@@ -38,11 +38,11 @@ import matplotlib.pyplot as plt
 import time
 #sys.path.append("C:\\Users\\Jorge\\Dropbox\\Chicago\\Research\\Human capital and the household\]codes\\model")
 sys.path.append("/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/simulate_sample")
-import utility_v2 as util
+import utility as util
 import gridemax
 import int_linear
-import emax_2 as emax
-import simdata_2 as simdata
+import emax as emax
+import simdata as simdata
 
 np.random.seed(100);
 #Sample size

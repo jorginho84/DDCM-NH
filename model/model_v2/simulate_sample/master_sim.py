@@ -22,6 +22,9 @@ are instances of the class defined in int_linear
 
 (4) The emax dictionary is an input in the class found in simdata.py.
 
+pip2.7 install --user line_profiler
+
+
 """
 from __future__ import division #omit for python 3.x
 import numpy as np
@@ -35,11 +38,11 @@ import matplotlib.pyplot as plt
 import time
 #sys.path.append("C:\\Users\\Jorge\\Dropbox\\Chicago\\Research\\Human capital and the household\]codes\\model")
 sys.path.append("/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/simulate_sample")
-import utility as util
+import utility_v2 as util
 import gridemax
 import int_linear
-import emax as emax
-import simdata as simdata
+import emax_2 as emax
+import simdata_2 as simdata
 
 np.random.seed(100);
 #Sample size

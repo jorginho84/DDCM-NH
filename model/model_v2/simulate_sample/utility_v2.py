@@ -18,6 +18,7 @@ import numpy as np
 import pandas as pd
 import sys, os
 from scipy import stats
+from numba import jit
 
 class Parameters:
 
@@ -89,7 +90,12 @@ class Utility:
 
 		betas=self.param.betaw[0:-1,0]
 		epsilon=np.sqrt(self.param.betaw[-1,0])*np.random.rand(self.N)
-		return np.exp( np.dot(xw,betas)+epsilon )
+
+		@jit(nopython=True)
+		def wage_gen(xw,betas,epsilon):
+			return np.exp( np.dot(xw,betas)+epsilon )
+
+		return wage_gen(xw,betas,epsilon)
 
 	def q_prob(self):
 		"""
@@ -493,7 +499,7 @@ class Utility:
 	
 		return ut
 
-
+	
 	def simulate(self,periodt,wage0,free,price):
 		"""
 		Takes states (theta0, nkids0, married0, wage0) and given choices

@@ -1,0 +1,149 @@
+/*
+
+This do-file explores the impact of NEW HOPE on the educational expectations of children (year 5)
+
+-individuals' aspirations and expectations: yiq45a-c and yaq46c-yaq46d (about the future)
+-parents' report on expectations: piq147 piq148
+-teacher expectations: t2q11a t2q11b t2q11c 
+
+
+*/
+
+
+
+global databases "/mnt/Research/nealresearch/new-hope-secure/newhopemount/Data/databases"
+global codes "/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes"
+global results "/mnt/Research/nealresearch/new-hope-secure/newhopemount/results"
+
+/*
+robust SE for small samples. Set to hc3 for more conservatives. 
+
+See Angrist and Pischke for more information
+"robust" SE can be misleading when the sample size is small and there is no much heteroskedasticity.
+*/
+global SE "hc2"
+
+clear
+clear matrix
+clear mata
+set maxvar 15000
+
+
+*******************************************************
+/*Estimates from the youth database: year-2 results*/
+*******************************************************
+
+use "$databases/Youth_original.dta", clear
+
+*labels
+do "$codes/data_youth.do"
+keep  sampleid child zboy p_assign /* Identifiers
+*/ yiq45a yiq45b yiq45c /* Individual's expectations
+*/ t2q11a t2q11b t2q11c/* Teacher's expectations */
+
+
+/*Local labels: use them in regressions*/
+local identifiers sampleid child zboy
+local individual yiq45a yiq45b yiq45c
+local teacher t2q11a t2q11b t2q11c
+
+
+destring `individual' `teacher' zboy, force replace
+
+*Treatment status
+gen RA=1 if p_assign=="E"
+replace RA=2 if p_assign=="C"
+label define ra_lbl 1 "Treatment" 2 "Control"
+label values RA ra_lbl
+
+
+*Defining individual's expectations: at least "mostly sure, etc", or more
+local x=5
+foreach variable of varlist `individual'{
+	forvalues y=1/4{
+		gen `variable'_`y'=1 if `variable'>=`x' & `variable'<=5
+		replace `variable'_`y'=0 if `variable'<`x' & `variable'>=1
+	}
+	
+	local x=`x'-1
+	
+}
+local individual yiq45a* yiq45b* yiq45c*
+
+
+*Regressions and tables: overall, girls, and then boys.
+local nn=0
+foreach sex in "Overall" "Girls" "Boys"{
+
+	preserve
+	
+	if `nn'==1{
+		keep if zboy==0
+	}
+	else if `nn'==2{
+		keep if zboy==1
+	}
+
+	local x=1
+	foreach variable of varlist `individual'{
+		
+		ttest `variable', by(RA)
+		mat A=(r(mu_1),r(mu_2),r(mu_1)-r(mu_2))
+		mat list A
+
+		xi: reg `variable' i.RA, vce(`SE')
+		mat variance=e(V)
+		mat a_aux=variance[1,1]^0.5
+		mat C=A,a_aux
+		test _IRA_2=0
+		mat b_aux=r(p)
+		mat D=C,b_aux
+
+		if `x'==1{
+			mat baseline=D
+		}
+		else{
+			mat baseline=baseline\D
+		}
+		local x=`x'+1
+	}
+
+
+	*the table
+	putexcel B2=matrix(baseline) using "$results/skills_Y5_`sex'", sheet("data") modify
+	local number=2
+	foreach x in "Finish high school: Very sure"  "Finish high school: Mostly sure or +" "Finish high school: Somewhat sure or +"/*
+	*/"Finish high school: not really sure or +"/* individual's expectations
+	*/{
+		putexcel A`number'=("`x'") using "$results/skills_Y5_`sex'", sheet("data") modify
+		local number=`number'+1
+	}
+	putexcel B1=("Treatment") using "$results/expectations_Youth_Y5_`sex'", sheet("data") modify
+	putexcel C1=("Control") using "$results/expectations_Youth_Y5_`sex'", sheet("data") modify
+	putexcel D1=("T-C") using "$results/expectations_Youth_Y5_`sex'", sheet("data") modify
+	putexcel E1=("S.E.") using "$results/expectations_Youth_Y5_`sex'", sheet("data") modify
+	putexcel F1=("p-value") using "$results/expectations_Youth_Y5_`sex'", sheet("data") modify
+
+	
+	local nn=`nn'+1
+	
+	restore
+
+
+}
+
+
+
+
+/*
+*******************************************************
+/*Estimates from the adults database: year-2 results*/
+*******************************************************
+
+use "$databases/CFS_original.dta", clear
+
+*labels
+qui: do "$codes/data_cfs.do"
+
+
+*/

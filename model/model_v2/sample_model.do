@@ -549,14 +549,54 @@ save "$results/sample_model_theta_v2.dta", replace
 *This is the sample to start the simulations
 keep if c1!=. & piinvyy!=. & epiinvyy!=.
 
-
 foreach x of varlist d_RA age_ra d_marital_2 d_HS2 nkids_baseline age_t0 {
-
 	drop if `x'==.
 }
 
-*Maybe I can work with different samples???
 save "/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/sample_model_v2.dta", replace
 outsheet using "/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/sample_model_v2.csv", comma  replace
 
+/*
+*Statistics: how many families have one young and one old child in t=0
+preserve
+keep age_t0 sampleid child
+reshape wide age_t0, i(sampleid) j(child)
+*252 out of 438 (57%) families have two surveyed children
 
+*a family with siblings
+gen d_sib=(age_t01!=. & age_t02!=.) 
+tab d_sib
+*a family with one old and one young: 28% of the sample (48% of those families with 
+gen d_s=(d_sib==1) & ((age_t01>5 & age_t02<=5) | (age_t01<=5 & age_t02>5) )
+tab d_s
+tab d_s if d_sib==1
+restore
+
+*Statistics: how many families with an old child, have a newborn
+preserve
+keep age_t0 nkids_baseline nkids_year2 nkids_year5 nkids_year8 sampleid child
+gen age_t2=age_t0+1
+gen age_t5=age_t0+5
+gen age_t8=age_t0+8
+drop age_t0
+
+*have a kid
+gen d_born_t2=nkids_year2>nkids_baseline
+gen d_born_t5=nkids_year5>nkids_year2
+gen d_born_t8=nkids_year8>nkids_year5
+drop nkids*
+
+reshape wide age* d_born* , i(sampleid) j(child)
+
+*families with old children in t=2,5,8
+gen d_old=0
+forvalues sib=1/2{
+	foreach t in 2 5 8{
+		replace d_old = 1 if age_t`t'`sib'>5 & d_born_t`t'1
+	}
+}
+
+*41% of families have an old child in a given year, and then have another child
+*this is an upper bound, since one child could have been 4 when the other was born
+tab d_old
+*/

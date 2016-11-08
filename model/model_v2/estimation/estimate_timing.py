@@ -11,7 +11,6 @@ import sys, os
 from scipy import stats
 from scipy.optimize import minimize
 from scipy.optimize import fmin_bfgs
-from joblib import Parallel, delayed
 sys.path.append("/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/simulate_sample")
 import utility as util
 import gridemax
@@ -67,22 +66,34 @@ class Estimate:
 		ssrs_t2_matrix=np.zeros((self.N,3,self.M))
 		ssrs_t5_matrix=np.zeros((self.N,self.M))
 
-		#Obtaining M samples
+		#Parallel computing samples
+		def sample_gen(sim_ins,j):
+			np.random.seed(j+100)
+			return sim_ins.fake_data(9)
+
+		dics = []
+		pool = mp.Pool(processes=8) 
+		#save results here
+		multiple_results = [pool.apply_async(sample_gen,args=(simdata_ins,j)) for j in range(self.M)]
+		for res in multiple_results:
+			dics.append(res.get(timeout=1))
+
+		print dics
+		print 'length of dics', len(dics)
+    	#Saving results		
 		for j in range(0,self.M):
-			np.random.seed(j+100) #same shock for the entire procedure-but different for every draw
-			dics=simdata_ins.fake_data(9) #t=0 to t=8
-			income_matrix[:,:,j]=dics['Income']
-			consumption_matrix[:,:,j]=dics['Consumption']
-			choice_matrix[:,:,j]=dics['Choices']
-			theta_matrix[:,:,j]=dics['Theta']
-			wage_matrix[:,:,j]=dics['Wage']
-			hours_matrix[:,:,j]=dics['Hours']
-			ssrs_t2_matrix[:,:,j]=dics['SSRS_t2']
-			ssrs_t5_matrix[:,j]=dics['SSRS_t5']
+			income_matrix[:,:,j]=dics[j]['Income']
+			consumption_matrix[:,:,j]=dics[j]['Consumption']
+			choice_matrix[:,:,j]=dics[j]['Choices']
+			theta_matrix[:,:,j]=dics[j]['Theta']
+			wage_matrix[:,:,j]=dics[j]['Wage']
+			hours_matrix[:,:,j]=dics[j]['Hours']
+			ssrs_t2_matrix[:,:,j]=dics[j]['SSRS_t2']
+			ssrs_t5_matrix[:,j]=dics[j]['SSRS_t5']
 			
 
 			for periodt in range(0,9):
-				utils_periodt[:,:,periodt,j]=dics['Uti_values_dic'][periodt]
+				utils_periodt[:,:,periodt,j]=dics[j]['Uti_values_dic'][periodt]
 
 		return {'utils_periodt': utils_periodt,'income_matrix':income_matrix,
 				'choice_matrix': choice_matrix,'theta_matrix': theta_matrix,

@@ -11,6 +11,7 @@ import sys, os
 from scipy import stats
 from scipy.optimize import minimize
 from scipy.optimize import fmin_bfgs
+from pathos.multiprocessing import ProcessPool
 sys.path.append("/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/simulate_sample")
 import utility as util
 import gridemax
@@ -66,19 +67,14 @@ class Estimate:
 		ssrs_t2_matrix=np.zeros((self.N,3,self.M))
 		ssrs_t5_matrix=np.zeros((self.N,self.M))
 
-		#Parallel computing samples
-		def sample_gen(sim_ins,j):
+		#Computing samples (in paralel)
+		def sample_gen(j):
 			np.random.seed(j+100)
-			return sim_ins.fake_data(9)
+			return simdata_ins.fake_data(9)
 
-		dics = []
-		pool = mp.Pool(processes=8) 
-		#save results here
-		multiple_results = [pool.apply_async(sample_gen,args=(simdata_ins,j)) for j in range(self.M)]
-		for res in multiple_results:
-			dics.append(res.get(timeout=1))
-
-		print dics
+		pool = ProcessPool(nodes=1)
+		dics = pool.map(sample_gen,range(self.M))
+		
 		print 'length of dics', len(dics)
     	#Saving results		
 		for j in range(0,self.M):

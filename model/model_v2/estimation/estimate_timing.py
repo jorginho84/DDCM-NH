@@ -72,10 +72,10 @@ class Estimate:
 			np.random.seed(j+100)
 			return simdata_ins.fake_data(9)
 
-		pool = ProcessPool(nodes=1)
+		pool = ProcessPool(nodes=20)
 		dics = pool.map(sample_gen,range(self.M))
 		
-		print 'length of dics', len(dics)
+		
     	#Saving results		
 		for j in range(0,self.M):
 			income_matrix[:,:,j]=dics[j]['Income']
@@ -484,7 +484,7 @@ class Estimate:
 
 		
 		#Here we go
-		opt = minimize(self.ll, beta0,  method='Nelder-Mead', options={'maxiter':800, 'ftol': 1e-3, 'disp': True});
+		opt = minimize(self.ll, beta0,  method='Nelder-Mead', options={'maxiter':33*200, 'ftol': 1e-3, 'disp': True});
 		
 		return opt
 

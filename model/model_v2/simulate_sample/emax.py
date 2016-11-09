@@ -15,10 +15,10 @@ as a given
 from __future__ import division #omit for python 3.x
 import numpy as np
 import itertools
+from numba import jit
 import sys, os
 from scipy import stats
 from scipy import interpolate
-from pathos.multiprocessing import ProcessPool
 #sys.path.append("C:\\Users\\Jorge\\Dropbox\\Chicago\\Research\\Human capital and the household\]codes\\model")
 sys.path.append("/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model/simulate_sample")
 import utility as util
@@ -121,7 +121,66 @@ class Emaxt:
 			#Here I save array of Ut by schock/choice (at T)
 			u_vec=np.zeros((ngrid,self.D,J))
 			
-			def util_gen(j,i):
+
+			#At T, loop over possible shocks, for every future choice
+			#Montecarlo integration: loop over shocks by choice (hours and childcare)
+			"""
+			@jit
+			def numba_emax():
+				for j,i in itertools.product(range(0,J),range(0,self.D)):
+				
+
+					#States at T
+					model=util.Utility(self.param,ngrid,x_w,x_m,x_k,
+						passign,theta0,nkids0,married0,hours,childcare,wage0,agech)
+
+					periodt=8 
+
+					married_t1=model.marriaget(periodt,married0)
+					married_t1=np.reshape(married_t1,(ngrid,1))
+					nkids_t1=model.kidst(periodt,np.reshape(nkids0,(ngrid,1)),
+						married0)+nkids0
+					wage_t1=model.waget(periodt)
+					#using t-1 income to get theta_T
+					dincome_t=model.dincomet(periodt-1,hours,wage0,married0,nkids0)
+					theta_t1=model.thetat(periodt,theta0,hours,childcare,dincome_t,
+						married0,nkids0) #theta at t+1 uses inputs at t
+
+					#future possible decision
+					if j<=2:
+						if j==0:
+							hours_aux2=0
+						elif j==1:
+							hours_aux2=15
+						elif j==2:
+							hours_aux2==30
+						hours_t1=np.full(ngrid,hours_aux2,dtype=float)
+						childcare_t1=np.zeros((ngrid,1))
+					else:
+						if j==3:
+							hours_aux2=0
+						elif j==4:
+							hours_aux2=15
+						elif j==5:
+							hours_aux2==30
+						hours_t1=np.full(ngrid,hours_aux2,dtype=float)
+						childcare_t1=np.ones((ngrid,1))				
+
+					model=util.Utility(self.param,ngrid,x_w,x_m,x_k,
+						passign,theta_t1,nkids_t1,married_t1,hours_t1,childcare,wage_t1,agech)
+					
+					#This is the terminal value!
+					u_vec[:,i,j]=model.simulate(8) #Last period is T=8. Terminal value=0
+
+				return u_vec
+
+			u_vec=numba_emax()
+			"""
+
+			
+			for j,i in itertools.product(range(0,J),range(0,self.D)):
+				
+
 				#States at T
 				model=util.Utility(self.param,ngrid,x_w,x_m,x_k,
 					passign,theta0,nkids0,married0,hours,childcare,agech)
@@ -147,7 +206,7 @@ class Emaxt:
 					elif j==1:
 						hours_aux2=15
 					elif j==2:
-						hours_aux2=30
+						hours_aux2==30
 					hours_t1=np.full(ngrid,hours_aux2,dtype=float)
 					childcare_t1=np.zeros((ngrid,1))
 				else:
@@ -156,7 +215,7 @@ class Emaxt:
 					elif j==4:
 						hours_aux2=15
 					elif j==5:
-						hours_aux2=30
+						hours_aux2==30
 					hours_t1=np.full(ngrid,hours_aux2,dtype=float)
 					childcare_t1=np.ones((ngrid,1))				
 
@@ -164,25 +223,8 @@ class Emaxt:
 					passign,theta_t1,nkids_t1,married_t1,hours_t1,childcare,agech)
 				
 				#This is the terminal value!
-				return model.simulate(8,wage_t1,free_t1,price_t1) #Last period is T=8. Terminal value=0			
-
-			#possible choices combinations
-			iters = list(itertools.product(range(0,J),range(0,self.D)))
-			list_ch = []
-			list_shock = []
-			for i in range(len(iters)):
-				list_ch.append(iters[i][0])
-				list_shock.append(iters[i][1])
-
-			pool = ProcessPool(nodes=10)
-			list_util = pool.map(util_gen,list_ch,list_shock)
+				u_vec[:,i,j]=model.simulate(8,wage_t1,free_t1,price_t1) #Last period is T=8. Terminal value=0
 			
-			#saving utils in the vector
-			it=0
-			for j in range(J):	
-				for i in range(self.D):
-					u_vec[:,i,j]=list_util[it]
-					it = it + 1
 
 			#obtaining max over choices by random schocks: young vs old
 			max_ut=np.zeros((ngrid,self.D))
@@ -304,8 +346,8 @@ class Emaxt:
 			
 
 			#Montecarlo integration: loop over shocks by choice at t (hours and childcare)
-			#for j,i in itertools.product(range(0,J),range(0,self.D)):
-			def util_gen(j,i):
+			for j,i in itertools.product(range(0,J),range(0,self.D)):
+				#for i in range(0,D):
 				
 				#Computing states at t
 				model=util.Utility(self.param,ngrid,x_w,x_m,x_k,
@@ -350,7 +392,7 @@ class Emaxt:
 					passign,theta_t1,nkids_t1,married_t1,hours_t1,childcare_t1,agech)
 
 				#Current-period utility at t
-				ut=model.simulate(periodt,wage_t1,free_t1,price_t1) 
+				u_vec[:,i,j]=model.simulate(periodt,wage_t1,free_t1,price_t1) 
 
 				#getting next-period already computed emaxt+1
 				data_int_ex=np.concatenate(( np.reshape(theta_t1,(ngrid,1)), 
@@ -367,25 +409,7 @@ class Emaxt:
 				emax_t1_choice=emax_inst_choice.int_values(data_int_ex,betas_t1_choice)
 
 				#Value function at t.
-				return ut + 0.95*emax_t1_choice
-
-			#possible choices combinations
-			iters = list(itertools.product(range(0,J),range(0,self.D)))
-			list_ch = []
-			list_shock = []
-			for i in range(len(iters)):
-				list_ch.append(iters[i][0])
-				list_shock.append(iters[i][1])
-
-			pool = ProcessPool(nodes=10)
-			list_util = pool.map(util_gen,list_ch,list_shock)
-			
-			#saving utils in the vector
-			it=0
-			for j in range(J):	
-				for i in range(self.D):
-					u_vec[:,i,j]=list_util[it]
-					it = it + 1
+				u_vec[:,i,j]=u_vec[:,i,j]+0.95*emax_t1_choice
 
 			#obtaining max over choices by random shock/choice at t-1. Young vs old
 			max_ut=np.zeros((ngrid,self.D))
@@ -456,5 +480,20 @@ class Emaxt:
 
 
 		
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 

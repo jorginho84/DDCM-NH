@@ -282,7 +282,7 @@ outsheet using "$results/aux_model/prob_inc_t2.csv", comma  replace
 
 
 foreach var in prob_diff inputs_moments_old /*
-*/ inputs_moments_young_cc0 inputs_moments_young_cc0 inputs_moments_young_cc1/*
+*/ inputs_moments_young_cc0 inputs_moments_young_cc1/*
 */ prob_inc_t5 prob_diff_t5{
 
 	use `param', clear

@@ -44,8 +44,8 @@ wagep_betas=np.array([betas_nelder[3],betas_nelder[4],betas_nelder[5],
 
 
 #Production function [young[cc0,cc1],old]
-gamma1=[[betas_nelder[8],betas_nelder[10]],betas_nelder[12]]
-gamma2=[[betas_nelder[9],betas_nelder[11]],betas_nelder[13]]
+gamma1=[[0.6,0.7],0.7]
+gamma2=[[0.3,0.4],0.4]
 sigmatheta=0
 
 #Measurement system: three measures for t=2, one for t=5
@@ -213,9 +213,9 @@ beta_kappas_t2=np.mean(dic_betas['beta_kappas_t2'],axis=2) #4 x 3
 beta_lambdas_t2=np.mean(dic_betas['beta_lambdas_t2'],axis=1) #2 x 1
 beta_kappas_t5=np.mean(dic_betas['beta_kappas_t5'],axis=1) #4 x 1
 beta_lambdas_t5=np.mean(dic_betas['beta_lambdas_t5'],axis=1) #1 x 1
-beta_inputs_old_sim=np.mean(dic_betas['beta_inputs_old'],axis=1) #2 x 1
-beta_inputs_young_cc0_sim=np.mean(dic_betas['beta_inputs_young_cc0'],axis=1) #2 x 1
-beta_inputs_young_cc1_sim=np.mean(dic_betas['beta_inputs_young_cc1'],axis=1) #2 x 1
+beta_inputs_old_sim=np.mean(dic_betas['beta_inputs_old'],axis=1) #3 x 1
+beta_inputs_young_cc0_sim=np.mean(dic_betas['beta_inputs_young_cc0'],axis=1) #3 x 1
+beta_inputs_young_cc1_sim=np.mean(dic_betas['beta_inputs_young_cc1'],axis=1) #3 x 1
 """
 #Data equivalent
 beta_childcare_data=self.betas_dic['beta_cc']
@@ -284,11 +284,11 @@ for j in range(3):
 	if j==0:
 		pos = 18
 	elif j==1:
-		pos = 22
+		pos = 23
 	else:
-		pos = 24
+		pos = 26
 	
-	for c in range(2):
+	for c in range(3): # 3 moments each
 		sim_moment = ws.cell('E' + str(c + pos))
 		obs_moment = ws.cell('G' + str(c + pos))
 		obs_sigma = ws.cell('I' + str(c + pos))

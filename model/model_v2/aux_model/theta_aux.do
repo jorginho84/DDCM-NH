@@ -17,7 +17,7 @@ See Angrist and Pischke for more information
 local SE="hc2"
 
 
-
+set seed 2038947
 
 clear
 clear matrix
@@ -53,9 +53,9 @@ gen incomepc_t1=(total_income_y1-cc_pay_t1*12)/(1 + nkids_year2 + married_year2)
 gen incomepc_t4=(total_income_y4-cc_pay_t4*12)/(1 + nkids_year5 + married_year5)
 gen incomepc_t7=(total_income_y7)/(1 + nkids_year8 + married_year8)
 
-replace incomepc_t1=1 if incomepc_t1<0
-replace incomepc_t4=1 if incomepc_t4<0
-replace incomepc_t7=1 if incomepc_t7<0
+replace incomepc_t1=0 if incomepc_t1<0
+replace incomepc_t4=0 if incomepc_t4<0
+replace incomepc_t7=0 if incomepc_t7<0
 
 foreach x of numlist 1 4 7{
 	
@@ -144,26 +144,35 @@ drop d_m1 d_m2
 ********************************************************************
 
 *To identify gammas (production function): 2 x 1 matrix
-mat inputs_moments_old=J(2,1,.)
-mat inputs_moments_young_cc0=J(2,1,.)
-mat inputs_moments_young_cc1=J(2,1,.)
+mat inputs_moments_old=J(3,1,.)
+mat inputs_moments_young_cc0=J(3,1,.)
+mat inputs_moments_young_cc1=J(3,1,.)
 
-mat sigma_inputs_moments_old=J(2,1,.)
-mat sigma_inputs_moments_young_cc0=J(2,1,.)
-mat sigma_inputs_moments_young_cc1=J(2,1,.)
+mat sigma_inputs_moments_old=J(3,1,.)
+mat sigma_inputs_moments_young_cc0=J(3,1,.)
+mat sigma_inputs_moments_young_cc1=J(3,1,.)
 
 program input_diff, rclass
 	version 13
 	args loginput z_m
 	tempname  mean_1 mean_2
-	qui: sum `loginput' if `z_m'>=4
+	qui: sum `loginput' if `z_m'>=3
 	scalar `mean_1'=r(mean)
-	qui: sum `loginput' if `z_m'<=2
+	qui: sum `loginput' if `z_m'<3
 	scalar `mean_2'=r(mean)
 	return scalar diff=`mean_1' - `mean_2'
 end
 
-
+program input_theta, rclass
+	version 13
+	args z_t2 z_t5
+	tempname dummy_t5 dummy_t2 mean_1
+	gen `dummy_t2'=`z_t2'>=3
+	gen `dummy_t5'=`z_t5'>=3
+	qui: sum `dummy_t5' if `dummy_t2'==1
+	scalar `mean_1'=r(mean)
+	return scalar mean_out=`mean_1'
+end
 	
 *Old children: prod function
 preserve
@@ -179,28 +188,49 @@ mat beta_aux=e(b)
 mat inputs_moments_old[2,1]=beta_aux[1,1]
 mat sigma_aux=e(V)
 mat sigma_inputs_moments_old[2,1]=sigma_aux[1,1]
+
+bootstrap corr_theta=r(mean_out), reps(`reps'): input_theta skills_m1_t2 skills_t5 if (skills_m1_t2!=. & skills_t5!=.)
+mat beta_aux=e(b)
+mat inputs_moments_old[3,1]=beta_aux[1,1]
+mat sigma_aux=e(V)
+mat sigma_inputs_moments_old[3,1]=sigma_aux[1,1]
+
+
 restore
+
+
 
 *Young children/cc=0 and 1: produ function
 forvalues cc=0/1{
+
 	preserve
-	keep if age_t4<=5 & d_CC2_t4==`cc'
-	bootstrap mean_diff=r(diff), reps(`reps'): input_diff lincomepc_t4 skills_t5  if (lincomepc_t4!=. & skills_t5!=.)
+	keep if age_t1<=5 & d_CC2_t1==`cc'
+	bootstrap mean_diff=r(diff), reps(`reps'): input_diff lincomepc_t1 skills_m1_t2  if (lincomepc_t1!=. & skills_m1_t2!=.)
 	mat beta_aux=e(b)
 	mat inputs_moments_young_cc`cc'[1,1]=beta_aux[1,1]
 	mat sigma_aux=e(V)
 	mat sigma_inputs_moments_young_cc`cc'[1,1]=sigma_aux[1,1]
 	
-	bootstrap mean_diff=r(diff), reps(`reps'): input_diff ll_t4 skills_t5  if (ll_t4!=. & skills_t5!=.)
+	bootstrap mean_diff=r(diff), reps(`reps'): input_diff ll_t1 skills_m1_t2  if (ll_t1!=. & skills_m1_t2!=.)
 	mat beta_aux=e(b)
 	mat inputs_moments_young_cc`cc'[2,1]=beta_aux[1,1]
 	mat sigma_aux=e(V)
 	mat sigma_inputs_moments_young_cc`cc'[2,1]=sigma_aux[1,1]
+	
+	bootstrap corr_theta=r(mean_out), reps(`reps'): input_theta skills_m1_t2 skills_t5 if (skills_m1_t2!=. & skills_t5!=.)
+	mat beta_aux=e(b)
+	mat inputs_moments_young_cc`cc'[3,1]=beta_aux[1,1]
+	mat sigma_aux=e(V)
+	mat sigma_inputs_moments_young_cc`cc'[3,1]=sigma_aux[1,1]
 
 	restore
+		
+	
 }
 
-
+**********************************************************************************************
+**********************************************************************************************
+**********************************************************************************************
 
 *Inconditional Probs: matrix of 4 (categories) X 1 (measures)
 *(to identify kappas)

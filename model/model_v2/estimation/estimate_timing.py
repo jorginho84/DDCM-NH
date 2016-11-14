@@ -198,9 +198,9 @@ class Estimate:
 
 		beta_kappas_t2=np.zeros((4,3,self.M)) #4 moments
 		beta_lambdas_t2=np.zeros((2,self.M)) # 2 moments
-		beta_inputs_old=np.zeros((2,self.M)) # 2 moments
-		beta_inputs_young_cc0=np.zeros((2,self.M)) #2 moments
-		beta_inputs_young_cc1=np.zeros((2,self.M)) #2 moments
+		beta_inputs_old=np.zeros((3,self.M)) # 3 moments
+		beta_inputs_young_cc0=np.zeros((3,self.M)) #3 moments
+		beta_inputs_young_cc1=np.zeros((3,self.M)) #3 moments
 		beta_kappas_t5=np.zeros((4,self.M)) #4 moments
 		beta_lambdas_t5=np.zeros((1,self.M)) #1 moment
 		
@@ -224,27 +224,33 @@ class Estimate:
 			beta_lambdas_t2[1,j]=np.mean(boo_m2[boo_5]) - np.mean(boo_m2[boo_4])
 
 		boo_old=age_child[:,4]>5 #older than 5 at t=4
-		boo_young=age_child[:,4]<=5 #less than 5 at t=4
+		boo_young=age_child[:,1]<=5 #less than 5 at t=1
 
 
 		for j in range(self.M):
-			boo_4=(ssrs_t5_matrix[:,j]>=4) & (boo_old)
-			boo_2=(ssrs_t5_matrix[:,j]<=2) & (boo_old)
+			boo_4=(ssrs_t5_matrix[:,j]>=3) & (boo_old)
+			boo_2=(ssrs_t5_matrix[:,j]<3) & (boo_old)
+			boo_ssrs2=(m1[:,j]>=3) & (boo_old)
 			beta_inputs_old[0,j] = np.mean(lconsumption_matrix[boo_4,4,j]) - np.mean(lconsumption_matrix[boo_2,4,j])
 			beta_inputs_old[1,j] = np.mean(lleisure_matrix[boo_4,4,j]) - np.mean(lleisure_matrix[boo_2,4,j])
+			beta_inputs_old[2,j] = np.mean(boo_4[boo_ssrs2]) 
 			
-			b_cc0=choice_matrix[:,4,j]<3 #child care choice=0 at t=4
+			b_cc0=choice_matrix[:,1,j]<3 #child care choice=0 at t=1
 			
-			boo_4=(ssrs_t5_matrix[:,j]>=4) & (boo_young==True) & (b_cc0==True)
-			boo_2=(ssrs_t5_matrix[:,j]<=2) & (boo_young==True) & (b_cc0==True)
-			beta_inputs_young_cc0[0,j] = np.mean(lconsumption_matrix[boo_4,4,j]) - np.mean(lconsumption_matrix[boo_2,4,j])
-			beta_inputs_young_cc0[1,j] = np.mean(lleisure_matrix[boo_4,4,j]) - np.mean(lleisure_matrix[boo_2,4,j])
+			boo_4=(m1[:,j]>=3) & (boo_young==True) & (b_cc0==True)
+			boo_2=(m1[:,j]<3) & (boo_young==True) & (b_cc0==True)
+			boo_ssrs5=(ssrs_t5_matrix[:,j]>=3) & (boo_young==True) & (b_cc0==True)
+			beta_inputs_young_cc0[0,j] = np.mean(lconsumption_matrix[boo_4,1,j]) - np.mean(lconsumption_matrix[boo_2,1,j])
+			beta_inputs_young_cc0[1,j] = np.mean(lleisure_matrix[boo_4,1,j]) - np.mean(lleisure_matrix[boo_2,1,j])
+			beta_inputs_young_cc0[2,j] = np.mean(boo_ssrs5[boo_4])
 
-			b_cc1=choice_matrix[:,4,j]>=3 #child care choice=1 at t=4
-			boo_4=(ssrs_t5_matrix[:,j]>=4) & (boo_young==True) & (b_cc1==True)
-			boo_2=(ssrs_t5_matrix[:,j]<=2) & (boo_young==True) & (b_cc1==True)
-			beta_inputs_young_cc1[0,j] = np.mean(lconsumption_matrix[boo_4,4,j]) - np.mean(lconsumption_matrix[boo_2,4,j])
-			beta_inputs_young_cc1[1,j] = np.mean(lleisure_matrix[boo_4,4,j]) - np.mean(lleisure_matrix[boo_2,4,j])
+			b_cc1=choice_matrix[:,1,j]>=3 #child care choice=1 at t=1
+			boo_4=(m1[:,j]>=3) & (boo_young==True) & (b_cc1==True)
+			boo_2=(m1[:,j]<3) & (boo_young==True) & (b_cc1==True)
+			boo_ssrs5=(ssrs_t5_matrix[:,j]>=3) & (boo_young==True) & (b_cc1==True)
+			beta_inputs_young_cc1[0,j] = np.mean(lconsumption_matrix[boo_4,1,j]) - np.mean(lconsumption_matrix[boo_2,1,j])
+			beta_inputs_young_cc1[1,j] = np.mean(lleisure_matrix[boo_4,1,j]) - np.mean(lleisure_matrix[boo_2,1,j])
+			beta_inputs_young_cc1[2,j] = np.mean(boo_ssrs5[boo_4])
 
 		
 		for z in range(2,6): #4 rankings
@@ -347,9 +353,9 @@ class Estimate:
 		beta_lambdas_t2=np.mean(dic_betas['beta_lambdas_t2'],axis=1) #2 x 1
 		beta_kappas_t5=np.mean(dic_betas['beta_kappas_t5'],axis=1) #4 x 1
 		beta_lambdas_t5=np.mean(dic_betas['beta_lambdas_t5'],axis=1) #1 x 1
-		beta_inputs_old=np.mean(dic_betas['beta_inputs_old'],axis=1) #2 x 1
-		beta_inputs_young_cc0=np.mean(dic_betas['beta_inputs_young_cc0'],axis=1) #2 x 1
-		beta_inputs_young_cc1=np.mean(dic_betas['beta_inputs_young_cc1'],axis=1) #2 x 1
+		beta_inputs_old=np.mean(dic_betas['beta_inputs_old'],axis=1) #3 x 1
+		beta_inputs_young_cc0=np.mean(dic_betas['beta_inputs_young_cc0'],axis=1) #3 x 1
+		beta_inputs_young_cc1=np.mean(dic_betas['beta_inputs_young_cc1'],axis=1) #3 x 1
 
 		#Data equivalent
 		beta_childcare_data=self.betas_dic['beta_cc']

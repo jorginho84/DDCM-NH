@@ -20,7 +20,7 @@ set maxvar 15000
 *Reps in bootstrap
 local reps = 1000
 
-use "/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/sample_model_theta_v2.dta", clear
+use "/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/sample_model_v2.dta", clear
 
 *Recovering AFDC eligibility parameters  (cutoff and benefits standards)
 qui: do "$codes/income/afdc_param.do"

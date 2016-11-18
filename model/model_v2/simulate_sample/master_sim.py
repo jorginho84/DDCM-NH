@@ -78,7 +78,7 @@ shapew=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/resu
 q=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/aux_model/q_prob.csv').values
 
 #Probability of afdc takeup
-pafdc=.58
+pafdc=.60
 
 #Probability of snap takeup
 psnap=.70

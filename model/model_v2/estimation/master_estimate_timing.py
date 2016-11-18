@@ -67,7 +67,7 @@ q=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/a
 
 
 #Probability of afdc takeup
-pafdc=.58
+pafdc=.60
 
 #Probability of snap takeup
 psnap=.70

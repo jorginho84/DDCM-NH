@@ -473,7 +473,7 @@ drop _merge
 *Note: total_income_y0 is actually one year behind!!
 
 drop total_income_y0 gross_y0 gross_nominal_y0 grossv2_y0 employment_y0 /*
-*/ fs_y0 afdc_y0
+*/ fs_y0 afdc_y0 sup_y0
 forvalues x=1/9{
 	local z=`x'-1
 	rename total_income_y`x' total_income_y`z'
@@ -483,6 +483,7 @@ forvalues x=1/9{
 	rename employment_y`x' employment_y`z'
 	rename afdc_y`x' afdc_y`z'
 	rename fs_y`x' fs_y`z'
+	rename sup_y`x' sup_y`z'
 
 }
 
@@ -541,7 +542,7 @@ gen delta_emp=d_emp_t1-d_emp_t0
 gen d_HS2=higrade>=12
 
 keep sampleid child d_RA p_assign age_ra age_ra2 d_marital* d_HS d_HS2 nkids* hours_t* d_CC* constant emp_baseline  delta_emp skills_* c1 piinvyy /*
-*/ epiinvyy total_income_y* married* cc_pay* gross_y* gross_nominal_y* grossv2_y* age_t0 age_t02 d_free afdc_y* fs_y*
+*/ epiinvyy total_income_y* married* cc_pay* gross_y* gross_nominal_y* grossv2_y* age_t0 age_t02 d_free afdc_y* fs_y* sup_y*
 
 save "$results/sample_model_theta_v2.dta", replace
 

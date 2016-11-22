@@ -2,3 +2,5 @@ model/approx timing.xlsx
 model/approx timing.xlsx
 model/model_v2/simulate_sample/draft.py
 *.xlsx
+model/model_v2/simulate_sample/master_sim.py
+model/approx timing.xlsx

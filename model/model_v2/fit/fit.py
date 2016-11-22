@@ -44,8 +44,8 @@ wagep_betas=np.array([betas_nelder[3],betas_nelder[4],betas_nelder[5],
 
 
 #Production function [young[cc0,cc1],old]
-gamma1=[[0.6,0.7],0.7]
-gamma2=[[0.3,0.4],0.4]
+gamma1=[[betas_nelder[8],betas_nelder[10]],betas_nelder[12]]
+gamma2=[[betas_nelder[9],betas_nelder[11]],betas_nelder[13]]
 sigmatheta=0
 
 #Measurement system: three measures for t=2, one for t=5

@@ -72,7 +72,7 @@ class Estimate:
 			np.random.seed(j+100)
 			return simdata_ins.fake_data(9)
 
-		pool = ProcessPool(nodes=19)
+		pool = ProcessPool(nodes=15)
 		dics = pool.map(sample_gen,range(self.M))
 		
 		
@@ -490,7 +490,7 @@ class Estimate:
 
 		
 		#Here we go
-		opt = minimize(self.ll, beta0,  method='Nelder-Mead', options={'maxiter':1000, 'ftol': 1e-3, 'disp': True});
+		opt = minimize(self.ll, beta0,  method='Nelder-Mead', options={'maxiter':3000, 'maxfev': 90000, 'ftol': 1e-3, 'disp': True});
 		
 		return opt
 

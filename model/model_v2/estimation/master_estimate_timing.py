@@ -33,7 +33,7 @@ import estimate_timing as estimate
 
 np.random.seed(1)
 
-betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv2_nelder_v10.npy')
+betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv2_nelder_v9.npy')
 
 #Utility function
 eta=betas_nelder[0]
@@ -258,7 +258,7 @@ betas_opt=np.array([eta_opt, alphap_opt,alphaf_opt,betaw0,betaw1,betaw2,
 	kappas_100,kappas_101,kappas_102,kappas_103,
 	lambdas_00,lambdas_01,lambdas_02,lambdas_10])
 
-np.save('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv2_nelder_v11.npy',betas_opt)
+np.save('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv2_nelder_v10.npy',betas_opt)
 
 
 

@@ -31,7 +31,7 @@ import estimate_timing as estimate
 
 np.random.seed(1)
 
-betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv2_nelder_v9.npy')
+betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv2_nelder_v10.npy')
 
 #Utility function
 eta=betas_nelder[0]
@@ -53,7 +53,8 @@ kappas=[[[betas_nelder[14],betas_nelder[15],betas_nelder[16],betas_nelder[17]]
 ,[betas_nelder[18],betas_nelder[19],betas_nelder[20],betas_nelder[21]],
 [betas_nelder[22],betas_nelder[23],betas_nelder[24],betas_nelder[25]]],
 [[betas_nelder[26],betas_nelder[27],betas_nelder[28],betas_nelder[29]]]]
-lambdas=[[betas_nelder[30],betas_nelder[31],betas_nelder[32]],[betas_nelder[33]]]
+#First measure is normalized. starting arbitrary values
+lambdas=[[1,0.9,0.9],[0.9]]
 
 
 #Weibull distribution of cc prices

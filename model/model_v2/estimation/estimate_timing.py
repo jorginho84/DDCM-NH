@@ -314,10 +314,10 @@ class Estimate:
 		self.param0.kappas[1][0][1]=beta[27]
 		self.param0.kappas[1][0][2]=beta[28]
 		self.param0.kappas[1][0][3]=beta[29]
-		self.param0.lambdas[0][0]=beta[30]
-		self.param0.lambdas[0][1]=beta[31]
-		self.param0.lambdas[0][2]=beta[32]
-		self.param0.lambdas[1][0]=beta[33]
+		#First lambda = 1 (fixed)
+		self.param0.lambdas[0][1]=beta[30]
+		self.param0.lambdas[0][2]=beta[31]
+		self.param0.lambdas[1][0]=beta[32]
 
 		
 
@@ -483,14 +483,14 @@ class Estimate:
 			self.param0.kappas[0][2][2],self.param0.kappas[0][2][3],#kappa: t=2, m2
 			self.param0.kappas[1][0][0],self.param0.kappas[1][0][1],#kappa: t=5, m0
 			self.param0.kappas[1][0][2],self.param0.kappas[1][0][3], #kappa: t=5, m0
-			self.param0.lambdas[0][0],self.param0.lambdas[0][1], #lambda, t=0
+			self.param0.lambdas[0][1], #lambda, t=0. first lambda_00=1 (fixed)
 			self.param0.lambdas[0][2],#lambda, t=0
 			self.param0.lambdas[1][0] #lambda t=1
 			]) 
 
 		
 		#Here we go
-		opt = minimize(self.ll, beta0,  method='Nelder-Mead', options={'maxiter':3000, 'maxfev': 90000, 'ftol': 1e-3, 'disp': True});
+		opt = minimize(self.ll, beta0,  method='Nelder-Mead', options={'maxiter':1000, 'maxfev': 90000, 'ftol': 1e-3, 'disp': True});
 		
 		return opt
 

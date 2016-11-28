@@ -48,8 +48,6 @@ wagep_betas=np.array([betas_nelder[3],betas_nelder[4],betas_nelder[5],
 #Production function [young[cc0,cc1],old]
 gamma1=[[betas_nelder[8],betas_nelder[10]],betas_nelder[12]]
 gamma2=[[betas_nelder[9],betas_nelder[11]],betas_nelder[13]]
-#gamma1=[[0.6,0.7],0.7]
-#gamma2=[[0.3,0.4],0.4]
 sigmatheta=0
 
 #Measurement system: three measures for t=2, one for t=5
@@ -57,7 +55,8 @@ kappas=[[[betas_nelder[14],betas_nelder[15],betas_nelder[16],betas_nelder[17]]
 ,[betas_nelder[18],betas_nelder[19],betas_nelder[20],betas_nelder[21]],
 [betas_nelder[22],betas_nelder[23],betas_nelder[24],betas_nelder[25]]],
 [[betas_nelder[26],betas_nelder[27],betas_nelder[28],betas_nelder[29]]]]
-lambdas=[[betas_nelder[30],betas_nelder[31],betas_nelder[32]],[betas_nelder[33]]]
+#First measure is normalized. starting arbitrary values
+lambdas=[[1,0.9,0.9],[0.9]]
 
 
 #Weibull distribution of cc prices
@@ -243,10 +242,9 @@ kappas_100=output.x[26]
 kappas_101=output.x[27]
 kappas_102=output.x[28]
 kappas_103=output.x[29]
-lambdas_00=output.x[30]
-lambdas_01=output.x[31]
-lambdas_02=output.x[32]
-lambdas_10=output.x[33]
+lambdas_01=output.x[30]
+lambdas_02=output.x[31]
+lambdas_10=output.x[32]
 
 
 betas_opt=np.array([eta_opt, alphap_opt,alphaf_opt,betaw0,betaw1,betaw2,
@@ -256,7 +254,7 @@ betas_opt=np.array([eta_opt, alphap_opt,alphaf_opt,betaw0,betaw1,betaw2,
 	kappas_010,kappas_011,kappas_012,kappas_013,
 	kappas_020,kappas_021,kappas_022,kappas_023,
 	kappas_100,kappas_101,kappas_102,kappas_103,
-	lambdas_00,lambdas_01,lambdas_02,lambdas_10])
+	lambdas_01,lambdas_02,lambdas_10])
 
 np.save('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv2_nelder_v11.npy',betas_opt)
 

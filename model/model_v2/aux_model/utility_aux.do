@@ -34,11 +34,11 @@ gen age_t4=age_t0+4
 gen age_t7=age_t0+7
 
 egen id=group(sampleid child)
-keep age_t1 age_t4 d_CC_t1  d_CC_t4 p_assign id
-reshape long age_t d_CC_t, i(id) j(t_ra)
+keep age_t1 age_t4 d_CC2_t1  d_CC2_t4 p_assign id
+reshape long age_t d_CC2_t, i(id) j(t_ra)
 xtset id t_ra
 
-xi: reg d_CC_t i.p_assign if age_t<=5, vce(`SE')
+xi: reg d_CC2_t i.p_assign if age_t<=5, vce(`SE')
 matrix beta=_b[_Ip_assign_2]\_b[_cons]
 matrix sigma_aux=e(V)
 matrix sigma=sigma_aux[1,1]\sigma_aux[2,2]

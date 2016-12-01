@@ -48,7 +48,7 @@ np.random.seed(100);
 #Sample size
 #N=315
 
-betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv2_nelder_v9.npy')
+betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv2_nelder_v11.npy')
 
 #Utility function
 eta=betas_nelder[0]
@@ -69,7 +69,9 @@ kappas=[[[betas_nelder[14],betas_nelder[15],betas_nelder[16],betas_nelder[17]]
 ,[betas_nelder[18],betas_nelder[19],betas_nelder[20],betas_nelder[21]],
 [betas_nelder[22],betas_nelder[23],betas_nelder[24],betas_nelder[25]]],
 [[betas_nelder[26],betas_nelder[27],betas_nelder[28],betas_nelder[29]]]]
-lambdas=[[betas_nelder[30],betas_nelder[31],betas_nelder[32]],[betas_nelder[33]]] 
+#First measure is normalized. starting arbitrary values
+lambdas=[[1,betas_nelder[30],betas_nelder[31]],[betas_nelder[32]]]
+
 
 
 #Weibull distribution of cc prices
@@ -213,8 +215,10 @@ np.mean(ltheta,axis=0)
 ate_theta=np.mean(ltheta[passign[:,0]==1,:],axis=0) - np.mean(ltheta[passign[:,0]==0,:],axis=0)
 
 #Impact on income
+np.mean(ct,axis=0)
 np.mean(income,axis=0)
 ate_income=np.mean(income[passign[:,0]==1,:],axis=0) - np.mean(income[passign[:,0]==0,:],axis=0)
+ate_ct=np.mean(ct[passign[:,0]==1,:],axis=0) - np.mean(ct[passign[:,0]==0,:],axis=0)
 
 #Children's ranking
 ssrs_freq_t2=np.zeros((N,3,5))
@@ -243,7 +247,7 @@ unemp_t=hours_t==0
 part_t=hours_t==15
 full_t=hours_t==30
 
-np.mean(full_t,axis=0)
+np.mean(unemp_t,axis=0)
 
 
 

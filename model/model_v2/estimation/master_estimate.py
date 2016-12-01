@@ -161,7 +161,7 @@ D=50
 M=1000
 
 output_ins=estimate.Estimate(param0,x_w,x_m,x_k,x_wmk,passign,agech0,theta0,nkids0,
-	married0,D,dict_grid,M,N,moments_vector,var_cov)
+	married0,D,dict_grid,M,N,moments_vector,w_matrix)
 
 start_time = time.time()
 output=output_ins.optimizer()

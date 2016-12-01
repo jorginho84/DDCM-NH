@@ -166,3 +166,5 @@ se_ins=se.SEs(output_ins,var_cov,betas_nelder)
 
 #The var-cov matrix of structural parameters
 ses = se_ins.big_sand(0.00001,36,33) 
+
+np.save('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/estimation/ses.npy',ses)

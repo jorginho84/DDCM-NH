@@ -204,13 +204,7 @@ class SEs:
 
 		return db_dt
 
-	def w_matrix(self,numpar):
-		"""
-		Calls the weighting matrix generated in the estimate class
-		"""
-
-		return self.output_ins.w_matrix(numpar)
-
+	
 	def big_sand(self,h,nmoments,npar):
 		"""
 		Computes the big sandwich matrix (standard errors of structural parameters)
@@ -221,7 +215,7 @@ class SEs:
 		dbdt = self.db_dtheta(self.psi,h,nmoments,npar)
 
 		#The weighting matrix used in estimation
-		w_matrix = self.w_matrix(nmoments)
+		w_matrix = self.output_ins.__dict__['w_matrix']
 
 		#The big sandwhich matrix: a_matrix*a_inn*var_cov*a_inn'a_matrix
 		a_inn = np.dot(np.transpose(dbdt),w_matrix)

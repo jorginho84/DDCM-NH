@@ -26,12 +26,12 @@ import emax as emax
 import simdata as simdata
 import openpyxl
 sys.path.append("/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/estimation")
-import estimate_timing as estimate
+import estimate_aux as estimate
 
 
 np.random.seed(1)
 
-betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv2_nelder_v10.npy')
+betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv2_nelder_v11.npy')
 
 #Utility function
 eta=betas_nelder[0]
@@ -54,7 +54,7 @@ kappas=[[[betas_nelder[14],betas_nelder[15],betas_nelder[16],betas_nelder[17]]
 [betas_nelder[22],betas_nelder[23],betas_nelder[24],betas_nelder[25]]],
 [[betas_nelder[26],betas_nelder[27],betas_nelder[28],betas_nelder[29]]]]
 #First measure is normalized. starting arbitrary values
-lambdas=[[1,0.9,0.9],[0.9]]
+lambdas=[[1,betas_nelder[30],betas_nelder[31]],[betas_nelder[32]]]
 
 
 #Weibull distribution of cc prices
@@ -134,7 +134,18 @@ param0=util.Parameters(alphap, alphaf, eta, gamma1, gamma2,sigmatheta,
 
 
 
-###Auxiliary estimates### (pending)
+###Auxiliary estimates###
+moments_vector=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/aux_model/moments_vector.csv').values
+
+#This is the var cov matrix of aux estimates
+var_cov=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/aux_model/var_cov.csv').values
+
+#The vector of aux standard errors
+#Using diagonal of Var-Cov matrix of simulated moments
+se_vector  = np.sqrt(np.diagonal(var_cov))
+
+
+"""
 #The betas of child care and hours regressions
 beta_cc_aux=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/aux_model/beta_childcare_v2.csv').values
 beta_cc=beta_cc_aux[1].reshape((1,1))
@@ -185,7 +196,7 @@ sigma_dic={'sigma_beta_cc':sigma_beta_cc,'sigma_beta_h2':sigma_beta_h2,
 'sigma_beta_inputs_young_cc1':sigma_beta_inputs_young_cc1,
 'sigma_beta_kappas_t5':sigma_beta_kappas_t5_data,
 'sigma_beta_lambdas_t5':sigma_beta_lambdas_t5_data}
-
+"""
 
 #Creating a grid for the emax computation
 dict_grid=gridemax.grid()
@@ -197,7 +208,7 @@ D=50
 M=1000
 
 output_ins=estimate.Estimate(param0,x_w,x_m,x_k,x_wmk,passign,agech0,theta0,nkids0,
-	married0,D,dict_grid,M,N,betas_dic,sigma_dic)
+	married0,D,dict_grid,M,N,moments_vector,var_cov)
 
 #Obtaining emax instances, samples, and betas for M samples
 emax_instance = output_ins.emax(param0)
@@ -246,97 +257,105 @@ sigma_beta_inputs_young_cc1=self.sigma_dic['sigma_beta_inputs_young_cc1']
 """
 
 ########Opening workbook#######
+
 wb=openpyxl.load_workbook('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/fit/fit.xlsx')
-ws = wb["new_moments"]
+ws = wb["new_moments_data"]
 
 #A. Labor supply and child care decisions
 list_aux = [beta_childcare,beta_hours2,beta_hours3]
-list_obs = [beta_cc,beta_h2,beta_h3]
-list_sig = [sigma_beta_cc,sigma_beta_h2,sigma_beta_h3]
+list_obs = [moments_vector[0,0],moments_vector[1,0],moments_vector[2,0]]
+list_sig = [se_vector[0],se_vector[1],se_vector[2]]
 for c in range(3):
-	sim_moment = ws.cell('E' + str(c + 4))
-	obs_moment = ws.cell('G' + str(c + 4))
-	obs_sigma = ws.cell('I' + str(c + 4))
+	sim_moment = ws.cell('B' + str(c + 2))
+	obs_moment = ws.cell('D' + str(c + 2))
+	obs_sigma = ws.cell('F' + str(c + 2))
 	sim_moment.value = np.float(list_aux[c])
 	obs_moment.value = np.float(list_obs[c])
-	obs_sigma.value = np.float(list_sig[c]**.5)
+	obs_sigma.value = np.float(list_sig[c])
 
-
+ind = 3
 #B. Log wage equation
 for c in range(5):
-	sim_moment = ws.cell('E' + str(c + 9))
-	obs_moment = ws.cell('G' + str(c + 9))
-	obs_sigma = ws.cell('I' + str(c + 9))
+	sim_moment = ws.cell('B' + str(c + 5))
+	obs_moment = ws.cell('D' + str(c + 5))
+	obs_sigma = ws.cell('F' + str(c + 5))
 	sim_moment.value = np.float(beta_wagep[c])
-	obs_moment.value = np.float(beta_wage[c,0])
-	obs_sigma.value = np.float(sigma_beta_wage[c,0]**.5)
+	obs_moment.value = np.float(moments_vector[ind+c,0])
+	obs_sigma.value = np.float(se_vector[ind+c])
+
+ind = ind + 5
+
+#A. t=2, kappas
+it = 10
+obs = 0
+for c in range(4):
+	for m in range(3):
+ 		sim_moment = ws.cell('B' + str(it))
+ 		obs_moment = ws.cell('D' + str(it))
+		obs_sigma = ws.cell('F' + str(it))
+		sim_moment.value = np.float(beta_kappas_t2[c,m])
+		obs_moment.value = np.float(moments_vector[ind + obs,0])
+		obs_sigma.value = np.float(se_vector[ind + obs])
+
+		it = it + 1
+		obs = obs +1
+
+ind = ind + 12
+#A. t=2, lambdas
+for c in range(2):
+	sim_moment = ws.cell('B' + str(c + 22))
+	obs_moment = ws.cell('D' + str(c + 22))
+	obs_sigma = ws.cell('F' + str(c + 22))
+	sim_moment.value = np.float(beta_lambdas_t2[c])
+	obs_moment.value = np.float(moments_vector[ind + c,0])
+	obs_sigma.value = np.float(se_vector[ind + c])
+
+
+ind = ind + 2
+#B. t=5, kappas
+for c in range(4):
+	sim_moment = ws.cell('B' + str(c + 24))
+	obs_moment = ws.cell('D' + str(c + 24))
+	obs_sigma = ws.cell('F' + str(c + 24))
+	sim_moment.value = np.float(beta_kappas_t5[c])
+	obs_moment.value = np.float(moments_vector[ind + c,0])
+	obs_sigma.value = np.float(se_vector[ind + c])
+
+ind = ind + 4
+#B. t=5, lambda
+sim_moment = ws.cell('B' + str(28))
+obs_moment = ws.cell('D' + str(28))
+obs_sigma = ws.cell('F' + str(28))
+sim_moment.value = np.float(beta_lambdas_t5[0])
+obs_moment.value = np.float(moments_vector[ind,0])
+obs_sigma.value = np.float(se_vector[ind])
+
 
 #C. Measures of academic achievement and family choices
-
+ind = ind +1
 #C.1 and C.2 Age>5 and Age<=5
 list_aux = [beta_inputs_old_sim, beta_inputs_young_cc0_sim, 
 beta_inputs_young_cc1_sim]
-list_obs = [beta_inputs_old, beta_inputs_young_cc0, 
-beta_inputs_young_cc1]
-list_sig = [sigma_beta_inputs_old, sigma_beta_inputs_young_cc0, 
-sigma_beta_inputs_young_cc1]
+list_obs = [moments_vector[ind:ind + 3,0], moments_vector[ind+3 : ind + 6,0], 
+moments_vector[ind+6 : ind + 9,0]]
+list_sig = [se_vector[ind:ind + 3], se_vector[ind+3: ind + 6], 
+se_vector[ind+6: ind + 9]]
 
 for j in range(3):
 	if j==0:
-		pos = 18
+		pos = 29
 	elif j==1:
-		pos = 23
+		pos = 32
 	else:
-		pos = 26
+		pos = 35
 	
 	for c in range(3): # 3 moments each
-		sim_moment = ws.cell('E' + str(c + pos))
-		obs_moment = ws.cell('G' + str(c + pos))
-		obs_sigma = ws.cell('I' + str(c + pos))
+		sim_moment = ws.cell('B' + str(c + pos))
+		obs_moment = ws.cell('D' + str(c + pos))
+		obs_sigma = ws.cell('F' + str(c + pos))
 		sim_moment.value = np.float(list_aux[j][c])
-		obs_moment.value = np.float(list_obs[j][c,0])
-		obs_sigma.value = np.float(list_sig[j][c,0]**.5)
-
-ws = wb["new_moments_2"]
-
-#A. t=2, kappas
-it = 5
-for c in range(4):
-	for m in range(3):
- 		sim_moment = ws.cell('E' + str(it))
- 		obs_moment = ws.cell('G' + str(it))
-		obs_sigma = ws.cell('I' + str(it))
-		sim_moment.value = np.float(beta_kappas_t2[c,m])
-		obs_moment.value = np.float(beta_kappas_t2_data[c,m])
-		obs_sigma.value = np.float(sigma_beta_kappas_t2_data[c,m]**.5)
-
-		it = it + 1
-
-#A. t=2, lambdas
-for c in range(2):
-	sim_moment = ws.cell('E' + str(c + 17))
-	obs_moment = ws.cell('G' + str(c + 17))
-	obs_sigma = ws.cell('I' + str(c + 17))
-	sim_moment.value = np.float(beta_lambdas_t2[c])
-	obs_moment.value = np.float(beta_lambdas_t2_data[c,0])
-	obs_sigma.value = np.float(sigma_beta_lambdas_t2_data[c,0]**.5)
-
-#B. t=5, kappas
-for c in range(4):
-	sim_moment = ws.cell('E' + str(c + 21))
-	obs_moment = ws.cell('G' + str(c + 21))
-	obs_sigma = ws.cell('I' + str(c + 21))
-	sim_moment.value = np.float(beta_kappas_t5[c])
-	obs_moment.value = np.float(beta_kappas_t5_data[c,0])
-	obs_sigma.value = np.float(sigma_beta_kappas_t5_data[c,0]**.5)
-
-#B. t=5, lambda
-sim_moment = ws.cell('E' + str(25))
-obs_moment = ws.cell('G' + str(25))
-obs_sigma = ws.cell('I' + str(25))
-sim_moment.value = np.float(beta_lambdas_t5[0])
-obs_moment.value = np.float(beta_lambdas_t5_data[0,0])
-obs_sigma.value = np.float(sigma_beta_lambdas_t5_data[0,0]**.5)
+		obs_moment.value = np.float(list_obs[j][c])
+		obs_sigma.value = np.float(list_sig[j][c])
 
 
 

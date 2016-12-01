@@ -7,14 +7,8 @@ do sample_model.do
 
 */
 
-clear
-program drop _all
-clear matrix
-clear mata
-set more off
-set maxvar 15000
 
-global results "/mnt/Research/nealresearch/new-hope-secure/newhopemount/results"
+
 
 
 *These are the CPI factors (to 2003 dollars)
@@ -26,8 +20,7 @@ local cpi_8=1
 
 
 
-use "/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/sample_model_v2.dta", clear
-
+use "$results/data_aux.dta", clear
 
 *Weekly wage (from annual figures)
 *grossv2_y: gross earnings, including CSJs (W-2) payments from 
@@ -66,7 +59,7 @@ gen age_t7=age_ra+7
 
 
 *Panel
-egen id=group(sampleid child)
+egen id=seq()
 keep lhwage* age_t* d_HS2 id
 reshape long lhwage_t age_t, i(id) j(t_ra)
 xtset id t_ra
@@ -86,53 +79,7 @@ REGRESSION
 **************************************************************************
 **************************************************************************
 **************************************************************************
-
-
-*xi: reg lhwage_t age_t age_t2 d_HS2
-*matrix betas=_b[age_t]\_b[age_t2]\_b[d_HS2]\_b[_cons]\e(rmse)
-*matrix sigma_aux=e(V)
-*matrix sigma=sigma_aux[1,1]\sigma_aux[2,2]\sigma_aux[3,3]\
-
-*Number of steps to bootstrap
-local reps=1000
-
-program reg_aux, rclass
-	version 13
-	args lhwage_t age_t age_t2 d_HS2
-	xi: reg lhwage_t age_t age_t2 d_HS2
-	return scalar beta_age=_b[age_t]
-	return scalar beta_age2=_b[age_t2]
-	return scalar beta_HS=_b[d_HS2]
-	return scalar beta_cons=_b[_cons]
-	return scalar sigma=e(rmse)^2
-end
 	
-
-
-bootstrap beta_age=r(beta_age) beta_age2=r(beta_age2) beta_HS=r(beta_HS)/*
-*/ beta_cons=r(beta_cons) sigma=r(sigma), /*
-*/ reps(`reps'): reg_aux lhwage_t age_t age_t2 d_HS2
+xi: reg lhwage_t age_t age_t2 d_HS2
 matrix beta_aux=e(b)
-matrix betas=beta_aux'
-matrix sigma_aux=e(V)
-matrix sigma=sigma_aux[1,1]\sigma_aux[2,2]\sigma_aux[3,3]\sigma_aux[4,4]\sigma_aux[5,5]
-
-*The order: age, age2, HS, const, and sigma
-
-
-svmat betas
-svmat sigma
-
-preserve
-keep betas*
-drop if betas1==.
-outsheet using "$results/wage_process/betas_v2.csv", comma  replace
-restore
-
-preserve
-keep sigma*
-drop if sigma1==.
-outsheet using "$results/wage_process/sigma_v2.csv", comma  replace
-restore
-
-
+matrix beta_wage=beta_aux'\e(rmse)^2

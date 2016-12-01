@@ -33,7 +33,8 @@ import estimate as estimate
 
 np.random.seed(1)
 
-betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv2_nelder_v7.npy')
+betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv2_nelder_v11.npy')
+
 
 #Utility function
 eta=betas_nelder[0]
@@ -43,7 +44,6 @@ alphaf=betas_nelder[2]
 #wage process
 wagep_betas=np.array([betas_nelder[3],betas_nelder[4],betas_nelder[5],
 	betas_nelder[6],betas_nelder[7]]).reshape((5,1))
-
 
 #Production function [young[cc0,cc1],old]
 gamma1=[[betas_nelder[8],betas_nelder[10]],betas_nelder[12]]
@@ -55,7 +55,8 @@ kappas=[[[betas_nelder[14],betas_nelder[15],betas_nelder[16],betas_nelder[17]]
 ,[betas_nelder[18],betas_nelder[19],betas_nelder[20],betas_nelder[21]],
 [betas_nelder[22],betas_nelder[23],betas_nelder[24],betas_nelder[25]]],
 [[betas_nelder[26],betas_nelder[27],betas_nelder[28],betas_nelder[29]]]]
-lambdas=[[betas_nelder[30],betas_nelder[31],betas_nelder[32]],[betas_nelder[33]]]
+#First measure is normalized. starting arbitrary values
+lambdas=[[1,betas_nelder[30],betas_nelder[31]],[betas_nelder[32]]]
 
 
 #Weibull distribution of cc prices
@@ -65,7 +66,7 @@ q=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/a
 
 
 #Probability of afdc takeup
-pafdc=.58
+pafdc=.60
 
 #Probability of snap takeup
 psnap=.70
@@ -135,57 +136,19 @@ param0=util.Parameters(alphap, alphaf, eta, gamma1, gamma2,sigmatheta,
 
 
 
-###Auxiliary estimates### (pending)
-#The betas of child care and hours regressions
-beta_cc_aux=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/aux_model/beta_childcare_v2.csv').values
-beta_cc=beta_cc_aux[1].reshape((1,1))
-beta_h2=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/aux_model/beta_level_hours2_v2.csv').values
-beta_h3=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/aux_model/beta_level_hours3_v2.csv').values
+###Auxiliary estimates### 
 
-#betas in wage process
-beta_wage=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/wage_process/betas_v2.csv').values
+moments_vector=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/aux_model/moments_vector.csv').values
 
-#betas in prod function
-beta_kappas_t2=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/aux_model/prob_inc_t2.csv').values
-beta_lambdas_t2=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/aux_model/prob_diff.csv').values
-beta_inputs_old=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/aux_model/inputs_moments_old.csv').values
-beta_inputs_young_cc0=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/aux_model/inputs_moments_young_cc0.csv').values
-beta_inputs_young_cc1=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/aux_model/inputs_moments_young_cc1.csv').values
-beta_kappas_t5=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/aux_model/prob_inc_t5.csv').values
-beta_lambdas_t5=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/aux_model/prob_diff_t5.csv').values
 
-betas_dic={'beta_cc':beta_cc,'beta_h2':beta_h2,'beta_h3':beta_h3,
-'beta_wage':beta_wage,'beta_kappas_t2':beta_kappas_t2,
-'beta_lambdas_t2':beta_lambdas_t2,'beta_inputs_old':beta_inputs_old,
-'beta_inputs_young_cc0':beta_inputs_young_cc0,
-'beta_inputs_young_cc1':beta_inputs_young_cc1,
-'beta_kappas_t5':beta_kappas_t5,'beta_lambdas_t5':beta_lambdas_t5}
+#This is the var cov matrix of aux estimates
+var_cov=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/aux_model/var_cov.csv').values
 
-#For the W matrix in Wald metric
-sigma_beta_cc_aux=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/aux_model/sigma_childcare_v2.csv').values
-sigma_beta_cc=sigma_beta_cc_aux[1]
-sigma_beta_h2=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/aux_model/sigma_level_hours2_v2.csv').values
-sigma_beta_h3=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/aux_model/sigma_level_hours3_v2.csv').values
-
-sigma_beta_wage=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/wage_process/sigma_v2.csv').values
-
-sigma_beta_kappas_t2=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/aux_model/sigma_prob_inc_t2.csv').values
-sigma_beta_lambdas_t2=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/aux_model/sigma_prob_diff.csv').values
-sigma_beta_inputs_old=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/aux_model/sigma_inputs_moments_old.csv').values
-sigma_beta_inputs_young_cc0=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/aux_model/sigma_inputs_moments_young_cc0.csv').values
-sigma_beta_inputs_young_cc1=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/aux_model/sigma_inputs_moments_young_cc1.csv').values
-sigma_beta_kappas_t5=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/aux_model/sigma_prob_inc_t5.csv').values
-sigma_beta_lambdas_t5=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/aux_model/sigma_prob_diff_t5.csv').values
-
-sigma_dic={'sigma_beta_cc':sigma_beta_cc,'sigma_beta_h2':sigma_beta_h2,
-'sigma_beta_h3':sigma_beta_h3,'sigma_beta_wage':sigma_beta_wage,
-'sigma_beta_kappas_t2':sigma_beta_kappas_t2,
-'sigma_beta_lambdas_t2':sigma_beta_lambdas_t2,
-'sigma_beta_inputs_old':sigma_beta_inputs_old,
-'sigma_beta_inputs_young_cc0':sigma_beta_inputs_young_cc0,
-'sigma_beta_inputs_young_cc1':sigma_beta_inputs_young_cc1,
-'sigma_beta_kappas_t5':sigma_beta_kappas_t5,
-'sigma_beta_lambdas_t5':sigma_beta_lambdas_t5}
+#The W matrix in Wald metric
+#Using diagonal of Var-Cov matrix of simulated moments
+w_matrix  = np.zeros((var_cov.shape[0],var_cov.shape[0]))
+for i in range(var_cov.shape[0]):
+	w_matrix[i,i] = var_cov[i,i]
 
 
 #Creating a grid for the emax computation
@@ -198,7 +161,7 @@ D=50
 M=1000
 
 output_ins=estimate.Estimate(param0,x_w,x_m,x_k,x_wmk,passign,agech0,theta0,nkids0,
-	married0,D,dict_grid,M,N,betas_dic,sigma_dic)
+	married0,D,dict_grid,M,N,moments_vector,var_cov)
 
 start_time = time.time()
 output=output_ins.optimizer()
@@ -241,10 +204,9 @@ kappas_100=output.x[26]
 kappas_101=output.x[27]
 kappas_102=output.x[28]
 kappas_103=output.x[29]
-lambdas_00=output.x[30]
-lambdas_01=output.x[31]
-lambdas_02=output.x[32]
-lambdas_10=output.x[33]
+lambdas_01=output.x[30]
+lambdas_02=output.x[31]
+lambdas_10=output.x[32]
 
 
 betas_opt=np.array([eta_opt, alphap_opt,alphaf_opt,betaw0,betaw1,betaw2,
@@ -254,9 +216,9 @@ betas_opt=np.array([eta_opt, alphap_opt,alphaf_opt,betaw0,betaw1,betaw2,
 	kappas_010,kappas_011,kappas_012,kappas_013,
 	kappas_020,kappas_021,kappas_022,kappas_023,
 	kappas_100,kappas_101,kappas_102,kappas_103,
-	lambdas_00,lambdas_01,lambdas_02,lambdas_10])
+	lambdas_01,lambdas_02,lambdas_10])
 
-np.save('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv2_nelder_v8.npy',betas_opt)
+np.save('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv2_nelder_v12.npy',betas_opt)
 
 
 

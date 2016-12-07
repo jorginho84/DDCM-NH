@@ -15,13 +15,13 @@ def grid():
 	"""
 
 	#Lists of state variables (that determine emax)
-	nkids_grid=np.linspace(1,5,3).astype(int).tolist() #approx 95% of obs are in this region
+	nkids_grid=np.linspace(1,5,4).astype(int).tolist() 
 	married_grid=[i for i in range(0,2)]
-	theta_grid=np.linspace(0.01,3,5).tolist()
+	theta_grid=np.linspace(0.01,3,10).tolist()
 	passign_grid=[i for i in range(0,2)]
 	dhs_grid=[i for i in range(0,2)]
-	age_grid=np.linspace(18,45,3).astype(int).tolist() #approx 95% of obs are in this region
-	agech_grid=np.linspace(1,18,5).astype(int).tolist()
+	age_grid=np.linspace(18,45,4).astype(int).tolist() 
+	agech_grid=[3,8]
 	
 	
 

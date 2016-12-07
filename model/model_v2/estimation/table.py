@@ -21,7 +21,7 @@ import time
 import openpyxl
 
 #Betas and var-cov matrix
-betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv2_nelder_v11.npy')
+betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv2_nelder_v12.npy')
 var_cov=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/estimation/ses.npy')
 se_vector  = np.sqrt(np.diagonal(var_cov))
 
@@ -98,7 +98,7 @@ for c in range(5):
 
 #Prod function young cc=0
 list_beta = [gamma1[0][0],gamma2[0][0]]
-sigma_list_sigma = [sigma_gamma1[0][0],sigma_gamma2[0][0]]
+list_sigma = [sigma_gamma1[0][0],sigma_gamma2[0][0]]
 
 for c in range(2):
 	beta_est = ws.cell('D' + str(c+17))
@@ -108,7 +108,7 @@ for c in range(2):
 
 #Prod function young cc=1
 list_beta = [gamma1[0][1],gamma2[0][1]]
-sigma_list_sigma = [sigma_gamma1[0][1],sigma_gamma2[0][1]]
+list_sigma = [sigma_gamma1[0][1],sigma_gamma2[0][1]]
 
 for c in range(2):
 	beta_est = ws.cell('D' + str(c+21))
@@ -118,7 +118,7 @@ for c in range(2):
 
 #Prod function old
 list_beta = [gamma1[1],gamma2[1]]
-sigma_list_sigma = [sigma_gamma1[1],sigma_gamma2[1]]
+list_sigma = [sigma_gamma1[1],sigma_gamma2[1]]
 
 for c in range(2):
 	beta_est = ws.cell('D' + str(c+25))
@@ -130,7 +130,7 @@ ws = wb["table_2"]
 
 #Kappas, reading (t=2)
 list_beta = [kappas[0][0][0],kappas[0][0][1],kappas[0][0][2],kappas[0][0][3]]
-sigma_list_beta = [sigma_kappas[0][0][0],sigma_kappas[0][0][1],sigma_kappas[0][0][2],sigma_kappas[0][0][3]]
+list_sigma = [sigma_kappas[0][0][0],sigma_kappas[0][0][1],sigma_kappas[0][0][2],sigma_kappas[0][0][3]]
 
 for c in range(4):
 	beta_est = ws.cell('D' + str(c+7))
@@ -140,7 +140,7 @@ for c in range(4):
 
 #Kappas, math (t=2)
 list_beta = [kappas[0][1][0],kappas[0][1][1],kappas[0][1][2],kappas[0][1][3]]
-sigma_list_beta = [sigma_kappas[0][1][0],sigma_kappas[0][1][1],sigma_kappas[0][1][2],sigma_kappas[0][1][3]]
+list_sigma = [sigma_kappas[0][1][0],sigma_kappas[0][1][1],sigma_kappas[0][1][2],sigma_kappas[0][1][3]]
 
 for c in range(4):
 	beta_est = ws.cell('D' + str(c+13))
@@ -150,7 +150,7 @@ for c in range(4):
 
 #Kappas, int func (t=2)
 list_beta = [kappas[0][2][0],kappas[0][2][1],kappas[0][2][2],kappas[0][2][3]]
-sigma_list_beta = [sigma_kappas[0][2][0],sigma_kappas[0][2][1],sigma_kappas[0][2][2],sigma_kappas[0][2][3]]
+list_sigma = [sigma_kappas[0][2][0],sigma_kappas[0][2][1],sigma_kappas[0][2][2],sigma_kappas[0][2][3]]
 
 for c in range(4):
 	beta_est = ws.cell('D' + str(c+19))
@@ -160,7 +160,7 @@ for c in range(4):
 
 #Kappas, SSRS overall (t=5)
 list_beta = [kappas[1][0][0],kappas[1][0][1],kappas[1][0][2],kappas[1][0][3]]
-sigma_list_beta = [sigma_kappas[1][0][0],sigma_kappas[1][0][1],sigma_kappas[1][0][2],sigma_kappas[1][0][3]]
+list_sigma = [sigma_kappas[1][0][0],sigma_kappas[1][0][1],sigma_kappas[1][0][2],sigma_kappas[1][0][3]]
 
 for c in range(4):
 	beta_est = ws.cell('D' + str(c+25))

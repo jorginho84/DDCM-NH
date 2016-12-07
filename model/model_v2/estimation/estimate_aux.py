@@ -408,7 +408,7 @@ class Estimate:
 		#The Q metric
 		q_w=np.dot(np.dot(np.transpose(x_vector),np.linalg.inv(self.w_matrix)),x_vector)
 		print ''
-		print 'The objetive function value', q_w
+		print 'The objetive function value equals ', q_w
 		print ''
 
 		time_opt=time.time() - start_time
@@ -449,7 +449,7 @@ class Estimate:
 
 		
 		#Here we go
-		opt = minimize(self.ll, beta0,  method='Nelder-Mead', options={'maxiter':1000, 'maxfev': 90000, 'ftol': 1e-3, 'disp': True});
+		opt = minimize(self.ll, beta0,  method='Nelder-Mead', options={'maxiter':700, 'maxfev': 90000, 'ftol': 1e-3, 'disp': True});
 		
 		return opt
 

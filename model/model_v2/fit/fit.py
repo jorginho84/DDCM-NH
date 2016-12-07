@@ -1,7 +1,20 @@
 """
 execfile('fit.py')
 
-This file compares simulated and observed target moments
+This file computes stats to validate model
+
+It uses:
+ate_theta.py
+oprobit.py
+table_aux.py
+ate_emp.py
+ate_cc.py
+ssrs_obs.do
+ssrs_sim.do
+ate_cc.do
+ate_emp.do
+
+
 
 """
 from __future__ import division #omit for python 3.x
@@ -15,7 +28,10 @@ from scipy import stats
 from scipy.optimize import fmin_bfgs
 from joblib import Parallel, delayed
 from scipy import interpolate
+import matplotlib
+matplotlib.use('Agg') # Force matplotlib to not use any Xwindows backend.
 import matplotlib.pyplot as plt
+import subprocess
 #sys.path.append("C:\\Users\\Jorge\\Dropbox\\Chicago\\Research\\Human capital and the household\]codes\\model")
 sys.path.append("/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/simulate_sample")
 import utility as util
@@ -26,12 +42,12 @@ import emax as emax
 import simdata as simdata
 import openpyxl
 sys.path.append("/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/estimation")
-import estimate_aux as estimate
+import estimate as estimate
 
 
 np.random.seed(1)
 
-betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv2_nelder_v11.npy')
+betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv2_nelder_v13_v2.npy')
 
 #Utility function
 eta=betas_nelder[0]
@@ -145,59 +161,6 @@ var_cov=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/res
 se_vector  = np.sqrt(np.diagonal(var_cov))
 
 
-"""
-#The betas of child care and hours regressions
-beta_cc_aux=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/aux_model/beta_childcare_v2.csv').values
-beta_cc=beta_cc_aux[1].reshape((1,1))
-beta_h2=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/aux_model/beta_level_hours2_v2.csv').values
-beta_h3=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/aux_model/beta_level_hours3_v2.csv').values
-
-#betas in wage process
-beta_wage=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/wage_process/betas_v2.csv').values
-
-#betas in prod function
-beta_kappas_t2_data=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/aux_model/prob_inc_t2.csv').values
-beta_lambdas_t2_data=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/aux_model/prob_diff.csv').values
-beta_inputs_old=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/aux_model/inputs_moments_old.csv').values
-beta_inputs_young_cc0=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/aux_model/inputs_moments_young_cc0.csv').values
-beta_inputs_young_cc1=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/aux_model/inputs_moments_young_cc1.csv').values
-beta_kappas_t5_data=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/aux_model/prob_inc_t5.csv').values
-beta_lambdas_t5_data=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/aux_model/prob_diff_t5.csv').values
-
-betas_dic={'beta_cc':beta_cc,'beta_h2':beta_h2,'beta_h3':beta_h3,
-'beta_wage':beta_wage,'beta_kappas_t2':beta_kappas_t2_data,
-'beta_lambdas_t2':beta_lambdas_t2_data,'beta_inputs_old':beta_inputs_old,
-'beta_inputs_young_cc0':beta_inputs_young_cc0,
-'beta_inputs_young_cc1':beta_inputs_young_cc1,
-'beta_kappas_t5':beta_kappas_t5_data,'beta_lambdas_t5':beta_lambdas_t5_data}
-
-#For the W matrix in Wald metric
-sigma_beta_cc_aux=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/aux_model/sigma_childcare_v2.csv').values
-sigma_beta_cc=sigma_beta_cc_aux[1]
-sigma_beta_h2=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/aux_model/sigma_level_hours2_v2.csv').values
-sigma_beta_h3=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/aux_model/sigma_level_hours3_v2.csv').values
-
-sigma_beta_wage=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/wage_process/sigma_v2.csv').values
-
-sigma_beta_kappas_t2_data=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/aux_model/sigma_prob_inc_t2.csv').values
-sigma_beta_lambdas_t2_data=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/aux_model/sigma_prob_diff.csv').values
-sigma_beta_inputs_old=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/aux_model/sigma_inputs_moments_old.csv').values
-sigma_beta_inputs_young_cc0=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/aux_model/sigma_inputs_moments_young_cc0.csv').values
-sigma_beta_inputs_young_cc1=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/aux_model/sigma_inputs_moments_young_cc1.csv').values
-sigma_beta_kappas_t5_data=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/aux_model/sigma_prob_inc_t5.csv').values
-sigma_beta_lambdas_t5_data=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/aux_model/sigma_prob_diff_t5.csv').values
-
-sigma_dic={'sigma_beta_cc':sigma_beta_cc,'sigma_beta_h2':sigma_beta_h2,
-'sigma_beta_h3':sigma_beta_h3,'sigma_beta_wage':sigma_beta_wage,
-'sigma_beta_kappas_t2':sigma_beta_kappas_t2_data,
-'sigma_beta_lambdas_t2':sigma_beta_lambdas_t2_data,
-'sigma_beta_inputs_old':sigma_beta_inputs_old,
-'sigma_beta_inputs_young_cc0':sigma_beta_inputs_young_cc0,
-'sigma_beta_inputs_young_cc1':sigma_beta_inputs_young_cc1,
-'sigma_beta_kappas_t5':sigma_beta_kappas_t5_data,
-'sigma_beta_lambdas_t5':sigma_beta_lambdas_t5_data}
-"""
-
 #Creating a grid for the emax computation
 dict_grid=gridemax.grid()
 
@@ -228,135 +191,38 @@ beta_lambdas_t5=np.mean(dic_betas['beta_lambdas_t5'],axis=1) #1 x 1
 beta_inputs_old_sim=np.mean(dic_betas['beta_inputs_old'],axis=1) #3 x 1
 beta_inputs_young_cc0_sim=np.mean(dic_betas['beta_inputs_young_cc0'],axis=1) #3 x 1
 beta_inputs_young_cc1_sim=np.mean(dic_betas['beta_inputs_young_cc1'],axis=1) #3 x 1
-"""
-#Data equivalent
-beta_childcare_data=self.betas_dic['beta_cc']
-beta_hours2_data=self.betas_dic['beta_h2']
-beta_hours3_data=self.betas_dic['beta_h3']
-beta_wagep_data=self.betas_dic['beta_wage']
-beta_kappas_t2_data=self.betas_dic['beta_kappas_t2']
-beta_lambdas_t2_data=self.betas_dic['beta_lambdas_t2']
-beta_kappas_t5_data=self.betas_dic['beta_kappas_t5']
-beta_lambdas_t5_data=self.betas_dic['beta_lambdas_t5']
-beta_inputs_old_data=self.betas_dic['beta_inputs_old']
-beta_inputs_young_cc0_data=self.betas_dic['beta_inputs_young_cc0']
-beta_inputs_young_cc1_data=self.betas_dic['beta_inputs_young_cc1']
-
-#W matrix
-sigma_beta_cc=self.sigma_dic['sigma_beta_cc']
-sigma_beta_h2=self.sigma_dic['sigma_beta_h2']
-sigma_beta_h3=self.sigma_dic['sigma_beta_h3']
-sigma_beta_wage=self.sigma_dic['sigma_beta_wage']
-sigma_beta_kappas_t2=self.sigma_dic['sigma_beta_kappas_t2']
-sigma_beta_lambdas_t2=self.sigma_dic['sigma_beta_lambdas_t2']
-sigma_beta_kappas_t5=self.sigma_dic['sigma_beta_kappas_t5']
-sigma_beta_lambdas_t5=self.sigma_dic['sigma_beta_lambdas_t5']
-sigma_beta_inputs_old=self.sigma_dic['sigma_beta_inputs_old']
-sigma_beta_inputs_young_cc0=self.sigma_dic['sigma_beta_inputs_young_cc0']
-sigma_beta_inputs_young_cc1=self.sigma_dic['sigma_beta_inputs_young_cc1']
-"""
-
-########Opening workbook#######
-
-wb=openpyxl.load_workbook('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/fit/fit.xlsx')
-ws = wb["new_moments_data"]
-
-#A. Labor supply and child care decisions
-list_aux = [beta_childcare,beta_hours2,beta_hours3]
-list_obs = [moments_vector[0,0],moments_vector[1,0],moments_vector[2,0]]
-list_sig = [se_vector[0],se_vector[1],se_vector[2]]
-for c in range(3):
-	sim_moment = ws.cell('B' + str(c + 2))
-	obs_moment = ws.cell('D' + str(c + 2))
-	obs_sigma = ws.cell('F' + str(c + 2))
-	sim_moment.value = np.float(list_aux[c])
-	obs_moment.value = np.float(list_obs[c])
-	obs_sigma.value = np.float(list_sig[c])
-
-ind = 3
-#B. Log wage equation
-for c in range(5):
-	sim_moment = ws.cell('B' + str(c + 5))
-	obs_moment = ws.cell('D' + str(c + 5))
-	obs_sigma = ws.cell('F' + str(c + 5))
-	sim_moment.value = np.float(beta_wagep[c])
-	obs_moment.value = np.float(moments_vector[ind+c,0])
-	obs_sigma.value = np.float(se_vector[ind+c])
-
-ind = ind + 5
-
-#A. t=2, kappas
-it = 10
-obs = 0
-for c in range(4):
-	for m in range(3):
- 		sim_moment = ws.cell('B' + str(it))
- 		obs_moment = ws.cell('D' + str(it))
-		obs_sigma = ws.cell('F' + str(it))
-		sim_moment.value = np.float(beta_kappas_t2[c,m])
-		obs_moment.value = np.float(moments_vector[ind + obs,0])
-		obs_sigma.value = np.float(se_vector[ind + obs])
-
-		it = it + 1
-		obs = obs +1
-
-ind = ind + 12
-#A. t=2, lambdas
-for c in range(2):
-	sim_moment = ws.cell('B' + str(c + 22))
-	obs_moment = ws.cell('D' + str(c + 22))
-	obs_sigma = ws.cell('F' + str(c + 22))
-	sim_moment.value = np.float(beta_lambdas_t2[c])
-	obs_moment.value = np.float(moments_vector[ind + c,0])
-	obs_sigma.value = np.float(se_vector[ind + c])
 
 
-ind = ind + 2
-#B. t=5, kappas
-for c in range(4):
-	sim_moment = ws.cell('B' + str(c + 24))
-	obs_moment = ws.cell('D' + str(c + 24))
-	obs_sigma = ws.cell('F' + str(c + 24))
-	sim_moment.value = np.float(beta_kappas_t5[c])
-	obs_moment.value = np.float(moments_vector[ind + c,0])
-	obs_sigma.value = np.float(se_vector[ind + c])
+#################################################################################
+#################################################################################
+#FIGURE: ATE ON INCOME#
+execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/fit/ate_inc.py')
 
-ind = ind + 4
-#B. t=5, lambda
-sim_moment = ws.cell('B' + str(28))
-obs_moment = ws.cell('D' + str(28))
-obs_sigma = ws.cell('F' + str(28))
-sim_moment.value = np.float(beta_lambdas_t5[0])
-obs_moment.value = np.float(moments_vector[ind,0])
-obs_sigma.value = np.float(se_vector[ind])
+#################################################################################
+#################################################################################
+#FIGURE: ATE ON CHILD CARE#
+execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/fit/ate_cc.py')
 
 
-#C. Measures of academic achievement and family choices
-ind = ind +1
-#C.1 and C.2 Age>5 and Age<=5
-list_aux = [beta_inputs_old_sim, beta_inputs_young_cc0_sim, 
-beta_inputs_young_cc1_sim]
-list_obs = [moments_vector[ind:ind + 3,0], moments_vector[ind+3 : ind + 6,0], 
-moments_vector[ind+6 : ind + 9,0]]
-list_sig = [se_vector[ind:ind + 3], se_vector[ind+3: ind + 6], 
-se_vector[ind+6: ind + 9]]
+#################################################################################
+#################################################################################
+#FIGURE: ATE ON CHILD CARE#
+execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/fit/ate_emp.py')
 
-for j in range(3):
-	if j==0:
-		pos = 29
-	elif j==1:
-		pos = 32
-	else:
-		pos = 35
-	
-	for c in range(3): # 3 moments each
-		sim_moment = ws.cell('B' + str(c + pos))
-		obs_moment = ws.cell('D' + str(c + pos))
-		obs_sigma = ws.cell('F' + str(c + pos))
-		sim_moment.value = np.float(list_aux[j][c])
-		obs_moment.value = np.float(list_obs[j][c])
-		obs_sigma.value = np.float(list_sig[j][c])
+#################################################################################
+#################################################################################
+#FIGURE: ATE ON THETA#
+execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/fit/ate_theta.py')
+
+
+#################################################################################
+#################################################################################
+#TABLE: COMPARING OPROBITS#
+execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/fit/oprobit.py')
 
 
 
-wb.save('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/fit/fit.xlsx')
+#################################################################################
+#################################################################################
+#TABLE FIT: target moments#
+execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/fit/table_aux.py')

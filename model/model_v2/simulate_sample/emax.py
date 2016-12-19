@@ -85,7 +85,11 @@ class Emaxt:
 
 		agech=np.reshape(agech,ngrid)
 		#number of choices (hours worked * child care)
-		J=6 
+		J=6
+
+		#I save emaxT(T-1) values here
+		emax_t1=np.zeros((ngrid,J))
+
 
 		#Compute wages (don't observe w on those unemployed)
 		hours=np.zeros(ngrid)
@@ -236,12 +240,15 @@ class Emaxt:
 			av_max_ut=np.average(max_ut,axis=1)
 
 			#database for interpolation
-			data_int=np.concatenate( ( np.reshape(theta0,(ngrid,1)), 
+			data_int=np.concatenate( ( np.reshape(np.log(theta0),(ngrid,1)), 
 				np.reshape(nkids0,(ngrid,1)),np.reshape(married0,(ngrid,1)),
-				np.reshape(np.square(theta0),(ngrid,1)),
+				np.reshape(np.square(np.log(theta0)),(ngrid,1)),
 				np.reshape(passign,(ngrid,1)), 
 				x_wmk ), axis=1)
 
+
+			#Saving in the big matrix
+			emax_t1[:,jt]=av_max_ut
 
 			#saving instances.
 			if jt==0: 
@@ -256,7 +263,7 @@ class Emaxt:
 
 		#the instance with the eitc function and emax values
 
-		return emax_inst
+		return [emax_inst,emax_t1]
 
 
 	def emax_t(self,periodt,bigt,emax_t1_ins):
@@ -307,6 +314,8 @@ class Emaxt:
 
 		#I save interpolating instances here
 		emax_inst=[]
+		#I save emaxT(T-1) here
+		emax_t1=np.zeros((ngrid,Jt))
 
 
 		#Loop: choice at t-1
@@ -395,9 +404,9 @@ class Emaxt:
 				u_vec[:,i,j]=model.simulate(periodt,wage_t1,free_t1,price_t1) 
 
 				#getting next-period already computed emaxt+1
-				data_int_ex=np.concatenate(( np.reshape(theta_t1,(ngrid,1)), 
+				data_int_ex=np.concatenate(( np.reshape(np.log(theta_t1),(ngrid,1)), 
 					np.reshape(nkids_t1,(ngrid,1)),np.reshape(married_t1,(ngrid,1)),
-					np.reshape(np.square(theta_t1),(ngrid,1)),
+					np.reshape(np.square(np.log(theta_t1)),(ngrid,1)),
 					np.reshape(passign,(ngrid,1)), 
 					x_wmk ), axis=1)
 
@@ -420,13 +429,15 @@ class Emaxt:
 			av_max_ut=np.average(max_ut,axis=1)
 
 			#Data for interpolating emaxt (states at t-1)
-			data_int=np.concatenate(( np.reshape(theta0,(ngrid,1)), 
+			data_int=np.concatenate(( np.reshape(np.log(theta0),(ngrid,1)), 
 				np.reshape(nkids0,(ngrid,1)),np.reshape(married0,(ngrid,1)),
-				np.reshape(np.square(theta0),(ngrid,1)),
+				np.reshape(np.square(np.log(theta0)),(ngrid,1)),
 				np.reshape(passign,(ngrid,1)), 
 				x_wmk ), axis=1)
 
 			
+			#Emax value for a given choice
+			emax_t1[:,jt]=av_max_ut
 
 			#saving instances
 
@@ -441,7 +452,7 @@ class Emaxt:
 
 		#the instance with the eitc function and emax values
 
-		return emax_inst
+		return [emax_inst,emax_t1]
 
 
 	def recursive(self,nt):
@@ -460,19 +471,22 @@ class Emaxt:
 		for t in range(nt,0,-1):
 			if t==nt:#last period
 				emax_bigt_ins=self.emax_bigt()
-				emax_dic={'emax'+str(t): emax_bigt_ins}
+				emax_dic={'emax'+str(t): emax_bigt_ins[0]}
+				emax_values={'emax'+str(t): emax_bigt_ins[1]}
 				
 
 			elif t==nt-1: #at T-1
-				emax_t1_ins=self.emax_t(t,nt,emax_bigt_ins)
-				emax_dic['emax'+str(t)]=emax_t1_ins
+				emax_t1_ins=self.emax_t(t,nt,emax_bigt_ins[0])
+				emax_dic['emax'+str(t)]=emax_t1_ins[0]
+				emax_values['emax'+str(t)]=emax_t1_ins[1]
 				
 			else:
-				emax_t1_ins=self.emax_t(t,nt,emax_t1_ins)
-				emax_dic['emax'+str(t)]=emax_t1_ins
+				emax_t1_ins=self.emax_t(t,nt,emax_t1_ins[0])
+				emax_dic['emax'+str(t)]=emax_t1_ins[0]
+				emax_values['emax'+str(t)]=emax_t1_ins[1]
 				
 
-		return emax_dic
+		return [emax_dic,emax_values]
 
 
 

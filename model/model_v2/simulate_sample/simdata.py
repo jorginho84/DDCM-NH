@@ -103,14 +103,14 @@ class SimData:
 					married0,nkids0,wage0,free0,price0) #theta at t+1 uses inputs at t
 
 			
-				data_int_t1=np.concatenate((np.reshape(theta_t1,(self.N,1)), 
+				data_int_t1=np.concatenate((np.reshape(np.log(theta_t1),(self.N,1)), 
 					np.reshape(nkids_t1,(self.N,1)),married_t1,
-					np.reshape(np.square(theta_t1),(self.N,1)),
+					np.reshape(np.square(np.log(theta_t1)),(self.N,1)),
 					np.reshape(self.passign,(self.N,1)), 
 					self.x_wmk), axis=1)
 
 				#Getting dictionary to incorporate emax_t+1, choice j
-				emax_ins=self.emax_function['emax'+str(periodt+1)][j]
+				emax_ins=self.emax_function[0]['emax'+str(periodt+1)][j]
 				emax_betas=emax_ins.betas()
 				emax_t1=emax_ins.int_values(data_int_t1,emax_betas)
 	

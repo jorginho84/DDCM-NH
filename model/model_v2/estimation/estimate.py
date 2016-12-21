@@ -72,7 +72,7 @@ class Estimate:
 			np.random.seed(j+100)
 			return simdata_ins.fake_data(9)
 
-		pool = ProcessPool(nodes=10)
+		pool = ProcessPool(nodes=20)
 		dics = pool.map(sample_gen,range(self.M))
 		
 		
@@ -213,15 +213,16 @@ class Estimate:
 		m3=ssrs_t2_matrix[:,2,:].copy()
 
 		for j in range(self.M):
-			boo_5=m2[:,j]==5
-			boo_4=m2[:,j]==4
-			boo_m1=m1[:,j]==5
-			beta_lambdas_t2[0,j]=np.mean(boo_m1[boo_5]) - np.mean(boo_m1[boo_4])
+			boo_5_m1=m1[:,j]>=3
+			boo_4_m1=m1[:,j]<3
+			boo_5_m2=m2[:,j]>=3
+			boo_4_m2=m2[:,j]<3
+			boo_5_m3=m3[:,j]>=3
+			boo_4_m3=m3[:,j]<3
+
 			
-			boo_5=m3[:,j]==5
-			boo_4=m3[:,j]==4
-			boo_m2=m2[:,j]==5
-			beta_lambdas_t2[1,j]=np.mean(boo_m2[boo_5]) - np.mean(boo_m2[boo_4])
+			beta_lambdas_t2[0,j]=(np.mean(boo_5_m2[boo_5_m3]) - np.mean(boo_5_m2[boo_4_m3]))/(np.mean(boo_5_m1[boo_5_m3]) - np.mean(boo_5_m1[boo_4_m3]))
+			beta_lambdas_t2[1,j]=(np.mean(boo_5_m1[boo_5_m3]) - np.mean(boo_5_m1[boo_4_m3]))/(np.mean(boo_5_m1[boo_5_m2]) - np.mean(boo_5_m1[boo_4_m2]))
 
 		boo_old=age_child[:,4]>5 #older than 5 at t=4
 		boo_young=age_child[:,1]<=5 #less than 5 at t=1
@@ -449,7 +450,7 @@ class Estimate:
 
 		
 		#Here we go
-		opt = minimize(self.ll, beta0,  method='Nelder-Mead', options={'maxiter':700, 'maxfev': 90000, 'ftol': 1e-3, 'disp': True});
+		opt = minimize(self.ll, beta0,  method='Nelder-Mead', options={'maxiter':1000, 'maxfev': 90000, 'ftol': 1e-3, 'disp': True});
 		
 		return opt
 

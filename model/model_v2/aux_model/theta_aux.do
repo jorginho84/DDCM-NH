@@ -72,29 +72,40 @@ foreach m of numlist 1 2 3{
 *Conditional probs: Matrix 2 (two differences)  x1
 *To identify lambdas
 mat prob_diff=J(2,1,.)
-gen d_m1=skills_m1_t2==5
+gen d_m1=skills_m1_t2>=3
 replace d_m1=. if skills_m1_t2==.
-gen d_m2=skills_m2_t2==5 /*this is the normalizing measure (lambda=1)*/
+gen d_m2=skills_m2_t2>=3 
 replace d_m2=. if skills_m2_t2==.
+gen d_m3=skills_m3_t2>=3 /*this is the normalizing measure (lambda=1)*/
+replace d_m3=. if skills_m3_t2==.
+
 
 program prob_diff, rclass
 	version 13
 	args z_m1 z_m2
 	tempname mean_1 mean_2
-	qui: sum `z_m1' if `z_m2'==5 
+	qui: sum `z_m1' if `z_m2'>=3 
 	scalar `mean_1'=r(mean)
-	qui: sum `z_m1' if `z_m2'==4
+	qui: sum `z_m1' if `z_m2'<3
 	scalar `mean_2'=r(mean)
 	return scalar diff=`mean_1' - `mean_2'
 end
 
-prob_diff d_m1 skills_m2_t2 if (skills_m2_t2!=. & d_m1!=.)
-mat prob_diff[1,1] = r(diff)
 
+*Cov(m2,m3)
 prob_diff d_m2 skills_m3_t2 if (skills_m3_t2!=. & d_m2!=.)
-mat prob_diff[2,1] = r(diff)
+local diff_1 = r(diff)
+*Cov(m1,m3)
+prob_diff d_m1 skills_m3_t2 if (skills_m3_t2!=. & d_m1!=.)
+local diff_2 = r(diff)
+*Cov(m1,m2)
+prob_diff d_m1 skills_m2_t2 if (skills_m2_t2!=. & d_m1!=.)
+local diff_3 = r(diff)
 
-mat list prob_diff
+*Cov(m2,m3)/Cov(m1,m3)
+mat prob_diff[1,1] = `diff_1'/`diff_2'
+*Cov(m1,m3)/Cov(m1,m2)
+mat prob_diff[2,1] = `diff_2'/`diff_3'
 
 
 

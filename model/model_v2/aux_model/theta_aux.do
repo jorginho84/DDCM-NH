@@ -202,23 +202,24 @@ foreach j of numlist 2 3 4 5{
 matrix prob_diff_t5=J(1,1,.)
 matrix sigma_prob_diff_t5=J(1,1,.)
 drop d_m1
-gen d_m1=skills_t5==5
+gen d_m1=skills_t5>=3
 replace d_m1=. if skills_t5==.
 
 program prob_diff2, rclass
 	version 13
 	args z_m1 z_m2
 	tempname mean_1 mean_2
-	qui: sum `z_m1' if `z_m2'==5 
+	qui: sum `z_m1' if `z_m2'>=3 
 	scalar `mean_1'=r(mean)
-	qui: sum `z_m1' if `z_m2'==4
+	qui: sum `z_m1' if `z_m2'<3
 	scalar `mean_2'=r(mean)
 	return scalar diff=`mean_1' - `mean_2'
 end
 
 
 prob_diff d_m1 skills_m1_t2 if (d_m1!=. & skills_m1_t2!=.)
-mat prob_diff_t5[1,1]=r(diff)
+local diff_1 = r(diff)
+mat prob_diff_t5[1,1]=`diff_1' / `diff_3' /*from t=2*/
 drop d_m1
 
 

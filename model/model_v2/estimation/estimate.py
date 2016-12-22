@@ -259,10 +259,10 @@ class Estimate:
 			beta_kappas_t5[z-2,:]=np.mean(boo,axis=0)
 		
 		for j in range(self.M):
-			boo_t2_5=ssrs_t2_matrix[:,0,j]==5
-			boo_t2_4=ssrs_t2_matrix[:,0,j]==4
-			boo_t5=ssrs_t5_matrix[:,j]==5
-			beta_lambdas_t5[0,j] = np.mean(boo_t5[boo_t2_5]) - np.mean(boo_t5[boo_t2_4])
+			boo_t2_5=ssrs_t2_matrix[:,0,j]>=3
+			boo_t2_4=ssrs_t2_matrix[:,0,j]<3
+			boo_t5=ssrs_t5_matrix[:,j]>=3
+			beta_lambdas_t5[0,j] = (np.mean(boo_t5[boo_t2_5]) - np.mean(boo_t5[boo_t2_4])) / (np.mean(boo_5_m1[boo_5_m2]) - np.mean(boo_5_m1[boo_4_m2]))
 
 		return{'beta_childcare':beta_childcare,'beta_hours2':beta_hours2,
 		'beta_hours3':beta_hours3,'beta_wagep': beta_wagep, 'beta_kappas_t2': beta_kappas_t2,

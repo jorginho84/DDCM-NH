@@ -37,4 +37,4 @@ fig.savefig('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Mod
 plt.close()
 
 #Back to original
-param0.lambdas[1][0] = lambdas[1][0].copy()
+execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/load_param.py')

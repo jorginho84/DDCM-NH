@@ -26,7 +26,7 @@ plt.setp(plot1,linewidth=3)
 plt.setp(plot2,linewidth=3)
 plt.setp(plot3,linewidth=3)
 ax.legend()
-ax.set_ylabel(r'Pr(Reading=5 $\mid$ Math=5) - Pr(Reading=5$\mid$ Math=4)')
+ax.set_ylabel(r'Moment')
 ax.set_xlabel(r'Factor loading ($\lambda$): Math test score')
 ax.spines['right'].set_visible(False)
 ax.spines['top'].set_visible(False)
@@ -37,4 +37,4 @@ fig.savefig('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Mod
 plt.close()
 
 #Back to original
-param0.lambdas[0][1] = lambdas[0][1].copy()
+execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/load_param.py')

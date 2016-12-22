@@ -1,7 +1,7 @@
 
 #build a grid around parameter value
-lenght = 0.4
-size_grid = 10
+lenght = 1
+size_grid = 4
 max_p = alphap + lenght
 min_p = alphap - lenght
 p_list = np.linspace(min_p,max_p,size_grid)
@@ -16,6 +16,8 @@ for i in range(size_grid):
 	dic_betas=output_ins.aux_model(choices)
 	target_moment[i] = np.mean(dic_betas['beta_hours2'],axis=0)
 
+#Back to original
+execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/load_param.py')
 
 #the graph
 fig, ax=plt.subplots()
@@ -36,5 +38,3 @@ plt.show()
 fig.savefig('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/checks/alphap_check.pdf', format='pdf')
 plt.close()
 
-#Back to original
-param0.alphap = alphap.copy()

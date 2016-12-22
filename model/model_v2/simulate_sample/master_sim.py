@@ -48,12 +48,12 @@ np.random.seed(100);
 #Sample size
 #N=315
 
-betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv2_nelder_v12.npy')
+betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv2_nelder_v14.npy')
 
 #Utility function
 eta=betas_nelder[0]
-alphap=betas_nelder[1]
-alphaf=betas_nelder[2]
+alphap=-betas_nelder[1]
+alphaf=-betas_nelder[2]
 
 #wage process
 wagep_betas=np.array([betas_nelder[3],betas_nelder[4],betas_nelder[5],

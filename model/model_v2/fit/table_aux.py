@@ -31,9 +31,9 @@ ind = ind + 5
 #A. t=2, kappas
 it = 10
 obs = 0
-for c in range(4):
-	for m in range(3):
- 		sim_moment = ws.cell('B' + str(it))
+for m in range(3):
+	for c in range(4):
+		sim_moment = ws.cell('B' + str(it))
  		obs_moment = ws.cell('D' + str(it))
 		obs_sigma = ws.cell('F' + str(it))
 		sim_moment.value = np.float(beta_kappas_t2[c,m])

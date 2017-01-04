@@ -74,7 +74,7 @@ class Utility:
 		(at t=0 we don't observe wages for those who do not work)
 		(that's why I need to simulate w0 instead of just using observed one)
 
-		lnw =beta1*age + beta1*age2 + beta3d_HS + e
+		lnw =beta1*age + beta1*age2 + beta3d_HS + constant+ e
 
 		"""
 

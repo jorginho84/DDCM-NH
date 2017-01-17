@@ -72,7 +72,7 @@ class Estimate:
 			np.random.seed(j+100)
 			return simdata_ins.fake_data(9)
 
-		pool = ProcessPool(nodes=5)
+		pool = ProcessPool(nodes=8)
 		dics = pool.map(sample_gen,range(self.M))
 		
 		
@@ -213,15 +213,16 @@ class Estimate:
 		m3=ssrs_t2_matrix[:,2,:].copy()
 
 		for j in range(self.M):
-			boo_5=m2[:,j]==5
-			boo_4=m2[:,j]==4
-			boo_m1=m1[:,j]==5
-			beta_lambdas_t2[0,j]=np.mean(boo_m1[boo_5]) - np.mean(boo_m1[boo_4])
+			boo_5_m1=m1[:,j]>=3
+			boo_4_m1=m1[:,j]<3
+			boo_5_m2=m2[:,j]>=3
+			boo_4_m2=m2[:,j]<3
+			boo_5_m3=m3[:,j]>=3
+			boo_4_m3=m3[:,j]<3
+
 			
-			boo_5=m3[:,j]==5
-			boo_4=m3[:,j]==4
-			boo_m2=m2[:,j]==5
-			beta_lambdas_t2[1,j]=np.mean(boo_m2[boo_5]) - np.mean(boo_m2[boo_4])
+			beta_lambdas_t2[0,j]=np.corrcoef(m1[:,j],m2[:,j])[0,1]
+			beta_lambdas_t2[1,j]=np.corrcoef(m1[:,j],m3[:,j])[0,1]
 
 		boo_old=age_child[:,4]>5 #older than 5 at t=4
 		boo_young=age_child[:,1]<=5 #less than 5 at t=1
@@ -258,10 +259,10 @@ class Estimate:
 			beta_kappas_t5[z-2,:]=np.mean(boo,axis=0)
 		
 		for j in range(self.M):
-			boo_t2_5=ssrs_t2_matrix[:,0,j]==5
-			boo_t2_4=ssrs_t2_matrix[:,0,j]==4
-			boo_t5=ssrs_t5_matrix[:,j]==5
-			beta_lambdas_t5[0,j] = np.mean(boo_t5[boo_t2_5]) - np.mean(boo_t5[boo_t2_4])
+			boo_t2_5=ssrs_t2_matrix[:,0,j]>=3
+			boo_t2_4=ssrs_t2_matrix[:,0,j]<3
+			boo_t5=ssrs_t5_matrix[:,j]>=3
+			beta_lambdas_t5[0,j] = np.corrcoef(ssrs_t5_matrix[:,j],ssrs_t2_matrix[:,0,j])[0,1]
 
 		return{'beta_childcare':beta_childcare,'beta_hours2':beta_hours2,
 		'beta_hours3':beta_hours3,'beta_wagep': beta_wagep, 'beta_kappas_t2': beta_kappas_t2,
@@ -285,41 +286,23 @@ class Estimate:
 			return ((1/(1+np.exp(-a))) - 0.5)*2
 
 		#updating beta->parameters instance to compute likelihood.
-		self.param0.eta=beta[0]
-		self.param0.alphap=beta[1]
-		self.param0.alphaf=beta[2]
-		self.param0.betaw[0]=beta[3]
-		self.param0.betaw[1]=beta[4]
-		self.param0.betaw[2]=beta[5]
-		self.param0.betaw[3]=beta[6]
-		self.param0.betaw[4]=np.exp(beta[7])
-		self.param0.gamma1[0][0]=sym(beta[8])
-		self.param0.gamma2[0][0]=sym(beta[9])
-		self.param0.gamma1[0][1]=sym(beta[10])
-		self.param0.gamma2[0][1]=sym(beta[11])
-		self.param0.gamma1[1]=sym(beta[12])
-		self.param0.gamma2[1]=sym(beta[13])
-		self.param0.kappas[0][0][0]=beta[14]
-		self.param0.kappas[0][0][1]=beta[15]
-		self.param0.kappas[0][0][2]=beta[16]
-		self.param0.kappas[0][0][3]=beta[17]
-		self.param0.kappas[0][1][0]=beta[18]
-		self.param0.kappas[0][1][1]=beta[19]
-		self.param0.kappas[0][1][2]=beta[20]
-		self.param0.kappas[0][1][3]=beta[21]
-		self.param0.kappas[0][2][0]=beta[22]
-		self.param0.kappas[0][2][1]=beta[23]
-		self.param0.kappas[0][2][2]=beta[24]
-		self.param0.kappas[0][2][3]=beta[25]
-		self.param0.kappas[1][0][0]=beta[26]
-		self.param0.kappas[1][0][1]=beta[27]
-		self.param0.kappas[1][0][2]=beta[28]
-		self.param0.kappas[1][0][3]=beta[29]
-		#First lambda = 1 (fixed)
-		self.param0.lambdas[0][1]=beta[30]
-		self.param0.lambdas[0][2]=beta[31]
-		self.param0.lambdas[1][0]=beta[32]
-
+		self.param0.kappas[0][0][0]=beta[0]
+		self.param0.kappas[0][0][1]=beta[1]
+		self.param0.kappas[0][0][2]=beta[2]
+		self.param0.kappas[0][0][3]=beta[3]
+		self.param0.kappas[0][1][0]=beta[4]
+		self.param0.kappas[0][1][1]=beta[5]
+		self.param0.kappas[0][1][2]=beta[6]
+		self.param0.kappas[0][1][3]=beta[7]
+		self.param0.kappas[0][2][0]=beta[8]
+		self.param0.kappas[0][2][1]=beta[9]
+		self.param0.kappas[0][2][2]=beta[10]
+		self.param0.kappas[0][2][3]=beta[11]
+		self.param0.kappas[1][0][0]=beta[12]
+		self.param0.kappas[1][0][1]=beta[13]
+		self.param0.kappas[1][0][2]=beta[14]
+		self.param0.kappas[1][0][3]=beta[15]
+		
 		
 
 
@@ -365,46 +348,20 @@ class Estimate:
 		###########################################################################
 
 		#Number of moments to match
-		num_par=beta_childcare.size + beta_hours2.size + beta_hours3.size + beta_wagep.size + beta_kappas_t2.size + beta_lambdas_t2.size + beta_kappas_t5.size + beta_lambdas_t5.size +	beta_inputs_old.size + beta_inputs_young_cc0.size + beta_inputs_young_cc1.size
+		num_par=beta_kappas_t2.size + beta_kappas_t5.size 
 		
 		#Outer matrix
 		x_vector=np.zeros((num_par,1))
 
 		
-		x_vector[0:beta_childcare.size,0]=beta_childcare - self.moments_vector[0,0]
-		
-		ind=beta_childcare.size
-		x_vector[ind:ind+beta_hours2.size,0]=beta_hours2 - self.moments_vector[ind,0]
-		
-		ind=ind + beta_hours2.size
-		x_vector[ind:ind + beta_hours3.size,0]=beta_hours3 - self.moments_vector[ind,0]
-		
-		ind = ind + beta_hours3.size
-		x_vector[ind: ind+ beta_wagep.size,0]=beta_wagep - self.moments_vector[ind:ind+ beta_wagep.size,0]
-		
-		
-		ind = ind + beta_wagep.size
+		ind = 0
 		for k in range(beta_kappas_t2.shape[1]):
 			x_vector[ind:ind + beta_kappas_t2.shape[0],0]=beta_kappas_t2[:,k] - self.moments_vector[ind:ind + beta_kappas_t2.shape[0],0]
 			ind = ind + beta_kappas_t2.shape[0]
 
-		x_vector[ind: ind + beta_lambdas_t2.size,0] = beta_lambdas_t2 - self.moments_vector[ind:: ind + beta_lambdas_t2.size,0]
-		
-		ind = ind + beta_lambdas_t2.size
 		x_vector[ind: ind + beta_kappas_t5.size,0] = beta_kappas_t5 - self.moments_vector[ind: ind + beta_kappas_t5.size,0]
 		
-		ind = ind + beta_kappas_t5.size
-		x_vector[ind: ind + beta_lambdas_t5.size,0] = beta_lambdas_t5 - self.moments_vector[ind: ind + beta_lambdas_t5.size,0]
-		
-		ind = ind + beta_lambdas_t5.size
-		x_vector[ind:ind + beta_inputs_old.size,0] = beta_inputs_old - self.moments_vector[ind:ind + beta_inputs_old.size,0]
-		
-		ind = ind + beta_inputs_old.size
-		x_vector[ind: ind + beta_inputs_young_cc0.size,0] = beta_inputs_young_cc0 - self.moments_vector[ind: ind + beta_inputs_young_cc0.size,0]
-		
-		ind = ind + beta_inputs_young_cc0.size
-		x_vector[ind: ind + beta_inputs_young_cc1.size,0] = beta_inputs_young_cc1 - self.moments_vector[ind: ind + beta_inputs_young_cc1.size,0]
-		
+						
 		#The Q metric
 		q_w=np.dot(np.dot(np.transpose(x_vector),np.linalg.inv(self.w_matrix)),x_vector)
 		print ''
@@ -428,13 +385,7 @@ class Estimate:
 			return out
 		
 				
-		beta0=np.array([self.param0.eta,self.param0.alphap,self.param0.alphaf,
-			self.param0.betaw[0],self.param0.betaw[1],self.param0.betaw[2],
-			self.param0.betaw[3],np.log(self.param0.betaw[4]),
-			syminv(self.param0.gamma1[0][0]),syminv(self.param0.gamma2[0][0]),
-			syminv(self.param0.gamma1[0][1]),syminv(self.param0.gamma2[0][1]),
-			syminv(self.param0.gamma1[1]),syminv(self.param0.gamma2[1]),
-			self.param0.kappas[0][0][0],self.param0.kappas[0][0][1], #kappa: t=2, m0
+		beta0=np.array([self.param0.kappas[0][0][0],self.param0.kappas[0][0][1], #kappa: t=2, m0
 			self.param0.kappas[0][0][2],self.param0.kappas[0][0][3],#kappa: t=2, m0
 			self.param0.kappas[0][1][0],self.param0.kappas[0][1][1],#kappa: t=2, m1
 			self.param0.kappas[0][1][2],self.param0.kappas[0][1][3],#kappa: t=2, m1
@@ -442,14 +393,11 @@ class Estimate:
 			self.param0.kappas[0][2][2],self.param0.kappas[0][2][3],#kappa: t=2, m2
 			self.param0.kappas[1][0][0],self.param0.kappas[1][0][1],#kappa: t=5, m0
 			self.param0.kappas[1][0][2],self.param0.kappas[1][0][3], #kappa: t=5, m0
-			self.param0.lambdas[0][1], #lambda, t=0. first lambda_00=1 (fixed)
-			self.param0.lambdas[0][2],#lambda, t=0
-			self.param0.lambdas[1][0] #lambda t=1
 			]) 
 
 		
 		#Here we go
-		opt = minimize(self.ll, beta0,  method='Nelder-Mead', options={'maxiter':700, 'maxfev': 90000, 'ftol': 1e-3, 'disp': True});
+		opt = minimize(self.ll, beta0,  method='Nelder-Mead', options={'maxiter':1000, 'maxfev': 90000, 'ftol': 1e-1, 'disp': True});
 		
 		return opt
 

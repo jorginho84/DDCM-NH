@@ -1,4 +1,4 @@
-betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv2_nelder_v15.npy')
+betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv2_nelder_v17.npy')
 
 
 #Utility function
@@ -16,12 +16,12 @@ gamma2=[[betas_nelder[9],betas_nelder[11]],betas_nelder[13]]
 sigmatheta=0
 
 #Measurement system: three measures for t=2, one for t=5
-kappas=[[[betas_nelder[14],betas_nelder[15],betas_nelder[16],betas_nelder[17]]
-,[betas_nelder[18],betas_nelder[19],betas_nelder[20],betas_nelder[21]],
+kappas=[[[betas_nelder[14]-1.3,betas_nelder[15]-1.3,betas_nelder[16]-0.2,betas_nelder[17]]
+,[betas_nelder[18]-1.3,betas_nelder[19]-1.3,betas_nelder[20]-0.2,betas_nelder[21]],
 [betas_nelder[22],betas_nelder[23],betas_nelder[24],betas_nelder[25]]],
 [[betas_nelder[26],betas_nelder[27],betas_nelder[28],betas_nelder[29]]]]
 #First measure is normalized. starting arbitrary values
-lambdas=[[1,betas_nelder[30],betas_nelder[31]],[1]]
+lambdas=[[7,betas_nelder[30],betas_nelder[31]],[betas_nelder[32]]]
 
 
 #Weibull distribution of cc prices

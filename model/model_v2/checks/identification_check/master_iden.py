@@ -16,7 +16,7 @@ import sys, os
 from scipy import stats
 #from scipy.optimize import minimize
 from scipy.optimize import fmin_bfgs
-from joblib import Parallel, delayed
+from pathos.multiprocessing import ProcessPool
 from scipy import interpolate
 import matplotlib
 matplotlib.use('Agg') # Force matplotlib to not use any Xwindows backend.
@@ -64,32 +64,67 @@ M=1000
 output_ins=estimate.Estimate(param0,x_w,x_m,x_k,x_wmk,passign,agech0,theta0,nkids0,
 	married0,D,dict_grid,M,N,moments_vector,w_matrix)
 
-
+def syminv(g):
+	out = -np.log((2/(g+1)) - 1)
+	return out
 
 #########################################################
 ####Part-time work###
-execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/alphap.py')
+#execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/alphap.py')
 
 #########################################################
 ####Full-time work###
-execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/alphaf.py')
+#execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/alphaf.py')
 
 #########################################################
 ####Lambda_t2###
-execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/lambda_t2.py')
+
+#Math
+#execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/lambda_t2_1.py')
+
+#Int Funct
+#execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/lambda_t2_2.py')
 
 #########################################################
 ####Lambda_t5###
-execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/lambda_t5.py')
+#execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/lambda_t5.py')
 
 #########################################################
 ####\gamma_2 (old)###
-execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/gamma2_old.py')
+#execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/gamma2_old.py')
 
 #########################################################
 ####\gamma_2 (young_cc1)###
-execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/gamma2_young_cc1.py')
+#execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/gamma2_young_cc1.py')
 
 #########################################################
 ####sigma^2_wage###
-execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/sigma2_wage.py')
+#execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/sigma2_wage.py')
+
+
+#########################################################
+####kappas
+
+#Reading, t=2, kappa1
+#execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/kappa_t2_m1_k1.py')
+
+#Reading, t=2, kappa2
+execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/kappa_t2_m1_k2.py')
+
+#Reading, t=2, kappa4
+#execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/kappa_t2_m1_k4.py')
+
+#Math, t=2, kappa2
+#execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/kappa_t2_m2_k2.py')
+
+#Int, t=2, kappa3
+#execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/kappa_t2_m3_k3.py')
+
+
+#def sample_graph(j):
+#	execfile(j)
+#	return 1
+
+#sys.path.append("/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check")
+#pool = ProcessPool(nodes=3)	
+#dics = pool.map(sample_graph,['kappa_t2_m1_k2.py','kappa_t2_m2_k3.py', 'kappa_t2_m2_k3.py'])

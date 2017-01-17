@@ -72,40 +72,13 @@ foreach m of numlist 1 2 3{
 *Conditional probs: Matrix 2 (two differences)  x1
 *To identify lambdas
 mat prob_diff=J(2,1,.)
-gen d_m1=skills_m1_t2>=3
-replace d_m1=. if skills_m1_t2==.
-gen d_m2=skills_m2_t2>=3 
-replace d_m2=. if skills_m2_t2==.
-gen d_m3=skills_m3_t2>=3 /*this is the normalizing measure (lambda=1)*/
-replace d_m3=. if skills_m3_t2==.
 
-
-program prob_diff, rclass
-	version 13
-	args z_m1 z_m2
-	tempname mean_1 mean_2
-	qui: sum `z_m1' if `z_m2'>=3 
-	scalar `mean_1'=r(mean)
-	qui: sum `z_m1' if `z_m2'<3
-	scalar `mean_2'=r(mean)
-	return scalar diff=`mean_1' - `mean_2'
-end
-
-
-*Cov(m2,m3)
-prob_diff d_m2 skills_m3_t2 if (skills_m3_t2!=. & d_m2!=.)
-local diff_1 = r(diff)
-*Cov(m1,m3)
-prob_diff d_m1 skills_m3_t2 if (skills_m3_t2!=. & d_m1!=.)
-local diff_2 = r(diff)
-*Cov(m1,m2)
-prob_diff d_m1 skills_m2_t2 if (skills_m2_t2!=. & d_m1!=.)
-local diff_3 = r(diff)
-
-*Cov(m2,m3)/Cov(m1,m3)
-mat prob_diff[1,1] = `diff_1'/`diff_2'
-*Cov(m1,m3)/Cov(m1,m2)
-mat prob_diff[2,1] = `diff_2'/`diff_3'
+*Corr(m1,m2)
+corr skills_m1_t2 skills_m2_t2
+mat prob_diff[1,1] = r(rho)
+*Corr(m1,m3)
+corr skills_m1_t2 skills_m3_t2
+mat prob_diff[2,1] = r(rho)
 
 
 
@@ -200,27 +173,11 @@ foreach j of numlist 2 3 4 5{
 
 *To identify lambda_t (t=5)
 matrix prob_diff_t5=J(1,1,.)
-matrix sigma_prob_diff_t5=J(1,1,.)
-drop d_m1
-gen d_m1=skills_t5>=3
-replace d_m1=. if skills_t5==.
 
-program prob_diff2, rclass
-	version 13
-	args z_m1 z_m2
-	tempname mean_1 mean_2
-	qui: sum `z_m1' if `z_m2'>=3 
-	scalar `mean_1'=r(mean)
-	qui: sum `z_m1' if `z_m2'<3
-	scalar `mean_2'=r(mean)
-	return scalar diff=`mean_1' - `mean_2'
-end
+*corr(m1,m3)
+corr skills_m1_t2 skills_t5
+mat prob_diff_t5[1,1]=r(rho)
 
-
-prob_diff d_m1 skills_m1_t2 if (d_m1!=. & skills_m1_t2!=.)
-local diff_1 = r(diff)
-mat prob_diff_t5[1,1]=`diff_1' / `diff_3' /*from t=2*/
-drop d_m1
 
 
 **********************************************
@@ -232,5 +189,5 @@ mat betas_prod = prob_inc_t2\prob_diff\prob_inc_t5\prob_diff_t5\inputs_moments_o
 */inputs_moments_young_cc0\inputs_moments_young_cc1 
 
 
-program drop prob_diff input_diff input_theta prob_diff2
+program drop input_diff input_theta 
 

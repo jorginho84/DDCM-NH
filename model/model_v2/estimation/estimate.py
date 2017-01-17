@@ -221,8 +221,8 @@ class Estimate:
 			boo_4_m3=m3[:,j]<3
 
 			
-			beta_lambdas_t2[0,j]=(np.mean(boo_5_m2[boo_5_m3]) - np.mean(boo_5_m2[boo_4_m3]))/(np.mean(boo_5_m1[boo_5_m3]) - np.mean(boo_5_m1[boo_4_m3]))
-			beta_lambdas_t2[1,j]=(np.mean(boo_5_m1[boo_5_m3]) - np.mean(boo_5_m1[boo_4_m3]))/(np.mean(boo_5_m1[boo_5_m2]) - np.mean(boo_5_m1[boo_4_m2]))
+			beta_lambdas_t2[0,j]=np.corrcoef(m1[:,j],m2[:,j])[0,1]
+			beta_lambdas_t2[1,j]=np.corrcoef(m1[:,j],m3[:,j])[0,1]
 
 		boo_old=age_child[:,4]>5 #older than 5 at t=4
 		boo_young=age_child[:,1]<=5 #less than 5 at t=1
@@ -262,7 +262,7 @@ class Estimate:
 			boo_t2_5=ssrs_t2_matrix[:,0,j]>=3
 			boo_t2_4=ssrs_t2_matrix[:,0,j]<3
 			boo_t5=ssrs_t5_matrix[:,j]>=3
-			beta_lambdas_t5[0,j] = (np.mean(boo_t5[boo_t2_5]) - np.mean(boo_t5[boo_t2_4])) / (np.mean(boo_5_m1[boo_5_m2]) - np.mean(boo_5_m1[boo_4_m2]))
+			beta_lambdas_t5[0,j] = np.corrcoef(ssrs_t5_matrix[:,j],ssrs_t2_matrix[:,0,j])[0,1]
 
 		return{'beta_childcare':beta_childcare,'beta_hours2':beta_hours2,
 		'beta_hours3':beta_hours3,'beta_wagep': beta_wagep, 'beta_kappas_t2': beta_kappas_t2,
@@ -389,7 +389,7 @@ class Estimate:
 			x_vector[ind:ind + beta_kappas_t2.shape[0],0]=beta_kappas_t2[:,k] - self.moments_vector[ind:ind + beta_kappas_t2.shape[0],0]
 			ind = ind + beta_kappas_t2.shape[0]
 
-		x_vector[ind: ind + beta_lambdas_t2.size,0] = beta_lambdas_t2 - self.moments_vector[ind:: ind + beta_lambdas_t2.size,0]
+		x_vector[ind: ind + beta_lambdas_t2.size,0] = beta_lambdas_t2 - self.moments_vector[ind: ind + beta_lambdas_t2.size,0]
 		
 		ind = ind + beta_lambdas_t2.size
 		x_vector[ind: ind + beta_kappas_t5.size,0] = beta_kappas_t5 - self.moments_vector[ind: ind + beta_kappas_t5.size,0]
@@ -450,7 +450,7 @@ class Estimate:
 
 		
 		#Here we go
-		opt = minimize(self.ll, beta0,  method='Nelder-Mead', options={'maxiter':1000, 'maxfev': 90000, 'ftol': 1e-3, 'disp': True});
+		opt = minimize(self.ll, beta0,  method='Nelder-Mead', options={'maxiter':500, 'maxfev': 90000, 'ftol': 1e-1, 'disp': True});
 		
 		return opt
 

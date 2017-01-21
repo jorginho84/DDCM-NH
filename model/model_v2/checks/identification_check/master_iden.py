@@ -77,6 +77,11 @@ def syminv(g):
 #execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/alphaf.py')
 
 #########################################################
+####ETA###
+execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/eta.py')
+
+
+#########################################################
 ####Lambda_t2###
 
 #Math
@@ -109,7 +114,7 @@ def syminv(g):
 #execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/kappa_t2_m1_k1.py')
 
 #Reading, t=2, kappa2
-execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/kappa_t2_m1_k2.py')
+#execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/kappa_t2_m1_k2.py')
 
 #Reading, t=2, kappa4
 #execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/kappa_t2_m1_k4.py')

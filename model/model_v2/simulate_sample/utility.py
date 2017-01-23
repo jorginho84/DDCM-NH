@@ -508,23 +508,23 @@ class Utility:
 		return self.Ut(periodt,income,self.married0,self.cc,self.nkids0,self.hours,
 			self.theta0,wage0,free,price)
 
-	def measures(self,periodt,m,thetat):
+	def measures(self,periodt,thetat):
 		"""
 		For a given periodt and measure, computes the SSRS, given a value for theta.
-		m \in (0,1,2) if t=2 and m=0 in t=5
+		There is only one measure for period
 		"""
 		if periodt==2:
 			loc=0
 		elif periodt==5:
 			loc=1
 
-		lambdam=self.param.lambdas[loc][m]
-		cuts=[self.param.kappas[loc][m][0],self.param.kappas[loc][m][1],
-		self.param.kappas[loc][m][2],self.param.kappas[loc][m][3]]
+		lambdam=self.param.lambdas[loc]
+		cuts=[self.param.kappas[loc][0],self.param.kappas[loc][1],
+		self.param.kappas[loc][2],self.param.kappas[loc][3]]
 				
 		z_star=lambdam*np.log(thetat) + np.random.randn(self.N)
 
-		#the SSRS measure m
+		#the SSRS measure
 		z=np.zeros(self.N)
 		z[z_star<=cuts[0]]=1
 		z[(z_star>cuts[0]) & (z_star<=cuts[1])]=2

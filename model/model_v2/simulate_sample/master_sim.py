@@ -48,7 +48,7 @@ np.random.seed(100);
 #Sample size
 #N=315
 
-betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv2_nelder_v18.npy')
+betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv2_nelder_v15.npy')
 
 #Utility function
 eta=betas_nelder[0]
@@ -66,12 +66,10 @@ gamma2=[[betas_nelder[9],betas_nelder[11]],betas_nelder[13]]
 sigmatheta=0
 
 #Measurement system: three measures for t=2, one for t=5
-kappas=[[[betas_nelder[14],betas_nelder[15],betas_nelder[16],betas_nelder[17]]
-,[betas_nelder[18],betas_nelder[19],betas_nelder[20],betas_nelder[21]],
-[betas_nelder[22],betas_nelder[23],betas_nelder[24],betas_nelder[25]]],
-[[betas_nelder[26],betas_nelder[27],betas_nelder[28],betas_nelder[29]]]]
-#First measure is normalized. starting arbitrary values
-lambdas=[[7,betas_nelder[30],betas_nelder[31]],[betas_nelder[32]]]
+kappas=[[-1.2,-0.4,0.4,1.1],
+[betas_nelder[26],betas_nelder[27],betas_nelder[28],betas_nelder[29]]]
+#All factor loadings are normalized
+lambdas=[1,1]
 
 
 
@@ -222,20 +220,15 @@ ate_income=np.mean(income[passign[:,0]==1,:],axis=0) - np.mean(income[passign[:,
 ate_ct=np.mean(ct[passign[:,0]==1,:],axis=0) - np.mean(ct[passign[:,0]==0,:],axis=0)
 
 #Children's ranking
-ssrs_freq_t2=np.zeros((N,3,5))
+ssrs_freq_t2=np.zeros((N,5))
 ssrs_freq_t5=np.zeros((N,5))
 for j in range(1,6):
 	ssrs_freq_t5[:,j-1]=ssrs_t5==j
-
-for i in range(3):
-	for j in range(1,6):
-		ssrs_freq_t2[:,i,j-1]=ssrs_t2[:,i]==j
+	ssrs_freq_t2[:,j-1]=ssrs_t2==j
 
 
 np.mean(ssrs_freq_t5,axis=0)
-np.mean(ssrs_freq_t2[:,0,:],axis=0)
-np.mean(ssrs_freq_t2[:,1,:],axis=0)
-np.mean(ssrs_freq_t2[:,2,:],axis=0)
+np.mean(ssrs_freq_t2,axis=0)
 
 
 #Child care (inn t=0, all young)

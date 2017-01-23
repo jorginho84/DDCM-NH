@@ -30,7 +30,7 @@ import int_linear
 import emax as emax
 import simdata as simdata
 sys.path.append("/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/estimation")
-import estimate as estimate
+import estimate_aux as estimate
 
 np.random.seed(1)
 

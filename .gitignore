@@ -17,3 +17,16 @@ model/model_v2/fit/draft.py
 model/model_v2/simulate_sample/gridemax.py
 model/model_v2/simulate_sample/master_sim.py
 model/model_v2/ses/master_se.py
+model/model_v2/checks/emax_check/master_emaxc.py
+model/model_v2/checks/identification_check/alphaf.py
+model/model_v2/checks/identification_check/alphap.py
+model/model_v2/checks/identification_check/lambda_t2.py
+model/model_v2/checks/identification_check/lambda_t5.py
+model/model_v2/fit/fit.py
+model/model_v2/simulate_sample/master_sim.py
+*.dmp
+model/model_v2/checks/identification_check/eta.py
+model/model_v2/checks/identification_check/master_iden.py
+model/model_v2/estimation/estimate_aux.py
+model/model_v2/fit/fit.py
+model/model_v2/simulate_sample/master_sim.py

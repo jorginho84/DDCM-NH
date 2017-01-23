@@ -48,16 +48,17 @@ np.random.seed(100);
 #Sample size
 #N=315
 
-betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv2_nelder_v14.npy')
+betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv2_nelder_v18.npy')
 
 #Utility function
 eta=betas_nelder[0]
-alphap=-betas_nelder[1]
-alphaf=-betas_nelder[2]
+alphap=betas_nelder[1]
+alphaf=betas_nelder[2]
 
 #wage process
 wagep_betas=np.array([betas_nelder[3],betas_nelder[4],betas_nelder[5],
 	betas_nelder[6],betas_nelder[7]]).reshape((5,1))
+
 
 #Production function [young[cc0,cc1],old]
 gamma1=[[betas_nelder[8],betas_nelder[10]],betas_nelder[12]]
@@ -70,7 +71,7 @@ kappas=[[[betas_nelder[14],betas_nelder[15],betas_nelder[16],betas_nelder[17]]
 [betas_nelder[22],betas_nelder[23],betas_nelder[24],betas_nelder[25]]],
 [[betas_nelder[26],betas_nelder[27],betas_nelder[28],betas_nelder[29]]]]
 #First measure is normalized. starting arbitrary values
-lambdas=[[1,betas_nelder[30],betas_nelder[31]],[betas_nelder[32]]]
+lambdas=[[7,betas_nelder[30],betas_nelder[31]],[betas_nelder[32]]]
 
 
 

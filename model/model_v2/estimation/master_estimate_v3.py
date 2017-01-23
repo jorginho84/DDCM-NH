@@ -204,7 +204,7 @@ betas_opt=np.array([eta_opt, alphap_opt,alphaf_opt,betaw0,betaw1,betaw2,
 	betaw3,betaw4,gamma1_young_cc0,gamma2_young_cc0,gamma1_young_cc1,
 	gamma2_young_cc1,gamma1_old,gamma2_old,
 	kappas_00,kappas_01,kappas_02,kappas_03,
-	kappas_10,kappas_11,kappas_12,kappas_132])
+	kappas_10,kappas_11,kappas_12,kappas_13])
 	
 
 np.save('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv3_nelder_v16.npy',betas_opt)

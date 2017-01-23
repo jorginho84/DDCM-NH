@@ -51,38 +51,22 @@ gen age_t7=age_t0+7
 
 
 
-matrix prob_inc_t2=J(4*3,1,.)
+matrix prob_inc_t2=J(4,1,.)
 local obs=1
-foreach m of numlist 1 2 3{
-	foreach j of numlist 2 3 4 5{
-		gen d_prob=skills_m`m'_t2==`j'
-		replace d_prob=. if  skills_m`m'_t2==.
-		qui: sum d_prob if d_prob!=.
-		mat beta_aux=r(mean)
-		mat prob_inc_t2[`obs',1]=beta_aux[1,1]
-		drop d_prob
-		local obs=`obs'+1
-
-	}
+foreach j of numlist 2 3 4 5{
+	gen d_prob=skills_t2==`j'
+	replace d_prob=. if  skills_t2==.
+	qui: sum d_prob if d_prob!=.
+	mat beta_aux=r(mean)
+	mat prob_inc_t2[`obs',1]=beta_aux[1,1]
+	drop d_prob
+	local obs=`obs'+1
 
 }
 
 
 
-*Conditional probs: Matrix 2 (two differences)  x1
-*To identify lambdas
-mat prob_diff=J(2,1,.)
-
-*Corr(m1,m2)
-corr skills_m1_t2 skills_m2_t2
-mat prob_diff[1,1] = r(rho)
-*Corr(m1,m3)
-corr skills_m1_t2 skills_m3_t2
-mat prob_diff[2,1] = r(rho)
-
-
-
-********************************************************************
+*******************************************************************
 /*Identifying period 5 measurement system and prod function*/
 ********************************************************************
 
@@ -126,25 +110,25 @@ mat inputs_moments_old[1,1]=r(diff)
 input_diff ll_t4 skills_t5 if (ll_t4!=. & skills_t5!=.)
 mat inputs_moments_old[2,1]=r(diff)
 
-input_theta skills_m1_t2 skills_t5 if (skills_m1_t2!=. & skills_t5!=.)
+input_theta skills_t2 skills_t5 if (skills_m1_t2!=. & skills_t5!=.)
 mat inputs_moments_old[3,1]=r(mean_out)
 
 restore
 
 
 
-*Young children/cc=0 and 1: produ function
+*Young children/cc=0 and 1: production function
 forvalues cc=0/1{
 
 	preserve
 	keep if age_t1<=5 & d_CC2_t1==`cc'
-	input_diff lincomepc_t1 skills_m1_t2  if (lincomepc_t1!=. & skills_m1_t2!=.)
+	input_diff lincomepc_t1 skills_t2  if (lincomepc_t1!=. & skills_m1_t2!=.)
 	mat inputs_moments_young_cc`cc'[1,1]=r(diff)
 	
-	input_diff ll_t1 skills_m1_t2  if (ll_t1!=. & skills_m1_t2!=.)
+	input_diff ll_t1 skills_t2  if (ll_t1!=. & skills_m1_t2!=.)
 	mat inputs_moments_young_cc`cc'[2,1]=r(diff)
 	
-	input_theta skills_m1_t2 skills_t5 if (skills_m1_t2!=. & skills_t5!=.)
+	input_theta skills_t2 skills_t5 if (skills_m1_t2!=. & skills_t5!=.)
 	mat inputs_moments_young_cc`cc'[3,1]=r(mean_out)
 	
 	restore
@@ -171,13 +155,6 @@ foreach j of numlist 2 3 4 5{
 	}
 
 
-*To identify lambda_t (t=5)
-matrix prob_diff_t5=J(1,1,.)
-
-*corr(m1,m3)
-corr skills_m1_t2 skills_t5
-mat prob_diff_t5[1,1]=r(rho)
-
 
 
 **********************************************
@@ -185,7 +162,7 @@ mat prob_diff_t5[1,1]=r(rho)
 **********************************************
 /*Saving betas*/
 
-mat betas_prod = prob_inc_t2\prob_diff\prob_inc_t5\prob_diff_t5\inputs_moments_old\/*
+mat betas_prod = prob_inc_t2\prob_inc_t5\inputs_moments_old\/*
 */inputs_moments_young_cc0\inputs_moments_young_cc1 
 
 

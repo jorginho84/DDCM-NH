@@ -138,7 +138,7 @@ class SimData:
 		marr_matrix=np.zeros((self.N,n_periods))
 		kids_matrix=np.zeros((self.N,n_periods))
 		util_values_dic=[] #list of t=0,..,8 periods
-		ssrs_t2=np.zeros((self.N,3))
+		ssrs_t2=np.zeros(self.N)
 		ssrs_t5=np.zeros(self.N)
 
 		#initialize state variables
@@ -205,10 +205,9 @@ class SimData:
 
 			#SSRS measures
 			if periodt==2: 
-				for i in range(3):
-					ssrs_t2[:,i]=model.measures(periodt,i,theta0)
+				ssrs_t2=model.measures(periodt,theta0)
 			elif periodt==5:
-				ssrs_t5=model.measures(periodt,0,theta0)
+				ssrs_t5=model.measures(periodt,theta0)
 
 
 			#Next period states (only if periodt<8): update

@@ -1,8 +1,8 @@
 
 #build a grid around parameter value
 lenght = 0.3
-size_grid = 4
-max_p = 0.4
+size_grid = 6
+max_p = 1.2
 min_p = 0.01
 p_list = np.linspace(min_p,max_p,size_grid)
 obs_moment = moments_vector[0,0].copy()
@@ -23,18 +23,11 @@ for i in range(size_grid):
 		syminv(param0.gamma1[0][0]),syminv(param0.gamma2[0][0]),
 		syminv(param0.gamma1[0][1]),syminv(param0.gamma2[0][1]),
 		syminv(param0.gamma1[1]),syminv(param0.gamma2[1]),
-		param0.kappas[0][0][0],param0.kappas[0][0][1], #kappa: t=2, m0
-		param0.kappas[0][0][2],param0.kappas[0][0][3],#kappa: t=2, m0
-		param0.kappas[0][1][0],param0.kappas[0][1][1],#kappa: t=2, m1
-		param0.kappas[0][1][2],param0.kappas[0][1][3],#kappa: t=2, m1
-		param0.kappas[0][2][0],param0.kappas[0][2][1],#kappa: t=2, m2
-		param0.kappas[0][2][2],param0.kappas[0][2][3],#kappa: t=2, m2
-		param0.kappas[1][0][0],param0.kappas[1][0][1],#kappa: t=5, m0
-		param0.kappas[1][0][2],param0.kappas[1][0][3], #kappa: t=5, m0
-		param0.lambdas[0][1], #lambda, t=0. first lambda_00=1 (fixed)
-		param0.lambdas[0][2],#lambda, t=0
-		param0.lambdas[1][0] #lambda t=1
-			])
+		param0.kappas[0][0],param0.kappas[0][1], #kappa: t=2 
+		param0.kappas[0][2],param0.kappas[0][3],#kappa: t=2 
+		param0.kappas[1][0],param0.kappas[1][1],#kappa: t=5 
+		param0.kappas[1][2],param0.kappas[1][3], #kappa: t=5
+		])
 	qw[i] = output_ins.ll(beta0)
 
 

@@ -1,27 +1,26 @@
-betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv2_nelder_v17.npy')
+betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv2_nelder_v15.npy')
 
 
 #Utility function
 eta=betas_nelder[0]
-alphap=betas_nelder[1]
-alphaf=betas_nelder[2] - 0.06
+alphap=-0.05
+alphaf=-0.1
 
 #wage process
 wagep_betas=np.array([betas_nelder[3],betas_nelder[4],betas_nelder[5],
-	betas_nelder[6]+0.3,betas_nelder[7]]).reshape((5,1))
+	betas_nelder[6]-1.7,betas_nelder[7]+10]).reshape((5,1))
 
 #Production function [young[cc0,cc1],old]
-gamma1=[[0.6,0.75],betas_nelder[12]+0.15]
-gamma2=[[0.04,0.05],0.01]
+gamma1=[[betas_nelder[8],betas_nelder[10]],betas_nelder[12]]
+gamma2=[[betas_nelder[9],betas_nelder[11]-0.1],betas_nelder[13]]
 sigmatheta=0
 
 #Measurement system: three measures for t=2, one for t=5
-kappas=[[[betas_nelder[14]-2.2,betas_nelder[15]-1.5,betas_nelder[16]+0.3,betas_nelder[17]+1.3]
-,[betas_nelder[18]-2.4,betas_nelder[19]-1.8,betas_nelder[20],betas_nelder[21]+0.9],
-[betas_nelder[22]-5,betas_nelder[23]-3.5,betas_nelder[24]-0.2,betas_nelder[25]+1.3]],
-[[betas_nelder[26]+0.4,betas_nelder[27]+0.4,betas_nelder[28]+0.205,betas_nelder[29]+0.1]]]
+kappas=[[-1.2,-0.4,0.4,1.1],
+[betas_nelder[26],betas_nelder[27],betas_nelder[28],betas_nelder[29]]]
 #First measure is normalized. starting arbitrary values
-lambdas=[[7,betas_nelder[30],betas_nelder[31] + 1],[betas_nelder[32] - 2]]
+#All factor loadings are normalized
+lambdas=[1,1]
 
 
 #Weibull distribution of cc prices

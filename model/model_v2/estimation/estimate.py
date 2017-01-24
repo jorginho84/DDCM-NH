@@ -131,7 +131,6 @@ class Estimate:
 		passign_aux=np.concatenate((self.passign[:,0],self.passign[:,0]),axis=0)
 		hours_aux_2=(choices_aux==1) | (choices_aux==4)
 		hours_aux_3=(choices_aux==2) | (choices_aux==5)
-		boo_h=(passign_aux==0)
 		beta_hours2=np.mean(hours_aux_2[passign_aux==1,:],axis=0) - np.mean(hours_aux_2[passign_aux==0,:],axis=0)
 		beta_hours3=np.mean(hours_aux_3[passign_aux==1,:],axis=0) - np.mean(hours_aux_3[passign_aux==0,:],axis=0)
 
@@ -152,7 +151,8 @@ class Estimate:
 		age2_aux=np.square(age_aux)
 
 		dhs_aux=np.reshape(np.concatenate((self.x_w[:,1],self.x_w[:,1],self.x_w[:,1],self.x_w[:,1]),axis=0),(self.N*4,1))
-
+		choices_aux=np.concatenate((choice_matrix[:,0,:],choice_matrix[:,1,:],
+			choice_matrix[:,4,:],choice_matrix[:,7,:]),axis=0)
 		boo_work=(choices_aux==1) | (choices_aux==2) | (choices_aux==4) | (choices_aux==5)
 		
 		beta_w=np.zeros((4,self.M))

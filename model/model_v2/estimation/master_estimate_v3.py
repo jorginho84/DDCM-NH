@@ -37,9 +37,9 @@ betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/re
 
 
 #Utility function
-eta=betas_nelder[0] + 0.08
-alphap=-0.05
-alphaf=-0.1
+eta=betas_nelder[0]
+alphap=-0.2
+alphaf=-0.8
 
 
 #wage process

@@ -51,18 +51,18 @@ np.random.seed(100);
 betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv2_nelder_v15.npy')
 
 #Utility function
-eta=betas_nelder[0]
-alphap=betas_nelder[1]
-alphaf=betas_nelder[2]
+eta=0.3
+alphap=-0.05
+alphaf=-0.1
 
 #wage process
 wagep_betas=np.array([betas_nelder[3],betas_nelder[4],betas_nelder[5],
-	betas_nelder[6],betas_nelder[7]]).reshape((5,1))
+	betas_nelder[6]-1.7,betas_nelder[7]+10]).reshape((5,1))
 
 
 #Production function [young[cc0,cc1],old]
 gamma1=[[betas_nelder[8],betas_nelder[10]],betas_nelder[12]]
-gamma2=[[betas_nelder[9],betas_nelder[11]],betas_nelder[13]]
+gamma2=[[betas_nelder[9],betas_nelder[11]-0.1],betas_nelder[13]]
 sigmatheta=0
 
 #Measurement system: three measures for t=2, one for t=5
@@ -231,9 +231,14 @@ np.mean(ssrs_freq_t5,axis=0)
 np.mean(ssrs_freq_t2,axis=0)
 
 
-#Child care (inn t=0, all young)
+#Child care (t=0, all young)
 np.mean(cc_t[agech0[:,0]<=5,:],axis=0)
 ate_cc=np.mean(cc_t[(passign[:,0]==1) & (agech0[:,0]<=5),:],axis=0) - np.mean(cc_t[(passign[:,0]==0) & (agech0[:,0]<=5),:],axis=0)
+
+#Child care (t=0, all young, employed)
+np.mean(cc_t[(agech0[:,0]<=5),0],axis=0)
+np.mean(cc_t[(agech0[:,0]<=5) & (hours_t[:,0]==30),0],axis=0)
+np.mean(cc_t[(agech0[:,0]<=5) & (hours_t[:,0]==15),0],axis=0)
 
 
 #Labor supply
@@ -242,6 +247,7 @@ part_t=hours_t==15
 full_t=hours_t==30
 
 np.mean(unemp_t,axis=0)
+np.mean(full_t,axis=0)
 
 
 

@@ -51,12 +51,12 @@ betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/re
 
 #Utility function
 eta=betas_nelder[0] + 0.08
-alphap=betas_nelder[1] + 0.07
-alphaf=betas_nelder[2]
+alphap=-0.05
+alphaf=-0.1
 
 #wage process
 wagep_betas=np.array([betas_nelder[3],betas_nelder[4],betas_nelder[5],
-	betas_nelder[6]-1.5,betas_nelder[7]+10]).reshape((5,1))
+	betas_nelder[6]-1.7,betas_nelder[7]+10]).reshape((5,1))
 
 
 #Production function [young[cc0,cc1],old]

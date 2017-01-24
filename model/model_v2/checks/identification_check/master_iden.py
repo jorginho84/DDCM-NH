@@ -30,7 +30,7 @@ import int_linear
 import emax as emax
 import simdata as simdata
 sys.path.append("/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/estimation")
-import estimate_aux as estimate
+import estimate as estimate
 
 np.random.seed(1)
 
@@ -82,19 +82,6 @@ execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2
 
 
 #########################################################
-####Lambda_t2###
-
-#Math
-#execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/lambda_t2_1.py')
-
-#Int Funct
-#execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/lambda_t2_2.py')
-
-#########################################################
-####Lambda_t5###
-#execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/lambda_t5.py')
-
-#########################################################
 ####\gamma_2 (old)###
 #execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/gamma2_old.py')
 
@@ -110,20 +97,8 @@ execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2
 #########################################################
 ####kappas
 
-#Reading, t=2, kappa1
+#SSRS, t=2, kappa1
 #execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/kappa_t2_m1_k1.py')
-
-#Reading, t=2, kappa2
-#execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/kappa_t2_m1_k2.py')
-
-#Reading, t=2, kappa4
-#execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/kappa_t2_m1_k4.py')
-
-#Math, t=2, kappa2
-#execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/kappa_t2_m2_k2.py')
-
-#Int, t=2, kappa3
-#execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/kappa_t2_m3_k3.py')
 
 
 #def sample_graph(j):

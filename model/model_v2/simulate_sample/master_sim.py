@@ -44,30 +44,30 @@ import int_linear
 import emax as emax
 import simdata as simdata
 
-np.random.seed(100);
+np.random.seed(1);
 #Sample size
 #N=315
 
-betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv2_nelder_v15.npy')
+betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv3_nelder_v19_v2.npy')
 
 #Utility function
-eta=0.3
-alphap=-0.05
-alphaf=-0.1
+eta=betas_nelder[0]
+alphap=betas_nelder[1]
+alphaf=betas_nelder[2]
 
 #wage process
 wagep_betas=np.array([betas_nelder[3],betas_nelder[4],betas_nelder[5],
-	betas_nelder[6]-1.7,betas_nelder[7]+10]).reshape((5,1))
+	betas_nelder[6],betas_nelder[7]]).reshape((5,1))
 
 
 #Production function [young[cc0,cc1],old]
 gamma1=[[betas_nelder[8],betas_nelder[10]],betas_nelder[12]]
-gamma2=[[betas_nelder[9],betas_nelder[11]-0.1],betas_nelder[13]]
+gamma2=[[betas_nelder[9],betas_nelder[11]],betas_nelder[13]]
 sigmatheta=0
 
 #Measurement system: three measures for t=2, one for t=5
-kappas=[[-1.2,-0.4,0.4,1.1],
-[betas_nelder[26],betas_nelder[27],betas_nelder[28],betas_nelder[29]]]
+kappas=[[betas_nelder[14],betas_nelder[15],betas_nelder[16],betas_nelder[17]],
+[betas_nelder[18],betas_nelder[19],betas_nelder[20],betas_nelder[21]]]
 #All factor loadings are normalized
 lambdas=[1,1]
 
@@ -161,6 +161,7 @@ print ''
 
 
 D=50
+np.random.seed(2)
 emax_function_in=emax.Emaxt(param,D,dict_grid)
 emax_dic=emax_function_in.recursive(8) #8 emax (t=1 to t=8)
 
@@ -250,9 +251,20 @@ np.mean(unemp_t,axis=0)
 np.mean(full_t,axis=0)
 
 
+gross = wage_t*hours_t*52
+np.mean(wage_t[(part_t[:,0]==1) & (passign[:,0]==1),0],axis=0)
+np.mean(gross[(part_t[:,0]==1) & (passign[:,0]==1),0],axis=0)
+np.mean(income[(unemp_t[:,0]==1) & (passign[:,0]==1),0],axis=0)
+
+ate_income_all=np.mean(income[passign[:,0]==1,0],axis=0) - np.mean(income[passign[:,0]==0,0],axis=0)
+ate_income_ft=np.mean(income[(full_t[:,0]==1) & (passign[:,0]==1),0],axis=0) - np.mean(income[(full_t[:,0]==1) & (passign[:,0]==0),0],axis=0)
+ate_income_pt=np.mean(income[(part_t[:,0]==1) & (passign[:,0]==1),0],axis=0) - np.mean(income[(part_t[:,0]==1) & (passign[:,0]==0),0],axis=0)
+ate_income_un=np.mean(income[(unemp_t[:,0]==1) & (passign[:,0]==1),0],axis=0) - np.mean(income[(unemp_t[:,0]==1) & (passign[:,0]==0),0],axis=0)
 
 #ATE on employment
-ate_emp=np.mean(1-unemp_t[passign[:,0]==1,:],axis=0) - np.mean(1-unemp_t[passign[:,0]==0,:],axis=0)
+ate_unem=np.mean(unemp_t[passign[:,0]==1,:],axis=0) - np.mean(unemp_t[passign[:,0]==0,:],axis=0)
+ate_part=np.mean(part_t[passign[:,0]==1,:],axis=0) - np.mean(part_t[passign[:,0]==0,:],axis=0)
+ate_full=np.mean(full_t[passign[:,0]==1,:],axis=0) - np.mean(full_t[passign[:,0]==0,:],axis=0)
 
 
 		

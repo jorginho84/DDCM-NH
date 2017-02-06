@@ -39,6 +39,7 @@ class Estimate:
 
 		"""
 		#updating with new betas
+		np.random.seed(1) #always the same emax, for a given set of beta
 		emax_ins_1=emax.Emaxt(param1,self.D,self.dict_grid)
 		return emax_ins_1.recursive(8) #t=1 to t=8
 
@@ -127,12 +128,17 @@ class Estimate:
 		beta_childcare=np.mean(cc_logit[boo,:],axis=0) #beta for every m
 		
 		#mean hours at t=0,1,4 and 7
-		choices_aux=np.concatenate((choice_matrix[:,0,:],choice_matrix[:,1,:]),axis=0)
-		passign_aux=np.concatenate((self.passign[:,0],self.passign[:,0]),axis=0)
+		choices_aux=np.concatenate((choice_matrix[:,0,:],choice_matrix[:,1,:],
+			choice_matrix[:,4,:],choice_matrix[:,7,:]),axis=0)
+		passign_aux=np.concatenate((self.passign[:,0],self.passign[:,0],
+			self.passign[:,0],self.passign[:,0]),axis=0)
+		age_aux=np.concatenate((age_child[:,0],age_child[:,1],age_child[:,4],
+			age_child[:,7]),axis=0)
 		hours_aux_2=(choices_aux==1) | (choices_aux==4)
 		hours_aux_3=(choices_aux==2) | (choices_aux==5)
-		beta_hours2=np.mean(hours_aux_2[passign_aux==1,:],axis=0) - np.mean(hours_aux_2[passign_aux==0,:],axis=0)
-		beta_hours3=np.mean(hours_aux_3[passign_aux==1,:],axis=0) - np.mean(hours_aux_3[passign_aux==0,:],axis=0)
+		boo_h=(passign_aux==0) & (age_aux>5)
+		beta_hours2=np.mean(hours_aux_2[boo_h,:],axis=0)
+		beta_hours3=np.mean(hours_aux_3[boo_h,:],axis=0)
 
 		############################################################
 		####Aux to identify wage process############################
@@ -213,24 +219,25 @@ class Estimate:
 			boo_4=(ssrs_t5_matrix[:,j]>=3) & (boo_old)
 			boo_2=(ssrs_t5_matrix[:,j]<3) & (boo_old)
 			boo_ssrs2=(ssrs_t2_matrix[:,j]>=3) & (boo_old)
-			beta_inputs_old[0,j] = np.mean(lconsumption_matrix[boo_4,4,j]) - np.mean(lconsumption_matrix[boo_2,4,j])
+			beta_inputs_old[0,j] = np.corrcoef(lconsumption_matrix[boo_old,4,j],ssrs_t5_matrix[boo_old,j])[1,0]
 			beta_inputs_old[1,j] = np.mean(lleisure_matrix[boo_4,4,j]) - np.mean(lleisure_matrix[boo_2,4,j])
 			beta_inputs_old[2,j] = np.mean(boo_4[boo_ssrs2]) 
 			
 			b_cc0=choice_matrix[:,1,j]<3 #child care choice=0 at t=1
-			
+			boo_young_cc = (boo_young==True) & (b_cc0==True)
 			boo_4=(ssrs_t2_matrix[:,j]>=3) & (boo_young==True) & (b_cc0==True)
 			boo_2=(ssrs_t2_matrix[:,j]<3) & (boo_young==True) & (b_cc0==True)
 			boo_ssrs5=(ssrs_t5_matrix[:,j]>=3) & (boo_young==True) & (b_cc0==True)
-			beta_inputs_young_cc0[0,j] = np.mean(lconsumption_matrix[boo_4,1,j]) - np.mean(lconsumption_matrix[boo_2,1,j])
+			beta_inputs_young_cc0[0,j] = np.corrcoef(lconsumption_matrix[boo_young_cc,1,j],ssrs_t2_matrix[boo_young_cc,j])[1,0]
 			beta_inputs_young_cc0[1,j] = np.mean(lleisure_matrix[boo_4,1,j]) - np.mean(lleisure_matrix[boo_2,1,j])
 			beta_inputs_young_cc0[2,j] = np.mean(boo_ssrs5[boo_4])
 
 			b_cc1=choice_matrix[:,1,j]>=3 #child care choice=1 at t=1
+			boo_young_cc = (boo_young==True) & (b_cc1==True)
 			boo_4=(ssrs_t2_matrix[:,j]>=3) & (boo_young==True) & (b_cc1==True)
 			boo_2=(ssrs_t2_matrix[:,j]<3) & (boo_young==True) & (b_cc1==True)
 			boo_ssrs5=(ssrs_t5_matrix[:,j]>=3) & (boo_young==True) & (b_cc1==True)
-			beta_inputs_young_cc1[0,j] = np.mean(lconsumption_matrix[boo_4,1,j]) - np.mean(lconsumption_matrix[boo_2,1,j])
+			beta_inputs_young_cc1[0,j] = np.corrcoef(lconsumption_matrix[boo_young_cc,1,j],ssrs_t2_matrix[boo_young_cc,j])[1,0]
 			beta_inputs_young_cc1[1,j] = np.mean(lleisure_matrix[boo_4,1,j]) - np.mean(lleisure_matrix[boo_2,1,j])
 			beta_inputs_young_cc1[2,j] = np.mean(boo_ssrs5[boo_4])
 
@@ -287,6 +294,7 @@ class Estimate:
 
 
 		##obtaining emax instance##
+		np.random.seed(1) #same set of shocks when computing emax (for every beta)
 		emax_instance=self.emax(self.param0)
 		
 		##obtaining samples##
@@ -395,7 +403,7 @@ class Estimate:
 
 		
 		#Here we go
-		opt = minimize(self.ll, beta0,  method='Nelder-Mead', options={'maxiter':500, 'maxfev': 90000, 'ftol': 1e-1, 'disp': True});
+		opt = minimize(self.ll, beta0,  method='Nelder-Mead', options={'maxiter':2000, 'maxfev': 90000, 'ftol': 1e-1, 'disp': True});
 		
 		return opt
 

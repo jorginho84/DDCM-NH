@@ -51,7 +51,7 @@ forvalues x = 1/`draws'{
 	use "/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/sample_model_v2.dta", clear
 	bsample
 	qui: save "$results/data_aux.dta", replace
-	qui: do "$codes/utility_aux_v2.do"
+	qui: do "$codes/utility_aux.do"
 	qui: do "$codes/wage_p.do"
 	qui: do "$codes/theta_aux.do"
 	mat betas=beta_utility\beta_wage\betas_prod
@@ -88,7 +88,7 @@ forvalues x=2/25{
 preserve
 drop draw betas*
 svmat beta_matrix
-outsheet using "$results/aux_model/moments_vector_v2.csv", comma  replace
+outsheet using "$results/aux_model/moments_vector.csv", comma  replace
 restore
 
 *This is the cov matrix
@@ -97,5 +97,5 @@ mat var_cov = r(C)
 preserve
 drop draw betas*
 svmat var_cov
-outsheet using "$results/aux_model/var_cov_v2.csv", comma  replace
+outsheet using "$results/aux_model/var_cov.csv", comma  replace
 restore

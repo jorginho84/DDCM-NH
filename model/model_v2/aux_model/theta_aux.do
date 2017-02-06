@@ -104,8 +104,10 @@ end
 *Old children: prod function
 preserve
 keep if age_t4>5
-input_diff lincomepc_t4 skills_t5 if (lincomepc_t4!=. & skills_t5!=.)
-mat inputs_moments_old[1,1]=r(diff)
+*input_diff lincomepc_t4 skills_t5 if (lincomepc_t4!=. & skills_t5!=.)
+qui: corr lincomepc_t4 skills_t5
+mat m_aux = r(C)
+mat inputs_moments_old[1,1]=m_aux[2,1]
 
 input_diff ll_t4 skills_t5 if (ll_t4!=. & skills_t5!=.)
 mat inputs_moments_old[2,1]=r(diff)
@@ -122,8 +124,10 @@ forvalues cc=0/1{
 
 	preserve
 	keep if age_t1<=5 & d_CC2_t1==`cc'
-	input_diff lincomepc_t1 skills_t2  if (lincomepc_t1!=. & skills_m1_t2!=.)
-	mat inputs_moments_young_cc`cc'[1,1]=r(diff)
+	*input_diff lincomepc_t1 skills_t2  if (lincomepc_t1!=. & skills_m1_t2!=.)
+	qui: corr lincomepc_t1 skills_t2
+	mat m_aux = r(C)
+	mat inputs_moments_young_cc`cc'[1,1]=m_aux[2,1]
 	
 	input_diff ll_t1 skills_t2  if (ll_t1!=. & skills_m1_t2!=.)
 	mat inputs_moments_young_cc`cc'[2,1]=r(diff)

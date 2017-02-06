@@ -348,7 +348,7 @@ class Utility:
 		boo_net_eli = net_inc <= net_i_test
 		boo_gro_eli = pwage <= gross_i_test
 		boo_unemp=hours==0
-		snap = snap_takeup*((max_b - 0.3*net_inc)*boo_net_eli*boo_gro_eli*(1-boo_unemp) + boo_unemp*(max_b - 0.3*net_inc))
+		snap = snap_takeup*((max_b - 0.3*net_inc)*boo_net_eli*boo_gro_eli*(1-boo_unemp) + boo_unemp*(max_b - 0.3*net_inc))*snap_takeup
 		snap[snap<0]=0
 
 		dincome = pwage + afdc_benefit + nh_supp + snap + eitc_fed + eitc_state

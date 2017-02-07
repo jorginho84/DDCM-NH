@@ -220,17 +220,17 @@ class Estimate:
 			boo_2=(ssrs_t5_matrix[:,j]<3) & (boo_old)
 			boo_ssrs2=(ssrs_t2_matrix[:,j]>=3) & (boo_old)
 			beta_inputs_old[0,j] = np.corrcoef(lconsumption_matrix[boo_old,4,j],ssrs_t5_matrix[boo_old,j])[1,0]
-			beta_inputs_old[1,j] = np.mean(lleisure_matrix[boo_4,4,j]) - np.mean(lleisure_matrix[boo_2,4,j])
-			beta_inputs_old[2,j] = np.mean(boo_4[boo_ssrs2]) 
-			
+			beta_inputs_old[1,j] = np.corrcoef(lleisure_matrix[boo_old,4,j],ssrs_t5_matrix[boo_old,j])[1,0]
+			beta_inputs_old[2,j] = np.corrcoef(ssrs_t2_matrix[boo_old,j],ssrs_t5_matrix[boo_old,j])[1,0]
+						
 			b_cc0=choice_matrix[:,1,j]<3 #child care choice=0 at t=1
 			boo_young_cc = (boo_young==True) & (b_cc0==True)
 			boo_4=(ssrs_t2_matrix[:,j]>=3) & (boo_young==True) & (b_cc0==True)
 			boo_2=(ssrs_t2_matrix[:,j]<3) & (boo_young==True) & (b_cc0==True)
 			boo_ssrs5=(ssrs_t5_matrix[:,j]>=3) & (boo_young==True) & (b_cc0==True)
 			beta_inputs_young_cc0[0,j] = np.corrcoef(lconsumption_matrix[boo_young_cc,1,j],ssrs_t2_matrix[boo_young_cc,j])[1,0]
-			beta_inputs_young_cc0[1,j] = np.mean(lleisure_matrix[boo_4,1,j]) - np.mean(lleisure_matrix[boo_2,1,j])
-			beta_inputs_young_cc0[2,j] = np.mean(boo_ssrs5[boo_4])
+			beta_inputs_young_cc0[1,j] = np.corrcoef(lleisure_matrix[boo_young_cc,1,j],ssrs_t2_matrix[boo_young_cc,j])[1,0]
+			beta_inputs_young_cc0[2,j] = np.corrcoef(ssrs_t5_matrix[boo_young_cc,j],ssrs_t2_matrix[boo_young_cc,j])[1,0]
 
 			b_cc1=choice_matrix[:,1,j]>=3 #child care choice=1 at t=1
 			boo_young_cc = (boo_young==True) & (b_cc1==True)
@@ -238,8 +238,8 @@ class Estimate:
 			boo_2=(ssrs_t2_matrix[:,j]<3) & (boo_young==True) & (b_cc1==True)
 			boo_ssrs5=(ssrs_t5_matrix[:,j]>=3) & (boo_young==True) & (b_cc1==True)
 			beta_inputs_young_cc1[0,j] = np.corrcoef(lconsumption_matrix[boo_young_cc,1,j],ssrs_t2_matrix[boo_young_cc,j])[1,0]
-			beta_inputs_young_cc1[1,j] = np.mean(lleisure_matrix[boo_4,1,j]) - np.mean(lleisure_matrix[boo_2,1,j])
-			beta_inputs_young_cc1[2,j] = np.mean(boo_ssrs5[boo_4])
+			beta_inputs_young_cc1[1,j] = np.corrcoef(lleisure_matrix[boo_young_cc,1,j],ssrs_t2_matrix[boo_young_cc,j])[1,0]
+			beta_inputs_young_cc1[2,j] = np.corrcoef(ssrs_t5_matrix[boo_young_cc,j],ssrs_t2_matrix[boo_young_cc,j])[1,0]
 
 		
 		for z in range(2,6): #4 rankings

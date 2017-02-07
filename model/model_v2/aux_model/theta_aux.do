@@ -109,11 +109,15 @@ qui: corr lincomepc_t4 skills_t5
 mat m_aux = r(C)
 mat inputs_moments_old[1,1]=m_aux[2,1]
 
-input_diff ll_t4 skills_t5 if (ll_t4!=. & skills_t5!=.)
-mat inputs_moments_old[2,1]=r(diff)
+*input_diff ll_t4 skills_t5 if (ll_t4!=. & skills_t5!=.)
+qui: corr ll_t4 skills_t5
+mat m_aux = r(C)
+mat inputs_moments_old[2,1]=m_aux[2,1]
 
-input_theta skills_t2 skills_t5 if (skills_m1_t2!=. & skills_t5!=.)
-mat inputs_moments_old[3,1]=r(mean_out)
+*input_theta skills_t2 skills_t5 if (skills_m1_t2!=. & skills_t5!=.)
+corr skills_t2 skills_t5
+mat m_aux = r(C)
+mat inputs_moments_old[3,1]=m_aux[2,1]
 
 restore
 
@@ -129,11 +133,15 @@ forvalues cc=0/1{
 	mat m_aux = r(C)
 	mat inputs_moments_young_cc`cc'[1,1]=m_aux[2,1]
 	
-	input_diff ll_t1 skills_t2  if (ll_t1!=. & skills_m1_t2!=.)
-	mat inputs_moments_young_cc`cc'[2,1]=r(diff)
+	*input_diff ll_t1 skills_t2  if (ll_t1!=. & skills_m1_t2!=.)
+	corr ll_t1 skills_t2
+	mat m_aux = r(C)
+	mat inputs_moments_young_cc`cc'[2,1]=m_aux[2,1]
 	
-	input_theta skills_t2 skills_t5 if (skills_m1_t2!=. & skills_t5!=.)
-	mat inputs_moments_young_cc`cc'[3,1]=r(mean_out)
+	*input_theta skills_t2 skills_t5 if (skills_m1_t2!=. & skills_t5!=.)
+	corr skills_t2 skills_t5
+	mat m_aux = r(C)
+	mat inputs_moments_young_cc`cc'[3,1]=m_aux[2,1]
 	
 	restore
 		

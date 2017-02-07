@@ -33,7 +33,7 @@ import estimate as estimate
 
 np.random.seed(1)
 
-betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv2_nelder_v11.npy')
+betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv3_nelder_v19_v2.npy')
 
 
 #Utility function
@@ -45,18 +45,18 @@ alphaf=betas_nelder[2]
 wagep_betas=np.array([betas_nelder[3],betas_nelder[4],betas_nelder[5],
 	betas_nelder[6],betas_nelder[7]]).reshape((5,1))
 
+
 #Production function [young[cc0,cc1],old]
 gamma1=[[betas_nelder[8],betas_nelder[10]],betas_nelder[12]]
 gamma2=[[betas_nelder[9],betas_nelder[11]],betas_nelder[13]]
 sigmatheta=0
 
 #Measurement system: three measures for t=2, one for t=5
-kappas=[[[betas_nelder[14],betas_nelder[15],betas_nelder[16],betas_nelder[17]]
-,[betas_nelder[18],betas_nelder[19],betas_nelder[20],betas_nelder[21]],
-[betas_nelder[22],betas_nelder[23],betas_nelder[24],betas_nelder[25]]],
-[[betas_nelder[26],betas_nelder[27],betas_nelder[28],betas_nelder[29]]]]
+kappas=[[betas_nelder[14],betas_nelder[15],betas_nelder[16],betas_nelder[17]],
+[betas_nelder[18],betas_nelder[19],betas_nelder[20],betas_nelder[21]]]
 #First measure is normalized. starting arbitrary values
-lambdas=[[1,betas_nelder[30],betas_nelder[31]],[betas_nelder[32]]]
+#All factor loadings are normalized
+lambdas=[1,1]
 
 
 #Weibull distribution of cc prices
@@ -188,37 +188,23 @@ gamma1_young_cc1=sym(output.x[10])
 gamma2_young_cc1=sym(output.x[11])
 gamma1_old=sym(output.x[12])
 gamma2_old=sym(output.x[13])
-kappas_000=output.x[14]
-kappas_001=output.x[15]
-kappas_002=output.x[16]
-kappas_003=output.x[17]
-kappas_010=output.x[18]
-kappas_011=output.x[19]
-kappas_012=output.x[20]
-kappas_013=output.x[21]
-kappas_020=output.x[22]
-kappas_021=output.x[23]
-kappas_022=output.x[24]
-kappas_023=output.x[25]
-kappas_100=output.x[26]
-kappas_101=output.x[27]
-kappas_102=output.x[28]
-kappas_103=output.x[29]
-lambdas_01=output.x[30]
-lambdas_02=output.x[31]
-lambdas_10=output.x[32]
+kappas_00=output.x[14]
+kappas_01=output.x[15]
+kappas_02=output.x[16]
+kappas_03=output.x[17]
+kappas_10=output.x[18]
+kappas_11=output.x[19]
+kappas_12=output.x[20]
+kappas_13=output.x[21]
 
 
 betas_opt=np.array([eta_opt, alphap_opt,alphaf_opt,betaw0,betaw1,betaw2,
 	betaw3,betaw4,gamma1_young_cc0,gamma2_young_cc0,gamma1_young_cc1,
 	gamma2_young_cc1,gamma1_old,gamma2_old,
-	kappas_000,kappas_001,kappas_002,kappas_003,
-	kappas_010,kappas_011,kappas_012,kappas_013,
-	kappas_020,kappas_021,kappas_022,kappas_023,
-	kappas_100,kappas_101,kappas_102,kappas_103,
-	lambdas_01,lambdas_02,lambdas_10])
+	kappas_00,kappas_01,kappas_02,kappas_03,
+	kappas_10,kappas_11,kappas_12,kappas_13])
 
-np.save('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv2_nelder_v12.npy',betas_opt)
+np.save('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv3_nelder_v20_v4.npy',betas_opt)
 
 
 

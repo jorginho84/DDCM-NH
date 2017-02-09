@@ -33,32 +33,30 @@ import estimate as estimate
 
 np.random.seed(1)
 
-betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv2_nelder_v15.npy')
+betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv3_nelder_v19_v3.npy')
 
 
 #Utility function
 eta=betas_nelder[0]
-alphap=-0.2
-alphaf=-0.8
-
+alphap=betas_nelder[1]
+alphaf=betas_nelder[2]
 
 #wage process
 wagep_betas=np.array([betas_nelder[3],betas_nelder[4],betas_nelder[5],
-	betas_nelder[6]-1.7,betas_nelder[7]+10]).reshape((5,1))
+	betas_nelder[6],betas_nelder[7]]).reshape((5,1))
+
 
 #Production function [young[cc0,cc1],old]
 gamma1=[[betas_nelder[8],betas_nelder[10]],betas_nelder[12]]
-gamma2=[[betas_nelder[9],betas_nelder[11]-0.1],betas_nelder[13]]
+gamma2=[[betas_nelder[9],betas_nelder[11]],betas_nelder[13]]
 sigmatheta=0
 
-
 #Measurement system: three measures for t=2, one for t=5
-kappas=[[-1.2,-0.4,0.4,1.1],
-[betas_nelder[26],betas_nelder[27],betas_nelder[28],betas_nelder[29]]]
+kappas=[[betas_nelder[14],betas_nelder[15],betas_nelder[16],betas_nelder[17]],
+[betas_nelder[18],betas_nelder[19],betas_nelder[20],betas_nelder[21]]]
 #First measure is normalized. starting arbitrary values
 #All factor loadings are normalized
 lambdas=[1,1]
-
 
 
 #Weibull distribution of cc prices
@@ -140,11 +138,11 @@ param0=util.Parameters(alphap, alphaf, eta, gamma1, gamma2,sigmatheta,
 
 ###Auxiliary estimates### 
 
-moments_vector=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/aux_model/moments_vector.csv').values
+moments_vector=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/aux_model/moments_vector_v2.csv').values
 
 
 #This is the var cov matrix of aux estimates
-var_cov=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/aux_model/var_cov.csv').values
+var_cov=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/aux_model/var_cov_v2.csv').values
 
 #The W matrix in Wald metric
 #Using diagonal of Var-Cov matrix of simulated moments
@@ -205,11 +203,43 @@ betas_opt=np.array([eta_opt, alphap_opt,alphaf_opt,betaw0,betaw1,betaw2,
 	gamma2_young_cc1,gamma1_old,gamma2_old,
 	kappas_00,kappas_01,kappas_02,kappas_03,
 	kappas_10,kappas_11,kappas_12,kappas_13])
-	
 
-np.save('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv3_nelder_v16.npy',betas_opt)
+np.save('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv3_nelder_v20_v3.npy',betas_opt)
 
 
+
+
+#this will not be necessary once running optimizer (this will go in optimizer(.))
+#beta0=np.array([np.log(eta),alphap,alphaf,wagep_betas[0],wagep_betas[1],wagep_betas[2],
+#	wagep_betas[3],np.log(wagep_betas[4]),gamma1[0][0],gamma2[0][0],
+#	gamma1[0][1],gamma2[0][1],gamma1[1],gamma2[1]])
+
+#dic_qw=output_ins.ll(beta0)
+
+
+"""
+##obtaining emax instance##
+emax_instance=output_ins.emax(param0)
+		
+##obtaining samples##
+choices=output_ins.samples(param0,emax_instance)
+
+
+
+##Getting the betas of the auxiliary model##
+dic_betas=output_ins.aux_model(choices)
+
+beta_inputs_old=dic_betas['beta_inputs_old']
+beta_inputs_old.shape
+
+
+beta_kappas_t5=dic_betas['beta_kappas_t5']
+beta_kappas_t5.shape
+beta_lambdas_t5=dic_betas['beta_lambdas_t5']
+beta_lambdas_t5.shape
+beta_lambdas_t2=dic_betas['beta_lambdas_t2']
+beta_lambdas_t2.shape
+"""
 
 
 

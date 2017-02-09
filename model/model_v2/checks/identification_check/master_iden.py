@@ -78,7 +78,7 @@ def syminv(g):
 
 #########################################################
 ####ETA###
-execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/eta.py')
+#execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/eta.py')
 
 
 #########################################################
@@ -87,7 +87,17 @@ execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2
 
 #########################################################
 ####\gamma_2 (young_cc1)###
-#execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/gamma2_young_cc1.py')
+execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/gamma2_young_cc1.py')
+
+#########################################################
+####\gamma_1 (young_cc1)###
+#execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/gamma1_young_cc1.py')
+
+
+#########################################################
+####\gamma_1 (young_cc0)###
+execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/gamma1_young_cc0.py')
+
 
 #########################################################
 ####sigma^2_wage###
@@ -98,7 +108,7 @@ execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2
 ####kappas
 
 #SSRS, t=2, kappa1
-#execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/kappa_t2_m1_k1.py')
+#execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/kappa_1_t2.py')
 
 
 #def sample_graph(j):

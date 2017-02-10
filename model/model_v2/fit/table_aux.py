@@ -55,9 +55,9 @@ ind = ind +4
 list_aux = [beta_inputs_old_sim, beta_inputs_young_cc0_sim, 
 beta_inputs_young_cc1_sim]
 list_obs = [moments_vector[ind:ind + 3,0], moments_vector[ind+3 : ind + 6,0], 
-moments_vector[ind+6 : ind + 9,0]]
+moments_vector[ind+6 : ind + 10,0]]
 list_sig = [se_vector[ind:ind + 3], se_vector[ind+3: ind + 6], 
-se_vector[ind+6: ind + 9]]
+se_vector[ind+6: ind + 10]]
 
 for j in range(3):
 	if j==0:
@@ -74,6 +74,15 @@ for j in range(3):
 		sim_moment.value = np.float(list_aux[j][c])
 		obs_moment.value = np.float(list_obs[j][c])
 		obs_sigma.value = np.float(list_sig[j][c])
+	
+	#the last one identified tfp
+	if j==2:
+		sim_moment = ws.cell('B' + str(27))
+		obs_moment = ws.cell('D' + str(27))
+		obs_sigma = ws.cell('F' + str(27))
+		sim_moment.value = np.float(list_aux[j][3])
+		obs_moment.value = np.float(list_obs[j][3])
+		obs_sigma.value = np.float(list_sig[j][3])
 
 
 

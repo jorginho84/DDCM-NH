@@ -48,7 +48,7 @@ np.random.seed(1);
 #Sample size
 #N=315
 
-betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv3_nelder_v19_v2.npy')
+betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv3_nelder_v20_v4.npy')
 
 #Utility function
 eta=betas_nelder[0]
@@ -63,6 +63,7 @@ wagep_betas=np.array([betas_nelder[3],betas_nelder[4],betas_nelder[5],
 #Production function [young[cc0,cc1],old]
 gamma1=[[betas_nelder[8],betas_nelder[10]],betas_nelder[12]]
 gamma2=[[betas_nelder[9],betas_nelder[11]],betas_nelder[13]]
+tfp = 0.3
 sigmatheta=0
 
 #Measurement system: three measures for t=2, one for t=5
@@ -143,7 +144,7 @@ married0=x_df[ ['d_marital_2']   ].values
 agech0=x_df[['age_t0']].values
 
 #Defines the instance with parameters
-param=util.Parameters(alphap, alphaf, eta, gamma1, gamma2,sigmatheta,
+param=util.Parameters(alphap, alphaf, eta, gamma1, gamma2,tfp,sigmatheta,
 	wagep_betas, marriagep_betas, kidsp_betas, eitc_list,afdc_list,snap_list,
 	cpi,q,scalew,shapew,lambdas,kappas,pafdc,psnap)
 

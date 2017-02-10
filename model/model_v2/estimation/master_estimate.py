@@ -49,6 +49,7 @@ wagep_betas=np.array([betas_nelder[3],betas_nelder[4],betas_nelder[5],
 #Production function [young[cc0,cc1],old]
 gamma1=[[betas_nelder[8],betas_nelder[10]],betas_nelder[12]]
 gamma2=[[betas_nelder[9],betas_nelder[11]],betas_nelder[13]]
+tfp=0.15
 sigmatheta=0
 
 #Measurement system: three measures for t=2, one for t=5
@@ -130,7 +131,7 @@ married0=x_df[ ['d_marital_2']   ].values
 agech0=x_df[['age_t0']].values
 
 #Defines the instance with parameters
-param0=util.Parameters(alphap, alphaf, eta, gamma1, gamma2,sigmatheta,
+param0=util.Parameters(alphap, alphaf, eta, gamma1, gamma2, tfp, sigmatheta,
 	wagep_betas, marriagep_betas, kidsp_betas, eitc_list,afdc_list,snap_list,
 	cpi,q,scalew,shapew,lambdas,kappas,pafdc,psnap)
 
@@ -188,19 +189,20 @@ gamma1_young_cc1=sym(output.x[10])
 gamma2_young_cc1=sym(output.x[11])
 gamma1_old=sym(output.x[12])
 gamma2_old=sym(output.x[13])
-kappas_00=output.x[14]
-kappas_01=output.x[15]
-kappas_02=output.x[16]
-kappas_03=output.x[17]
-kappas_10=output.x[18]
-kappas_11=output.x[19]
-kappas_12=output.x[20]
-kappas_13=output.x[21]
+tfp_opt=output.x[14]
+kappas_00=output.x[15]
+kappas_01=output.x[16]
+kappas_02=output.x[17]
+kappas_03=output.x[18]
+kappas_10=output.x[19]
+kappas_11=output.x[20]
+kappas_12=output.x[21]
+kappas_13=output.x[22]
 
 
 betas_opt=np.array([eta_opt, alphap_opt,alphaf_opt,betaw0,betaw1,betaw2,
 	betaw3,betaw4,gamma1_young_cc0,gamma2_young_cc0,gamma1_young_cc1,
-	gamma2_young_cc1,gamma1_old,gamma2_old,
+	gamma2_young_cc1,gamma1_old,gamma2_old,tfp_opt,
 	kappas_00,kappas_01,kappas_02,kappas_03,
 	kappas_10,kappas_11,kappas_12,kappas_13])
 

@@ -203,7 +203,7 @@ class Estimate:
 		beta_kappas_t2=np.zeros((4,self.M)) #4 moments
 		beta_inputs_old=np.zeros((3,self.M)) # 3 moments
 		beta_inputs_young_cc0=np.zeros((3,self.M)) #3 moments
-		beta_inputs_young_cc1=np.zeros((3,self.M)) #3 moments
+		beta_inputs_young_cc1=np.zeros((4,self.M)) #4 moments
 		beta_kappas_t5=np.zeros((4,self.M)) #4 moments
 				
 		for z in range(2,6): #4 rankings
@@ -211,35 +211,29 @@ class Estimate:
 			beta_kappas_t2[z-2,:]=np.mean(boo,axis=0)
 
 			
-		boo_old=age_child[:,4]>5 #older than 5 at t=4
-		boo_young=age_child[:,1]<=5 #less than 5 at t=1
+		boo_old=age_child[:,4]>6 #older than 6 at t=4
+		boo_young=age_child[:,1]<=6 #less than 6 at t=1
 
 
 		for j in range(self.M):
-			boo_4=(ssrs_t5_matrix[:,j]>=3) & (boo_old)
-			boo_2=(ssrs_t5_matrix[:,j]<3) & (boo_old)
 			boo_ssrs2=(ssrs_t2_matrix[:,j]>=3) & (boo_old)
 			beta_inputs_old[0,j] = np.corrcoef(lconsumption_matrix[boo_old,4,j],ssrs_t5_matrix[boo_old,j])[1,0]
 			beta_inputs_old[1,j] = np.corrcoef(lleisure_matrix[boo_old,4,j],ssrs_t5_matrix[boo_old,j])[1,0]
 			beta_inputs_old[2,j] = np.corrcoef(ssrs_t2_matrix[boo_old,j],ssrs_t5_matrix[boo_old,j])[1,0]
 						
 			b_cc0=choice_matrix[:,1,j]<3 #child care choice=0 at t=1
-			boo_young_cc = (boo_young==True) & (b_cc0==True)
-			boo_4=(ssrs_t2_matrix[:,j]>=3) & (boo_young==True) & (b_cc0==True)
-			boo_2=(ssrs_t2_matrix[:,j]<3) & (boo_young==True) & (b_cc0==True)
-			boo_ssrs5=(ssrs_t5_matrix[:,j]>=3) & (boo_young==True) & (b_cc0==True)
-			beta_inputs_young_cc0[0,j] = np.corrcoef(lconsumption_matrix[boo_young_cc,1,j],ssrs_t2_matrix[boo_young_cc,j])[1,0]
-			beta_inputs_young_cc0[1,j] = np.corrcoef(lleisure_matrix[boo_young_cc,1,j],ssrs_t2_matrix[boo_young_cc,j])[1,0]
-			beta_inputs_young_cc0[2,j] = np.corrcoef(ssrs_t5_matrix[boo_young_cc,j],ssrs_t2_matrix[boo_young_cc,j])[1,0]
+			boo_young_cc0 = (boo_young==True) & (b_cc0==True)
+			beta_inputs_young_cc0[0,j] = np.corrcoef(lconsumption_matrix[boo_young_cc0,1,j],ssrs_t2_matrix[boo_young_cc0,j])[1,0]
+			beta_inputs_young_cc0[1,j] = np.corrcoef(lleisure_matrix[boo_young_cc0,1,j],ssrs_t2_matrix[boo_young_cc0,j])[1,0]
+			beta_inputs_young_cc0[2,j] = np.corrcoef(ssrs_t5_matrix[boo_young_cc0,j],ssrs_t2_matrix[boo_young_cc0,j])[1,0]
 
 			b_cc1=choice_matrix[:,1,j]>=3 #child care choice=1 at t=1
-			boo_young_cc = (boo_young==True) & (b_cc1==True)
-			boo_4=(ssrs_t2_matrix[:,j]>=3) & (boo_young==True) & (b_cc1==True)
-			boo_2=(ssrs_t2_matrix[:,j]<3) & (boo_young==True) & (b_cc1==True)
+			boo_young_cc1 = (boo_young==True) & (b_cc1==True)
 			boo_ssrs5=(ssrs_t5_matrix[:,j]>=3) & (boo_young==True) & (b_cc1==True)
-			beta_inputs_young_cc1[0,j] = np.corrcoef(lconsumption_matrix[boo_young_cc,1,j],ssrs_t2_matrix[boo_young_cc,j])[1,0]
-			beta_inputs_young_cc1[1,j] = np.corrcoef(lleisure_matrix[boo_young_cc,1,j],ssrs_t2_matrix[boo_young_cc,j])[1,0]
-			beta_inputs_young_cc1[2,j] = np.corrcoef(ssrs_t5_matrix[boo_young_cc,j],ssrs_t2_matrix[boo_young_cc,j])[1,0]
+			beta_inputs_young_cc1[0,j] = np.corrcoef(lconsumption_matrix[boo_young_cc1,1,j],ssrs_t2_matrix[boo_young_cc1,j])[1,0]
+			beta_inputs_young_cc1[1,j] = np.corrcoef(lleisure_matrix[boo_young_cc1,1,j],ssrs_t2_matrix[boo_young_cc1,j])[1,0]
+			beta_inputs_young_cc1[2,j] = np.corrcoef(ssrs_t5_matrix[boo_young_cc1,j],ssrs_t2_matrix[boo_young_cc1,j])[1,0]
+			beta_inputs_young_cc1[3,j] = np.mean(ssrs_t2_matrix[boo_young_cc1,j]) - np.mean(ssrs_t2_matrix[boo_young_cc0,j])
 
 		
 		for z in range(2,6): #4 rankings
@@ -282,14 +276,15 @@ class Estimate:
 		self.param0.gamma2[0][1]=sym(beta[11])
 		self.param0.gamma1[1]=sym(beta[12])
 		self.param0.gamma2[1]=sym(beta[13])
-		self.param0.kappas[0][0]=beta[14]
-		self.param0.kappas[0][1]=beta[15]
-		self.param0.kappas[0][2]=beta[16]
-		self.param0.kappas[0][3]=beta[17]
-		self.param0.kappas[1][0]=beta[18]
-		self.param0.kappas[1][1]=beta[19]
-		self.param0.kappas[1][2]=beta[20]
-		self.param0.kappas[1][3]=beta[21]
+		self.param0.tfp=beta[14]
+		self.param0.kappas[0][0]=beta[15]
+		self.param0.kappas[0][1]=beta[16]
+		self.param0.kappas[0][2]=beta[17]
+		self.param0.kappas[0][3]=beta[18]
+		self.param0.kappas[1][0]=beta[19]
+		self.param0.kappas[1][1]=beta[20]
+		self.param0.kappas[1][2]=beta[21]
+		self.param0.kappas[1][3]=beta[22]
 			
 
 
@@ -325,7 +320,7 @@ class Estimate:
 		beta_kappas_t5=np.mean(dic_betas['beta_kappas_t5'],axis=1) #4 x 1
 		beta_inputs_old=np.mean(dic_betas['beta_inputs_old'],axis=1) #3 x 1
 		beta_inputs_young_cc0=np.mean(dic_betas['beta_inputs_young_cc0'],axis=1) #3 x 1
-		beta_inputs_young_cc1=np.mean(dic_betas['beta_inputs_young_cc1'],axis=1) #3 x 1
+		beta_inputs_young_cc1=np.mean(dic_betas['beta_inputs_young_cc1'],axis=1) #4 x 1
 
 			
 
@@ -394,7 +389,7 @@ class Estimate:
 			self.param0.betaw[3],np.log(self.param0.betaw[4]),
 			syminv(self.param0.gamma1[0][0]),syminv(self.param0.gamma2[0][0]),
 			syminv(self.param0.gamma1[0][1]),syminv(self.param0.gamma2[0][1]),
-			syminv(self.param0.gamma1[1]),syminv(self.param0.gamma2[1]),
+			syminv(self.param0.gamma1[1]),syminv(self.param0.gamma2[1]),self.param0.tfp,
 			self.param0.kappas[0][0],self.param0.kappas[0][1],#kappa: t=2, m0
 			self.param0.kappas[0][2],self.param0.kappas[0][3], #kappa: t=2, m0
 			self.param0.kappas[1][0],self.param0.kappas[1][1],#kappa: t=5, m0
@@ -403,7 +398,7 @@ class Estimate:
 
 		
 		#Here we go
-		opt = minimize(self.ll, beta0,  method='Nelder-Mead', options={'maxiter':2000, 'maxfev': 90000, 'ftol': 1e-3, 'disp': True});
+		opt = minimize(self.ll, beta0,  method='Nelder-Mead', options={'maxiter':2000, 'maxfev': 90000, 'ftol': 1e-1, 'disp': True});
 		
 		return opt
 

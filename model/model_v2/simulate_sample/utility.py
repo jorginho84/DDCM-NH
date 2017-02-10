@@ -26,12 +26,13 @@ class Parameters:
 	List of structural parameters and prices
 
 	"""
-	def __init__(self,alphap,alphaf,eta,gamma1,gamma2,
+	def __init__(self,alphap,alphaf,eta,gamma1,gamma2,tfp,
 		sigmatheta,betaw,betam,betak,eitc,afdc,snap,cpi,q,scalew,shapew,
 		lambdas,kappas,pafdc,psnap):
 
 		self.alphap,self.alphaf,self.eta=alphap,alphaf,eta
 		self.gamma1,self.gamma2=gamma1,gamma2
+		self.tfp=tfp
 		self.sigmatheta,self.betaw,self.betam,self.betak=sigmatheta,betaw,betam,betak
 		self.eitc,self.afdc,self.snap,self.cpi,self.q=eitc,afdc,snap,cpi,q
 		self.scalew,self.shapew=scalew,shapew
@@ -388,7 +389,7 @@ class Utility:
 			cc_cost = price[:,0]*(ones-free.reshape(self.N))
 		
 		#old kids don't pay for child care
-		cc_cost[agech>5]=0
+		cc_cost[agech>6]=0
 
 		incomepc=(dincome - cc*cc_cost)/(ones+nkids+marr)
 		incomepc[incomepc<=0]=1
@@ -422,21 +423,22 @@ class Utility:
 		#Parameters
 		gamma1=self.param.gamma1
 		gamma2=self.param.gamma2
+		tfp=self.param.tfp
 		
 		theta1=np.zeros(self.N)
 
 		#The production of HC: young, cc=0
-		boo=(agech<=5) & (cc==0)
+		boo=(agech<=6) & (cc==0)
 		theta1[boo] = gamma1[0][0]*np.log(theta0[boo]) + gamma2[0][0]*incomepc[boo] +\
 		(1 - gamma1[0][0] - gamma2[0][0] )*leisure[boo] + omega[boo]
 
 		#The production of HC: young, cc=1
-		boo=(agech<=5) & (cc==1)
+		boo=(agech<=6) & (cc==1)
 		theta1[boo] = gamma1[0][1]*np.log(theta0[boo]) + gamma2[0][1]*incomepc[boo] +\
-		(1 - gamma1[0][1] - gamma2[0][1] )*leisure[boo] + omega[boo]
+		(1 - gamma1[0][1] - gamma2[0][1] )*leisure[boo] + tfp + omega[boo]
 
 		#The production of HC: old
-		boo=(agech>5)
+		boo=(agech>6)
 		theta1[boo] = gamma1[1]*np.log(theta0[boo]) + gamma2[1]*incomepc[boo] +\
 		(1 - gamma1[1] - gamma2[1] )*leisure[boo] + omega[boo]
 

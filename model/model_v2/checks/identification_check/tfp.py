@@ -1,16 +1,17 @@
 
 #build a grid around parameter value
-lenght = 0.1
-size_grid = 4
-max_p = tfp - lenght
-min_p = tfp + lenght
+lenght = 0.02
+size_grid = 5
+max_p = tfp + lenght
+min_p = tfp - lenght
 p_list = np.linspace(min_p,max_p,size_grid)
 obs_moment = moments_vector[25,0].copy()
 
 #draft: try updating a parameter
 target_moment = np.zeros((size_grid,))
+qw = np.zeros((size_grid,))
 for i in range(size_grid): 
-	param0.gamma1[0][1] = p_list[i].copy()
+	param0.tfp = p_list[i].copy()
 	emax_instance=output_ins.emax(param0)
 	choices=output_ins.samples(param0,emax_instance)
 	dic_betas=output_ins.aux_model(choices)

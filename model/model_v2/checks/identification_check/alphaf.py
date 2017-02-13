@@ -1,9 +1,9 @@
 
 #build a grid around parameter value
-lenght = 0.8
-size_grid = 3
-max_p = -0.05
-min_p = -0.2
+lenght = 0.05
+size_grid = 5
+max_p = alphaf + lenght
+min_p = alphaf - lenght
 p_list = np.linspace(min_p,max_p,size_grid)
 obs_moment = moments_vector[2,0].copy()
 
@@ -21,7 +21,7 @@ for i in range(size_grid):
 		param0.betaw[3],np.log(param0.betaw[4]),
 		syminv(param0.gamma1[0][0]),syminv(param0.gamma2[0][0]),
 		syminv(param0.gamma1[0][1]),syminv(param0.gamma2[0][1]),
-		syminv(param0.gamma1[1]),syminv(param0.gamma2[1]),
+		syminv(param0.gamma1[1]),syminv(param0.gamma2[1]),param0.tfp,
 		param0.kappas[0][0],param0.kappas[0][1], #kappa: t=2 
 		param0.kappas[0][2],param0.kappas[0][3],#kappa: t=2 
 		param0.kappas[1][0],param0.kappas[1][1],#kappa: t=5 

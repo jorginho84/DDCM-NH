@@ -1,9 +1,9 @@
 
 #build a grid around parameter value
-lenght = 0.5
-size_grid = 4
-max_p = 0.3
-min_p = 0.005
+lenght = 0.05
+size_grid = 5
+max_p = gamma2[0][1] + lenght
+min_p = gamma2[0][1] - lenght
 p_list = np.linspace(min_p,max_p,size_grid)
 obs_moment = moments_vector[22,0].copy()
 
@@ -16,6 +16,10 @@ for i in range(size_grid):
 	dic_betas=output_ins.aux_model(choices)
 	target_moment[i] = np.mean(dic_betas['beta_inputs_young_cc1'][0,:],axis=0)
 
+
+
+#Back to original
+execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/load_param.py')
 
 #the graph
 fig, ax=plt.subplots()
@@ -36,5 +40,3 @@ plt.show()
 fig.savefig('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/checks/gamma2_young_cc1.pdf', format='pdf')
 plt.close()
 
-#Back to original
-execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/load_param.py')

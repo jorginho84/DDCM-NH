@@ -1,9 +1,9 @@
 
 #build a grid around parameter value
-lenght = 0.3
-size_grid = 4
-max_p = 0.7
-min_p = 0.01
+lenght = 0.05
+size_grid = 5
+max_p = eta + lenght
+min_p = eta - lenght
 p_list = np.linspace(min_p,max_p,size_grid)
 obs_moment = moments_vector[0,0].copy()
 
@@ -22,7 +22,7 @@ for i in range(size_grid):
 		param0.betaw[3],np.log(param0.betaw[4]),
 		syminv(param0.gamma1[0][0]),syminv(param0.gamma2[0][0]),
 		syminv(param0.gamma1[0][1]),syminv(param0.gamma2[0][1]),
-		syminv(param0.gamma1[1]),syminv(param0.gamma2[1]),
+		syminv(param0.gamma1[1]),syminv(param0.gamma2[1]),param0.tfp,
 		param0.kappas[0][0],param0.kappas[0][1], #kappa: t=2 
 		param0.kappas[0][2],param0.kappas[0][3],#kappa: t=2 
 		param0.kappas[1][0],param0.kappas[1][1],#kappa: t=5 
@@ -43,7 +43,7 @@ plt.setp(plot1,linewidth=3)
 plt.setp(plot2,linewidth=3)
 plt.setp(plot3,linewidth=3)
 ax.legend(loc = 0)
-ax.set_ylabel(r'Moment')
+ax.set_ylabel(r'Proportion of unemployed')
 ax.set_xlabel(r'Preference for $\ln\theta$ ($\eta$)')
 ax.spines['right'].set_visible(False)
 ax.spines['top'].set_visible(False)

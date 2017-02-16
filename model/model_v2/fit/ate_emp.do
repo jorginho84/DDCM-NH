@@ -24,29 +24,41 @@ program prob_diff, rclass
 	return scalar ate=`mean_1' - `mean_2'
 end
 
-mat ate_emp=J(9,1,.)
-mat se_ate_emp=J(9,1,.)
+mat ate_part=J(9,1,.)
+mat se_ate_part=J(9,1,.)
+mat ate_full=J(9,1,.)
+mat se_ate_full=J(9,1,.)
 foreach x in 0 1 4 7{
-	gen d_emp_t`x' = hours_t`x'_cat1 == 0
-	bootstrap diff=r(ate), reps(`reps'): prob_diff d_emp_t`x'
-	mat ate_emp[`x'+1,1] = e(b)
-	mat se_ate_emp[`x'+1,1] = e(se)
+	gen d_part_t`x' = hours_t`x'_cat2 == 1
+	gen d_full_t`x' = hours_t`x'_cat3 == 1
+	
+	bootstrap diff=r(ate), reps(`reps'): prob_diff d_part_t`x'
+	mat ate_part[`x'+1,1] = e(b)
+	mat se_ate_part[`x'+1,1] = e(se)
+
+	bootstrap diff=r(ate), reps(`reps'): prob_diff d_full_t`x'
+	mat ate_full[`x'+1,1] = e(b)
+	mat se_ate_full[`x'+1,1] = e(se)
 
 }
 
-preserve
-clear
-set obs 9
-svmat ate_emp
-outsheet using "/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/fit/ate_emp.csv", comma replace
-restore
 
-preserve
-clear
-set obs 9
-svmat se_ate_emp
-outsheet using "/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/fit/se_ate_emp.csv", comma replace
-restore
+foreach vars in part full{
+	preserve
+	clear
+	set obs 9
+	svmat ate_`vars'
+	outsheet using "/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/fit/ate_`vars'.csv", comma replace
+	restore
+
+	preserve
+	clear
+	set obs 9
+	svmat se_ate_`vars'
+	outsheet using "/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/fit/se_ate_`vars'.csv", comma replace
+	restore
+
+} 
 
 
 exit, STATA clear

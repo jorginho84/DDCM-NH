@@ -89,7 +89,7 @@ class Utility:
 					np.reshape(self.xwage[:,2],(self.N,1))),axis=1)
 
 		betas=self.param.betaw[0:-1,0]
-		epsilon=np.sqrt(self.param.betaw[-1,0])*np.random.rand(self.N)
+		epsilon=np.sqrt(self.param.betaw[-1,0])*np.random.randn(self.N)
 		return np.exp( np.dot(xw,betas)+epsilon )
 
 	def q_prob(self):
@@ -134,7 +134,7 @@ class Utility:
 		age_ra=self.xmarr[:,0].copy()
 		age=age_ra+(periodt-1) #age at t-1
 		betas=self.param.betam[0:-1,0]
-		epsilon=self.param.betam[-1,0]*np.random.rand(self.N)
+		epsilon=self.param.betam[-1,0]*np.random.randn(self.N)
 		x_marr2=np.concatenate( (np.reshape(age,(self.N,1)),
 			np.reshape(marriedt_1,(self.N,1)),
 			np.ones((self.N,1))),axis=1 )
@@ -165,7 +165,7 @@ class Utility:
 		age=age_ra+(periodt-1) #age at period t-1
 		age2=age**2
 		betas=self.param.betak[0:-1,0]
-		epsilon=self.param.betak[-1,0]*np.random.rand(self.N)
+		epsilon=self.param.betak[-1,0]*np.random.randn(self.N)
 		xkids2=np.concatenate((np.reshape(age,(self.N,1)),np.reshape(age2,(self.N,1)),
 					nkids,marriage,np.ones((self.N,1))),axis=1)
 

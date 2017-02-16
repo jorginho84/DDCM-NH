@@ -14,6 +14,8 @@ ssrs_sim.do
 ate_cc.do
 ate_emp.do
 
+
+
 """
 from __future__ import division #omit for python 3.x
 import numpy as np
@@ -45,7 +47,7 @@ import estimate as estimate
 
 np.random.seed(1)
 
-betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv3_nelder_v22_v4.npy')
+betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv3_nelder_v20_v4.npy')
 
 #Utility function
 eta=betas_nelder[0]
@@ -60,12 +62,12 @@ wagep_betas=np.array([betas_nelder[3],betas_nelder[4],betas_nelder[5],
 #Production function [young[cc0,cc1],old]
 gamma1=[[betas_nelder[8],betas_nelder[10]],betas_nelder[12]]
 gamma2=[[betas_nelder[9],betas_nelder[11]],betas_nelder[13]]
-tfp=betas_nelder[14]
+tfp=0.15
 sigmatheta=0
 
 #Measurement system: three measures for t=2, one for t=5
-kappas=[[betas_nelder[15],betas_nelder[16],betas_nelder[17],betas_nelder[18]],
-[betas_nelder[19],betas_nelder[20],betas_nelder[21],betas_nelder[22]]]
+kappas=[[betas_nelder[14],betas_nelder[15],betas_nelder[16],betas_nelder[17]],
+[betas_nelder[18],betas_nelder[19],betas_nelder[20],betas_nelder[21]]]
 #First measure is normalized. starting arbitrary values
 #All factor loadings are normalized
 lambdas=[1,1]
@@ -194,29 +196,29 @@ beta_inputs_young_cc1_sim=np.mean(dic_betas['beta_inputs_young_cc1'],axis=1) #4 
 #################################################################################
 #################################################################################
 #FIGURE: ATE ON INCOME#
-execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/fit/ate_inc.py')
+#execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/fit/ate_inc.py')
 
 #################################################################################
 #################################################################################
 #FIGURE: ATE ON CHILD CARE#
-execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/fit/ate_cc.py')
+#execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/fit/ate_cc.py')
 
 
 #################################################################################
 #################################################################################
 #FIGURE: ATE ON EMPLOYMENT#
-execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/fit/ate_emp.py')
+#execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/fit/ate_emp.py')
 
 #################################################################################
 #################################################################################
 #FIGURE: ATE ON THETA#
-execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/fit/ate_theta.py')
+#execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/fit/ate_theta.py')
 
 
 #################################################################################
 #################################################################################
 #TABLE: COMPARING OPROBITS#
-execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/fit/oprobit.py')
+#execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/fit/oprobit.py')
 
 #################################################################################
 #################################################################################

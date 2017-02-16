@@ -27,14 +27,14 @@ import int_linear
 import emax as emax
 import simdata as simdata
 sys.path.append("/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/estimation")
-import estimate_aux as estimate
+import estimate as estimate
 sys.path.append("/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/ses")
 import se
 
 
 np.random.seed(1)
 
-betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv2_nelder_v12.npy')
+betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv3_nelder_v22_v4.npy')
 
 
 #Utility function
@@ -50,15 +50,15 @@ wagep_betas=np.array([betas_nelder[3],betas_nelder[4],betas_nelder[5],
 #Production function [young[cc0,cc1],old]
 gamma1=[[betas_nelder[8],betas_nelder[10]],betas_nelder[12]]
 gamma2=[[betas_nelder[9],betas_nelder[11]],betas_nelder[13]]
+tfp=betas_nelder[14]
 sigmatheta=0
 
 #Measurement system: three measures for t=2, one for t=5
-kappas=[[[betas_nelder[14],betas_nelder[15],betas_nelder[16],betas_nelder[17]]
-,[betas_nelder[18],betas_nelder[19],betas_nelder[20],betas_nelder[21]],
-[betas_nelder[22],betas_nelder[23],betas_nelder[24],betas_nelder[25]]],
-[[betas_nelder[26],betas_nelder[27],betas_nelder[28],betas_nelder[29]]]]
+kappas=[[betas_nelder[15],betas_nelder[16],betas_nelder[17],betas_nelder[18]],
+[betas_nelder[19],betas_nelder[20],betas_nelder[21],betas_nelder[22]]]
 #First measure is normalized. starting arbitrary values
-lambdas=[[1,betas_nelder[30],betas_nelder[31]],[betas_nelder[32]]]
+#All factor loadings are normalized
+lambdas=[1,1]
 
 
 #Weibull distribution of cc prices
@@ -129,7 +129,7 @@ married0=x_df[ ['d_marital_2']   ].values
 agech0=x_df[['age_t0']].values
 
 #Defines the instance with parameters
-param0=util.Parameters(alphap, alphaf, eta, gamma1, gamma2,sigmatheta,
+param0=util.Parameters(alphap, alphaf, eta, gamma1, gamma2, tfp, sigmatheta,
 	wagep_betas, marriagep_betas, kidsp_betas, eitc_list,afdc_list,snap_list,
 	cpi,q,scalew,shapew,lambdas,kappas,pafdc,psnap)
 
@@ -164,7 +164,11 @@ output_ins=estimate.Estimate(param0,x_w,x_m,x_k,x_wmk,passign,agech0,theta0,nkid
 #The SE class
 se_ins=se.SEs(output_ins,var_cov,betas_nelder)
 
+#Number of parameters and moments
+npar = betas_nelder.shape[0]
+nmom = moments_vector.shape[0]
+
 #The var-cov matrix of structural parameters
-ses = se_ins.big_sand(0.00001,36,33) 
+ses = se_ins.big_sand(0.00001,nmom,npar) 
 
 np.save('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/estimation/ses_v12.npy',ses)

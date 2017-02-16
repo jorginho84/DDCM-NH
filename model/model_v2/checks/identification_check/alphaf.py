@@ -37,7 +37,7 @@ execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2
 fig, ax=plt.subplots()
 plot1=ax.plot(p_list,target_moment,'b-',label='Simulated',alpha=0.9)
 plot2=ax.plot(p_list,np.full((size_grid,),obs_moment),'r-',label='Observed',alpha=0.9)
-plot3=ax.plot(np.full((size_grid,),alphap),target_moment,'k--',label='Estimated parameter',alpha=0.9)
+plot3=ax.plot(np.full((size_grid,),alphaf),target_moment,'k--',label='Estimated parameter',alpha=0.9)
 plt.setp(plot1,linewidth=3)
 plt.setp(plot2,linewidth=3)
 plt.setp(plot3,linewidth=3)

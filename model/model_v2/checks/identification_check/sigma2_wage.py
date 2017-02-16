@@ -1,6 +1,6 @@
 
 #build a grid around parameter value
-lenght = 0.05
+lenght = 3
 size_grid = 5
 max_p = wagep_betas[4,0] + lenght
 min_p = wagep_betas[4,0] - lenght

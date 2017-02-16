@@ -2,8 +2,8 @@
 #build a grid around parameter value
 lenght = 0.05
 size_grid = 5
-max_p = gamma1[0][1] + lenght
-min_p = gamma1[0][1] - lenght
+max_p = 0.99
+min_p = 0.8
 p_list = np.linspace(min_p,max_p,size_grid)
 obs_moment = moments_vector[24,0].copy()
 
@@ -28,7 +28,7 @@ plot3=ax.plot(np.full((size_grid,),gamma1[0][1]),target_moment,'k--',label='Esti
 plt.setp(plot1,linewidth=3)
 plt.setp(plot2,linewidth=3)
 plt.setp(plot3,linewidth=3)
-ax.legend()
+ax.legend(loc=4)
 ax.set_ylabel(r'$Corr(SSRS_5,SSRS_2)$')
 ax.set_xlabel(r'Productivity of $\theta_t$ ($\gamma_2$, age $\leq 5$)')
 ax.spines['right'].set_visible(False)

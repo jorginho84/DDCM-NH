@@ -25,11 +25,12 @@ class SimData:
 	The rest are state variables at period 0
 	"""
 	def __init__(self,N,param,emax_function,
-		x_w,x_m,x_k,x_wmk,passign,theta0,nkids0,married0,agech):
+		x_w,x_m,x_k,x_wmk,passign,theta0,nkids0,married0,agech,hours_p,hours_f):
 		self.N,self.param,self.emax_function=N,param,emax_function
 		self.x_w,self.x_m,self.x_k,self.x_wmk=x_w,x_m,x_k,x_wmk
 		self.passign,self.theta0,self.nkids0,self.married0=passign,theta0,nkids0,married0
 		self.agech=agech
+		self.hours_p, self.hours_f=hours_p,hours_f
 		
 		
 
@@ -63,9 +64,9 @@ class SimData:
 				if j==0:
 					hours_aux=0
 				elif j==1:
-					hours_aux=15
+					hours_aux=self.hours_p
 				elif j==2:
-					hours_aux=30
+					hours_aux=self.hours_f
 
 				hours=np.full(self.N,hours_aux,dtype=float)
 				childcare=np.zeros(self.N)
@@ -74,9 +75,9 @@ class SimData:
 				if j==3:
 					hours_aux=0
 				elif j==4:
-					hours_aux=15
+					hours_aux=self.hours_p
 				elif j==5:
-					hours_aux=30
+					hours_aux=self.hours_f
 
 				hours=np.full(self.N,hours_aux,dtype=float)
 				childcare=np.ones(self.N)
@@ -182,11 +183,11 @@ class SimData:
 			
 			#at periodt=0, if choice>4, individual chooses childcare=1	
 			hours_t[choices_index==0]=0
-			hours_t[choices_index==1]=15
-			hours_t[choices_index==2]=30
+			hours_t[choices_index==1]=self.hours_p
+			hours_t[choices_index==2]=self.hours_f
 			hours_t[choices_index==3]=0
-			hours_t[choices_index==4]=15
-			hours_t[choices_index==5]=30
+			hours_t[choices_index==4]=self.hours_p
+			hours_t[choices_index==5]=self.hours_f
 			childcare_t[choices_index>2]=1
 
 			#Saving

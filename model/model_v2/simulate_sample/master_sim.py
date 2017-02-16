@@ -48,7 +48,7 @@ np.random.seed(1);
 #Sample size
 #N=315
 
-betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv3_nelder_v20_v4.npy')
+betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv3_nelder_v22_v4.npy')
 
 #Utility function
 eta=betas_nelder[0]
@@ -57,18 +57,18 @@ alphaf=betas_nelder[2]
 
 #wage process
 wagep_betas=np.array([betas_nelder[3],betas_nelder[4],betas_nelder[5],
-	betas_nelder[6],betas_nelder[7]]).reshape((5,1))
+	1.1,1]).reshape((5,1))
 
 
 #Production function [young[cc0,cc1],old]
 gamma1=[[betas_nelder[8],betas_nelder[10]],betas_nelder[12]]
 gamma2=[[betas_nelder[9],betas_nelder[11]],betas_nelder[13]]
-tfp = 0.3
+tfp=betas_nelder[14]
 sigmatheta=0
 
 #Measurement system: three measures for t=2, one for t=5
-kappas=[[betas_nelder[14],betas_nelder[15],betas_nelder[16],betas_nelder[17]],
-[betas_nelder[18],betas_nelder[19],betas_nelder[20],betas_nelder[21]]]
+kappas=[[betas_nelder[15],betas_nelder[16],betas_nelder[17],betas_nelder[18]],
+[betas_nelder[19],betas_nelder[20],betas_nelder[21],betas_nelder[22]]]
 #All factor loadings are normalized
 lambdas=[1,1]
 
@@ -152,6 +152,10 @@ param=util.Parameters(alphap, alphaf, eta, gamma1, gamma2,tfp,sigmatheta,
 #Creating a grid for the emax computation
 dict_grid=gridemax.grid()
 
+#How many hours is part- and full-time work
+hours_p=15
+hours_f=40
+
 ##############Computing EmaxT#####################
 print ''
 print ''
@@ -163,7 +167,7 @@ print ''
 
 D=50
 np.random.seed(2)
-emax_function_in=emax.Emaxt(param,D,dict_grid)
+emax_function_in=emax.Emaxt(param,D,dict_grid,hours_p,hours_f)
 emax_dic=emax_function_in.recursive(8) #8 emax (t=1 to t=8)
 
 
@@ -176,6 +180,7 @@ print ''
 print ''
 
 
+
 #########Simulating data###############
 print ''
 print ''
@@ -186,7 +191,7 @@ print ''
 
 
 sim_ins=simdata.SimData(N,param,emax_dic,x_w,x_m,x_k,x_wmk,passign,theta0,\
-	nkids0,married0,agech0)
+	nkids0,married0,agech0,hours_p,hours_f)
 data_dic=sim_ins.fake_data(9) #9 periods (t=0 to t=8)
 
 
@@ -221,6 +226,7 @@ np.mean(income,axis=0)
 ate_income=np.mean(income[passign[:,0]==1,:],axis=0) - np.mean(income[passign[:,0]==0,:],axis=0)
 ate_ct=np.mean(ct[passign[:,0]==1,:],axis=0) - np.mean(ct[passign[:,0]==0,:],axis=0)
 
+
 #Children's ranking
 ssrs_freq_t2=np.zeros((N,5))
 ssrs_freq_t5=np.zeros((N,5))
@@ -245,14 +251,18 @@ np.mean(cc_t[(agech0[:,0]<=5) & (hours_t[:,0]==15),0],axis=0)
 
 #Labor supply
 unemp_t=hours_t==0
-part_t=hours_t==15
-full_t=hours_t==30
+part_t=hours_t==hours_p
+full_t=hours_t==hours_f
 
 np.mean(unemp_t,axis=0)
 np.mean(full_t,axis=0)
+np.mean(part_t,axis=0)
 
+
+np.mean(wage_t[unemp_t[:,0]==0,0])
 
 gross = wage_t*hours_t*52
+np.mean(gross[unemp_t[:,0]==0,0])
 np.mean(wage_t[(part_t[:,0]==1) & (passign[:,0]==1),0],axis=0)
 np.mean(gross[(part_t[:,0]==1) & (passign[:,0]==1),0],axis=0)
 np.mean(income[(unemp_t[:,0]==1) & (passign[:,0]==1),0],axis=0)
@@ -269,3 +279,4 @@ ate_full=np.mean(full_t[passign[:,0]==1,:],axis=0) - np.mean(full_t[passign[:,0]
 
 
 		
+

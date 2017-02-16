@@ -33,7 +33,7 @@ class Emaxt:
 	"""
 
 
-	def __init__(self,param,D,grid_dict):
+	def __init__(self,param,D,grid_dict,hours_p,hours_f):
 
 		"""
 		D=number of shocks for a given individual to be drawn
@@ -47,6 +47,7 @@ class Emaxt:
 
 		self.param=param
 		self.D,self.grid_dict=D,grid_dict
+		self.hours_p,self.hours_f=hours_p,hours_f
 		
 
 	def emax_bigt(self):
@@ -106,9 +107,9 @@ class Emaxt:
 				if jt==0:
 					hours_aux=0
 				elif jt==1:
-					hours_aux=15
+					hours_aux=self.hours_p
 				elif jt==2:
-					hours_aux=30
+					hours_aux=self.hours_f
 				hours=np.full(ngrid,hours_aux,dtype=float)
 				childcare=np.zeros(ngrid)
 
@@ -116,9 +117,9 @@ class Emaxt:
 				if jt==3:
 					hours_aux=0
 				elif jt==4:
-					hours_aux=15
+					hours_aux=self.hours_p
 				elif jt==5:
-					hours_aux=30
+					hours_aux=self.hours_f
 				hours=np.full(ngrid,hours_aux,dtype=float)
 				childcare=np.ones(ngrid)
 
@@ -155,18 +156,18 @@ class Emaxt:
 						if j==0:
 							hours_aux2=0
 						elif j==1:
-							hours_aux2=15
+							hours_aux2=self.hours_p
 						elif j==2:
-							hours_aux2==30
+							hours_aux2==self.hours_f
 						hours_t1=np.full(ngrid,hours_aux2,dtype=float)
 						childcare_t1=np.zeros((ngrid,1))
 					else:
 						if j==3:
 							hours_aux2=0
 						elif j==4:
-							hours_aux2=15
+							hours_aux2=self.hours_p
 						elif j==5:
-							hours_aux2==30
+							hours_aux2==self.hours_f
 						hours_t1=np.full(ngrid,hours_aux2,dtype=float)
 						childcare_t1=np.ones((ngrid,1))				
 
@@ -208,18 +209,18 @@ class Emaxt:
 					if j==0:
 						hours_aux2=0
 					elif j==1:
-						hours_aux2=15
+						hours_aux2=self.hours_p
 					elif j==2:
-						hours_aux2==30
+						hours_aux2==self.hours_f
 					hours_t1=np.full(ngrid,hours_aux2,dtype=float)
 					childcare_t1=np.zeros((ngrid,1))
 				else:
 					if j==3:
 						hours_aux2=0
 					elif j==4:
-						hours_aux2=15
+						hours_aux2=self.hours_p
 					elif j==5:
-						hours_aux2==30
+						hours_aux2==self.hours_f
 					hours_t1=np.full(ngrid,hours_aux2,dtype=float)
 					childcare_t1=np.ones((ngrid,1))				
 
@@ -327,9 +328,9 @@ class Emaxt:
 				if jt==0:
 					hours_aux=0
 				elif jt==1:
-					hours_aux=15
+					hours_aux=self.hours_p
 				elif jt==2:
-					hours_aux=30
+					hours_aux=self.hours_f
 
 				hours=np.full(ngrid,hours_aux,dtype=float)
 				childcare=np.zeros(ngrid)
@@ -338,9 +339,9 @@ class Emaxt:
 				if jt==3:
 					hours_aux=0
 				elif jt==4:
-					hours_aux=15
+					hours_aux=self.hours_p
 				elif jt==5:
-					hours_aux=30
+					hours_aux=self.hours_f
 
 				hours=np.full(ngrid,hours_aux,dtype=float)
 				childcare=np.ones(ngrid)
@@ -380,18 +381,18 @@ class Emaxt:
 					if j==0:
 						hours_aux=0
 					elif j==1:
-						hours_aux=15
+						hours_aux=self.hours_p
 					elif j==2:
-						hours_aux=30
+						hours_aux=self.hours_f
 					hours_t1=np.full(ngrid,hours_aux,dtype=float)
 					childcare_t1=np.zeros(ngrid)
 				else:
 					if j==3:
 						hours_aux=0
 					elif j==4:
-						hours_aux=15
+						hours_aux=self.hours_p
 					elif j==5:
-						hours_aux=30
+						hours_aux=self.hours_f
 					hours_t1=np.full(ngrid,hours_aux,dtype=float)
 					childcare_t1=np.ones(ngrid)
 

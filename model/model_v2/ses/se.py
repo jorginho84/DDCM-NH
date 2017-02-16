@@ -32,7 +32,7 @@ import int_linear
 import emax as emax
 import simdata as simdata
 sys.path.append("/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/estimation")
-import estimate_aux as estimate
+import estimate as estimate
 
 
 class SEs:
@@ -71,8 +71,7 @@ class SEs:
 		shapew =  self.output_ins.__dict__['param0'].__dict__['shapew']
 		pafdc =  self.output_ins.__dict__['param0'].__dict__['pafdc']
 		psnap =  self.output_ins.__dict__['param0'].__dict__['psnap']
-		lambda_fixed = self.output_ins.__dict__['param0'].__dict__['lambdas'][0][0] #normalized
-
+		
 		#Utility function
 		eta=bs[0]
 		alphap=bs[1]
@@ -85,18 +84,16 @@ class SEs:
 		#Production function [young[cc0,cc1],old]
 		gamma1=[[bs[8],bs[10]],bs[12]]
 		gamma2=[[bs[9],bs[11]],bs[13]] 
+		tfp=bs[14]
 		sigmatheta=0
 
 		#Measurement system: three measures for t=2, one for t=5
-		kappas=[[[bs[14],bs[15],bs[16],bs[17]]
-		,[bs[18],bs[19],bs[20],bs[21]],
-		[bs[22],bs[23],bs[24],bs[25]]],
-		[[bs[26],bs[27],bs[28],bs[29]]]]
-		lambdas=[[lambda_fixed,bs[30],bs[31]],[bs[32]]]
+		kappas=[[bs[15],bs[16],bs[17],bs[18]],[bs[19],bs[20],bs[21],bs[22]]]
+		lambdas=[1,1]
 
 
 		#Re-defines the instance with parameters 
-		param0=util.Parameters(alphap, alphaf, eta, gamma1, gamma2,sigmatheta,
+		param0=util.Parameters(alphap, alphaf, eta, gamma1, gamma2, tfp, sigmatheta,
 			wagep_betas, marriagep_betas, kidsp_betas, eitc_list,
 			afdc_list,snap_list,cpi,q,scalew,shapew,
 			lambdas,kappas,pafdc,psnap)
@@ -126,19 +123,14 @@ class SEs:
 		beta_hours2=np.mean(dic_betas['beta_hours2'],axis=0) #1x1
 		beta_hours3=np.mean(dic_betas['beta_hours3'],axis=0) #1x1
 		beta_wagep=np.mean(dic_betas['beta_wagep'],axis=1) # 5 x 1
-		beta_kappas_t2_aux=np.mean(dic_betas['beta_kappas_t2'],axis=2) #4 x 3
-		#transforming to long array
-		beta_kappas_t2 = beta_kappas_t2_aux.reshape((beta_kappas_t2_aux.shape[0]*beta_kappas_t2_aux.shape[1],1))
-		beta_lambdas_t2=np.mean(dic_betas['beta_lambdas_t2'],axis=1) #2 x 1
+		beta_kappas_t2=np.mean(dic_betas['beta_kappas_t2'],axis=1) #4 x 1
 		beta_kappas_t5=np.mean(dic_betas['beta_kappas_t5'],axis=1) #4 x 1
-		beta_lambdas_t5=np.mean(dic_betas['beta_lambdas_t5'],axis=1) #1 x 1
 		beta_inputs_old=np.mean(dic_betas['beta_inputs_old'],axis=1) #3 x 1
 		beta_inputs_young_cc0=np.mean(dic_betas['beta_inputs_young_cc0'],axis=1) #3 x 1
-		beta_inputs_young_cc1=np.mean(dic_betas['beta_inputs_young_cc1'],axis=1) #3 x 1
+		beta_inputs_young_cc1=np.mean(dic_betas['beta_inputs_young_cc1'],axis=1) #4 x 1
 
 		return [beta_childcare, beta_hours2,beta_hours3,beta_wagep,beta_kappas_t2,
-		  beta_lambdas_t2,beta_kappas_t5, beta_lambdas_t5,beta_inputs_old,
-		 beta_inputs_young_cc0, beta_inputs_young_cc1]
+		  beta_kappas_t5, beta_inputs_old,beta_inputs_young_cc0, beta_inputs_young_cc1]
 
 	def binding(self,psi):
 		"""

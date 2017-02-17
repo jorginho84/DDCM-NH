@@ -25,30 +25,29 @@ import simdata as simdata
 
 np.random.seed(1)
 
-betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv2_nelder_v14.npy')
+betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv3_nelder_v22_v4.npy')
 
 #Utility function
-eta=betas_nelder[0]
+eta=0.4
 alphap=-betas_nelder[1]
 alphaf=-betas_nelder[2]
 
 
 #wage process
 wagep_betas=np.array([betas_nelder[3],betas_nelder[4],betas_nelder[5],
-	betas_nelder[6],betas_nelder[7]]).reshape((5,1))
+	1.1,1]).reshape((5,1))
 
 #Production function [young[cc0,cc1],old]
 gamma1=[[betas_nelder[8],betas_nelder[10]],betas_nelder[12]]
 gamma2=[[betas_nelder[9],betas_nelder[11]],betas_nelder[13]]
+tfp=betas_nelder[14]
 sigmatheta=0
 
 #Measurement system: three measures for t=2, one for t=5
-kappas=[[[betas_nelder[14],betas_nelder[15],betas_nelder[16],betas_nelder[17]]
-,[betas_nelder[18],betas_nelder[19],betas_nelder[20],betas_nelder[21]],
-[betas_nelder[22],betas_nelder[23],betas_nelder[24],betas_nelder[25]]],
-[[betas_nelder[26],betas_nelder[27],betas_nelder[28],betas_nelder[29]]]]
+kappas=[[betas_nelder[15],betas_nelder[16],betas_nelder[17],betas_nelder[18]],
+[betas_nelder[19],betas_nelder[20],betas_nelder[21],betas_nelder[22]]]
 #First measure is normalized. starting arbitrary values
-lambdas=[[1,betas_nelder[30],betas_nelder[31]],[betas_nelder[32]]]
+lambdas=[1,1]
 
 
 #Weibull distribution of cc prices
@@ -122,13 +121,16 @@ married0=x_df[ ['d_marital_2']   ].values
 agech0=x_df[['age_t0']].values
 
 #Defines the instance with parameters
-param0=util.Parameters(alphap, alphaf, eta, gamma1, gamma2,sigmatheta,
+param0=util.Parameters(alphap, alphaf, eta, gamma1, gamma2,tfp,sigmatheta,
 	wagep_betas, marriagep_betas, kidsp_betas, eitc_list,afdc_list,snap_list,
 	cpi,q,scalew,shapew,lambdas,kappas,pafdc,psnap)
 
 #For montercarlo integration
-D=200
+D=50
 
+#How many hours is part- and full-time work
+hours_p=15
+hours_f=40
 
 ######################################################################
 #Creating a grid for the emax computation
@@ -136,7 +138,8 @@ D=200
 dict_grid=gridemax.grid()
 
 #The emax interpolated values
-emax_function_in=emax.Emaxt(param0,D,dict_grid)
+np.random.seed(2)
+emax_function_in=emax.Emaxt(param0,D,dict_grid,hours_p,hours_f)
 emax_dic = emax_function_in.recursive(8)
 
 #to generate wage data (for interpolation)
@@ -161,7 +164,7 @@ for j in range(J):
 true_grid = { 'passign': passign,'theta0': theta0, 'nkids0': nkids0 , 'married0': married0, 
 		'x_w': x_w, 'x_m':x_m, 'x_k': x_k, 'x_wmk': x_wmk, 'agech':agech0 }
 
-emax_function_in_true=emax.Emaxt(param0,D,true_grid)
+emax_function_in_true=emax.Emaxt(param0,D,true_grid,hours_p,hours_f)
 emax_dic_true = emax_function_in_true.recursive(8)
 emax_t1_true = emax_dic_true[1]['emax1'] #(ngrid,n_choices)
 

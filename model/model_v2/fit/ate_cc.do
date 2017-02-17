@@ -36,7 +36,7 @@ mat se_ate_cc=J(2,1,.)
 
 local i =1
 foreach x in 1 4 {/*No young children in t=7*/
-	bootstrap diff=r(ate), reps(`reps'): prob_diff d_CC2_t`x' if age_t`x'<=5
+	bootstrap diff=r(ate), reps(`reps'): prob_diff d_CC2_t`x' if age_t`x'<=6
 	mat ate_cc[`i',1]=e(b)
 	mat se_ate_cc[`i',1]=e(se)
 	local i = `i' + 1

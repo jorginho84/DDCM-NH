@@ -7,7 +7,7 @@ for x in range(nperiods):
 	age_child[:,x]=agech0[:,0] + x
 
 
-boo_young = age_child<=5
+boo_young = age_child<=6
 boo_t = passign[:,0]==1
 boo_c = passign[:,0]==0
 

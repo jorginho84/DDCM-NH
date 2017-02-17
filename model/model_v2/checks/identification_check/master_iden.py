@@ -54,6 +54,10 @@ for i in range(var_cov.shape[0]):
 #Creating a grid for the emax computation
 dict_grid=gridemax.grid()
 
+#How many hours is part- and full-time work
+hours_p=15
+hours_f=40
+
 #For montercarlo integration
 D=50
 
@@ -62,7 +66,7 @@ M=1000
 
 #The instance
 output_ins=estimate.Estimate(param0,x_w,x_m,x_k,x_wmk,passign,agech0,theta0,nkids0,
-	married0,D,dict_grid,M,N,moments_vector,w_matrix)
+	married0,D,dict_grid,M,N,moments_vector,w_matrix,hours_p,hours_f)
 
 def syminv(g):
 	out = -np.log((2/(g+1)) - 1)
@@ -79,12 +83,12 @@ def syminv(g):
 
 #########################################################
 ####Full-time work###
-#execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/alphaf.py')
+execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/alphaf.py')
 
 
 #########################################################
 ####\gamma_1 (young_cc1)###
-execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/gamma1_young_cc1.py')
+#execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/gamma1_young_cc1.py')
 
 #########################################################
 ####\gamma_2 (old)###

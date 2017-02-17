@@ -1,5 +1,5 @@
-part = choices['hours_matrix']==15
-full = choices['hours_matrix']==30
+part = choices['hours_matrix']==hours_p
+full = choices['hours_matrix']==hours_f
 
 #simulated
 ate_part = np.mean(np.mean(part[passign[:,0]==1,:,:],axis=0) - np.mean(part[passign[:,0]==0,:,:],axis=0),axis=1 )

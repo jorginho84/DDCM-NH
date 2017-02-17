@@ -48,13 +48,13 @@ np.random.seed(1)
 betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv3_nelder_v22_v4.npy')
 
 #Utility function
-eta=betas_nelder[0]
+eta=0.3
 alphap=betas_nelder[1]
-alphaf=betas_nelder[2]
+alphaf=-0.085
 
 #wage process
 wagep_betas=np.array([betas_nelder[3],betas_nelder[4],betas_nelder[5],
-	betas_nelder[6],betas_nelder[7]]).reshape((5,1))
+	1.1,1]).reshape((5,1))
 
 
 #Production function [young[cc0,cc1],old]
@@ -169,8 +169,12 @@ D=50
 #For II procedure
 M=1000
 
+#How many hours is part- and full-time work
+hours_p=15
+hours_f=40
+
 output_ins=estimate.Estimate(param0,x_w,x_m,x_k,x_wmk,passign,agech0,theta0,nkids0,
-	married0,D,dict_grid,M,N,moments_vector,var_cov)
+	married0,D,dict_grid,M,N,moments_vector,var_cov,hours_p,hours_f)
 
 #Obtaining emax instances, samples, and betas for M samples
 np.random.seed(1)

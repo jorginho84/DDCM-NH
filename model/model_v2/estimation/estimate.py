@@ -23,7 +23,7 @@ import simdata as simdata
 
 class Estimate:
 	def __init__(self,param0,x_w,x_m,x_k,x_wmk,passign,agech0,theta0,
-		nkids0,married0,D,dict_grid,M,N,moments_vector,w_matrix):
+		nkids0,married0,D,dict_grid,M,N,moments_vector,w_matrix,hours_p,hours_f):
 
 		self.param0=param0
 		self.x_w,self.x_m,self.x_k,self.x_wmk=x_w,x_m,x_k,x_wmk
@@ -32,6 +32,7 @@ class Estimate:
 		self.agech0=agech0
 		self.M,self.N=M,N
 		self.moments_vector,self.w_matrix=moments_vector,w_matrix
+		self.hours_p,self.hours_f=hours_p,hours_f
 
 	def emax(self,param1):
 		"""
@@ -40,7 +41,7 @@ class Estimate:
 		"""
 		#updating with new betas
 		np.random.seed(1) #always the same emax, for a given set of beta
-		emax_ins_1=emax.Emaxt(param1,self.D,self.dict_grid)
+		emax_ins_1=emax.Emaxt(param1,self.D,self.dict_grid,self.hours_p,self.hours_f)
 		return emax_ins_1.recursive(8) #t=1 to t=8
 
 	def samples(self,param1,emaxins):
@@ -54,7 +55,7 @@ class Estimate:
 		#updating sample with new betas and emax
 		simdata_ins= simdata.SimData(self.N,param1,emaxins,
 			self.x_w,self.x_m,self.x_k,self.x_wmk,self.passign,self.theta0,
-			self.nkids0,self.married0,self.agech0)
+			self.nkids0,self.married0,self.agech0,self.hours_p,self.hours_f)
 
 		#save here
 		util_list=[]
@@ -398,7 +399,7 @@ class Estimate:
 
 		
 		#Here we go
-		opt = minimize(self.ll, beta0,  method='Nelder-Mead', options={'maxiter':2000, 'maxfev': 90000, 'ftol': 1e-1, 'disp': True});
+		opt = minimize(self.ll, beta0,  method='Nelder-Mead', options={'maxiter':2000, 'maxfev': 90000, 'ftol': 1e-3, 'disp': True});
 		
 		return opt
 

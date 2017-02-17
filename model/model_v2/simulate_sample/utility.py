@@ -368,7 +368,7 @@ class Utility:
 		"""
 		pwage=np.reshape(h,self.N)*np.reshape(wage,self.N)*52
 
-		d_work=h>=3
+		d_work=h>=self.hours_f
 		agech=np.reshape(self.age_t0,(self.N)) + periodt
 
 		nkids=np.reshape(nkids,self.N)

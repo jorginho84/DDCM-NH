@@ -85,7 +85,7 @@ class SimData:
 			
 			#Computing utility
 			model=util.Utility(self.param,self.N,self.x_w,self.x_m,self.x_k,self.passign,
-				theta0,nkids0,married0,hours,childcare,self.agech)
+				theta0,nkids0,married0,hours,childcare,self.agech,self.hours_p,self.hours_f)
 
 			util_values[:,j]=model.simulate(periodt,wage0,free0,price0)
 
@@ -152,7 +152,7 @@ class SimData:
 		hours=np.zeros(self.N)
 		childcare=np.zeros(self.N)
 		model=util.Utility(self.param,self.N,self.x_w,self.x_m,self.x_k,self.passign,
-			theta0,nkids0,married0,hours,childcare,self.agech)
+			theta0,nkids0,married0,hours,childcare,self.agech,self.hours_p,self.hours_f)
 		wage0=model.waget(0)
 		free0=model.q_prob()
 		price0=model.price_cc()
@@ -196,7 +196,8 @@ class SimData:
 
 			#Current income
 			model=util.Utility(self.param,self.N,self.x_w,self.x_m,
-				self.x_k,self.passign,theta0,nkids0,married0,hours_t,childcare_t,self.agech)
+				self.x_k,self.passign,theta0,nkids0,married0,hours_t,childcare_t,self.agech,
+				self.hours_p,self.hours_f)
 			
 			dincome0=model.dincomet(periodt,hours_t,wage0,married0,nkids0)
 			dincome_matrix[:,periodt]=dincome0.copy()

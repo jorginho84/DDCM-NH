@@ -96,7 +96,7 @@ class Emaxt:
 		hours=np.zeros(ngrid)
 		childcare=np.zeros(ngrid)
 		model=util.Utility(self.param,ngrid,x_w,x_m,x_k,passign,
-			theta0,nkids0,married0,hours,childcare,agech)
+			theta0,nkids0,married0,hours,childcare,agech,self.hours_p,self.hours_f)
 		wage0=model.waget(8)
 		free=model.q_prob()
 		price=model.price_cc()		
@@ -188,7 +188,8 @@ class Emaxt:
 
 				#States at T
 				model=util.Utility(self.param,ngrid,x_w,x_m,x_k,
-					passign,theta0,nkids0,married0,hours,childcare,agech)
+					passign,theta0,nkids0,married0,hours,childcare,agech,
+					self.hours_p,self.hours_f)
 
 				periodt=8 
 
@@ -225,7 +226,8 @@ class Emaxt:
 					childcare_t1=np.ones((ngrid,1))				
 
 				model=util.Utility(self.param,ngrid,x_w,x_m,x_k,
-					passign,theta_t1,nkids_t1,married_t1,hours_t1,childcare,agech)
+					passign,theta_t1,nkids_t1,married_t1,hours_t1,childcare,agech,
+					self.hours_p,self.hours_f)
 				
 				#This is the terminal value!
 				u_vec[:,i,j]=model.simulate(8,wage_t1,free_t1,price_t1) #Last period is T=8. Terminal value=0
@@ -307,7 +309,8 @@ class Emaxt:
 		hours=np.zeros(ngrid)
 		childcare=np.zeros(ngrid)
 		model=util.Utility(self.param,ngrid,x_w,x_m,x_k,passign,
-			theta0,nkids0,married0,hours,childcare,agech)
+			theta0,nkids0,married0,hours,childcare,agech,
+			self.hours_p,self.hours_f)
 		wage0=model.waget(periodt-1)
 		free0=model.q_prob()
 		price0=model.price_cc()
@@ -361,7 +364,8 @@ class Emaxt:
 				
 				#Computing states at t
 				model=util.Utility(self.param,ngrid,x_w,x_m,x_k,
-					passign,theta0,nkids0,married0,hours,childcare,agech)
+					passign,theta0,nkids0,married0,hours,childcare,agech,
+					self.hours_p,self.hours_f)
 				
 				
 				married_t1=model.marriaget(periodt,married0)
@@ -399,7 +403,8 @@ class Emaxt:
 				
 				#Instance at period t
 				model=util.Utility(self.param,ngrid,x_w,x_m,x_k,
-					passign,theta_t1,nkids_t1,married_t1,hours_t1,childcare_t1,agech)
+					passign,theta_t1,nkids_t1,married_t1,hours_t1,childcare_t1,agech,
+					self.hours_p,self.hours_f)
 
 				#Current-period utility at t
 				u_vec[:,i,j]=model.simulate(periodt,wage_t1,free_t1,price_t1) 

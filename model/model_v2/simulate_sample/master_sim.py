@@ -53,7 +53,7 @@ betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/re
 #Utility function
 eta=betas_nelder[0]
 alphap=betas_nelder[1]
-alphaf=betas_nelder[2]
+alphaf=-0.1
 
 #wage process
 wagep_betas=np.array([betas_nelder[3],betas_nelder[4],betas_nelder[5],
@@ -212,6 +212,8 @@ hours_t=data_dic['Hours']
 wage_t=data_dic['Wage']
 ssrs_t2=data_dic['SSRS_t2']
 ssrs_t5=data_dic['SSRS_t5']
+kids=data_dic['Kids']
+marr=data_dic['Marriage']
 
 #log theta in SD units
 ltheta=np.log(theta_t)

@@ -47,7 +47,7 @@ class Utility:
 
 	"""
 	def __init__(self,param,N,xwage,xmarr,xkid,ra,theta0,
-		nkids0,married0,hours,cc,age_t0):
+		nkids0,married0,hours,cc,age_t0,hours_p,hours_f):
 		"""
 		Set up model's data and paramaters
 
@@ -63,6 +63,7 @@ class Utility:
 		self.xkid,self.ra,self.theta0=xkid,np.reshape(ra,self.N),theta0
 		self.nkids0,self.married0= nkids0,married0
 		self.hours,self.cc,self.age_t0=hours,cc,age_t0
+		self.hours_p,self.hours_f=hours_p,hours_f
 
 
 
@@ -458,8 +459,8 @@ class Utility:
 		ltheta=np.log(thetat)
 
 		#Work dummies
-		d_workf=ht==30
-		d_workp=ht==15
+		d_workf=ht==self.hours_f
+		d_workp=ht==self.hours_p
 		d_unemp=ht==0
 
 		#Consumption: depends on ra, cc, and period

@@ -37,19 +37,19 @@ betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/re
 
 
 #Utility function
-eta=betas_nelder[0]
+eta=0.35
 alphap=betas_nelder[1]
-alphaf=betas_nelder[2]
+alphaf=-0.2
 
 #wage process
 wagep_betas=np.array([betas_nelder[3],betas_nelder[4],betas_nelder[5],
-	betas_nelder[6],betas_nelder[7]]).reshape((5,1))
+	1.3,1]).reshape((5,1))
 
 
 #Production function [young[cc0,cc1],old]
-gamma1=[[betas_nelder[8],betas_nelder[10]],betas_nelder[12]]
-gamma2=[[betas_nelder[9],betas_nelder[11]],betas_nelder[13]]
-tfp=betas_nelder[14]
+gamma1=[0.8,betas_nelder[12]]
+gamma2=[0.1,betas_nelder[13]]
+tfp=0.42
 sigmatheta=0
 
 #Measurement system: three measures for t=2, one for t=5
@@ -187,30 +187,28 @@ betaw1=output.x[4]
 betaw2=output.x[5]
 betaw3=output.x[6]
 betaw4=np.exp(output.x[7])
-gamma1_young_cc0=sym(output.x[8])
-gamma2_young_cc0=sym(output.x[9])
-gamma1_young_cc1=sym(output.x[10])
-gamma2_young_cc1=sym(output.x[11])
-gamma1_old=sym(output.x[12])
-gamma2_old=sym(output.x[13])
-tfp_opt=output.x[14]
-kappas_00=output.x[15]
-kappas_01=output.x[16]
-kappas_02=output.x[17]
-kappas_03=output.x[18]
-kappas_10=output.x[19]
-kappas_11=output.x[20]
-kappas_12=output.x[21]
-kappas_13=output.x[22]
+gamma1_young_cc1=sym(output.x[8])
+gamma2_young_cc1=sym(output.x[9])
+gamma1_old=sym(output.x[10])
+gamma2_old=sym(output.x[11])
+tfp_opt=output.x[12]
+kappas_00=output.x[13]
+kappas_01=output.x[14]
+kappas_02=output.x[15]
+kappas_03=output.x[16]
+kappas_10=output.x[17]
+kappas_11=output.x[18]
+kappas_12=output.x[19]
+kappas_13=output.x[20]
 
 
 betas_opt=np.array([eta_opt, alphap_opt,alphaf_opt,betaw0,betaw1,betaw2,
-	betaw3,betaw4,gamma1_young_cc0,gamma2_young_cc0,gamma1_young_cc1,
-	gamma2_young_cc1,gamma1_old,gamma2_old,tfp_opt,
+	betaw3,betaw4,gamma1_young_cc1,gamma2_young_cc1,
+	gamma1_old,gamma2_old,tfp_opt,
 	kappas_00,kappas_01,kappas_02,kappas_03,
 	kappas_10,kappas_11,kappas_12,kappas_13])
 
-np.save('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv3_nelder_v22_v4.npy',betas_opt)
+np.save('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv4_v1.npy',betas_opt)
 
 
 

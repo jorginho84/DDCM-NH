@@ -52,22 +52,17 @@ for c in range(4):
 #C. Measures of academic achievement and family choices
 ind = ind +4
 #C.1 and C.2 Age>5 and Age<=5
-list_aux = [beta_inputs_old_sim, beta_inputs_young_cc0_sim, 
-beta_inputs_young_cc1_sim]
-list_obs = [moments_vector[ind:ind + 3,0], moments_vector[ind+3 : ind + 6,0], 
-moments_vector[ind+6 : ind + 10,0]]
-list_sig = [se_vector[ind:ind + 3], se_vector[ind+3: ind + 6], 
-se_vector[ind+6: ind + 10]]
+list_aux = [beta_inputs_old_sim, beta_inputs_young_cc1_sim]
+list_obs = [moments_vector[ind:ind + 2,0], moments_vector[ind+2 : ind + 5,0]]
+list_sig = [se_vector[ind:ind + 2], se_vector[ind+2: ind + 5]]
 
-for j in range(3):
+for j in range(2):
 	if j==0:
 		pos = 18
-	elif j==1:
-		pos = 21
 	else:
-		pos = 24
+		pos = 20
 	
-	for c in range(3): # 3 moments each
+	for c in range(2): # 3 moments each
 		sim_moment = ws.cell('B' + str(c + pos))
 		obs_moment = ws.cell('D' + str(c + pos))
 		obs_sigma = ws.cell('F' + str(c + pos))
@@ -76,13 +71,13 @@ for j in range(3):
 		obs_sigma.value = np.float(list_sig[j][c])
 	
 	#the last one identified tfp
-	if j==2:
-		sim_moment = ws.cell('B' + str(27))
-		obs_moment = ws.cell('D' + str(27))
-		obs_sigma = ws.cell('F' + str(27))
-		sim_moment.value = np.float(list_aux[j][3])
-		obs_moment.value = np.float(list_obs[j][3])
-		obs_sigma.value = np.float(list_sig[j][3])
+	if j==1:
+		sim_moment = ws.cell('B' + str(22))
+		obs_moment = ws.cell('D' + str(22))
+		obs_sigma = ws.cell('F' + str(22))
+		sim_moment.value = np.float(list_aux[j][2])
+		obs_moment.value = np.float(list_obs[j][2])
+		obs_sigma.value = np.float(list_sig[j][2])
 
 
 

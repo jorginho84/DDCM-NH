@@ -5,7 +5,7 @@ size_grid = 5
 max_p = tfp + lenght
 min_p = tfp - lenght
 p_list = np.linspace(min_p,max_p,size_grid)
-obs_moment = moments_vector[25,0].copy()
+obs_moment = moments_vector[20,0].copy()
 
 #draft: try updating a parameter
 target_moment = np.zeros((size_grid,))
@@ -15,12 +15,11 @@ for i in range(size_grid):
 	emax_instance=output_ins.emax(param0)
 	choices=output_ins.samples(param0,emax_instance)
 	dic_betas=output_ins.aux_model(choices)
-	target_moment[i] = np.mean(dic_betas['beta_inputs_young_cc1'][3,:],axis=0)
+	target_moment[i] = np.mean(dic_betas['beta_inputs_young_cc1'][2,:],axis=0)
 	beta0=np.array([param0.eta,param0.alphap,param0.alphaf,
 		param0.betaw[0],param0.betaw[1],param0.betaw[2],
 		param0.betaw[3],np.log(param0.betaw[4]),
-		syminv(param0.gamma1[0][0]),syminv(param0.gamma2[0][0]),
-		syminv(param0.gamma1[0][1]),syminv(param0.gamma2[0][1]),
+		syminv(param0.gamma1[0]),syminv(param0.gamma2[0]),
 		syminv(param0.gamma1[1]),syminv(param0.gamma2[1]),param0.tfp,
 		param0.kappas[0][0],param0.kappas[0][1], #kappa: t=2 
 		param0.kappas[0][2],param0.kappas[0][3],#kappa: t=2 

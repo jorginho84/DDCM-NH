@@ -71,13 +71,11 @@ foreach j of numlist 2 3 4 5{
 ********************************************************************
 
 *To identify gammas (production function): 2 x 1 matrix
-mat inputs_moments_old=J(3,1,.)
-mat inputs_moments_young_cc0=J(3,1,.)
-mat inputs_moments_young_cc1=J(4,1,.)
+mat inputs_moments_old=J(2,1,.)
+mat inputs_moments_young_cc1=J(3,1,.)
 
-mat sigma_inputs_moments_old=J(3,1,.)
-mat sigma_inputs_moments_young_cc0=J(3,1,.)
-mat sigma_inputs_moments_young_cc1=J(4,1,.)
+mat sigma_inputs_moments_old=J(2,1,.)
+mat sigma_inputs_moments_young_cc1=J(3,1,.)
 
 program input_diff, rclass
 	version 13
@@ -115,43 +113,42 @@ mat m_aux = r(C)
 mat inputs_moments_old[2,1]=m_aux[2,1]
 
 *input_theta skills_t2 skills_t5 if (skills_m1_t2!=. & skills_t5!=.)
-corr skills_t2 skills_t5
-mat m_aux = r(C)
-mat inputs_moments_old[3,1]=m_aux[2,1]
+*corr skills_t2 skills_t5
+*mat m_aux = r(C)
+*mat inputs_moments_old[3,1]=m_aux[2,1]
 
 restore
 
 
 
 *Young children/cc=0 and 1: production function
-forvalues cc=0/1{
 
-	preserve
-	keep if age_t1<=6 & d_CC2_t1==`cc'
-	*input_diff lincomepc_t1 skills_t2  if (lincomepc_t1!=. & skills_m1_t2!=.)
-	qui: corr lincomepc_t1 skills_t2
-	mat m_aux = r(C)
-	mat inputs_moments_young_cc`cc'[1,1]=m_aux[2,1]
-	
-	*input_diff ll_t1 skills_t2  if (ll_t1!=. & skills_m1_t2!=.)
-	corr ll_t1 skills_t2
-	mat m_aux = r(C)
-	mat inputs_moments_young_cc`cc'[2,1]=m_aux[2,1]
-	
-	*input_theta skills_t2 skills_t5 if (skills_m1_t2!=. & skills_t5!=.)
-	corr skills_t2 skills_t5
-	mat m_aux = r(C)
-	mat inputs_moments_young_cc`cc'[3,1]=m_aux[2,1]
+preserve
+keep if age_t1<=6 
+*input_diff lincomepc_t1 skills_t2  if (lincomepc_t1!=. & skills_m1_t2!=.)
+qui: corr lincomepc_t1 skills_t2
+mat m_aux = r(C)
+mat inputs_moments_young_cc1[1,1]=m_aux[2,1]
 
-	restore
+*input_diff ll_t1 skills_t2  if (ll_t1!=. & skills_m1_t2!=.)
+corr ll_t1 skills_t2
+mat m_aux = r(C)
+mat inputs_moments_young_cc1[2,1]=m_aux[2,1]
+
+*input_theta skills_t2 skills_t5 if (skills_m1_t2!=. & skills_t5!=.)
+*corr skills_t2 skills_t5
+*mat m_aux = r(C)
+*mat inputs_moments_young_cc1[3,1]=m_aux[2,1]
+
+restore
 		
 	
-}
+
 
 preserve
 keep if age_t1<=6
 qui: reg skills_t2 d_CC2_t1
-mat inputs_moments_young_cc1[4,1]=_b[d_CC2_t1]
+mat inputs_moments_young_cc1[3,1]=_b[d_CC2_t1]
 restore
 
 **********************************************************************************************
@@ -181,7 +178,7 @@ foreach j of numlist 2 3 4 5{
 /*Saving betas*/
 
 mat betas_prod = prob_inc_t2\prob_inc_t5\inputs_moments_old\/*
-*/inputs_moments_young_cc0\inputs_moments_young_cc1 
+*/inputs_moments_young_cc1 
 
 
 program drop input_diff input_theta 

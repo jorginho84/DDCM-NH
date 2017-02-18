@@ -78,7 +78,7 @@ forvalues x=2/`draws'{
 *This is the sim moments matrix
 sum betas1
 matrix beta_matrix =r(mean)
-forvalues x=2/26{ /*26 moments*/
+forvalues x=2/21{ /*21 moments*/
 	sum betas`x'
 	matrix beta_matrix = beta_matrix\r(mean)
 	

@@ -2,18 +2,18 @@ betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/re
 
 
 #Utility function
-eta=betas_nelder[0]
+eta=0.35
 alphap=betas_nelder[1]
-alphaf=betas_nelder[2]
+alphaf=-0.2
 
 #wage process
 wagep_betas=np.array([betas_nelder[3],betas_nelder[4],betas_nelder[5],
-	betas_nelder[6],betas_nelder[7]]).reshape((5,1))
+	1.3,1]).reshape((5,1))
 
 #Production function [young[cc0,cc1],old]
-gamma1=[[betas_nelder[8],betas_nelder[10]],betas_nelder[12]]
-gamma2=[[betas_nelder[9],betas_nelder[11]],betas_nelder[13]]
-tfp=betas_nelder[14]
+gamma1=[0.8,betas_nelder[12]]
+gamma2=[0.1,betas_nelder[13]]
+tfp=0.42
 sigmatheta=0
 
 #Measurement system: three measures for t=2, one for t=5

@@ -74,7 +74,7 @@ def syminv(g):
 
 #########################################################
 ####ETA###
-#execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/eta.py')
+execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/eta.py')
 
 
 #########################################################
@@ -83,25 +83,21 @@ def syminv(g):
 
 #########################################################
 ####Full-time work###
-execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/alphaf.py')
+#qexecfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/alphaf.py')
 
 
 #########################################################
-####\gamma_1 (young_cc1)###
-#execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/gamma1_young_cc1.py')
+####\gamma_1 (young)###
+#execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/gamma1_young.py')
+
+#########################################################
+####\gamma_2 (young)###
+#execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/gamma2_young.py')
 
 #########################################################
 ####\gamma_2 (old)###
 #execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/gamma2_old.py')
 
-#########################################################
-####\gamma_2 (young_cc1)###
-#execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/gamma2_young_cc1.py')
-
-
-#########################################################
-####\gamma_1 (young_cc0)###
-#execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/gamma1_young_cc0.py')
 
 #########################################################
 ####\tfp###

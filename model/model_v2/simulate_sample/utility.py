@@ -289,12 +289,10 @@ class Utility:
 
 			#disposable income
 			dincome_nh=pwage+wsubsidy+total_childa
-			supp=dincome_nh-dincome_eitc
-			boo=(supp>=0) & (hours>=30)
-			boo_ra=self.ra==1 
-			nh_supp=(wsubsidy+total_childa)*boo*boo_ra
+			nh_supp=dincome_nh-dincome_eitc
+			nh_supp[(self.ra==0) | (hours<self.hours_f) | (nh_supp<0) ] = 0 
 		else:
-			nh_supp = 0 #NH ends
+			nh_supp = np.zeros(self.N) #NH ends
 			#dincome=boo_ra*(boo*dincome_nh+(1-boo)*dincome_eitc) + \
 			#(1-boo_ra)*dincome_eitc 
 
@@ -430,13 +428,13 @@ class Utility:
 
 		#The production of HC: young, cc=0
 		boo=(agech<=6) & (cc==0)
-		theta1[boo] = gamma1[0][0]*np.log(theta0[boo]) + gamma2[0][0]*incomepc[boo] +\
-		(1 - gamma1[0][0] - gamma2[0][0] )*leisure[boo] + omega[boo]
+		theta1[boo] = gamma1[0]*np.log(theta0[boo]) + gamma2[0]*incomepc[boo] +\
+		(1 - gamma1[0] - gamma2[0] )*leisure[boo] + omega[boo]
 
 		#The production of HC: young, cc=1
 		boo=(agech<=6) & (cc==1)
-		theta1[boo] = gamma1[0][1]*np.log(theta0[boo]) + gamma2[0][1]*incomepc[boo] +\
-		(1 - gamma1[0][1] - gamma2[0][1] )*leisure[boo] + tfp + omega[boo]
+		theta1[boo] = gamma1[0]*np.log(theta0[boo]) + gamma2[0]*incomepc[boo] +\
+		(1 - gamma1[0] - gamma2[0] )*leisure[boo] + tfp + omega[boo]
 
 		#The production of HC: old
 		boo=(agech>6)

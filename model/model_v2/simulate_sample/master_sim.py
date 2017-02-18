@@ -61,8 +61,8 @@ wagep_betas=np.array([betas_nelder[3],betas_nelder[4],betas_nelder[5],
 
 
 #Production function [young[cc0,cc1],old]
-gamma1=[[betas_nelder[8],betas_nelder[10]],betas_nelder[12]]
-gamma2=[[betas_nelder[9],betas_nelder[11]],betas_nelder[13]]
+gamma1=[0.9,betas_nelder[12]]
+gamma2=[0.05,betas_nelder[13]]
 tfp=betas_nelder[14]
 sigmatheta=0
 
@@ -242,7 +242,7 @@ np.mean(ssrs_freq_t2,axis=0)
 
 
 #Child care (t=0, all young)
-np.mean(cc_t[agech0[:,0]<=5,:],axis=0)
+np.mean(cc_t[agech0[:,0]<=6,:],axis=0)
 ate_cc=np.mean(cc_t[(passign[:,0]==1) & (agech0[:,0]<=5),:],axis=0) - np.mean(cc_t[(passign[:,0]==0) & (agech0[:,0]<=5),:],axis=0)
 
 #Child care (t=0, all young, employed)

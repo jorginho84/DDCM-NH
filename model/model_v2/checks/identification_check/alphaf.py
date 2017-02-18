@@ -1,7 +1,7 @@
 
 #build a grid around parameter value
 lenght = 0.05
-size_grid = 5
+size_grid = 4
 max_p = -0.2
 min_p = -0.05
 p_list = np.linspace(min_p,max_p,size_grid)
@@ -19,8 +19,7 @@ for i in range(size_grid):
 	beta0=np.array([param0.eta,param0.alphap,param0.alphaf,
 		param0.betaw[0],param0.betaw[1],param0.betaw[2],
 		param0.betaw[3],np.log(param0.betaw[4]),
-		syminv(param0.gamma1[0][0]),syminv(param0.gamma2[0][0]),
-		syminv(param0.gamma1[0][1]),syminv(param0.gamma2[0][1]),
+		syminv(param0.gamma1[0]),syminv(param0.gamma2[0]),
 		syminv(param0.gamma1[1]),syminv(param0.gamma2[1]),param0.tfp,
 		param0.kappas[0][0],param0.kappas[0][1], #kappa: t=2 
 		param0.kappas[0][2],param0.kappas[0][3],#kappa: t=2 

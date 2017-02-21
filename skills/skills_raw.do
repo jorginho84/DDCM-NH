@@ -320,7 +320,7 @@ foreach year in 5 8{
 
 	forvalues x=1/5{/*5 blocks*/
 		if `x'==1{
-			file write Y`year' "\multicolumn{5}{l}{\textbf{Panel A. Woodscok-Johnson}} &       &       &       &  \\"_n
+			file write Y`year' "\multicolumn{5}{l}{\textbf{Panel A. Woodcock-Johnson}} &       &       &       &  \\"_n
 		}
 		else if `x'==2{
 			file write Y`year' "\multicolumn{5}{l}{\textbf{Panel B. SSRS Academic Subscale}} &       &       &       &  \\"_n

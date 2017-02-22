@@ -34,7 +34,7 @@ import se
 
 np.random.seed(1)
 
-betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv3_nelder_v22_v4.npy')
+betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv4_v1.npy')
 
 
 #Utility function
@@ -48,14 +48,14 @@ wagep_betas=np.array([betas_nelder[3],betas_nelder[4],betas_nelder[5],
 
 
 #Production function [young[cc0,cc1],old]
-gamma1=[[betas_nelder[8],betas_nelder[10]],betas_nelder[12]]
-gamma2=[[betas_nelder[9],betas_nelder[11]],betas_nelder[13]]
-tfp=betas_nelder[14]
+gamma1=[betas_nelder[8],betas_nelder[10]]
+gamma2=[betas_nelder[9],betas_nelder[11]]
+tfp=betas_nelder[12]
 sigmatheta=0
 
 #Measurement system: three measures for t=2, one for t=5
-kappas=[[betas_nelder[15],betas_nelder[16],betas_nelder[17],betas_nelder[18]],
-[betas_nelder[19],betas_nelder[20],betas_nelder[21],betas_nelder[22]]]
+kappas=[[betas_nelder[13],betas_nelder[14],betas_nelder[15],betas_nelder[16]],
+[betas_nelder[17],betas_nelder[18],betas_nelder[19],betas_nelder[20]]]
 #First measure is normalized. starting arbitrary values
 #All factor loadings are normalized
 lambdas=[1,1]
@@ -157,9 +157,13 @@ D=50
 #For II procedure
 M=1000
 
+#How many hours is part- and full-time work
+hours_p=15
+hours_f=40
+
 #The estimate class
 output_ins=estimate.Estimate(param0,x_w,x_m,x_k,x_wmk,passign,agech0,theta0,nkids0,
-	married0,D,dict_grid,M,N,moments_vector,w_matrix)
+	married0,D,dict_grid,M,N,moments_vector,w_matrix,hours_p,hours_f)
 
 #The SE class
 se_ins=se.SEs(output_ins,var_cov,betas_nelder)
@@ -171,4 +175,4 @@ nmom = moments_vector.shape[0]
 #The var-cov matrix of structural parameters
 ses = se_ins.big_sand(0.00001,nmom,npar) 
 
-np.save('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/estimation/ses_v12.npy',ses)
+np.save('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/estimation/sesv4_v1.npy',ses)

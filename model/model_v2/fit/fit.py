@@ -45,27 +45,28 @@ import estimate as estimate
 
 np.random.seed(1)
 
-betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv3_nelder_v22_v4.npy')
+betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv4_v1.npy')
 
 #Utility function
-eta=0.35
+eta=betas_nelder[0]
 alphap=betas_nelder[1]
-alphaf=-0.2
+alphaf=-0.15
 
 #wage process
 wagep_betas=np.array([betas_nelder[3],betas_nelder[4],betas_nelder[5],
-	1.3,1]).reshape((5,1))
+	betas_nelder[6],betas_nelder[7]]).reshape((5,1))
 
 
-#Production function [young[cc0,cc1],old]
-gamma1=[0.8,betas_nelder[12]]
-gamma2=[0.1,betas_nelder[13]]
-tfp=0.42
+#Production function [young,old]
+gamma1=[betas_nelder[8],betas_nelder[10]]
+gamma2=[betas_nelder[9],betas_nelder[11]]
+tfp=betas_nelder[12]
 sigmatheta=0
 
 #Measurement system: three measures for t=2, one for t=5
-kappas=[[betas_nelder[15],betas_nelder[16],betas_nelder[17],betas_nelder[18]],
-[betas_nelder[19],betas_nelder[20],betas_nelder[21],betas_nelder[22]]]
+kappas=[[betas_nelder[13],betas_nelder[14],betas_nelder[15],betas_nelder[16]],
+[betas_nelder[17],betas_nelder[18],betas_nelder[19],betas_nelder[20]]]
+
 #First measure is normalized. starting arbitrary values
 #All factor loadings are normalized
 lambdas=[1,1]
@@ -197,31 +198,89 @@ beta_inputs_young_cc1_sim=np.mean(dic_betas['beta_inputs_young_cc1'],axis=1) #3 
 #################################################################################
 #################################################################################
 #FIGURE: ATE ON INCOME#
-#execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/fit/ate_inc.py')
+execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/fit/ate_inc.py')
 
 #################################################################################
 #################################################################################
 #FIGURE: ATE ON CHILD CARE#
-#execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/fit/ate_cc.py')
+execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/fit/ate_cc.py')
 
 
 #################################################################################
 #################################################################################
 #FIGURE: ATE ON EMPLOYMENT#
-#execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/fit/ate_emp.py')
+execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/fit/ate_emp.py')
 
 #################################################################################
 #################################################################################
 #FIGURE: ATE ON THETA#
-#execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/fit/ate_theta.py')
+execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/fit/ate_theta.py')
 
 
 #################################################################################
 #################################################################################
 #TABLE: COMPARING OPROBITS#
-#execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/fit/oprobit.py')
+execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/fit/oprobit.py')
 
 #################################################################################
 #################################################################################
 #TABLE FIT: target moments#
 execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/fit/table_aux.py')
+
+
+#################################################################################
+#################################################################################
+#TABLE: model validation#
+
+ate_part_obs_2=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/fit/ate_part_2.csv').values
+se_ate_part_obs_2=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/fit/se_ate_part_2.csv').values
+ate_full_obs_2=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/fit/ate_full_2.csv').values
+se_ate_full_obs_2=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/fit/se_ate_full_2.csv').values
+
+ate_inc_obs_2=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/fit/ate_inc_2.csv').values
+se_ate_inc_obs_2=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/fit/se_ate_inc_2.csv').values
+
+#these ones are the same as the figure (only 2 data points)
+ate_cc_obs=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/fit/ate_cc.csv').values
+se_ate_cc_obs=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/fit/se_ate_cc.csv').values
+
+#from oprobits: beta_t2, beta_t5, betas_t2_obs, betas_t5_obs
+
+#Simulated before/after
+ate_cc_2 = [np.mean(ate_cc[0:3]), np.mean(ate_cc[3:])]
+ate_inc_2 = [np.mean(ate_inc[0:3])/1000, np.mean(ate_inc[3:])/1000]
+ate_part_2 = [np.mean(ate_part[0:3]), np.mean(ate_part[3:])]
+ate_full_2 = [np.mean(ate_full[0:3]), np.mean(ate_full[3:])]
+
+#The table
+
+#The list of statistics
+sim_list = [ate_cc_2,ate_inc_2,ate_part_2,ate_full_2,[beta_t2[0],beta_t5[0]]]
+obs_list = [ate_cc_obs,ate_inc_obs_2/1000,ate_part_obs_2,ate_full_obs_2,np.array([[betas_t2_obs[0,0]], [betas_t5_obs[0,0]]])]
+obs_list_se = [se_ate_cc_obs,se_ate_inc_obs_2/1000,se_ate_part_obs_2,se_ate_full_obs_2,np.array([[ses_betas_t2_obs[0,0]],[ses_betas_t5_obs[0,0]]])]
+var_list = ['ATE child care', 'ATE income', 'ATE part-time', 'ATE full-time', 'ATE SSRS']
+
+with open('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/fit/table_validation.tex','w') as f:
+	f.write(r'\begin{tabular}{llccccc}'+'\n')
+	f.write(r'\hline' + '\n')
+	f.write(r' && \multicolumn{2}{c}{\textbf{During NH}} & & \multicolumn{2}{c}{\textbf{After NH}} \bigstrut[t]\\' + '\n')
+	f.write(r'&& \textbf{Model} & \textbf{Data} &  & \textbf{Model} & \textbf{Data} \bigstrut[b]\\'+'\n')
+	f.write(r'\cline{1-1}\cline{3-4}\cline{6-7} & &  &  && &  \bigstrut[t]\\'+'\n')
+	
+
+	for j in range(5):
+		#ATE
+		f.write(r'\textbf{'+var_list[j]+r'} &       & ' + 
+			'{:04.3f}'.format(sim_list[j][0]) + 
+			r'  & '+ '{:04.3f}'.format(obs_list[j][0,0])+r'  &  & ' +  
+			'{:04.3f}'.format(sim_list[j][1]) + 
+			r'  & '+ '{:04.3f}'.format(obs_list[j][1,0])+r' \\'+'\n')
+		f.write(r' & & & ( '+ '{:04.3f}'.format(obs_list_se[j][0,0])+ 
+			r' ) &   &  & ('+ '{:04.3f}'.format(obs_list_se[j][1,0]) +r') \\'+'\n')
+		f.write(r'      &       &       &       &       &       &  \\'+'\n')
+
+	f.write(r'\hline'+'\n')
+	f.write(r'\end{tabular}' + '\n')
+	f.close()
+
+

@@ -31,6 +31,7 @@ gen age_t4=age_t0+4
 gen age_t7=age_t0+7
 
 
+*Computing ATE for each year
 mat ate_cc=J(2,1,.)
 mat se_ate_cc=J(2,1,.)
 

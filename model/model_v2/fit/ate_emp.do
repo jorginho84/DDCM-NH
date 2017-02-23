@@ -13,17 +13,20 @@ use "/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/sampl
 set seed 2828
 local reps = 800
 
+*This program computes ATE for a given year
 program prob_diff, rclass
 	version 13
 	tempname mean_1 mean_2
-	args d_year
-	qui: sum `d_year' if d_RA==1
+	args emp
+	qui: sum `emp' if d_RA==1
 	scalar `mean_1'=r(mean)
-	qui: sum `d_year' if d_RA==0
+	qui: sum `emp' if d_RA==0
 	scalar `mean_2'=r(mean)
 	return scalar ate=`mean_1' - `mean_2'
 end
 
+
+*Computing ATEs for each year
 mat ate_part=J(9,1,.)
 mat se_ate_part=J(9,1,.)
 mat ate_full=J(9,1,.)
@@ -42,8 +45,52 @@ foreach x in 0 1 4 7{
 
 }
 
+*Computing ATEs before/after
+egen child_id=group(sampleid child)
+
+mat ate_part_2=J(2,1,.)
+mat se_ate_part_2=J(2,1,.)
+mat ate_full_2=J(2,1,.)
+mat se_ate_full_2=J(2,1,.)
+
+*Before
+preserve
+
+keep d_part_t0 d_part_t1 d_full_t0 d_full_t1  d_RA child_id
+reshape long d_full_t d_part_t, i(child_id) j(year)
+
+gen newid = child_id
+
+foreach var in part full{
+	bootstrap diff=r(ate), reps(`reps') cluster(child_id) idcluster(newid): prob_diff d_`var'_t
+	mat ate_`var'_2[1,1]  =e(b)
+	mat se_ate_`var'_2[1,1]  =e(se)
+}
+
+
+restore
+
+*After
+preserve
+
+keep d_part_t4 d_part_t7 d_full_t4 d_full_t7  d_RA child_id
+reshape long d_full_t d_part_t, i(child_id) j(year)
+
+gen newid = child_id
+
+foreach var in part full{
+	bootstrap diff=r(ate), reps(`reps') cluster(child_id) idcluster(newid)/*
+	*/: prob_diff d_`var'_t
+	mat ate_`var'_2[2,1]  =e(b)
+	mat se_ate_`var'_2[2,1]  =e(se)
+}
+
+
+restore
 
 foreach vars in part full{
+
+	*For each year
 	preserve
 	clear
 	set obs 9
@@ -56,6 +103,21 @@ foreach vars in part full{
 	set obs 9
 	svmat se_ate_`vars'
 	outsheet using "/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/fit/se_ate_`vars'.csv", comma replace
+	restore
+
+	*Before/after
+	preserve
+	clear
+	set obs 9
+	svmat ate_`vars'_2
+	outsheet using "/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/fit/ate_`vars'_2.csv", comma replace
+	restore
+
+	preserve
+	clear
+	set obs 9
+	svmat se_ate_`vars'_2
+	outsheet using "/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/fit/se_ate_`vars'_2.csv", comma replace
 	restore
 
 } 

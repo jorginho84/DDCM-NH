@@ -141,7 +141,7 @@ tests_list  = [tests_list_block1, tests_list_block2, tests_list_block3,
 
 block_list = ['Panel A. Woodcock-Johnson', 'Panel B. SSRS Academic Subscale',
 'Panel C. Teachers Mock\' Reports Cards', 'Panel D. Classroom Behavior Scale',
-'Panel D. Parents\' Reports' ]
+'Panel E. Parents\' Reports' ]
 
 with open('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Skills/Y5_pvalues.tex','w') as f:
 	f.write(r'\begin{tabular}{lcccc}'+'\n')

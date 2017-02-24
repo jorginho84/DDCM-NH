@@ -83,9 +83,16 @@ class SimData:
 				childcare=np.ones(self.N)
 
 			
+
+			
 			#Computing utility
 			model=util.Utility(self.param,self.N,self.x_w,self.x_m,self.x_k,self.passign,
 				theta0,nkids0,married0,hours,childcare,self.agech,self.hours_p,self.hours_f)
+
+			#current consumption to get future theta
+			dincome0=model.dincomet(periodt,hours,wage0,married0,nkids0)
+			consumption0=model.consumptiont(periodt,hours,childcare,dincome0,
+					married0,nkids0,wage0,free0,price0)
 
 			util_values[:,j]=model.simulate(periodt,wage0,free0,price0)
 
@@ -98,10 +105,8 @@ class SimData:
 				married_t1=np.reshape(married_t1,(self.N,1))
 				nkids_t1=model.kidst(periodt+1,np.reshape(nkids0,(self.N,1)),
 					married0)+nkids0
-				#current income to get future theta
-				dincome_t=model.dincomet(periodt,hours,wage0,married0,nkids0)
-				theta_t1=model.thetat(periodt+1,theta0,hours,childcare,dincome_t,
-					married0,nkids0,wage0,free0,price0) #theta at t+1 uses inputs at t
+				
+				theta_t1=model.thetat(periodt,theta0,hours,childcare,consumption0) #theta at t+1 uses inputs at t
 
 			
 				data_int_t1=np.concatenate((np.reshape(np.log(theta_t1),(self.N,1)), 
@@ -221,8 +226,7 @@ class SimData:
 				nkids_t1=model.kidst(periodt+1,np.reshape(nkids0,(self.N,1)),
 					married0)+nkids0 #baseline kids + if they have a kid next period
 				
-				theta_t1=model.thetat(periodt+1,theta0,hours_t,childcare_t,dincome0,
-				married0,nkids0,wage0,free0,price0) #theta at t+1 uses inputs at t
+				theta_t1=model.thetat(periodt,theta0,hours_t,childcare_t,consumption0) #theta at t+1 uses inputs at t
 				wage_t1=model.waget(periodt+1)
 				free_t1=model.q_prob()
 				price_t1=model.price_cc()

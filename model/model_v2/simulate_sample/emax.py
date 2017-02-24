@@ -76,11 +76,6 @@ class Emaxt:
 
 
 
-
-		#age and age2 should have the same rows (first two columnds of x_wmk)
-		#for var in [passign, x_w, x_m, x_k,theta0,nkids0,married0,x_wmk[:,2:]]:
-		#	np.random.shuffle(var)
-
 		#Sample size
 		ngrid=theta0.shape[0]
 
@@ -91,17 +86,18 @@ class Emaxt:
 		#I save emaxT(T-1) values here
 		emax_t1=np.zeros((ngrid,J))
 
-
-		#Compute wages (don't observe w on those unemployed)
+		#At T-1, possible choices
 		hours=np.zeros(ngrid)
 		childcare=np.zeros(ngrid)
+
 		model=util.Utility(self.param,ngrid,x_w,x_m,x_k,passign,
 			theta0,nkids0,married0,hours,childcare,agech,self.hours_p,self.hours_f)
-		wage0=model.waget(8)
-		free=model.q_prob()
-		price=model.price_cc()		
+		wage0=model.waget(7)
+		free0=model.q_prob()
+		price0=model.price_cc()		
 		
-		#At T-1, possible choices
+		
+		
 		for jt in range(0,J):
 			if jt<=2:
 				if jt==0:
@@ -125,64 +121,16 @@ class Emaxt:
 
 			#Here I save array of Ut by schock/choice (at T)
 			u_vec=np.zeros((ngrid,self.D,J))
+
+			#Income and consumption at T-1
+			dincome0=model.dincomet(7,hours,wage0,married0,nkids0)
+			consumption0=model.consumptiont(7,hours,childcare,dincome0,
+					married0,nkids0,wage0,free0,price0)
 			
 
 			#At T, loop over possible shocks, for every future choice
 			#Montecarlo integration: loop over shocks by choice (hours and childcare)
-			"""
-			@jit
-			def numba_emax():
-				for j,i in itertools.product(range(0,J),range(0,self.D)):
-				
-
-					#States at T
-					model=util.Utility(self.param,ngrid,x_w,x_m,x_k,
-						passign,theta0,nkids0,married0,hours,childcare,wage0,agech)
-
-					periodt=8 
-
-					married_t1=model.marriaget(periodt,married0)
-					married_t1=np.reshape(married_t1,(ngrid,1))
-					nkids_t1=model.kidst(periodt,np.reshape(nkids0,(ngrid,1)),
-						married0)+nkids0
-					wage_t1=model.waget(periodt)
-					#using t-1 income to get theta_T
-					dincome_t=model.dincomet(periodt-1,hours,wage0,married0,nkids0)
-					theta_t1=model.thetat(periodt,theta0,hours,childcare,dincome_t,
-						married0,nkids0) #theta at t+1 uses inputs at t
-
-					#future possible decision
-					if j<=2:
-						if j==0:
-							hours_aux2=0
-						elif j==1:
-							hours_aux2=self.hours_p
-						elif j==2:
-							hours_aux2==self.hours_f
-						hours_t1=np.full(ngrid,hours_aux2,dtype=float)
-						childcare_t1=np.zeros((ngrid,1))
-					else:
-						if j==3:
-							hours_aux2=0
-						elif j==4:
-							hours_aux2=self.hours_p
-						elif j==5:
-							hours_aux2==self.hours_f
-						hours_t1=np.full(ngrid,hours_aux2,dtype=float)
-						childcare_t1=np.ones((ngrid,1))				
-
-					model=util.Utility(self.param,ngrid,x_w,x_m,x_k,
-						passign,theta_t1,nkids_t1,married_t1,hours_t1,childcare,wage_t1,agech)
 					
-					#This is the terminal value!
-					u_vec[:,i,j]=model.simulate(8) #Last period is T=8. Terminal value=0
-
-				return u_vec
-
-			u_vec=numba_emax()
-			"""
-
-			
 			for j,i in itertools.product(range(0,J),range(0,self.D)):
 				
 
@@ -201,11 +149,10 @@ class Emaxt:
 				free_t1=model.q_prob()
 				price_t1=model.price_cc()
 				#using t-1 income to get theta_T
-				dincome_t=model.dincomet(periodt-1,hours,wage0,married0,nkids0)
-				theta_t1=model.thetat(periodt,theta0,hours,childcare,dincome_t,
-					married0,nkids0,wage0,free,price) #theta at t+1 uses inputs at t
+				
+				theta_t1=model.thetat(periodt,theta0,hours,childcare,consumption0) #theta at t+1 uses inputs at t
 
-				#future possible decision
+				#future (at T) possible decision
 				if j<=2:
 					if j==0:
 						hours_aux2=0
@@ -292,10 +239,7 @@ class Emaxt:
 		x_k=self.grid_dict['x_k']
 		x_wmk=self.grid_dict['x_wmk']
 
-		#age and age2 should have the same rows (first two columnds of x_wmk)
-		#for var in [passign, x_w, x_m, x_k,theta0,nkids0,married0,x_wmk[:,2:]]:
-		#	np.random.shuffle(var)
-
+		
 		#Sample size
 		ngrid=theta0.shape[0]
 
@@ -305,13 +249,13 @@ class Emaxt:
 		#Set number of choices at t-1
 		Jt=6
 
-		#Compute wages at t-1
 		hours=np.zeros(ngrid)
 		childcare=np.zeros(ngrid)
+		
 		model=util.Utility(self.param,ngrid,x_w,x_m,x_k,passign,
 			theta0,nkids0,married0,hours,childcare,agech,
 			self.hours_p,self.hours_f)
-		wage0=model.waget(periodt-1)
+		wage0=model.waget(periodt)
 		free0=model.q_prob()
 		price0=model.price_cc()
 
@@ -323,6 +267,7 @@ class Emaxt:
 
 
 		#Loop: choice at t-1
+		
 		for jt in range(0,Jt):
 
 						
@@ -349,7 +294,10 @@ class Emaxt:
 				hours=np.full(ngrid,hours_aux,dtype=float)
 				childcare=np.ones(ngrid)
 
-		
+			#I get these to compute theta_t1
+			dincome0=model.dincomet(periodt,hours,wage0,married0,nkids0)
+			consumption0=model.consumptiont(periodt,hours,childcare,dincome0,
+					married0,nkids0,wage0,free0,price0)
 			
 
 			J=6 #number of choides in the inner loop
@@ -368,17 +316,15 @@ class Emaxt:
 					self.hours_p,self.hours_f)
 				
 				
-				married_t1=model.marriaget(periodt,married0)
+				married_t1=model.marriaget(periodt+1,married0)
 				married_t1=np.reshape(married_t1,(ngrid,1))
-				nkids_t1=model.kidst(periodt,np.reshape(nkids0,(ngrid,1)),
+				nkids_t1=model.kidst(periodt+1,np.reshape(nkids0,(ngrid,1)),
 					married0)+nkids0 #previous kids + if they have a kid next period
-				wage_t1=model.waget(periodt)
+				wage_t1=model.waget(periodt+1)
 				free_t1=model.q_prob()
 				price_t1=model.price_cc()
 				#income at t-1 to compute theta_t
-				dincome_t=model.dincomet(periodt-1,hours,wage0,married0,nkids0) #to compute theta_t+1
-				theta_t1=model.thetat(periodt,theta0,hours,childcare,dincome_t,
-					married0,nkids0,wage0,free0,price0) #theta at t+1 uses inputs at t
+				theta_t1=model.thetat(periodt,theta0,hours,childcare,consumption0) #theta at t+1 uses inputs at t
 
 				# Possible decision at t
 				if j<=2:
@@ -407,7 +353,7 @@ class Emaxt:
 					self.hours_p,self.hours_f)
 
 				#Current-period utility at t
-				u_vec[:,i,j]=model.simulate(periodt,wage_t1,free_t1,price_t1) 
+				u_vec[:,i,j]=model.simulate(periodt+1,wage_t1,free_t1,price_t1) 
 
 				#getting next-period already computed emaxt+1
 				data_int_ex=np.concatenate(( np.reshape(np.log(theta_t1),(ngrid,1)), 

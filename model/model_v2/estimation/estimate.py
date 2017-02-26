@@ -74,7 +74,7 @@ class Estimate:
 			np.random.seed(j+100)
 			return simdata_ins.fake_data(9)
 
-		pool = ProcessPool(nodes=20)
+		pool = ProcessPool(nodes=15)
 		dics = pool.map(sample_gen,range(self.M))
 		
 		
@@ -119,13 +119,11 @@ class Estimate:
 		####Aux to identify utility function########################
 		############################################################
 
-		#child care at period t=0,1 and 4
-		choices_aux=np.concatenate((choice_matrix[:,0,:],choice_matrix[:,1,:], 
-			choice_matrix[:,4,:]),axis=0) #t=1,4
-		age_aux=np.concatenate((age_child[:,0],age_child[:,1],age_child[:,4]),axis=0)
-		passign_aux=np.concatenate((self.passign[:,0],self.passign[:,0],self.passign[:,0]),axis=0)
-		cc_logit=(choices_aux==0) | (choices_aux==3)
-		boo=(age_aux<=5) & (passign_aux==0)
+		#child care at period t=1
+		choices_aux=choice_matrix[:,1,:]
+		age_aux=age_child[:,1]
+		cc_logit=(choices_aux>=3)
+		boo=(age_aux<=6) & (self.passign[:,0]==0)
 		beta_childcare=np.mean(cc_logit[boo,:],axis=0) #beta for every m
 		
 		#mean hours at t=0,1,4 and 7
@@ -133,11 +131,9 @@ class Estimate:
 			choice_matrix[:,4,:],choice_matrix[:,7,:]),axis=0)
 		passign_aux=np.concatenate((self.passign[:,0],self.passign[:,0],
 			self.passign[:,0],self.passign[:,0]),axis=0)
-		age_aux=np.concatenate((age_child[:,0],age_child[:,1],age_child[:,4],
-			age_child[:,7]),axis=0)
 		hours_aux_2=(choices_aux==1) | (choices_aux==4)
 		hours_aux_3=(choices_aux==2) | (choices_aux==5)
-		boo_h=(passign_aux==0) & (age_aux>5)
+		boo_h=(passign_aux==0) 
 		beta_hours2=np.mean(hours_aux_2[boo_h,:],axis=0)
 		beta_hours3=np.mean(hours_aux_3[boo_h,:],axis=0)
 

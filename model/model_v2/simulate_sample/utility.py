@@ -40,7 +40,7 @@ class Parameters:
 		self.pafdc,self.psnap=pafdc,psnap
 
 
-class Utility:
+class Utility(object):
 	""" 
 	
 	This class defines the economic environment of the agent
@@ -397,7 +397,7 @@ class Utility:
 
 
 
-	def thetat(self,periodt,theta0,h,cc,dincome,marr,nkids,wage,free,price):
+	def thetat(self,periodt,theta0,h,cc,ct):
 		"""
 		Computes theta at period (t+1) (next period)
 		t+1 goes from 1-8
@@ -409,7 +409,7 @@ class Utility:
 		agech=np.reshape(self.age_t0,(self.N)) + periodt
 
 		#log consumption pc
-		incomepc_aux=np.log(self.consumptiont(periodt,h,cc,dincome,marr,nkids,wage,free,price))
+		incomepc_aux=np.log(ct)
 		incomepc=incomepc_aux-np.mean(incomepc_aux)
 		
 		#log leisure (T=148 hours a week)

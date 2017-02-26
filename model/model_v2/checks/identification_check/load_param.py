@@ -1,24 +1,24 @@
-betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv3_nelder_v22_v4.npy')
+betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv4_v2.npy')
 
 
 #Utility function
-eta=0.35
+eta=0.01
 alphap=betas_nelder[1]
-alphaf=-0.2
+alphaf=-0.6
 
 #wage process
 wagep_betas=np.array([betas_nelder[3],betas_nelder[4],betas_nelder[5],
-	1.3,1]).reshape((5,1))
+	1.22,0.9]).reshape((5,1))
 
 #Production function [young[cc0,cc1],old]
-gamma1=[0.8,betas_nelder[12]]
-gamma2=[0.1,betas_nelder[13]]
-tfp=0.42
+gamma1=[betas_nelder[8],betas_nelder[10]]
+gamma2=[betas_nelder[9],betas_nelder[11]]
+tfp=betas_nelder[12]
 sigmatheta=0
 
 #Measurement system: three measures for t=2, one for t=5
-kappas=[[betas_nelder[15],betas_nelder[16],betas_nelder[17],betas_nelder[18]],
-[betas_nelder[19],betas_nelder[20],betas_nelder[21],betas_nelder[22]]]
+kappas=[[betas_nelder[13],betas_nelder[14],betas_nelder[15],betas_nelder[16]],
+[betas_nelder[17],betas_nelder[18],betas_nelder[19],betas_nelder[20]]]
 #First measure is normalized. starting arbitrary values
 #All factor loadings are normalized
 lambdas=[1,1]

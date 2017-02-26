@@ -34,7 +34,7 @@ import se
 
 np.random.seed(1)
 
-betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv4_v1.npy')
+betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv4_v2.npy')
 
 
 #Utility function
@@ -173,6 +173,6 @@ npar = betas_nelder.shape[0]
 nmom = moments_vector.shape[0]
 
 #The var-cov matrix of structural parameters
-ses = se_ins.big_sand(0.00001,nmom,npar) 
+ses = se_ins.big_sand(0.0001,nmom,npar) 
 
-np.save('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/estimation/sesv4_v1.npy',ses)
+np.save('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/estimation/sesv4_v2_e4.npy',ses)

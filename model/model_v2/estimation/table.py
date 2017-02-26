@@ -23,8 +23,8 @@ import time
 import openpyxl
 
 #Betas and var-cov matrix
-betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv4_v1.npy')
-var_cov=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/estimation/sesv4_v1_e4.npy')
+betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv4_v2.npy')
+var_cov=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/estimation/sesv4_v2_e5.npy')
 se_vector  = np.sqrt(np.diagonal(var_cov))
 
 #Utility function

@@ -40,7 +40,7 @@ class Parameters:
 		self.pafdc,self.psnap=pafdc,psnap
 
 
-class Utility:
+class Utility(object):
 	""" 
 	
 	This class defines the economic environment of the agent

@@ -33,7 +33,7 @@ class Emaxt:
 	"""
 
 
-	def __init__(self,param,D,grid_dict,hours_p,hours_f):
+	def __init__(self,param,D,grid_dict,hours_p,hours_f,model):
 
 		"""
 		D=number of shocks for a given individual to be drawn
@@ -42,14 +42,25 @@ class Emaxt:
 
 		also, include the x's from the data (not from the grid anymore)
 
+		model: a utility instance (with arbitrary parameters)
+
 		"""
 
 
 		self.param=param
 		self.D,self.grid_dict=D,grid_dict
 		self.hours_p,self.hours_f=hours_p,hours_f
-		
+		self.model = model
 
+	def change_util(self,param,N,x_w,x_m,x_k,passign,
+				theta0,nkids0,married0,hours,childcare,agech,hours_p,hours_f):
+		"""
+		This function changes parameters of util instance
+		"""
+		self.model.__init__(param,N,x_w,x_m,x_k,passign,theta0,nkids0,married0,
+			hours,childcare,agech,hours_p,hours_f)
+
+		
 	def emax_bigt(self):
 		"""
 		Computes the emax function for the last period (takes T-1 states, and 
@@ -90,11 +101,11 @@ class Emaxt:
 		hours=np.zeros(ngrid)
 		childcare=np.zeros(ngrid)
 
-		model=util.Utility(self.param,ngrid,x_w,x_m,x_k,passign,
-			theta0,nkids0,married0,hours,childcare,agech,self.hours_p,self.hours_f)
-		wage0=model.waget(7)
-		free0=model.q_prob()
-		price0=model.price_cc()		
+		self.change_util(self.param,ngrid,x_w,x_m,x_k,passign,theta0,
+			nkids0,married0,hours,childcare,agech,self.hours_p,self.hours_f)
+		wage0=self.model.waget(7)
+		free0=self.model.q_prob()
+		price0=self.model.price_cc()		
 		
 		
 		
@@ -123,8 +134,8 @@ class Emaxt:
 			u_vec=np.zeros((ngrid,self.D,J))
 
 			#Income and consumption at T-1
-			dincome0=model.dincomet(7,hours,wage0,married0,nkids0)
-			consumption0=model.consumptiont(7,hours,childcare,dincome0,
+			dincome0=self.model.dincomet(7,hours,wage0,married0,nkids0)
+			consumption0=self.model.consumptiont(7,hours,childcare,dincome0,
 					married0,nkids0,wage0,free0,price0)
 			
 
@@ -135,22 +146,22 @@ class Emaxt:
 				
 
 				#States at T
-				model=util.Utility(self.param,ngrid,x_w,x_m,x_k,
+				self.change_util(self.param,ngrid,x_w,x_m,x_k,
 					passign,theta0,nkids0,married0,hours,childcare,agech,
 					self.hours_p,self.hours_f)
 
 				periodt=8 
 
-				married_t1=model.marriaget(periodt,married0)
+				married_t1=self.model.marriaget(periodt,married0)
 				married_t1=np.reshape(married_t1,(ngrid,1))
-				nkids_t1=model.kidst(periodt,np.reshape(nkids0,(ngrid,1)),
+				nkids_t1=self.model.kidst(periodt,np.reshape(nkids0,(ngrid,1)),
 					married0)+nkids0
-				wage_t1=model.waget(periodt)
-				free_t1=model.q_prob()
-				price_t1=model.price_cc()
+				wage_t1=self.model.waget(periodt)
+				free_t1=self.model.q_prob()
+				price_t1=self.model.price_cc()
 				#using t-1 income to get theta_T
 				
-				theta_t1=model.thetat(periodt,theta0,hours,childcare,consumption0) #theta at t+1 uses inputs at t
+				theta_t1=self.model.thetat(periodt,theta0,hours,childcare,consumption0) #theta at t+1 uses inputs at t
 
 				#future (at T) possible decision
 				if j<=2:
@@ -172,12 +183,12 @@ class Emaxt:
 					hours_t1=np.full(ngrid,hours_aux2,dtype=float)
 					childcare_t1=np.ones((ngrid,1))				
 
-				model=util.Utility(self.param,ngrid,x_w,x_m,x_k,
+				self.change_util(self.param,ngrid,x_w,x_m,x_k,
 					passign,theta_t1,nkids_t1,married_t1,hours_t1,childcare,agech,
 					self.hours_p,self.hours_f)
 				
 				#This is the terminal value!
-				u_vec[:,i,j]=model.simulate(8,wage_t1,free_t1,price_t1) #Last period is T=8. Terminal value=0
+				u_vec[:,i,j]=self.model.simulate(8,wage_t1,free_t1,price_t1) #Last period is T=8. Terminal value=0
 			
 
 			#obtaining max over choices by random schocks: young vs old
@@ -252,12 +263,12 @@ class Emaxt:
 		hours=np.zeros(ngrid)
 		childcare=np.zeros(ngrid)
 		
-		model=util.Utility(self.param,ngrid,x_w,x_m,x_k,passign,
+		self.change_util(self.param,ngrid,x_w,x_m,x_k,passign,
 			theta0,nkids0,married0,hours,childcare,agech,
 			self.hours_p,self.hours_f)
-		wage0=model.waget(periodt)
-		free0=model.q_prob()
-		price0=model.price_cc()
+		wage0=self.model.waget(periodt)
+		free0=self.model.q_prob()
+		price0=self.model.price_cc()
 
 
 		#I save interpolating instances here
@@ -295,8 +306,8 @@ class Emaxt:
 				childcare=np.ones(ngrid)
 
 			#I get these to compute theta_t1
-			dincome0=model.dincomet(periodt,hours,wage0,married0,nkids0)
-			consumption0=model.consumptiont(periodt,hours,childcare,dincome0,
+			dincome0=self.model.dincomet(periodt,hours,wage0,married0,nkids0)
+			consumption0=self.model.consumptiont(periodt,hours,childcare,dincome0,
 					married0,nkids0,wage0,free0,price0)
 			
 
@@ -311,20 +322,20 @@ class Emaxt:
 				#for i in range(0,D):
 				
 				#Computing states at t
-				model=util.Utility(self.param,ngrid,x_w,x_m,x_k,
+				self.change_util(self.param,ngrid,x_w,x_m,x_k,
 					passign,theta0,nkids0,married0,hours,childcare,agech,
 					self.hours_p,self.hours_f)
 				
 				
-				married_t1=model.marriaget(periodt+1,married0)
+				married_t1=self.model.marriaget(periodt+1,married0)
 				married_t1=np.reshape(married_t1,(ngrid,1))
-				nkids_t1=model.kidst(periodt+1,np.reshape(nkids0,(ngrid,1)),
+				nkids_t1=self.model.kidst(periodt+1,np.reshape(nkids0,(ngrid,1)),
 					married0)+nkids0 #previous kids + if they have a kid next period
-				wage_t1=model.waget(periodt+1)
-				free_t1=model.q_prob()
-				price_t1=model.price_cc()
+				wage_t1=self.model.waget(periodt+1)
+				free_t1=self.model.q_prob()
+				price_t1=self.model.price_cc()
 				#income at t-1 to compute theta_t
-				theta_t1=model.thetat(periodt,theta0,hours,childcare,consumption0) #theta at t+1 uses inputs at t
+				theta_t1=self.model.thetat(periodt,theta0,hours,childcare,consumption0) #theta at t+1 uses inputs at t
 
 				# Possible decision at t
 				if j<=2:
@@ -348,12 +359,12 @@ class Emaxt:
 
 				
 				#Instance at period t
-				model=util.Utility(self.param,ngrid,x_w,x_m,x_k,
+				self.change_util(self.param,ngrid,x_w,x_m,x_k,
 					passign,theta_t1,nkids_t1,married_t1,hours_t1,childcare_t1,agech,
 					self.hours_p,self.hours_f)
 
 				#Current-period utility at t
-				u_vec[:,i,j]=model.simulate(periodt+1,wage_t1,free_t1,price_t1) 
+				u_vec[:,i,j]=self.model.simulate(periodt+1,wage_t1,free_t1,price_t1) 
 
 				#getting next-period already computed emaxt+1
 				data_int_ex=np.concatenate(( np.reshape(np.log(theta_t1),(ngrid,1)), 

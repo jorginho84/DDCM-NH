@@ -25,13 +25,26 @@ class SimData:
 	The rest are state variables at period 0
 	"""
 	def __init__(self,N,param,emax_function,
-		x_w,x_m,x_k,x_wmk,passign,theta0,nkids0,married0,agech,hours_p,hours_f):
+		x_w,x_m,x_k,x_wmk,passign,theta0,nkids0,married0,agech,hours_p,hours_f,
+		model):
+		"""
+		model: a utility instance (with arbitrary parameters)
+		"""
 		self.N,self.param,self.emax_function=N,param,emax_function
 		self.x_w,self.x_m,self.x_k,self.x_wmk=x_w,x_m,x_k,x_wmk
 		self.passign,self.theta0,self.nkids0,self.married0=passign,theta0,nkids0,married0
 		self.agech=agech
 		self.hours_p, self.hours_f=hours_p,hours_f
+		self.model = model
 		
+	def change_util(self,param,N,x_w,x_m,x_k,passign,
+				theta0,nkids0,married0,hours,childcare,agech,hours_p,hours_f):
+		"""
+		This function changes parameters of util instance
+		"""
+		self.model.__init__(param,N,x_w,x_m,x_k,passign,theta0,nkids0,married0,
+			hours,childcare,agech,hours_p,hours_f)
+
 		
 
 	def choice(self,periodt,bigt,theta0,nkids0,married0,wage0,free0,price0):
@@ -86,27 +99,27 @@ class SimData:
 
 			
 			#Computing utility
-			model=util.Utility(self.param,self.N,self.x_w,self.x_m,self.x_k,self.passign,
+			self.change_util(self.param,self.N,self.x_w,self.x_m,self.x_k,self.passign,
 				theta0,nkids0,married0,hours,childcare,self.agech,self.hours_p,self.hours_f)
 
 			#current consumption to get future theta
-			dincome0=model.dincomet(periodt,hours,wage0,married0,nkids0)
-			consumption0=model.consumptiont(periodt,hours,childcare,dincome0,
+			dincome0=self.model.dincomet(periodt,hours,wage0,married0,nkids0)
+			consumption0=self.model.consumptiont(periodt,hours,childcare,dincome0,
 					married0,nkids0,wage0,free0,price0)
 
-			util_values[:,j]=model.simulate(periodt,wage0,free0,price0)
+			util_values[:,j]=self.model.simulate(periodt,wage0,free0,price0)
 
 
 			####Only for periods t<T (compute an emax function)
 			#For period T, only current utility
 			if periodt<bigt:
 				#Data for computing emaxt+1, given choices and state at t
-				married_t1=model.marriaget(periodt+1,married0)
+				married_t1=self.model.marriaget(periodt+1,married0)
 				married_t1=np.reshape(married_t1,(self.N,1))
-				nkids_t1=model.kidst(periodt+1,np.reshape(nkids0,(self.N,1)),
+				nkids_t1=self.model.kidst(periodt+1,np.reshape(nkids0,(self.N,1)),
 					married0)+nkids0
 				
-				theta_t1=model.thetat(periodt,theta0,hours,childcare,consumption0) #theta at t+1 uses inputs at t
+				theta_t1=self.model.thetat(periodt,theta0,hours,childcare,consumption0) #theta at t+1 uses inputs at t
 
 			
 				data_int_t1=np.concatenate((np.reshape(np.log(theta_t1),(self.N,1)), 
@@ -156,11 +169,11 @@ class SimData:
 		#Re-compute wages (don't observe w on those unemployed)
 		hours=np.zeros(self.N)
 		childcare=np.zeros(self.N)
-		model=util.Utility(self.param,self.N,self.x_w,self.x_m,self.x_k,self.passign,
+		self.change_util(self.param,self.N,self.x_w,self.x_m,self.x_k,self.passign,
 			theta0,nkids0,married0,hours,childcare,self.agech,self.hours_p,self.hours_f)
-		wage0=model.waget(0)
-		free0=model.q_prob()
-		price0=model.price_cc()
+		wage0=self.model.waget(0)
+		free0=self.model.q_prob()
+		price0=self.model.price_cc()
 		
 	
 		for periodt in range(0,n_periods): #from t=0 to t=8
@@ -200,36 +213,36 @@ class SimData:
 			childcare_matrix[:,periodt]=childcare_t.copy()
 
 			#Current income
-			model=util.Utility(self.param,self.N,self.x_w,self.x_m,
+			self.change_util(self.param,self.N,self.x_w,self.x_m,
 				self.x_k,self.passign,theta0,nkids0,married0,hours_t,childcare_t,self.agech,
 				self.hours_p,self.hours_f)
 			
-			dincome0=model.dincomet(periodt,hours_t,wage0,married0,nkids0)
+			dincome0=self.model.dincomet(periodt,hours_t,wage0,married0,nkids0)
 			dincome_matrix[:,periodt]=dincome0.copy()
-			consumption0=model.consumptiont(periodt,hours_t,childcare_t,dincome0,married0,nkids0,wage0,
+			consumption0=self.model.consumptiont(periodt,hours_t,childcare_t,dincome0,married0,nkids0,wage0,
 				free0,price0)
 			consumption_matrix[:,periodt]=consumption0.copy()
 
 			#SSRS measures
 			if periodt==2: 
-				ssrs_t2=model.measures(periodt,theta0)
+				ssrs_t2=self.model.measures(periodt,theta0)
 			elif periodt==5:
-				ssrs_t5=model.measures(periodt,theta0)
+				ssrs_t5=self.model.measures(periodt,theta0)
 
 
 			#Next period states (only if periodt<8): update
 
 			if periodt<n_periods-1:
 				
-				married_t1=model.marriaget(periodt+1,married0)
+				married_t1=self.model.marriaget(periodt+1,married0)
 				married_t1=np.reshape(married_t1,(self.N,1))
-				nkids_t1=model.kidst(periodt+1,np.reshape(nkids0,(self.N,1)),
+				nkids_t1=self.model.kidst(periodt+1,np.reshape(nkids0,(self.N,1)),
 					married0)+nkids0 #baseline kids + if they have a kid next period
 				
-				theta_t1=model.thetat(periodt,theta0,hours_t,childcare_t,consumption0) #theta at t+1 uses inputs at t
-				wage_t1=model.waget(periodt+1)
-				free_t1=model.q_prob()
-				price_t1=model.price_cc()
+				theta_t1=self.model.thetat(periodt,theta0,hours_t,childcare_t,consumption0) #theta at t+1 uses inputs at t
+				wage_t1=self.model.waget(periodt+1)
+				free_t1=self.model.q_prob()
+				price_t1=self.model.price_cc()
 
 				#updating
 				married0=married_t1.copy()

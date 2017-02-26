@@ -43,6 +43,8 @@ import gridemax
 import int_linear
 import emax as emax
 import simdata as simdata
+sys.path.append("/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/experiments/NH")
+import cc0_wr0 as cc0_wr0
 
 np.random.seed(1);
 #Sample size
@@ -51,18 +53,19 @@ np.random.seed(1);
 betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv4_v2.npy')
 
 #Utility function
-eta=betas_nelder[0]
+eta=0.002
 alphap=betas_nelder[1]
-alphaf=betas_nelder[2]
+alphaf=-0.6
+
 
 #wage process
 wagep_betas=np.array([betas_nelder[3],betas_nelder[4],betas_nelder[5],
-	betas_nelder[6],betas_nelder[7]]).reshape((5,1))
+	1.22,0.9]).reshape((5,1))
 
 #Production function [young[cc0,cc1],old]
 gamma1=[betas_nelder[8],betas_nelder[10]]
 gamma2=[betas_nelder[9],betas_nelder[11]]
-tfp=betas_nelder[12]
+tfp=0.4
 sigmatheta=0
 
 #Measurement system: three measures for t=2, one for t=5
@@ -153,7 +156,17 @@ dict_grid=gridemax.grid()
 
 #How many hours is part- and full-time work
 hours_p=15
-hours_f=30
+hours_f=40
+
+hours = np.zeros(N)
+childcare = np.zeros(N)
+
+#This is an arbitrary initialization of Utility class
+#model = util.Utility(param,N,x_w,x_m,x_k,passign,theta0,nkids0,married0,hours,childcare,agech0,hours_p,hours_f)
+
+#This modifes model's budget set
+model2 = cc0_wr0.Utility_cc0_wr0(param,N,x_w,x_m,x_k,passign,theta0,nkids0,married0,hours,childcare,agech0,hours_p,hours_f)
+
 
 ##############Computing EmaxT#####################
 print ''
@@ -166,7 +179,7 @@ print ''
 
 D=50
 np.random.seed(2)
-emax_function_in=emax.Emaxt(param,D,dict_grid,hours_p,hours_f)
+emax_function_in=emax.Emaxt(param,D,dict_grid,hours_p,hours_f,model2)
 emax_dic=emax_function_in.recursive(8) #8 emax (t=1 to t=8)
 
 
@@ -190,7 +203,7 @@ print ''
 
 
 sim_ins=simdata.SimData(N,param,emax_dic,x_w,x_m,x_k,x_wmk,passign,theta0,\
-	nkids0,married0,agech0,hours_p,hours_f)
+	nkids0,married0,agech0,hours_p,hours_f,model2)
 data_dic=sim_ins.fake_data(9) #9 periods (t=0 to t=8)
 
 

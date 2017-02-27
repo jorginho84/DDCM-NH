@@ -34,17 +34,17 @@ class Estimate:
 		self.moments_vector,self.w_matrix=moments_vector,w_matrix
 		self.hours_p,self.hours_f=hours_p,hours_f
 
-	def emax(self,param1):
+	def emax(self,param1,model):
 		"""
 		Takes given betas and estimates the emax function (en emax_dic)
 
 		"""
 		#updating with new betas
 		np.random.seed(1) #always the same emax, for a given set of beta
-		emax_ins_1=emax.Emaxt(param1,self.D,self.dict_grid,self.hours_p,self.hours_f)
+		emax_ins_1=emax.Emaxt(param1,self.D,self.dict_grid,self.hours_p,self.hours_f,model)
 		return emax_ins_1.recursive(8) #t=1 to t=8
 
-	def samples(self,param1,emaxins):
+	def samples(self,param1,emaxins,model):
 		"""
 		Returns a sample M of utility values
 		"""
@@ -55,7 +55,7 @@ class Estimate:
 		#updating sample with new betas and emax
 		simdata_ins= simdata.SimData(self.N,param1,emaxins,
 			self.x_w,self.x_m,self.x_k,self.x_wmk,self.passign,self.theta0,
-			self.nkids0,self.married0,self.agech0,self.hours_p,self.hours_f)
+			self.nkids0,self.married0,self.agech0,self.hours_p,self.hours_f,model)
 
 		#save here
 		util_list=[]
@@ -273,12 +273,20 @@ class Estimate:
 		self.param0.kappas[1][3]=beta[20]
 			
 
+		#The model (utility instance)
+		hours = np.zeros(self.N)
+		childcare  = np.zeros(self.N)
+
+		model  = util.Utility(self.param0,self.N,self.x_w,self.x_m,self.x_k,self.passign,
+			self.theta0,self.nkids0,self.married0,hours,childcare,
+			self.agech0,self.hours_p,self.hours_f)
 
 		##obtaining emax instance##
-		emax_instance=self.emax(self.param0)
+		emax_instance=self.emax(self.param0,model)
 		
 		##obtaining samples##
-		choices=self.samples(self.param0,emax_instance)
+
+		choices=self.samples(self.param0,emax_instance,model)
 
 		###########################################################################
 		##Getting the betas of the auxiliary model#################################

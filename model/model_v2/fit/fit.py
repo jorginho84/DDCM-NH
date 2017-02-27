@@ -45,22 +45,22 @@ import estimate as estimate
 
 np.random.seed(1)
 
-betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv4_v2.npy')
+betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv5_v1.npy')
 
 #Utility function
-eta=0.002
+eta=betas_nelder[0]
 alphap=betas_nelder[1]
-alphaf=-0.6
+alphaf=betas_nelder[2]
 
 #wage process
 wagep_betas=np.array([betas_nelder[3],betas_nelder[4],betas_nelder[5],
-	1.22,0.9]).reshape((5,1))
+	betas_nelder[6],betas_nelder[7]]).reshape((5,1))
 
 
 #Production function [young,old]
 gamma1=[betas_nelder[8],betas_nelder[10]]
 gamma2=[betas_nelder[9],betas_nelder[11]]
-tfp=0.4
+tfp=betas_nelder[12]
 sigmatheta=0
 
 #Measurement system: three measures for t=2, one for t=5
@@ -177,10 +177,17 @@ hours_f=40
 output_ins=estimate.Estimate(param0,x_w,x_m,x_k,x_wmk,passign,agech0,theta0,nkids0,
 	married0,D,dict_grid,M,N,moments_vector,var_cov,hours_p,hours_f)
 
+#The model (utility instance)
+hours = np.zeros(N)
+childcare  = np.zeros(N)
+
+model  = util.Utility(param0,N,x_w,x_m,x_k,passign,
+	theta0,nkids0,married0,hours,childcare,agech0,hours_p,hours_f)
+
 #Obtaining emax instances, samples, and betas for M samples
 np.random.seed(1)
-emax_instance = output_ins.emax(param0)
-choices = output_ins.samples(param0,emax_instance)
+emax_instance = output_ins.emax(param0,model)
+choices = output_ins.samples(param0,emax_instance,model)
 dic_betas = output_ins.aux_model(choices)
 
 #Getting the simulated betas
@@ -198,7 +205,7 @@ beta_inputs_young_cc1_sim=np.mean(dic_betas['beta_inputs_young_cc1'],axis=1) #3 
 #################################################################################
 #################################################################################
 #FIGURE: ATE ON INCOME#
-#execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/fit/ate_inc.py')
+execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/fit/ate_inc.py')
 
 #################################################################################
 #################################################################################
@@ -209,18 +216,18 @@ execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2
 #################################################################################
 #################################################################################
 #FIGURE: ATE ON EMPLOYMENT#
-#execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/fit/ate_emp.py')
+execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/fit/ate_emp.py')
 
 #################################################################################
 #################################################################################
 #FIGURE: ATE ON THETA#
-#execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/fit/ate_theta.py')
+execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/fit/ate_theta.py')
 
 
 #################################################################################
 #################################################################################
 #TABLE: COMPARING OPROBITS#
-#execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/fit/oprobit.py')
+execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/fit/oprobit.py')
 
 #################################################################################
 #################################################################################
@@ -230,7 +237,7 @@ execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2
 
 #################################################################################
 #################################################################################
-"""
+
 #TABLE: model validation#
 
 ate_part_obs_2=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/fit/ate_part_2.csv').values
@@ -285,4 +292,3 @@ with open('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model
 	f.close()
 
 
-"""

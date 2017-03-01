@@ -33,7 +33,7 @@ class Emaxt:
 	"""
 
 
-	def __init__(self,param,D,grid_dict,hours_p,hours_f,model):
+	def __init__(self,param,D,grid_dict,hours_p,hours_f,wr,cs,ws,model):
 
 		"""
 		D=number of shocks for a given individual to be drawn
@@ -50,15 +50,17 @@ class Emaxt:
 		self.param=param
 		self.D,self.grid_dict=D,grid_dict
 		self.hours_p,self.hours_f=hours_p,hours_f
+		self.wr,self.cs,self.ws=wr,cs,ws
 		self.model = model
 
 	def change_util(self,param,N,x_w,x_m,x_k,passign,
-				theta0,nkids0,married0,hours,childcare,agech,hours_p,hours_f):
+				theta0,nkids0,married0,hours,childcare,agech,hours_p,hours_f,
+				wr,cs,ws):
 		"""
 		This function changes parameters of util instance
 		"""
 		self.model.__init__(param,N,x_w,x_m,x_k,passign,theta0,nkids0,married0,
-			hours,childcare,agech,hours_p,hours_f)
+			hours,childcare,agech,hours_p,hours_f,wr,cs,ws)
 
 		
 	def emax_bigt(self):
@@ -102,7 +104,8 @@ class Emaxt:
 		childcare=np.zeros(ngrid)
 
 		self.change_util(self.param,ngrid,x_w,x_m,x_k,passign,theta0,
-			nkids0,married0,hours,childcare,agech,self.hours_p,self.hours_f)
+			nkids0,married0,hours,childcare,agech,self.hours_p,self.hours_f,
+			self.wr,self.cs,self.ws)
 		wage0=self.model.waget(7)
 		free0=self.model.q_prob()
 		price0=self.model.price_cc()		
@@ -148,7 +151,7 @@ class Emaxt:
 				#States at T
 				self.change_util(self.param,ngrid,x_w,x_m,x_k,
 					passign,theta0,nkids0,married0,hours,childcare,agech,
-					self.hours_p,self.hours_f)
+					self.hours_p,self.hours_f,self.wr,self.cs,self.ws)
 
 				periodt=8 
 
@@ -185,7 +188,7 @@ class Emaxt:
 
 				self.change_util(self.param,ngrid,x_w,x_m,x_k,
 					passign,theta_t1,nkids_t1,married_t1,hours_t1,childcare,agech,
-					self.hours_p,self.hours_f)
+					self.hours_p,self.hours_f,self.wr,self.cs,self.ws)
 				
 				#This is the terminal value!
 				u_vec[:,i,j]=self.model.simulate(8,wage_t1,free_t1,price_t1) #Last period is T=8. Terminal value=0
@@ -265,7 +268,7 @@ class Emaxt:
 		
 		self.change_util(self.param,ngrid,x_w,x_m,x_k,passign,
 			theta0,nkids0,married0,hours,childcare,agech,
-			self.hours_p,self.hours_f)
+			self.hours_p,self.hours_f,self.wr,self.cs,self.ws)
 		wage0=self.model.waget(periodt)
 		free0=self.model.q_prob()
 		price0=self.model.price_cc()
@@ -324,7 +327,7 @@ class Emaxt:
 				#Computing states at t
 				self.change_util(self.param,ngrid,x_w,x_m,x_k,
 					passign,theta0,nkids0,married0,hours,childcare,agech,
-					self.hours_p,self.hours_f)
+					self.hours_p,self.hours_f,self.wr,self.cs,self.ws)
 				
 				
 				married_t1=self.model.marriaget(periodt+1,married0)
@@ -361,7 +364,7 @@ class Emaxt:
 				#Instance at period t
 				self.change_util(self.param,ngrid,x_w,x_m,x_k,
 					passign,theta_t1,nkids_t1,married_t1,hours_t1,childcare_t1,agech,
-					self.hours_p,self.hours_f)
+					self.hours_p,self.hours_f,self.wr,self.cs,self.ws)
 
 				#Current-period utility at t
 				u_vec[:,i,j]=self.model.simulate(periodt+1,wage_t1,free_t1,price_t1) 

@@ -1,10 +1,7 @@
 """
-execfile('master_estimate_v3.py')
+execfile('nhpol.py')
 
-This file returns the structural parameters' estimates
-
-This master file implements the Wald metric to estimate the structural
-parameters
+This file computes ATE theta and inputs of different New Hope policies
 
 """
 
@@ -29,7 +26,10 @@ import int_linear
 import emax as emax
 import simdata as simdata
 sys.path.append("/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/estimation")
-import estimate_v3 as estimate
+import estimate as estimate
+sys.path.append("/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/experiments/NH")
+from ate_gen import ATE
+
 
 np.random.seed(1)
 
@@ -139,20 +139,15 @@ param0=util.Parameters(alphap, alphaf, eta, alpha_cc,gamma1, gamma2, tfp, sigmat
 
 
 
-###Auxiliary estimates### 
-
-moments_vector=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/aux_model/moments_vector_2.csv').values
-
+###Auxiliary estimates###
+moments_vector=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/aux_model/moments_vector.csv').values
 
 #This is the var cov matrix of aux estimates
-var_cov=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/aux_model/var_cov_2.csv').values
+var_cov=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/aux_model/var_cov.csv').values
 
-#The W matrix in Wald metric
+#The vector of aux standard errors
 #Using diagonal of Var-Cov matrix of simulated moments
-w_matrix  = np.zeros((var_cov.shape[0],var_cov.shape[0]))
-for i in range(var_cov.shape[0]):
-	w_matrix[i,i] = var_cov[i,i]
-
+se_vector  = np.sqrt(np.diagonal(var_cov))
 
 #Creating a grid for the emax computation
 dict_grid=gridemax.grid()
@@ -160,93 +155,66 @@ dict_grid=gridemax.grid()
 #For montercarlo integration
 D=50
 
-#For II procedure
+#Number of samples to produce
 M=1000
 
 #How many hours is part- and full-time work
 hours_p=15
 hours_f=40
 
-output_ins=estimate.Estimate(param0,x_w,x_m,x_k,x_wmk,passign,agech0,theta0,nkids0,
-	married0,D,dict_grid,M,N,moments_vector,w_matrix,hours_p,hours_f)
-
-start_time = time.time()
-output=output_ins.optimizer()
-
-time_opt=time.time() - start_time
-print 'Done in'
-print("--- %s seconds ---" % (time_opt))
-
-def sym(a):
-	return ((1/(1+np.exp(-a))) - 0.5)*2
-
-#the list of estimated parameters
-eta_opt=output.x[0]
-alphap_opt=output.x[1]
-alphaf_opt=output.x[2]
-alphacc_opt=output.x[3]
-betaw0=output.x[4]
-betaw1=output.x[5]
-betaw2=output.x[6]
-betaw3=output.x[7]
-betaw4=np.exp(output.x[8])
-gamma1_young_cc1=sym(output.x[9])
-gamma2_young_cc1=sym(output.x[10])
-gamma1_old=sym(output.x[11])
-gamma2_old=sym(output.x[12])
-tfp_opt=output.x[13]
-kappas_00=output.x[14]
-kappas_01=output.x[15]
-kappas_02=output.x[16]
-kappas_03=output.x[17]
-kappas_10=output.x[18]
-kappas_11=output.x[19]
-kappas_12=output.x[20]
-kappas_13=output.x[21]
+#This is the list of models to compute [wr,cs,ws]. This order is fixed
+models_list = [[0,0,1], [0,1,1], [1,0,1],
+[0,1,0],[1,1,0],[1,1,1]]
 
 
-betas_opt=np.array([eta_opt, alphap_opt,alphaf_opt,betaw0,betaw1,betaw2,
-	betaw3,betaw4,gamma1_young_cc1,gamma2_young_cc1,
-	gamma1_old,gamma2_old,tfp_opt,
-	kappas_00,kappas_01,kappas_02,kappas_03,
-	kappas_10,kappas_11,kappas_12,kappas_13])
+###Computing counterfactuals
+dics = []
+for j in range(len(models_list)):
+	output_ins=estimate.Estimate(param0,x_w,x_m,x_k,x_wmk,passign,agech0,theta0,nkids0,
+		married0,D,dict_grid,M,N,moments_vector,var_cov,hours_p,hours_f,
+		models_list[j][0],models_list[j][1],models_list[j][2])
 
-np.save('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv6_v1.npy',betas_opt)
+	hours = np.zeros(N) #arbitrary to initialize model instance
+	childcare  = np.zeros(N)
+	model = util.Utility(param0,N,x_w,x_m,x_k,passign,theta0,nkids0,married0,hours,childcare,
+		agech0,hours_p,hours_f,models_list[j][0],models_list[j][1],models_list[j][2])
+
+	np.random.seed(1)
+	emax_instance = output_ins.emax(param0,model)
+	choices = output_ins.samples(param0,emax_instance,model)
+	ate_ins = ATE(choices,agech0,passign,hours_p,hours_f,model)
+	dics.append(ate_ins.sim_ate())
 
 
 
+####The table###
+#the list of policies
 
-#this will not be necessary once running optimizer (this will go in optimizer(.))
-#beta0=np.array([np.log(eta),alphap,alphaf,wagep_betas[0],wagep_betas[1],wagep_betas[2],
-#	wagep_betas[3],np.log(wagep_betas[4]),gamma1[0][0],gamma2[0][0],
-#	gamma1[0][1],gamma2[0][1],gamma1[1],gamma2[1]])
+pol_list = ['Wage sub.', 'Child care s. +  wage sub.', 'Work req. + wage sub.',
+'Child care s.', 'Work req. + child care s.', 'Work req. + child care s. +  wage sub.']
 
-#dic_qw=output_ins.ll(beta0)
+with open('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/experiments/NH/table_nhpol.tex','w') as f:
+	f.write(r'\begin{tabular}{llccccccccccc}'+'\n')
+	f.write(r'\hline'+'\n')
+	f.write(r'Policies &       & Part-time &       & Full-time &       & Child care &       & Consumption &       & $\log \theta$ &       & Welfare \bigstrut\\'+'\n')
+	f.write(r'\cline{1-1}\cline{3-3}\cline{5-5}\cline{7-7}\cline{9-9}\cline{11-11}\cline{13-13}      &       &       &       &       &       &       &       &       &       &       &       &  \bigstrut[t]\\'+'\n')
+	
+	for j in range(6): #there are five policies
+		f.write(pol_list[j] +r'&       & '+ '{:04.3f}'.format(dics[j]['Part-time']) +
+			r' & & ' + '{:04.3f}'.format(dics[j]['Full-time'])  + 
+			r' & &  '  '{:04.3f}'.format(dics[j]['CC']) + 
+			r' & &   '+ '{:04.3f}'.format(dics[j]['Consumption']) +
+			r' & & '+ '{:04.3f}'.format(dics[j]['Theta'])  )
 
+		#welfare effects relative to the baseline policy
+		if j==5:
+			f.write(r'&&' + '-' + r' \\'+'\n')
+		else:
+			f.write(r'&&' + '{:04.3f}'.format(dics[j]['Welfare']-dics[5]['Welfare']) + r' \\'+'\n')
 
-"""
-##obtaining emax instance##
-emax_instance=output_ins.emax(param0)
-		
-##obtaining samples##
-choices=output_ins.samples(param0,emax_instance)
-
-
-
-##Getting the betas of the auxiliary model##
-dic_betas=output_ins.aux_model(choices)
-
-beta_inputs_old=dic_betas['beta_inputs_old']
-beta_inputs_old.shape
-
-
-beta_kappas_t5=dic_betas['beta_kappas_t5']
-beta_kappas_t5.shape
-beta_lambdas_t5=dic_betas['beta_lambdas_t5']
-beta_lambdas_t5.shape
-beta_lambdas_t2=dic_betas['beta_lambdas_t2']
-beta_lambdas_t2.shape
-"""
+	f.write(r'\hline'+'\n')
+	f.write(r'\end{tabular}' + '\n')
+	f.close()
 
 
 

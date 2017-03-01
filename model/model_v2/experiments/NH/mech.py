@@ -266,3 +266,47 @@ ate_theta_sim_y_1 = np.mean(np.mean(theta_sim_matrix[1][age_ch[:,tt]<=6,tt+1,:] 
 ate_theta_sim_o_1 = np.mean(np.mean(theta_sim_matrix[1][age_ch[:,tt]>6,tt+1,:] - theta_sim_matrix[0][age_ch[:,tt]>6,tt+1,:],axis=0 ),axis=0)
 
 #try with the SSRS2...see what I can get simulated-RA and simulated all
+
+
+
+"""
+###First, comparing ATE sim and ATE observed from utility class##
+data_dics = {}
+thetas = {}
+ates_1 = {}
+ct = {}
+ate_ct = {}
+
+#This is trying to compute ATE sim vs ATE observed (something's wrong)
+emax_function_in=emax.Emaxt(param0,D,dict_grid,hours_p,hours_f,model)
+emax_dic=emax_function_in.recursive(8)
+sim_ins=simdata.SimData(N,param0,emax_dic,x_w,x_m,x_k,x_wmk,passign,theta0,
+	nkids0,married0,agech0,hours_p,hours_f,model)
+data_dics['observed'] =  sim_ins.fake_data(9)
+thetas['observed'] = np.log(data_dics['observed']['Theta'])
+ct['observed'] = np.log(data_dics['observed']['Consumption'])
+
+
+passign_aux = np.zeros(N)
+sim_ins.__init__(N,param0,emax_dic,x_w,x_m,x_k,x_wmk,passign_aux,theta0,
+	nkids0,married0,agech0,hours_p,hours_f,model)
+data_dics['control'] =  sim_ins.fake_data(9)
+thetas['control'] = np.log(data_dics['control']['Theta'])
+ct['control'] = np.log(data_dics['control']['Consumption'])
+
+passign_aux = np.ones(N)
+sim_ins.__init__(N,param0,emax_dic,x_w,x_m,x_k,x_wmk,passign_aux,theta0,
+	nkids0,married0,agech0,hours_p,hours_f,model)
+data_dics['treatment'] =  sim_ins.fake_data(9)
+thetas['treatment'] = np.log(data_dics['treatment']['Theta'])
+ct['treatment'] = np.log(data_dics['treatment']['Consumption'])
+
+
+ates_1['observed'] = np.mean(thetas['observed'][passign[:,0]==1,2],axis=0) - np.mean(thetas['observed'][passign[:,0]==0,2],axis=0)
+ates_1['simulated'] = np.mean(thetas['treatment'][:,2]) - np.mean(thetas['control'][:,2])
+
+ate_ct['observed'] = np.mean(ct['observed'][passign[:,0]==1,2],axis=0) - np.mean(ct['observed'][passign[:,0]==0,2],axis=0)
+ate_ct['simulated'] = np.mean(ct['treatment'][:,2]) - np.mean(ct['control'][:,2])
+
+
+"""

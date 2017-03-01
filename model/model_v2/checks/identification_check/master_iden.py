@@ -30,7 +30,7 @@ import int_linear
 import emax as emax
 import simdata as simdata
 sys.path.append("/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/estimation")
-import estimate as estimate
+import estimate_v3 as estimate
 
 np.random.seed(1)
 
@@ -38,11 +38,11 @@ execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2
 
 ###Auxiliary estimates### 
 
-moments_vector=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/aux_model/moments_vector.csv').values
+moments_vector=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/aux_model/moments_vector_2.csv').values
 
 
 #This is the var cov matrix of aux estimates
-var_cov=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/aux_model/var_cov.csv').values
+var_cov=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/aux_model/var_cov_2.csv').values
 
 #The W matrix in Wald metric
 #Using diagonal of Var-Cov matrix of simulated moments
@@ -64,7 +64,14 @@ D=50
 #For II procedure
 M=1000
 
-#The instance
+#The model (utility instance)
+hours = np.zeros(N)
+childcare  = np.zeros(N)
+
+model  = util.Utility(param0,N,x_w,x_m,x_k,passign,
+	theta0,nkids0,married0,hours,childcare,agech0,hours_p,hours_f)
+
+#The instance for computing samples
 output_ins=estimate.Estimate(param0,x_w,x_m,x_k,x_wmk,passign,agech0,theta0,nkids0,
 	married0,D,dict_grid,M,N,moments_vector,w_matrix,hours_p,hours_f)
 

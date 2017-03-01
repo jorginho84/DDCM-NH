@@ -2,7 +2,7 @@
 #build a grid around parameter value
 lenght = 0.05
 size_grid = 4
-max_p = 0.001
+max_p = 0.4
 min_p = 0.2
 p_list = np.linspace(min_p,max_p,size_grid)
 obs_moment = moments_vector[0,0].copy()
@@ -13,8 +13,8 @@ target_moment = np.zeros((size_grid,))
 qw = np.zeros((size_grid,))
 for i in range(size_grid): 
 	param0.eta= p_list[i]
-	emax_instance = output_ins.emax(param0)
-	choices = output_ins.samples(param0,emax_instance)
+	emax_instance = output_ins.emax(param0,model)
+	choices = output_ins.samples(param0,emax_instance,model)
 	dic_betas = output_ins.aux_model(choices)
 	target_moment[i] = np.mean(dic_betas['beta_childcare'],axis=0) #The matrix is 1X1
 	beta0=np.array([param0.eta,param0.alphap,param0.alphaf,

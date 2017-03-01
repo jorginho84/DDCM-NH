@@ -23,8 +23,7 @@ import simdata as simdata
 
 class Estimate:
 	def __init__(self,param0,x_w,x_m,x_k,x_wmk,passign,agech0,theta0,
-		nkids0,married0,D,dict_grid,M,N,moments_vector,w_matrix,hours_p,hours_f,
-		wr,cs,ws):
+		nkids0,married0,D,dict_grid,M,N,moments_vector,w_matrix,hours_p,hours_f):
 
 		self.param0=param0
 		self.x_w,self.x_m,self.x_k,self.x_wmk=x_w,x_m,x_k,x_wmk
@@ -34,7 +33,6 @@ class Estimate:
 		self.M,self.N=M,N
 		self.moments_vector,self.w_matrix=moments_vector,w_matrix
 		self.hours_p,self.hours_f=hours_p,hours_f
-		self.wr,self.cs,self.ws=wr,cs,ws
 
 	def emax(self,param1,model):
 		"""
@@ -43,8 +41,7 @@ class Estimate:
 		"""
 		#updating with new betas
 		np.random.seed(1) #always the same emax, for a given set of beta
-		emax_ins_1=emax.Emaxt(param1,self.D,self.dict_grid,self.hours_p,
-			self.hours_f,self.wr,self.cs,self.ws,model)
+		emax_ins_1=emax.Emaxt(param1,self.D,self.dict_grid,self.hours_p,self.hours_f,model)
 		return emax_ins_1.recursive(8) #t=1 to t=8
 
 	def samples(self,param1,emaxins,model):
@@ -58,8 +55,7 @@ class Estimate:
 		#updating sample with new betas and emax
 		simdata_ins= simdata.SimData(self.N,param1,emaxins,
 			self.x_w,self.x_m,self.x_k,self.x_wmk,self.passign,self.theta0,
-			self.nkids0,self.married0,self.agech0,self.hours_p,self.hours_f,
-			self.wr,self.cs,self.ws,model)
+			self.nkids0,self.married0,self.agech0,self.hours_p,self.hours_f,model)
 
 		#save here
 		util_list=[]
@@ -67,7 +63,6 @@ class Estimate:
 		consumption_matrix=np.zeros((self.N,9,self.M))
 		choice_matrix=np.zeros((self.N,9,self.M))
 		utils_periodt=np.zeros((self.N,J,9,self.M))
-		utils_c_periodt=np.zeros((self.N,J,9,self.M))
 		theta_matrix=np.zeros((self.N,9,self.M))
 		wage_matrix=np.zeros((self.N,9,self.M))
 		hours_matrix=np.zeros((self.N,9,self.M))
@@ -93,15 +88,12 @@ class Estimate:
 			hours_matrix[:,:,j]=dics[j]['Hours']
 			ssrs_t2_matrix[:,j]=dics[j]['SSRS_t2']
 			ssrs_t5_matrix[:,j]=dics[j]['SSRS_t5']
-			ssrs_t5_matrix[:,j]=dics[j]['SSRS_t5']
 			
 
 			for periodt in range(0,9):
 				utils_periodt[:,:,periodt,j]=dics[j]['Uti_values_dic'][periodt]
-				utils_c_periodt[:,:,periodt,j]=dics[j]['Uti_values_c_dic'][periodt]
 
-		return {'utils_periodt': utils_periodt,'utils_c_periodt': utils_c_periodt,
-				'income_matrix':income_matrix,
+		return {'utils_periodt': utils_periodt,'income_matrix':income_matrix,
 				'choice_matrix': choice_matrix,'theta_matrix': theta_matrix,
 				'wage_matrix': wage_matrix,'consumption_matrix':consumption_matrix,
 				'hours_matrix': hours_matrix, 'ssrs_t2_matrix':ssrs_t2_matrix,

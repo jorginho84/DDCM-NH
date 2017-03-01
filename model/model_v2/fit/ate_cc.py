@@ -1,7 +1,7 @@
 #simulated: only until t=4 (t=5 almost no young)
 nperiods = 5
 cc_t = choices['choice_matrix']>=3
-cc_t = cc_t[:,0:nperiods]
+cc_t = cc_t[:,0:nperiods,:]
 age_child = np.zeros((N,nperiods))
 for x in range(nperiods):
 	age_child[:,x]=agech0[:,0] + x

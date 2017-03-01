@@ -1,7 +1,5 @@
 """
-This sublcass modifies the budget set so that there is no child care subsidy and
-no working requirement
-
+This class modifies treatment group's budget set
 """
 from __future__ import division #omit for python 3.x
 import numpy as np
@@ -19,18 +17,34 @@ import time
 
 
 
-class Utility_cc0_wr0(Utility):
+class Budget(Utility):
 	"""
 	This class modifies the income and consumption processes
 	"""
 	def __init__(self,param,N,xwage,xmarr,xkid,ra,theta0,
 		nkids0,married0,hours,cc,age_t0,hours_p,hours_f):
-
+		"""
+		wr, cs, ws control working requirements, child care subsidy,
+		and wage subsidy parameters
+		"""
+		self.wr,self.cs,self.ws = wr,cs,ws
 		Utility.__init__(self,param,N,xwage,xmarr,xkid,ra,theta0,
 			nkids0,married0,hours,cc,age_t0,hours_p,hours_f)
 
 	def dincomet(self, periodt,hours,wage,marr,kid):
+		"""
+		Computes annual disposable income given weekly hours worked, hourly wage,
+		marital status and number of kids. 
+		Everyone receives EITC. Only the treatment group has NH. NH ends between t=2 and t=3
+		
+		EITC parameters: in the self.eitc list
 
+		6r1,r2: phase-in and phase-out rates
+		b1,b2: minimum income for max credit/beginning income for phase-out
+		state_eitc=fraction of federal eitc
+
+		""" 
+		
 		#from hourly wage to annual earnings
 		pwage=np.reshape(hours,self.N)*np.reshape(wage,self.N)*52
 
@@ -127,13 +141,21 @@ class Utility_cc0_wr0(Utility):
 			total_childa=childa*kid[:,0]
 
 			#disposable income
+
 			dincome_nh=pwage+wsubsidy+total_childa
 			nh_supp=dincome_nh-dincome_eitc
-			nh_supp[(self.ra==0) |  (hours==0)  |(nh_supp<0) ] = 0 #NO WORK REQUIREMENTS (only work)
+			
+			if ws==1:
+				if self.wr==1:
+					nh_supp[(self.ra==0) | (hours<self.hours_f) | (nh_supp<0) ] = 0
+				else:
+					nh_supp[(self.ra==0) | (hours==0) | (nh_supp<0) ] = 0
+			else:
+				nh_supp = np.zeros(self.N)
+
 		else:
 			nh_supp = np.zeros(self.N) #NH ends
-			#dincome=boo_ra*(boo*dincome_nh+(1-boo)*dincome_eitc) + \
-			#(1-boo_ra)*dincome_eitc 
+			 
 
 		#The AFDC (1995-1996. TANF implemented 1997, t=2)
 		afdc_benefit = np.zeros(self.N)
@@ -153,8 +175,7 @@ class Utility_cc0_wr0(Utility):
 			boo_min=benefit_std<=benefit_std-(pwage - 30)*.67
 			afdc_benefit[boo_eli]=(1-boo_min[boo_eli])*(benefit_std[boo_eli]-(pwage[boo_eli] - 30)*.67) + boo_min[boo_eli]*benefit_std[boo_eli]
 			afdc_benefit[afdc_benefit<0]=0
-			#boo_max=afdc_benefit>0
-			#dincome[boo_max]=dincome[boo_max] + afdc_benefit[boo_max]
+			
 		
 		#SNAP benefits: vary by period/family size.
 		std_deduction=np.zeros(self.N)
@@ -196,7 +217,13 @@ class Utility_cc0_wr0(Utility):
 		return dincome*(self.param.cpi[8]/self.param.cpi[periodt])
 
 	def consumptiont(self,periodt,h,cc,dincome,marr,nkids,wage, free,price):
+		"""
+		Computes per-capita consumption:
+		(income - cc_payment)/family size
 
+		where cc_payment is determined using NH formula and price offer
+
+		"""
 		pwage=np.reshape(h,self.N)*np.reshape(wage,self.N)*52
 
 		d_work=h>=self.hours_f
@@ -206,7 +233,29 @@ class Utility_cc0_wr0(Utility):
 		marr=np.reshape(marr,self.N)
 		ones=np.ones(self.N)
 		
-		cc_cost = price[:,0]*(ones-free.reshape(self.N))
+		#NH copayment
+		copayment=np.zeros(self.N)
+		copayment[price[:,0]<400]=price[price[:,0]<400,0]
+		copayment[(price[:,0]>400) & (pwage<=8500) ] = 400
+		copayment[(price[:,0]>400) & (pwage>8500)] = 315 + 0.01*pwage[(price[:,0]>400) & (pwage>8500)] 
+
+
+		#consumption pc (incorporate child care subsidy)
+		if periodt<=2:#NH eligibility period
+
+			if self.cs==1:
+
+				if wr==1:
+					cc_cost =  (ones-self.ra.reshape(self.N))*price[:,0]*(ones-free.reshape(self.N)) +\
+					self.ra*( (ones-free.reshape(self.N))*(d_work*copayment + (1-d_work)*price[:,0] ) )
+				else:
+					cc_cost =  (ones-self.ra.reshape(self.N))*price[:,0]*(ones-free.reshape(self.N)) +\
+					self.ra*( (ones-free.reshape(self.N))*copayment )
+			else:
+				cc_cost = price[:,0]*(ones-free.reshape(self.N)) 
+
+		else:
+			cc_cost = price[:,0]*(ones-free.reshape(self.N))
 		
 		#old kids don't pay for child care
 		cc_cost[agech>6]=0

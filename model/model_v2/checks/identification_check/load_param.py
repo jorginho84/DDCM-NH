@@ -1,14 +1,14 @@
-betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv4_v2.npy')
+betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv5_v1.npy')
 
 
 #Utility function
-eta=0.01
+eta=betas_nelder[0]
 alphap=betas_nelder[1]
-alphaf=-0.6
+alphaf=betas_nelder[2]
 
 #wage process
 wagep_betas=np.array([betas_nelder[3],betas_nelder[4],betas_nelder[5],
-	1.22,0.9]).reshape((5,1))
+	betas_nelder[6],betas_nelder[7]]).reshape((5,1))
 
 #Production function [young[cc0,cc1],old]
 gamma1=[betas_nelder[8],betas_nelder[10]]

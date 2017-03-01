@@ -50,22 +50,22 @@ np.random.seed(1);
 #Sample size
 #N=315
 
-betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv4_v2.npy')
+betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv5_v1.npy')
 
 #Utility function
-eta=0.002
-alphap=betas_nelder[1]
-alphaf=-0.6
-
+eta=.2
+alphap=-0.07
+alphaf=-0.15
+alpha_cc = -.2
 
 #wage process
-wagep_betas=np.array([betas_nelder[3],betas_nelder[4],betas_nelder[5],
-	1.22,0.9]).reshape((5,1))
+wagep_betas=np.array([0.005,betas_nelder[4],betas_nelder[5],
+	1.2,0.94]).reshape((5,1))
 
 #Production function [young[cc0,cc1],old]
 gamma1=[betas_nelder[8],betas_nelder[10]]
 gamma2=[betas_nelder[9],betas_nelder[11]]
-tfp=0.4
+tfp=betas_nelder[12]
 sigmatheta=0
 
 #Measurement system: three measures for t=2, one for t=5
@@ -146,7 +146,7 @@ married0=x_df[ ['d_marital_2']   ].values
 agech0=x_df[['age_t0']].values
 
 #Defines the instance with parameters
-param=util.Parameters(alphap, alphaf, eta, gamma1, gamma2,tfp,sigmatheta,
+param=util.Parameters(alphap, alphaf, eta, alpha_cc,gamma1, gamma2,tfp,sigmatheta,
 	wagep_betas, marriagep_betas, kidsp_betas, eitc_list,afdc_list,snap_list,
 	cpi,q,scalew,shapew,lambdas,kappas,pafdc,psnap)
 
@@ -160,13 +160,18 @@ hours_f=40
 
 hours = np.zeros(N)
 childcare = np.zeros(N)
+wr,cs,ws=1,0,1
 
 #This is an arbitrary initialization of Utility class
-#model = util.Utility(param,N,x_w,x_m,x_k,passign,theta0,nkids0,married0,hours,childcare,agech0,hours_p,hours_f)
+model = util.Utility(param,N,x_w,x_m,x_k,passign,theta0,nkids0,married0,hours,childcare,
+	agech0,hours_p,hours_f,wr,cs,ws)
 
 #This modifes model's budget set
-model2 = cc0_wr0.Utility_cc0_wr0(param,N,x_w,x_m,x_k,passign,theta0,nkids0,married0,hours,childcare,agech0,hours_p,hours_f)
+#model2 = cc0_wr0.Utility_cc0_wr0(param,N,x_w,x_m,x_k,passign,theta0,nkids0,married0,hours,childcare,agech0,hours_p,hours_f)
 
+#simulating cc prices
+#cc_price = model2.price_cc()
+#np.mean(cc_price)
 
 ##############Computing EmaxT#####################
 print ''
@@ -179,7 +184,7 @@ print ''
 
 D=50
 np.random.seed(2)
-emax_function_in=emax.Emaxt(param,D,dict_grid,hours_p,hours_f,model2)
+emax_function_in=emax.Emaxt(param,D,dict_grid,hours_p,hours_f,wr,cs,ws,model)
 emax_dic=emax_function_in.recursive(8) #8 emax (t=1 to t=8)
 
 
@@ -203,7 +208,7 @@ print ''
 
 
 sim_ins=simdata.SimData(N,param,emax_dic,x_w,x_m,x_k,x_wmk,passign,theta0,\
-	nkids0,married0,agech0,hours_p,hours_f,model2)
+	nkids0,married0,agech0,hours_p,hours_f,wr,cs,ws,model)
 data_dic=sim_ins.fake_data(9) #9 periods (t=0 to t=8)
 
 
@@ -235,7 +240,6 @@ np.mean(ltheta,axis=0)
 ate_theta=np.mean(ltheta[passign[:,0]==1,:],axis=0) - np.mean(ltheta[passign[:,0]==0,:],axis=0)
 
 #Impact on income
-np.mean(ct,axis=0)
 np.mean(income,axis=0)
 ate_income=np.mean(income[passign[:,0]==1,:],axis=0) - np.mean(income[passign[:,0]==0,:],axis=0)
 ate_ct=np.mean(ct[passign[:,0]==1,:],axis=0) - np.mean(ct[passign[:,0]==0,:],axis=0)
@@ -258,15 +262,17 @@ np.mean(cc_t[agech0[:,0]<=6,:],axis=0)
 ate_cc=np.mean(cc_t[(passign[:,0]==1) & (agech0[:,0]<=5),:],axis=0) - np.mean(cc_t[(passign[:,0]==0) & (agech0[:,0]<=5),:],axis=0)
 
 #Child care (t=0, all young, employed)
-np.mean(cc_t[(agech0[:,0]<=5),0],axis=0)
-np.mean(cc_t[(agech0[:,0]<=5) & (hours_t[:,0]==30),0],axis=0)
-np.mean(cc_t[(agech0[:,0]<=5) & (hours_t[:,0]==15),0],axis=0)
+np.mean(cc_t[(agech0[:,0]<=6),0],axis=0)
+np.mean(cc_t[(agech0[:,0]<=6) & (hours_t[:,0]==40),0],axis=0)
+np.mean(cc_t[(agech0[:,0]<=6) & (hours_t[:,0]==15),0],axis=0)
 
 
 #Labor supply
 unemp_t=hours_t==0
 part_t=hours_t==hours_p
 full_t=hours_t==hours_f
+
+np.mean(unemp_t[agech0[:,0]<=6,:],axis=0)
 
 np.mean(unemp_t,axis=0)
 np.mean(full_t,axis=0)
@@ -291,6 +297,9 @@ ate_unem=np.mean(unemp_t[passign[:,0]==1,:],axis=0) - np.mean(unemp_t[passign[:,
 ate_part=np.mean(part_t[passign[:,0]==1,:],axis=0) - np.mean(part_t[passign[:,0]==0,:],axis=0)
 ate_full=np.mean(full_t[passign[:,0]==1,:],axis=0) - np.mean(full_t[passign[:,0]==0,:],axis=0)
 
-
-		
+#Child care cost
+np.mean(ct[agech0[:,0]<=6,:],axis=0)
+np.mean(ct[(cc_t[:,0]==1) & (agech0[:,0]<=6),:],axis=0)
+np.mean(ct[(cc_t[:,0]==1) & (agech0[:,0]<=6) & (passign[:,0]==0) & (full_t[:,0]==1),:],axis=0)
+np.mean(ct[(cc_t[:,0]==0) & (agech0[:,0]<=6) & (passign[:,0]==0) & (full_t[:,0]==1),:],axis=0)
 

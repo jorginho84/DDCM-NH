@@ -26,11 +26,12 @@ class Parameters:
 	List of structural parameters and prices
 
 	"""
-	def __init__(self,alphap,alphaf,eta,gamma1,gamma2,tfp,
+	def __init__(self,alphap,alphaf,eta,alpha_cc,gamma1,gamma2,tfp,
 		sigmatheta,betaw,betam,betak,eitc,afdc,snap,cpi,q,scalew,shapew,
-		lambdas,kappas,pafdc,psnap):
+		lambdas,kappas,pafdc,psnap,):
 
 		self.alphap,self.alphaf,self.eta=alphap,alphaf,eta
+		self.alpha_cc=alpha_cc
 		self.gamma1,self.gamma2=gamma1,gamma2
 		self.tfp=tfp
 		self.sigmatheta,self.betaw,self.betam,self.betak=sigmatheta,betaw,betam,betak
@@ -47,7 +48,7 @@ class Utility(object):
 
 	"""
 	def __init__(self,param,N,xwage,xmarr,xkid,ra,theta0,
-		nkids0,married0,hours,cc,age_t0,hours_p,hours_f):
+		nkids0,married0,hours,cc,age_t0,hours_p,hours_f,wr,cs,ws):
 		"""
 		Set up model's data and paramaters
 
@@ -64,6 +65,7 @@ class Utility(object):
 		self.nkids0,self.married0= nkids0,married0
 		self.hours,self.cc,self.age_t0=hours,cc,age_t0
 		self.hours_p,self.hours_f=hours_p,hours_f
+		self.wr,self.cs,self.ws=wr,cs,ws
 
 
 
@@ -289,8 +291,15 @@ class Utility(object):
 
 			#disposable income
 			dincome_nh=pwage+wsubsidy+total_childa
-			nh_supp=dincome_nh-dincome_eitc
-			nh_supp[(self.ra==0) | (hours<self.hours_f) | (nh_supp<0) ] = 0 
+			
+			if self.ws==1:
+				nh_supp=dincome_nh-dincome_eitc
+				if self.wr==1:
+					nh_supp[(self.ra==0) | (hours<self.hours_f) | (nh_supp<0) ] = 0
+				else:
+					nh_supp[(self.ra==0) | (hours==0) | (nh_supp<0) ] = 0
+			else:
+				nh_supp = np.zeros(self.N) 
 		else:
 			nh_supp = np.zeros(self.N) #NH ends
 			#dincome=boo_ra*(boo*dincome_nh+(1-boo)*dincome_eitc) + \
@@ -373,7 +382,7 @@ class Utility(object):
 		marr=np.reshape(marr,self.N)
 		ones=np.ones(self.N)
 		
-
+		#NH copayment
 		copayment=np.zeros(self.N)
 		copayment[price[:,0]<400]=price[price[:,0]<400,0]
 		copayment[(price[:,0]>400) & (pwage<=8500) ] = 400
@@ -382,8 +391,15 @@ class Utility(object):
 
 		#consumption pc (incorporate child care subsidy)
 		if periodt<=2:#NH eligibility period
-			cc_cost =  (ones-self.ra.reshape(self.N))*price[:,0]*(ones-free.reshape(self.N)) +\
-			self.ra*( (ones-free.reshape(self.N))*(d_work*copayment + (1-d_work)*price[:,0] ) ) 
+			if self.cs==1:
+				if self.wr==1:
+					cc_cost =  (ones-self.ra.reshape(self.N))*price[:,0]*(ones-free.reshape(self.N)) +\
+					self.ra*( (ones-free.reshape(self.N))*(d_work*copayment + (1-d_work)*price[:,0] ) )
+				else:
+					cc_cost =  (ones-self.ra.reshape(self.N))*price[:,0]*(ones-free.reshape(self.N)) +\
+					self.ra*( (ones-free.reshape(self.N))*copayment )
+			else:
+				cc_cost = price[:,0]*(ones-free.reshape(self.N))  
 		else:
 			cc_cost = price[:,0]*(ones-free.reshape(self.N))
 		
@@ -451,7 +467,8 @@ class Utility(object):
 		"""
 
 		#age of child
-		#agech=np.reshape(self.age_t0,(self.N)) + periodt
+		agech=np.reshape(self.age_t0,(self.N)) + periodt
+		d_age = agech<=6
 
 		#log-theta
 		ltheta=np.log(thetat)
@@ -468,7 +485,8 @@ class Utility(object):
 		ap=self.param.alphap
 		af=self.param.alphaf
 		eta=self.param.eta
-		ut_h=d_workp*ap + d_workf*af
+		ac = self.param.alpha_cc
+		ut_h=d_workp*ap + d_workf*af + cc*ac*d_age
 
 		#Current-period utility
 		ut=np.log(ct) + ut_h +  eta*ltheta

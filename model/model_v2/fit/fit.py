@@ -40,7 +40,7 @@ import emax as emax
 import simdata as simdata
 import openpyxl
 sys.path.append("/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/estimation")
-import estimate as estimate
+import estimate_v3 as estimate
 
 
 np.random.seed(1)
@@ -48,13 +48,14 @@ np.random.seed(1)
 betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv5_v1.npy')
 
 #Utility function
-eta=betas_nelder[0]
-alphap=betas_nelder[1]
-alphaf=betas_nelder[2]
+eta=.1
+alphap=-0.12
+alphaf=-0.15
+alpha_cc = -0.35
 
 #wage process
-wagep_betas=np.array([betas_nelder[3],betas_nelder[4],betas_nelder[5],
-	betas_nelder[6],betas_nelder[7]]).reshape((5,1))
+wagep_betas=np.array([0.005,betas_nelder[4],betas_nelder[5],
+	1.2,0.94]).reshape((5,1))
 
 
 #Production function [young,old]
@@ -144,17 +145,17 @@ married0=x_df[ ['d_marital_2']   ].values
 agech0=x_df[['age_t0']].values
 
 #Defines the instance with parameters
-param0=util.Parameters(alphap, alphaf, eta, gamma1, gamma2, tfp,sigmatheta,
+param0=util.Parameters(alphap, alphaf, eta, alpha_cc,gamma1, gamma2, tfp,sigmatheta,
 	wagep_betas, marriagep_betas, kidsp_betas, eitc_list,afdc_list,snap_list,
 	cpi,q,scalew,shapew,lambdas,kappas,pafdc,psnap)
 
 
 
 ###Auxiliary estimates###
-moments_vector=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/aux_model/moments_vector.csv').values
+moments_vector=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/aux_model/moments_vector_2.csv').values
 
 #This is the var cov matrix of aux estimates
-var_cov=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/aux_model/var_cov.csv').values
+var_cov=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/aux_model/var_cov_2.csv').values
 
 #The vector of aux standard errors
 #Using diagonal of Var-Cov matrix of simulated moments
@@ -193,6 +194,7 @@ dic_betas = output_ins.aux_model(choices)
 #Getting the simulated betas
 #utility_aux
 beta_childcare=np.mean(dic_betas['beta_childcare'],axis=0) #1x1
+beta_hours1=np.mean(dic_betas['beta_hours1'],axis=0) #1x1
 beta_hours2=np.mean(dic_betas['beta_hours2'],axis=0) #1x1
 beta_hours3=np.mean(dic_betas['beta_hours3'],axis=0) #1x1
 beta_wagep=np.mean(dic_betas['beta_wagep'],axis=1) # 5 x 1
@@ -205,7 +207,7 @@ beta_inputs_young_cc1_sim=np.mean(dic_betas['beta_inputs_young_cc1'],axis=1) #3 
 #################################################################################
 #################################################################################
 #FIGURE: ATE ON INCOME#
-execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/fit/ate_inc.py')
+#execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/fit/ate_inc.py')
 
 #################################################################################
 #################################################################################
@@ -227,7 +229,7 @@ execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2
 #################################################################################
 #################################################################################
 #TABLE: COMPARING OPROBITS#
-execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/fit/oprobit.py')
+#execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/fit/oprobit.py')
 
 #################################################################################
 #################################################################################
@@ -240,6 +242,7 @@ execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2
 
 #TABLE: model validation#
 
+"""
 ate_part_obs_2=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/fit/ate_part_2.csv').values
 se_ate_part_obs_2=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/fit/se_ate_part_2.csv').values
 ate_full_obs_2=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/fit/ate_full_2.csv').values
@@ -292,3 +295,4 @@ with open('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model
 	f.close()
 
 
+"""

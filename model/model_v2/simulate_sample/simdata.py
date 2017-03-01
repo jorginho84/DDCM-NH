@@ -26,7 +26,7 @@ class SimData:
 	"""
 	def __init__(self,N,param,emax_function,
 		x_w,x_m,x_k,x_wmk,passign,theta0,nkids0,married0,agech,hours_p,hours_f,
-		model):
+		wr,cs,ws,model):
 		"""
 		model: a utility instance (with arbitrary parameters)
 		"""
@@ -35,15 +35,17 @@ class SimData:
 		self.passign,self.theta0,self.nkids0,self.married0=passign,theta0,nkids0,married0
 		self.agech=agech
 		self.hours_p, self.hours_f=hours_p,hours_f
+		self.wr,self.cs,self.ws=wr,cs,ws
 		self.model = model
 		
 	def change_util(self,param,N,x_w,x_m,x_k,passign,
-				theta0,nkids0,married0,hours,childcare,agech,hours_p,hours_f):
+				theta0,nkids0,married0,hours,childcare,agech,hours_p,hours_f,
+				wr,cs,ws):
 		"""
 		This function changes parameters of util instance
 		"""
 		self.model.__init__(param,N,x_w,x_m,x_k,passign,theta0,nkids0,married0,
-			hours,childcare,agech,hours_p,hours_f)
+			hours,childcare,agech,hours_p,hours_f,wr,cs,ws)
 
 		
 
@@ -67,6 +69,8 @@ class SimData:
 
 		#save choices utility  here
 		util_values=np.zeros((self.N,J))
+		#save current value here
+		util_values_c=np.zeros((self.N,J))
 		
 
 		#The choice loop
@@ -100,7 +104,8 @@ class SimData:
 			
 			#Computing utility
 			self.change_util(self.param,self.N,self.x_w,self.x_m,self.x_k,self.passign,
-				theta0,nkids0,married0,hours,childcare,self.agech,self.hours_p,self.hours_f)
+				theta0,nkids0,married0,hours,childcare,self.agech,self.hours_p,
+				self.hours_f,self.wr,self.cs,self.ws)
 
 			#current consumption to get future theta
 			dincome0=self.model.dincomet(periodt,hours,wage0,married0,nkids0)
@@ -108,6 +113,7 @@ class SimData:
 					married0,nkids0,wage0,free0,price0)
 
 			util_values[:,j]=self.model.simulate(periodt,wage0,free0,price0)
+			util_values_c[:,j]=util_values[:,j].copy()
 
 
 			####Only for periods t<T (compute an emax function)
@@ -133,10 +139,10 @@ class SimData:
 				emax_betas=emax_ins.betas()
 				emax_t1=emax_ins.int_values(data_int_t1,emax_betas)
 	
-				#Including option value (dicount factor 0.95)
+				#Including option value (discount factor 0.95)
 				util_values[:,j]=util_values[:,j]+0.95*emax_t1
 
-		return util_values
+		return [util_values,util_values_c]
 
 
 	def fake_data(self,n_periods):
@@ -157,6 +163,7 @@ class SimData:
 		marr_matrix=np.zeros((self.N,n_periods))
 		kids_matrix=np.zeros((self.N,n_periods))
 		util_values_dic=[] #list of t=0,..,8 periods
+		util_values_c_dic=[] #current value utils
 		ssrs_t2=np.zeros(self.N)
 		ssrs_t5=np.zeros(self.N)
 
@@ -170,7 +177,8 @@ class SimData:
 		hours=np.zeros(self.N)
 		childcare=np.zeros(self.N)
 		self.change_util(self.param,self.N,self.x_w,self.x_m,self.x_k,self.passign,
-			theta0,nkids0,married0,hours,childcare,self.agech,self.hours_p,self.hours_f)
+			theta0,nkids0,married0,hours,childcare,self.agech,self.hours_p,
+			self.hours_f,self.wr,self.cs,self.ws)
 		wage0=self.model.waget(0)
 		free0=self.model.q_prob()
 		price0=self.model.price_cc()
@@ -189,8 +197,11 @@ class SimData:
 			#Use self.choice function to obtain choices and saving u_ijt
 			#array of J columns
 			utiliy_values=self.choice(periodt,n_periods-1,theta0,nkids0,married0,wage0,
-				free0,price0)
+				free0,price0)[0]
+			utiliy_values_c=self.choice(periodt,n_periods-1,theta0,nkids0,married0,wage0,
+				free0,price0)[1]
 			util_values_dic.append(utiliy_values)
+			util_values_c_dic.append(utiliy_values_c)
 
 			#Young vs OLD: maximization
 			age_child=np.reshape(self.agech,(self.N)) + periodt
@@ -215,7 +226,7 @@ class SimData:
 			#Current income
 			self.change_util(self.param,self.N,self.x_w,self.x_m,
 				self.x_k,self.passign,theta0,nkids0,married0,hours_t,childcare_t,self.agech,
-				self.hours_p,self.hours_f)
+				self.hours_p,self.hours_f,self.wr,self.cs,self.ws)
 			
 			dincome0=self.model.dincomet(periodt,hours_t,wage0,married0,nkids0)
 			dincome_matrix[:,periodt]=dincome0.copy()
@@ -255,7 +266,7 @@ class SimData:
 				
 		return {'Choices': choice_matrix, 'Theta': theta_matrix,
 		 'Income': dincome_matrix, 'Hours':hours_matrix, 'Childcare': childcare_matrix,
-		 'Wage': wage_matrix, 'Uti_values_dic': util_values_dic,
+		 'Wage': wage_matrix, 'Uti_values_dic': util_values_dic,'Uti_values_c_dic': util_values_c_dic,
 		 'Marriage': marr_matrix, 'Kids': kids_matrix,'Consumption': consumption_matrix,
 		 'SSRS_t2':ssrs_t2,'SSRS_t5':ssrs_t5}
 

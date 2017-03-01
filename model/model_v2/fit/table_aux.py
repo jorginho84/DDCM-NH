@@ -5,10 +5,10 @@ wb=openpyxl.load_workbook('/mnt/Research/nealresearch/new-hope-secure/newhopemou
 ws = wb["new_moments_data"]
 
 #A. Labor supply and child care decisions
-list_aux = [beta_childcare,beta_hours2,beta_hours3]
-list_obs = [moments_vector[0,0],moments_vector[1,0],moments_vector[2,0]]
-list_sig = [se_vector[0],se_vector[1],se_vector[2]]
-for c in range(3):
+list_aux = [beta_childcare,beta_hours1,beta_hours2,beta_hours3]
+list_obs = [moments_vector[0,0],moments_vector[1,0],moments_vector[2,0],moments_vector[3,0]]
+list_sig = [se_vector[0],se_vector[1],se_vector[2],se_vector[3]]
+for c in range(4):
 	sim_moment = ws.cell('B' + str(c + 2))
 	obs_moment = ws.cell('D' + str(c + 2))
 	obs_sigma = ws.cell('F' + str(c + 2))
@@ -16,12 +16,12 @@ for c in range(3):
 	obs_moment.value = np.float(list_obs[c])
 	obs_sigma.value = np.float(list_sig[c])
 
-ind = 3
+ind = 4
 #B. Log wage equation
 for c in range(5):
-	sim_moment = ws.cell('B' + str(c + 5))
-	obs_moment = ws.cell('D' + str(c + 5))
-	obs_sigma = ws.cell('F' + str(c + 5))
+	sim_moment = ws.cell('B' + str(c + 6))
+	obs_moment = ws.cell('D' + str(c + 6))
+	obs_sigma = ws.cell('F' + str(c + 6))
 	sim_moment.value = np.float(beta_wagep[c])
 	obs_moment.value = np.float(moments_vector[ind+c,0])
 	obs_sigma.value = np.float(se_vector[ind+c])
@@ -30,9 +30,9 @@ ind = ind + 5
 
 #A. t=2, kappas
 for c in range(4):
-	sim_moment = ws.cell('B' + str(c + 10))
-	obs_moment = ws.cell('D' + str(c + 10))
-	obs_sigma = ws.cell('F' + str(c + 10))
+	sim_moment = ws.cell('B' + str(c + 11))
+	obs_moment = ws.cell('D' + str(c + 11))
+	obs_sigma = ws.cell('F' + str(c + 11))
 	sim_moment.value = np.float(beta_kappas_t2[c])
 	obs_moment.value = np.float(moments_vector[ind + c,0])
 	obs_sigma.value = np.float(se_vector[ind + c])
@@ -41,9 +41,9 @@ for c in range(4):
 ind = ind + 4
 #B. t=5, kappas
 for c in range(4):
-	sim_moment = ws.cell('B' + str(c + 14))
-	obs_moment = ws.cell('D' + str(c + 14))
-	obs_sigma = ws.cell('F' + str(c + 14))
+	sim_moment = ws.cell('B' + str(c + 15))
+	obs_moment = ws.cell('D' + str(c + 15))
+	obs_sigma = ws.cell('F' + str(c + 15))
 	sim_moment.value = np.float(beta_kappas_t5[c])
 	obs_moment.value = np.float(moments_vector[ind + c,0])
 	obs_sigma.value = np.float(se_vector[ind + c])
@@ -58,9 +58,9 @@ list_sig = [se_vector[ind:ind + 2], se_vector[ind+2: ind + 5]]
 
 for j in range(2):
 	if j==0:
-		pos = 18
+		pos = 19
 	else:
-		pos = 20
+		pos = 21
 	
 	for c in range(2): # 3 moments each
 		sim_moment = ws.cell('B' + str(c + pos))
@@ -72,9 +72,9 @@ for j in range(2):
 	
 	#the last one identified tfp
 	if j==1:
-		sim_moment = ws.cell('B' + str(22))
-		obs_moment = ws.cell('D' + str(22))
-		obs_sigma = ws.cell('F' + str(22))
+		sim_moment = ws.cell('B' + str(23))
+		obs_moment = ws.cell('D' + str(23))
+		obs_sigma = ws.cell('F' + str(23))
 		sim_moment.value = np.float(list_aux[j][2])
 		obs_moment.value = np.float(list_obs[j][2])
 		obs_sigma.value = np.float(list_sig[j][2])

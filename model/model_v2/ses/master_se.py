@@ -41,21 +41,22 @@ betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/re
 eta=betas_nelder[0]
 alphap=betas_nelder[1]
 alphaf=betas_nelder[2]
+alpha_cc = betas_nelder[3]
 
 #wage process
-wagep_betas=np.array([betas_nelder[3],betas_nelder[4],betas_nelder[5],
-	betas_nelder[6],betas_nelder[7]]).reshape((5,1))
+wagep_betas=np.array([betas_nelder[4],betas_nelder[5],betas_nelder[6],
+	betas_nelder[7],betas_nelder[8]]).reshape((5,1))
 
 
 #Production function [young[cc0,cc1],old]
-gamma1=[betas_nelder[8],betas_nelder[10]]
-gamma2=[betas_nelder[9],betas_nelder[11]]
-tfp=betas_nelder[12]
+gamma1=[betas_nelder[9],betas_nelder[11]]
+gamma2=[betas_nelder[10],betas_nelder[12]]
+tfp=betas_nelder[13]
 sigmatheta=0
 
 #Measurement system: three measures for t=2, one for t=5
-kappas=[[betas_nelder[13],betas_nelder[14],betas_nelder[15],betas_nelder[16]],
-[betas_nelder[17],betas_nelder[18],betas_nelder[19],betas_nelder[20]]]
+kappas=[[betas_nelder[14],betas_nelder[15],betas_nelder[16],betas_nelder[17]],
+[betas_nelder[18],betas_nelder[19],betas_nelder[20],betas_nelder[21]]]
 #First measure is normalized. starting arbitrary values
 #All factor loadings are normalized
 lambdas=[1,1]
@@ -129,17 +130,17 @@ married0=x_df[ ['d_marital_2']   ].values
 agech0=x_df[['age_t0']].values
 
 #Defines the instance with parameters
-param0=util.Parameters(alphap, alphaf, eta, gamma1, gamma2, tfp, sigmatheta,
+param0=util.Parameters(alphap, alphaf, eta, alpha_cc, gamma1, gamma2, tfp, sigmatheta,
 	wagep_betas, marriagep_betas, kidsp_betas, eitc_list,afdc_list,snap_list,
 	cpi,q,scalew,shapew,lambdas,kappas,pafdc,psnap)
 
 
 
 ###Auxiliary estimates###
-moments_vector=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/aux_model/moments_vector.csv').values
+moments_vector=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/aux_model/moments_vector_2.csv').values
 
 #This is the var cov matrix of aux estimates
-var_cov=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/aux_model/var_cov.csv').values
+var_cov=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/aux_model/var_cov_2.csv').values
 
 #The W matrix in Wald metric
 #Using diagonal of Var-Cov matrix of simulated moments
@@ -161,18 +162,25 @@ M=1000
 hours_p=15
 hours_f=40
 
+#Indicate if model includes a work requirement (wr), 
+#and child care subsidy (cs) and a wage subsidy (ws)
+wr=1
+cs=1
+ws=1
+
 #The estimate class
 output_ins=estimate.Estimate(param0,x_w,x_m,x_k,x_wmk,passign,agech0,theta0,nkids0,
-	married0,D,dict_grid,M,N,moments_vector,w_matrix,hours_p,hours_f)
+	married0,D,dict_grid,M,N,moments_vector,w_matrix,hours_p,hours_f,
+	wr,cs,ws)
 
 #The SE class
 se_ins=se.SEs(output_ins,var_cov,betas_nelder)
 
 #Number of parameters and moments
-npar = betas_nelder.shape[0]
+npar = betas_nelder.shape[0] + 1 #change this with new estimates!!
 nmom = moments_vector.shape[0]
 
 #The var-cov matrix of structural parameters
 ses = se_ins.big_sand(0.0001,nmom,npar) 
 
-np.save('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/estimation/sesv4_v2_e4.npy',ses)
+np.save('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/estimation/sesv5_v1_e4.npy',ses)

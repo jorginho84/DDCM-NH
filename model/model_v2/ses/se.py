@@ -76,41 +76,42 @@ class SEs:
 		eta=bs[0]
 		alphap=bs[1]
 		alphaf=bs[2]
+		alpha_cc=bs[3]
 
 		#wage process
-		wagep_betas=np.array([bs[3],bs[4],bs[5],
-			bs[6],bs[7]]).reshape((5,1))
+		wagep_betas=np.array([bs[4],bs[5],bs[6],
+			bs[7],bs[8]]).reshape((5,1))
 
 		#Production function [young[cc0,cc1],old]
-		gamma1=[bs[8],bs[10]]
-		gamma2=[bs[9],bs[11]] 
-		tfp=bs[12]
+		gamma1=[bs[9],bs[11]]
+		gamma2=[bs[10],bs[12]] 
+		tfp=bs[13]
 		sigmatheta=0
 
 		#Measurement system: three measures for t=2, one for t=5
-		kappas=[[bs[13],bs[14],bs[15],bs[16]],[bs[17],bs[18],bs[19],bs[20]]]
+		kappas=[[bs[14],bs[15],bs[16],bs[17]],[bs[18],bs[19],bs[20],bs[21]]]
 		lambdas=[1,1]
 
 
 		#Re-defines the instance with parameters 
-		param0=util.Parameters(alphap, alphaf, eta, gamma1, gamma2, tfp, sigmatheta,
+		param0=util.Parameters(alphap, alphaf, eta, alpha_cc, gamma1, gamma2, tfp, sigmatheta,
 			wagep_betas, marriagep_betas, kidsp_betas, eitc_list,
 			afdc_list,snap_list,cpi,q,scalew,shapew,
 			lambdas,kappas,pafdc,psnap)
 		return param0 
 
-	def emax(self,param0):
+	def emax(self,param0,model):
 		"""
 		Computes the emax for a given set of parameters
 		"""
-		return self.output_ins.emax(param0)
+		return self.output_ins.emax(param0,model)
 
 
-	def choices(self,param0,emax_instance):
+	def choices(self,param0,emax_instance,model):
 		"""
 		Simulates M samples
 		"""
-		return self.output_ins.samples(param0,emax_instance)
+		return self.output_ins.samples(param0,emax_instance,model)
 
 
 	def sim_moments(self,samples):
@@ -120,6 +121,7 @@ class SEs:
 		dic_betas = self.output_ins.aux_model(samples)
 
 		beta_childcare=np.mean(dic_betas['beta_childcare'],axis=0) #1x1
+		beta_hours1=np.mean(dic_betas['beta_hours1'],axis=0) #1x1
 		beta_hours2=np.mean(dic_betas['beta_hours2'],axis=0) #1x1
 		beta_hours3=np.mean(dic_betas['beta_hours3'],axis=0) #1x1
 		beta_wagep=np.mean(dic_betas['beta_wagep'],axis=1) # 5 x 1
@@ -128,7 +130,7 @@ class SEs:
 		beta_inputs_old=np.mean(dic_betas['beta_inputs_old'],axis=1) #2 x 1
 		beta_inputs_young_cc1=np.mean(dic_betas['beta_inputs_young_cc1'],axis=1) #3 x 1
 
-		return [beta_childcare, beta_hours2,beta_hours3,beta_wagep,beta_kappas_t2,
+		return [beta_childcare,beta_hours1,beta_hours2,beta_hours3,beta_wagep,beta_kappas_t2,
 		  beta_kappas_t5, beta_inputs_old,beta_inputs_young_cc1]
 
 	def binding(self,psi):
@@ -139,11 +141,30 @@ class SEs:
 		#Calling parameters instance based on betas
 		param0 = self.betas_struct(psi)
 
+		#The model instance
+		N=self.output_ins.__dict__['N']
+		x_w=self.output_ins.__dict__['x_w']
+		x_m=self.output_ins.__dict__['x_m']
+		x_k=self.output_ins.__dict__['x_k']
+		passign=self.output_ins.__dict__['passign']
+		theta0=self.output_ins.__dict__['theta0']
+		nkids0=self.output_ins.__dict__['nkids0']
+		married0=self.output_ins.__dict__['married0']
+		hours = np.zeros(N)
+		childcare = np.zeros(N)
+		agech0=self.output_ins.__dict__['agech0']
+		hours_p=self.output_ins.__dict__['hours_p']
+		hours_f=self.output_ins.__dict__['hours_f']
+
+
+		model  = util.Utility(param0,N,x_w,x_m,x_k,	passign,theta0,nkids0,
+			married0,hours,childcare,agech0,hours_p,hours_f)
+
 		#Computing the emax
-		emax_instance = self.emax(param0)
+		emax_instance = self.emax(param0,model)
 
 		#Computing M samples
-		samples = self.choices(param0,emax_instance)
+		samples = self.choices(param0,emax_instance,model)
 
 		#Computing aux model (binding function)
 

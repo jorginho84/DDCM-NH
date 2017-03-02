@@ -365,5 +365,93 @@ foreach year in 5 8{
 
 }
 
+*****************************************************************************************
+/*Graph: SSRS*/
 
-/*Table of Year 8*/
+
+clear
+set obs 10
+
+forvalues x=1/2{
+	gen model`x'_year2=.
+	gen sig_model`x'_year2=.
+	gen model`x'_year5=.
+	gen sig_model`x'_year5=.
+	gen model`x'_year8=.
+	gen sig_model`x'_year8=.
+
+
+}
+
+
+
+*Recovering values
+local i=1
+foreach variable in `Y2_B1'{
+
+	forvalues x=1/2{
+		if `pval_model`x'_`variable''<=0.05{
+			replace sig_model`x'_year2=`beta_model`x'_`variable''  if _n==`i'	
+		}
+		else{
+			replace model`x'_year2=`beta_model`x'_`variable''  if _n==`i'		
+		}
+		
+	}
+	
+	local i = `i' + 1
+}
+
+
+foreach year in 5 8{
+	local i=1
+	foreach variable in `Y`year'_B2'{
+
+		forvalues x=1/2{
+			if `pval_model`x'_`variable''<=0.05{
+			replace sig_model`x'_year`year'=`beta_model`x'_`variable''  if _n==`i'	
+		}
+		else{
+			replace model`x'_year`year'=`beta_model`x'_`variable''  if _n==`i'		
+		}
+			
+		}
+	
+	local i = `i' + 1
+	}
+
+}
+
+egen id = seq()
+reshape long model1_year model2_year sig_model1_year sig_model2_year, i(id) j(year)
+
+forvalues x=1/2{
+	twoway (scatter model`x' year, mlcolor(blue) mfcolor(none) msize(large)) /*
+	*/ (scatter sig_model`x' year, mlcolor(blue) mfcolor(blue) msize(large)),/*
+	*/ legend(off) ytitle("Impact on prob of being in the top 30%")  /*
+	*/xtitle("Years after random assignment") /*
+	*/ xlabel(2 5 8 , noticks) ylabel(, nogrid)/*
+	*/ graphregion(fcolor(white) ifcolor(white) lcolor(white) ilcolor(white))/*
+	*/ plotregion(fcolor(white) lcolor(white)  ifcolor(white) ilcolor(white)) scale(1.6)
+
+	graph export "$results/ssrs_model`x'.pdf", as(pdf) replace
+
+}
+
+/*
+*MOdel 1
+twoway (hist year2_model1, fcolor(none) lcolor(black) ) /*
+*/ (hist year5_model1, fcolor(none) lcolor(blue) ) /*
+*/(hist year8_model1, fcolor(none) lcolor(red)),/*
+*/ legend(order(1 "Year two" 2 "Year five" 3 "Year 8") region(lcolor(white)))/*
+*/ytitle("Density")  xtitle("Impact on prob of being in the top 30%") /*
+*/ xlabel( , noticks) ylabel(, nogrid)/*
+*/ graphregion(fcolor(white) ifcolor(white) lcolor(white) ilcolor(white))/*
+*/ plotregion(fcolor(white) lcolor(white)  ifcolor(white) ilcolor(white))
+
+graph export "$results/ssrs_model1.pdf", as(pdf) replace
+
+*/
+
+
+

@@ -40,7 +40,7 @@ import emax as emax
 import simdata as simdata
 import openpyxl
 sys.path.append("/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/estimation")
-import estimate_v3 as estimate
+import estimate as estimate
 
 
 np.random.seed(1)
@@ -175,15 +175,22 @@ M=1000
 hours_p=15
 hours_f=40
 
+#Indicate if model includes a work requirement (wr), 
+#and child care subsidy (cs) and a wage subsidy (ws)
+wr=1
+cs=1
+ws=1
+
 output_ins=estimate.Estimate(param0,x_w,x_m,x_k,x_wmk,passign,agech0,theta0,nkids0,
-	married0,D,dict_grid,M,N,moments_vector,var_cov,hours_p,hours_f)
+	married0,D,dict_grid,M,N,moments_vector,var_cov,hours_p,hours_f,
+	wr,cs,ws)
 
 #The model (utility instance)
 hours = np.zeros(N)
 childcare  = np.zeros(N)
 
 model  = util.Utility(param0,N,x_w,x_m,x_k,passign,
-	theta0,nkids0,married0,hours,childcare,agech0,hours_p,hours_f)
+	theta0,nkids0,married0,hours,childcare,agech0,hours_p,hours_f,wr,cs,ws)
 
 #Obtaining emax instances, samples, and betas for M samples
 np.random.seed(1)
@@ -212,18 +219,18 @@ beta_inputs_young_cc1_sim=np.mean(dic_betas['beta_inputs_young_cc1'],axis=1) #3 
 #################################################################################
 #################################################################################
 #FIGURE: ATE ON CHILD CARE#
-execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/fit/ate_cc.py')
+#execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/fit/ate_cc.py')
 
 
 #################################################################################
 #################################################################################
 #FIGURE: ATE ON EMPLOYMENT#
-execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/fit/ate_emp.py')
+#execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/fit/ate_emp.py')
 
 #################################################################################
 #################################################################################
 #FIGURE: ATE ON THETA#
-execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/fit/ate_theta.py')
+#execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/fit/ate_theta.py')
 
 
 #################################################################################

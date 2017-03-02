@@ -36,7 +36,7 @@ local controls=1
 *Choose: 1 if produce income graph for employed at baseline
 *Choose: 0 if produce income graph for unemployed at baseline
 *Choose: 3 if total
-local emp=0
+local emp=3
 
 use "$results/Income/data_income.dta", clear
 
@@ -73,20 +73,14 @@ else if `emp'==0{
 }
 
 
-*One year before RA
-qui xi: reg total_income_y0 i.p_assign `control_var', vce(`SE')
-mat betas=_b[_Ip_assign_2]
-qui: test _Ip_assign_2=0
-mat pvalue=r(p)
-
-
-
-forvalues y=1/9{
+forvalues y=0/9{
 
 	qui xi: reg total_income_y`y' i.p_assign `control_var', vce(`SE')
-	mat betas=betas\_b[_Ip_assign_2]
+	local mean_`y' = _b[_Ip_assign_2]
+	local lb_`y'=_b[_Ip_assign_2] - invttail(e(df_r),0.025)*_se[_Ip_assign_2]
+	local ub_`y'=_b[_Ip_assign_2] + invttail(e(df_r),0.025)*_se[_Ip_assign_2]
 	qui: test _Ip_assign_2=0
-	mat pvalue=pvalue\r(p)
+	local pvalue_`y'=r(p)
 
 
 
@@ -95,40 +89,41 @@ forvalues y=1/9{
 *********************
 /*The figure*/
 *********************
-
 preserve
-collapse (mean) total_income_y* , by(p_assign)
-reshape long total_income_y, i(p_assign) j(year)
 
-*Re-ordering to make the p-value label on top
-gen p_assign_aux=1 if p_assign=="E"
-replace p_assign_aux=2 if p_assign=="C"
-sort p_assign_aux year
-drop p_assign_aux
+clear
+set obs 10
+gen year=.
+gen effect=.
+gen lb=.
+gen ub=.
+gen pvalues=.
 
-*Recovering p-value for labels
-svmat pvalue
-svmat betas
+local obs=1
+forvalues year=0/9{
+	replace effect=`mean_`year'' if _n==`obs'
+	replace lb=`lb_`year'' if _n==`obs'
+	replace ub=`ub_`year'' if _n==`obs'
+	replace pvalues=`pvalue_`year'' if _n==`obs'
+	replace year=`year' - 1 if _n==`obs' /*original timing*/
+	local obs=`obs'+1
+	
+	
+}
 
-*These series are for coloring the significance levels
-gen mean_aux1=total_income_y if p_assign=="E" & pvalue1<=0.01
-gen mean_aux2=total_income_y if p_assign=="E" & pvalue1<=0.05 &  pvalue1>0.01
-gen mean_aux3=total_income_y if p_assign=="E" & pvalue1<=0.1 &  pvalue1>0.05
+gen mean_aux_1=effect if pvalues<0.05
+gen mean_aux_2=effect if pvalues>=0.05
 
-*Back to the original timing
-replace year=year-1
+gen year2=year*2
 
-twoway (line total_income_y year if p_assign=="E",  lpattern(solid) lwidth(thin) ) /*
-*/ (scatter mean_aux1 year ,  msymbol(circle) mcolor(blue) mfcolor(blue)) /*
-*/ (scatter mean_aux2 year ,  msymbol(circle) mcolor(blue) mfcolor(ltblue)) /*
-*/ (scatter mean_aux3 year ,  msymbol(circle) mcolor(blue) mfcolor(none)) /*
-*/(line total_income year if p_assign=="C" ,  lpattern(dash) lwidth(thin)),/*
-*/scheme(s2mono) legend(order(1 "Treatment" 5 "Control")  )/*
-*/ytitle(Total income (2003 dollars)) xtitle(Years since RA)/*
-*/graphregion(fcolor(white) ifcolor(white) lcolor(white) ilcolor(white)) plotregion(fcolor(white) lcolor(white)  ifcolor(white) ilcolor(white)) /*
-*/ ylabel(, nogrid)   /*
-*/  xline(3, lcolor(red)) xline(0, lcolor(red)) xlabel(-1(1)8)
-/*ylabel(500(1000)4500)*/  
+twoway (scatter mean_aux_2 year2,msymbol(circle) mlcolor(blue) mfcolor(white))/*
+*/ (rcap ub lb year2, lw(thin)) /*
+*/ (scatter mean_aux_1 year2, msymbol(circle) mlcolor(blue) mfcolor(blue)), /* 
+*/ ytitle("Change in annual income (2003 dollars)")  xtitle("Years after random assignment") legend(off) /*
+*/ xlabel( -2 "-1" 0 "0" 2 "1" 4 "2" 6 "3" 8 "4" 10 "5" 12 "6" 14 "7" 16 "8", noticks) /*
+*/ graphregion(fcolor(white) ifcolor(white) lcolor(white) ilcolor(white)) plotregion(fcolor(white) lcolor(white)  ifcolor(white) ilcolor(white))  /*
+*/ scheme(s2mono) ylabel(, nogrid) yline(0, lpattern(solid) lcolor(black)) scale(1.2) /*
+*/ xline(5, lcolor(red))
 
 graph export "$results/Income/total_income_annual_controls`controls'_emp`emp'.pdf", as(pdf) replace
 

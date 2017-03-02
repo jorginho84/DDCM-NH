@@ -32,6 +32,9 @@ year5_8=1: runs years 5 and 8. This will produce a table
 local year2=1
 local year5_8=0
 
+*Scale of graphs
+local scale = 1.3
+
 
 /*
 Set control=1 if regressions control for X's
@@ -43,7 +46,7 @@ local controls=1
 if `year2'==1{
 
 use "$databases/CFS_original.dta", clear
-do "$codes/data_cfs.do"
+qui: do "$codes/data_cfs.do"
 /*
 ********************************************************************************
 *Recovering information on children
@@ -68,7 +71,7 @@ drop zboy* agechild*
 ********************************************************************************
 */
 
-keep sampleid p_assign p_radatr /*
+keep sampleid p_assign p_radatr piinvyy/*
 */ pthwjbf1 /*Hours worked away home (CFS)
 */r*smof1 r*syrf1 r*atjf1 r*emof1 r*eyrf1 r*hwsf1 r*hwef1 /*Year 2 variables*/
 
@@ -80,6 +83,9 @@ format %tm date_ra
 gen date_survey=date_ra+24
 format %tm date_survey
 
+
+*Dropping individuals with no year-2 survey
+drop if piinvyy==" "
 
 *Rename for easier reshaping
 
@@ -118,7 +124,7 @@ forvalues y=1994/1998{
 	gen hours`y'm`mm'=hours_end if ( start<=monthly("`y'm`mm'","YM") & end>=monthly("`y'm`mm'","YM") )  | /*
 	*/( start<=monthly("`y'm`mm'","YM")  & still==1 & monthly("`y'm`mm'","YM")==date_survey )
 	
-	replace hours`y'm`mm'=. if monthly("`y'm`mm'","YM")>date_survey
+	replace hours`y'm`mm'=0 if monthly("`y'm`mm'","YM")>date_survey
 	}
 
 }
@@ -140,11 +146,11 @@ format month %tm
 
 
 
+
 /*
 *For each individual, average hours by month. 
 */
 collapse (mean) hours (first) p_assign date_ra, by(sampleid month)
-
 
 *Months since RA
 gen months_ra=month-date_ra
@@ -157,6 +163,7 @@ gen months_ra=month-date_ra
 replace months_ra=months_ra+23 /*trick to reshape*/
 keep hours sampleid months_ra p_assign
 reshape wide hours, i(sampleid) j(months_ra)
+
 
 *Obtaining control variables
 if `controls'==1{
@@ -177,6 +184,8 @@ drop hours0 hours1 hours2 hours3
 
 *Matrix of p-values (the first 3 will not show up in the graph anyways)
 forvalues x=4/47{
+	*Including 0s
+	replace hours`x'=0 if hours`x'==.
 	qui xi: reg hours`x' i.p_assign `control_var', vce(`SE')
 	qui: test _Ip_assign_2=0
 		
@@ -220,15 +229,16 @@ gen mean_aux2=hours if p_assign=="E" & pvalue1<=0.05 &  pvalue1>0.01
 gen mean_aux3=hours if p_assign=="E" & pvalue1<=0.1 &  pvalue1>0.05
 
 *According to the LS_survey: full sample from -7 onwards.
-twoway (line hours month if p_assign=="E" & month>=-7 ,  lpattern(solid) lwidth(thin) ) /*
-*/ (scatter mean_aux1 month if p_assign=="E" & month>=-7 ,  msymbol(circle) mcolor(blue) mfcolor(blue)) /*
-*/ (scatter mean_aux2 month if p_assign=="E" & month>=-7 ,  msymbol(circle) mcolor(blue) mfcolor(ltblue)) /*
-*/ (scatter mean_aux3 month if p_assign=="E" & month>=-7 ,  msymbol(circle) mcolor(blue) mfcolor(none)) /*
-*/(line hours month if p_assign=="C" & month>=-7,  lpattern(dash) lwidth(thin)),/*
+*Before 0, I have data for individuals who where working
+twoway (line hours month if p_assign=="E" & month>=0 ,  lpattern(solid) lwidth(thin) ) /*
+*/ (scatter mean_aux1 month if p_assign=="E" & month>=0 ,  msymbol(circle) mcolor(blue) mfcolor(blue)) /*
+*/ (scatter mean_aux2 month if p_assign=="E" & month>=0 ,  msymbol(circle) mcolor(blue) mfcolor(ltblue)) /*
+*/ (scatter mean_aux3 month if p_assign=="E" & month>=0 ,  msymbol(circle) mcolor(blue) mfcolor(none)) /*
+*/(line hours month if p_assign=="C" & month>=0,  lpattern(dash) lwidth(thin)),/*
 */scheme(s2mono) legend(order(1 "Treatment" 5 "Control")  )/*
 */ytitle(Hours worked (weekly)) xtitle(Months since RA)/*
 */graphregion(fcolor(white) ifcolor(white) lcolor(white) ilcolor(white)) plotregion(fcolor(white) lcolor(white)  ifcolor(white) ilcolor(white))/*
-*/xlabel(-7(5)24) ylabel(, nogrid)
+*/xlabel(0(5)24) ylabel(, nogrid) scale(`scale')
 
 graph save "$results/Time/hours_mra.gph", replace
 graph export "$results/Time/hours_mra.pdf", as(pdf) replace
@@ -304,13 +314,18 @@ if `controls'==1{
 	
 }
 
+*Replacing 0s
+replace piq66=0 if piq66==. & d_year5==0
+replace epi54=0 if epi54==. & d_year8==0
 
 *Regressions and table
 local j=7
 local y=5
 foreach variable of varlist piq66 epi54{
 
-	qui ttest `variable' if employment_year`y'==1, by(RA)
+
+	*qui ttest `variable' if employment_year`y'==1, by(RA)
+	qui ttest `variable', by(RA)
 	mat A=(r(mu_1),r(mu_2),0\r(sd_1), r(sd_2), 0)
 
 	 xi: reg `variable' i.RA `control_var' if employment_year`y'==1, vce(`SE')

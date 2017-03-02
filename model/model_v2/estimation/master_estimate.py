@@ -1,5 +1,5 @@
 """
-execfile('master_estimate.py')
+execfile('master_estimate_v3.py')
 
 This file returns the structural parameters' estimates
 
@@ -29,27 +29,29 @@ import int_linear
 import emax as emax
 import simdata as simdata
 sys.path.append("/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/estimation")
-import estimate as estimate
+import estimate_v3 as estimate
 
 np.random.seed(1)
 
-betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv4_v2.npy')
+betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv5_v1.npy')
 
 
 #Utility function
-eta=0.002
-alphap=betas_nelder[1]
-alphaf=-0.6
+eta=.1
+alphap=-0.1
+alphaf=-0.15
+alpha_cc = -0.35
+
 
 #wage process
-wagep_betas=np.array([betas_nelder[3],betas_nelder[4],betas_nelder[5],
-	1.22,0.9]).reshape((5,1))
+wagep_betas=np.array([0.005,betas_nelder[4],betas_nelder[5],
+	1.2,0.94]).reshape((5,1))
 
 
 #Production function [young[cc0,cc1],old]
 gamma1=[betas_nelder[8],betas_nelder[10]]
 gamma2=[betas_nelder[9],betas_nelder[11]]
-tfp=0.4
+tfp=betas_nelder[12]
 sigmatheta=0
 
 #Measurement system: three measures for t=2, one for t=5
@@ -131,7 +133,7 @@ married0=x_df[ ['d_marital_2']   ].values
 agech0=x_df[['age_t0']].values
 
 #Defines the instance with parameters
-param0=util.Parameters(alphap, alphaf, eta, gamma1, gamma2, tfp, sigmatheta,
+param0=util.Parameters(alphap, alphaf, eta, alpha_cc,gamma1, gamma2, tfp, sigmatheta,
 	wagep_betas, marriagep_betas, kidsp_betas, eitc_list,afdc_list,snap_list,
 	cpi,q,scalew,shapew,lambdas,kappas,pafdc,psnap)
 
@@ -139,11 +141,11 @@ param0=util.Parameters(alphap, alphaf, eta, gamma1, gamma2, tfp, sigmatheta,
 
 ###Auxiliary estimates### 
 
-moments_vector=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/aux_model/moments_vector.csv').values
+moments_vector=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/aux_model/moments_vector_2.csv').values
 
 
 #This is the var cov matrix of aux estimates
-var_cov=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/aux_model/var_cov.csv').values
+var_cov=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/aux_model/var_cov_2.csv').values
 
 #The W matrix in Wald metric
 #Using diagonal of Var-Cov matrix of simulated moments
@@ -182,24 +184,25 @@ def sym(a):
 eta_opt=output.x[0]
 alphap_opt=output.x[1]
 alphaf_opt=output.x[2]
-betaw0=output.x[3]
-betaw1=output.x[4]
-betaw2=output.x[5]
-betaw3=output.x[6]
-betaw4=np.exp(output.x[7])
-gamma1_young_cc1=sym(output.x[8])
-gamma2_young_cc1=sym(output.x[9])
-gamma1_old=sym(output.x[10])
-gamma2_old=sym(output.x[11])
-tfp_opt=output.x[12]
-kappas_00=output.x[13]
-kappas_01=output.x[14]
-kappas_02=output.x[15]
-kappas_03=output.x[16]
-kappas_10=output.x[17]
-kappas_11=output.x[18]
-kappas_12=output.x[19]
-kappas_13=output.x[20]
+alphacc_opt=output.x[3]
+betaw0=output.x[4]
+betaw1=output.x[5]
+betaw2=output.x[6]
+betaw3=output.x[7]
+betaw4=np.exp(output.x[8])
+gamma1_young_cc1=sym(output.x[9])
+gamma2_young_cc1=sym(output.x[10])
+gamma1_old=sym(output.x[11])
+gamma2_old=sym(output.x[12])
+tfp_opt=output.x[13]
+kappas_00=output.x[14]
+kappas_01=output.x[15]
+kappas_02=output.x[16]
+kappas_03=output.x[17]
+kappas_10=output.x[18]
+kappas_11=output.x[19]
+kappas_12=output.x[20]
+kappas_13=output.x[21]
 
 
 betas_opt=np.array([eta_opt, alphap_opt,alphaf_opt,betaw0,betaw1,betaw2,
@@ -208,7 +211,7 @@ betas_opt=np.array([eta_opt, alphap_opt,alphaf_opt,betaw0,betaw1,betaw2,
 	kappas_00,kappas_01,kappas_02,kappas_03,
 	kappas_10,kappas_11,kappas_12,kappas_13])
 
-np.save('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv5_v1.npy',betas_opt)
+np.save('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv6_v1.npy',betas_opt)
 
 
 

@@ -303,7 +303,7 @@ class Estimate:
 
 		model  = util.Utility(self.param0,self.N,self.x_w,self.x_m,self.x_k,self.passign,
 			self.theta0,self.nkids0,self.married0,hours,childcare,
-			self.agech0,self.hours_p,self.hours_f)
+			self.agech0,self.hours_p,self.hours_f,self.wr,self.cs,self.ws)
 
 		##obtaining emax instance##
 		emax_instance=self.emax(self.param0,model)

@@ -31,34 +31,36 @@ se_vector  = np.sqrt(np.diagonal(var_cov))
 eta_opt=betas_nelder[0]
 alphap_opt=betas_nelder[1]
 alphaf_opt=betas_nelder[2]
+alpha_cc_opt=betas_nelder[3]
 
 sigma_eta_opt=se_vector[0]
 sigma_alphap_opt=se_vector[1]
 sigma_alphaf_opt=se_vector[2]
+sigma_alpha_cc_opt=se_vector[3]
 
 #wage process
-wagep_betas=np.array([betas_nelder[3],betas_nelder[4],betas_nelder[5],
-	betas_nelder[6],betas_nelder[7]]).reshape((5,1))
+wagep_betas=np.array([betas_nelder[4],betas_nelder[5],betas_nelder[6],
+	betas_nelder[7],betas_nelder[8]]).reshape((5,1))
 
-sigma_wagep_betas=np.array([se_vector[3],se_vector[4],se_vector[5],
-	se_vector[6],se_vector[7]]).reshape((5,1))
+sigma_wagep_betas=np.array([se_vector[4],se_vector[5],se_vector[6],
+	se_vector[7],se_vector[8]]).reshape((5,1))
 
 
 #Production function [young[cc0,cc1],old]
-gamma1=[betas_nelder[8],betas_nelder[10]]
-gamma2=[betas_nelder[9],betas_nelder[11]]
-tfp=betas_nelder[12]
+gamma1=[betas_nelder[9],betas_nelder[11]]
+gamma2=[betas_nelder[10],betas_nelder[12]]
+tfp=betas_nelder[13]
 
-sigma_gamma1=[se_vector[8],se_vector[10]]
-sigma_gamma2=[se_vector[9],se_vector[11]]
-sigma_tfp=se_vector[12]
+sigma_gamma1=[se_vector[9],se_vector[11]]
+sigma_gamma2=[se_vector[10],se_vector[12]]
+sigma_tfp=se_vector[13]
 
 #Measurement system: three measures for t=2, one for t=5
-kappas=[[betas_nelder[13],betas_nelder[14],betas_nelder[15],betas_nelder[16]],
-[betas_nelder[17],betas_nelder[18],betas_nelder[19],betas_nelder[20]]]
+kappas=[[betas_nelder[14],betas_nelder[15],betas_nelder[16],betas_nelder[17]],
+[betas_nelder[18],betas_nelder[19],betas_nelder[20],betas_nelder[21]]]
 
-sigma_kappas=[[se_vector[13],se_vector[14],se_vector[15],se_vector[16]],
-[se_vector[17],se_vector[18],se_vector[19],se_vector[20]]]
+sigma_kappas=[[se_vector[14],se_vector[15],se_vector[16],se_vector[17]],
+[se_vector[18],se_vector[19],se_vector[20],se_vector[21]]]
 
 #First measure is normalized. starting arbitrary values
 lambdas=[1,1]
@@ -67,10 +69,11 @@ lambdas=[1,1]
 
 ###########.TEX table##################
 
-utility_list_beta = [alphap_opt,alphaf_opt,eta_opt]
-utility_list_se = [sigma_alphap_opt,sigma_alphaf_opt,sigma_eta_opt]
+utility_list_beta = [alphap_opt,alphaf_opt,alpha_cc_opt,eta_opt]
+utility_list_se = [sigma_alphap_opt,sigma_alphaf_opt,sigma_alpha_cc_opt,sigma_eta_opt]
 utility_names = [r'Preference for part-time work ($\alpha^p$)', 
-r'Preference for full-time work ($\alpha^f$)',r'Preference for human capital ($\eta$)']
+r'Preference for full-time work ($\alpha^f$)',r'Preference for child care ($\alpha^c$)'
+,r'Preference for human capital ($\eta$)']
 
 wage_list_beta = [wagep_betas[0,0],wagep_betas[1,0],wagep_betas[2,0],wagep_betas[3,0],wagep_betas[4,0]]
 wage_list_se = [sigma_wagep_betas[0,0],sigma_wagep_betas[1,0],

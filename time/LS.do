@@ -51,13 +51,21 @@ local controls=1
 
 
 /*
-Employment from CSJ: choose cjs=0 if employment do not include CSJs. Under this condition, the levels/quarter_RA figure changes its name
+Employment from CSJ: choose cjs=0 if employment do not include CSJs. 
+Under this condition, the levels/quarter_RA figure changes its name
 Otherwise, choose csj=1 to include CSJs in the employment definition.
 WARNING: set csj=0 only qhen estimating level/quarters_ra
 
 */
 
-local csj=0
+
+/*
+Scale of graphs
+*/
+
+local scale = 1.3
+
+local csj=1
 
 clear
 clear matrix
@@ -585,7 +593,7 @@ if `quarters_ra'==1{
 		*/ytitle(Employment (in %)) xtitle(Quarters since RA)/*
 		*/graphregion(fcolor(white) ifcolor(white) lcolor(white) ilcolor(white)) plotregion(fcolor(white) lcolor(white)  ifcolor(white) ilcolor(white)) /*
 		*/ ylabel(, nogrid) ylabel(30(10)100)  /*
-		*/  xline(12, lcolor(red)) xline(0, lcolor(red))
+		*/  xline(12, lcolor(red)) xline(0, lcolor(red)) scale(`scale')
 		
 		
 		*How much was the increase:
@@ -679,7 +687,7 @@ if `quarters_ra'==1{
 		*/ytitle(Employment (in%)) xtitle(Quarters since RA)/*
 		*/graphregion(fcolor(white) ifcolor(white) lcolor(white) ilcolor(white)) plotregion(fcolor(white) lcolor(white)  ifcolor(white) ilcolor(white)) /*
 		*/ ylabel(, nogrid) ylabel(30(10)100)  /*
-		*/  xline(12, lcolor(red)) xline(0, lcolor(red))
+		*/  xline(12, lcolor(red)) xline(0, lcolor(red)) scale(`scale')
 		
 		if `csj'==0{
 			graph save "$results/Time/LS_admin_qra_level_employed_NoCSJ.gph", replace

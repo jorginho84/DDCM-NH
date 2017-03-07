@@ -18,7 +18,7 @@ for c in range(4):
 
 ind = 4
 #B. Log wage equation
-for c in range(5):
+for c in range(6):
 	sim_moment = ws.cell('B' + str(c + 6))
 	obs_moment = ws.cell('D' + str(c + 6))
 	obs_sigma = ws.cell('F' + str(c + 6))
@@ -26,7 +26,7 @@ for c in range(5):
 	obs_moment.value = np.float(moments_vector[ind+c,0])
 	obs_sigma.value = np.float(se_vector[ind+c])
 
-ind = ind + 5
+ind = ind + 6
 
 #A. t=2, kappas
 for c in range(4):

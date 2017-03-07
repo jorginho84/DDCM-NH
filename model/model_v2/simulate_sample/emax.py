@@ -137,7 +137,7 @@ class Emaxt:
 			u_vec=np.zeros((ngrid,self.D,J))
 
 			#Income and consumption at T-1
-			dincome0=self.model.dincomet(7,hours,wage0,married0,nkids0)
+			dincome0=self.model.dincomet(7,hours,wage0,married0,nkids0)['income']
 			consumption0=self.model.consumptiont(7,hours,childcare,dincome0,
 					married0,nkids0,wage0,free0,price0)
 			
@@ -309,7 +309,7 @@ class Emaxt:
 				childcare=np.ones(ngrid)
 
 			#I get these to compute theta_t1
-			dincome0=self.model.dincomet(periodt,hours,wage0,married0,nkids0)
+			dincome0=self.model.dincomet(periodt,hours,wage0,married0,nkids0)['income']
 			consumption0=self.model.consumptiont(periodt,hours,childcare,dincome0,
 					married0,nkids0,wage0,free0,price0)
 			

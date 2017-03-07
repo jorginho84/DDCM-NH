@@ -45,7 +45,7 @@ bootstrap beta=r(beta_out), reps(10): betas_gen
 
 set seed 2828
 local draws = 500
-
+local n_moments = 23
 
 forvalues x = 1/`draws'{
 	use "/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/sample_model_v2.dta", clear
@@ -78,7 +78,7 @@ forvalues x=2/`draws'{
 *This is the sim moments matrix
 sum betas1
 matrix beta_matrix =r(mean)
-forvalues x=2/21{ /*21 moments*/
+forvalues x=2/`n_moments'{
 	sum betas`x'
 	matrix beta_matrix = beta_matrix\r(mean)
 	

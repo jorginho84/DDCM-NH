@@ -176,18 +176,25 @@ class Estimate:
 		age_aux=np.reshape(np.concatenate((age[:,0],age[:,1],age[:,4],age[:,7]),axis=0),(self.N*4,1))
 		age2_aux=np.square(age_aux)
 
+		period0=np.log(np.zeros(self.N) + 1)
+		period1=np.log(np.zeros(self.N) + 2)
+		period4=np.log(np.zeros(self.N) + 5)
+		period7=np.log(np.zeros(self.N) + 8)
+		lt = np.reshape(np.concatenate((period0,period1,period4,period7),axis=0),(self.N*4,1))
+
 		dhs_aux=np.reshape(np.concatenate((self.x_w[:,1],self.x_w[:,1],self.x_w[:,1],self.x_w[:,1]),axis=0),(self.N*4,1))
 		choices_aux=np.concatenate((choice_matrix[:,0,:],choice_matrix[:,1,:],
 			choice_matrix[:,4,:],choice_matrix[:,7,:]),axis=0)
 		boo_work=(choices_aux==1) | (choices_aux==2) | (choices_aux==4) | (choices_aux==5)
 		
-		beta_w=np.zeros((4,self.M))
+		beta_w=np.zeros((5,self.M)) #5 parameters
 		sigma_w=np.zeros((1,self.M))
 		const=np.ones((self.N*4,1)) #4 periods:0,1,4,7
 		for j in range(self.M):
 			xw_aux=np.concatenate((age_aux[boo_work[:,j]==1,:],
 				age2_aux[boo_work[:,j]==1,:],
 				dhs_aux[boo_work[:,j]==1,:],
+				lt[boo_work[:,j]==1,:],
 				const[boo_work[:,j]==1,:]),axis=1)
 
 			#If nonsingular matrix
@@ -281,20 +288,21 @@ class Estimate:
 		self.param0.betaw[1]=beta[5]
 		self.param0.betaw[2]=beta[6]
 		self.param0.betaw[3]=beta[7]
-		self.param0.betaw[4]=np.exp(beta[8])
-		self.param0.gamma1[0]=sym(beta[9])
-		self.param0.gamma2[0]=sym(beta[10])
-		self.param0.gamma1[1]=sym(beta[11])
-		self.param0.gamma2[1]=sym(beta[12])
-		self.param0.tfp=beta[13]
-		self.param0.kappas[0][0]=beta[14]
-		self.param0.kappas[0][1]=beta[15]
-		self.param0.kappas[0][2]=beta[16]
-		self.param0.kappas[0][3]=beta[17]
-		self.param0.kappas[1][0]=beta[18]
-		self.param0.kappas[1][1]=beta[19]
-		self.param0.kappas[1][2]=beta[20]
-		self.param0.kappas[1][3]=beta[21]
+		self.param0.betaw[4]=beta[8]
+		self.param0.betaw[5]=np.exp(beta[9])
+		self.param0.gamma1[0]=sym(beta[10])
+		self.param0.gamma2[0]=sym(beta[11])
+		self.param0.gamma1[1]=sym(beta[12])
+		self.param0.gamma2[1]=sym(beta[13])
+		self.param0.tfp=beta[14]
+		self.param0.kappas[0][0]=beta[15]
+		self.param0.kappas[0][1]=beta[16]
+		self.param0.kappas[0][2]=beta[17]
+		self.param0.kappas[0][3]=beta[18]
+		self.param0.kappas[1][0]=beta[19]
+		self.param0.kappas[1][1]=beta[20]
+		self.param0.kappas[1][2]=beta[21]
+		self.param0.kappas[1][3]=beta[22]
 			
 
 		#The model (utility instance)
@@ -405,8 +413,8 @@ class Estimate:
 				
 		beta0=np.array([self.param0.eta,self.param0.alphap,self.param0.alphaf,
 			self.param0.alpha_cc,self.param0.betaw[0],self.param0.betaw[1],
-			self.param0.betaw[2],self.param0.betaw[3],
-			np.log(self.param0.betaw[4]),
+			self.param0.betaw[2],self.param0.betaw[3],self.param0.betaw[4],
+			np.log(self.param0.betaw[5]),
 			syminv(self.param0.gamma1[0]),syminv(self.param0.gamma2[0]),
 			syminv(self.param0.gamma1[1]),syminv(self.param0.gamma2[1]),
 			self.param0.tfp,

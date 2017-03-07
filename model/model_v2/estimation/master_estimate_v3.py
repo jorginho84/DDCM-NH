@@ -205,7 +205,7 @@ kappas_12=output.x[20]
 kappas_13=output.x[21]
 
 
-betas_opt=np.array([eta_opt, alphap_opt,alphaf_opt,betaw0,betaw1,betaw2,
+betas_opt=np.array([eta_opt, alphap_opt,alphaf_opt,alphacc_opt,betaw0,betaw1,betaw2,
 	betaw3,betaw4,gamma1_young_cc1,gamma2_young_cc1,
 	gamma1_old,gamma2_old,tfp_opt,
 	kappas_00,kappas_01,kappas_02,kappas_03,

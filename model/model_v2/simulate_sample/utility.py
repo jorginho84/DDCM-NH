@@ -78,17 +78,20 @@ class Utility(object):
 		(at t=0 we don't observe wages for those who do not work)
 		(that's why I need to simulate w0 instead of just using observed one)
 
-		lnw =beta1*age + beta1*age2 + beta3d_HS + constant+ e
+		lnw =beta1*age + beta1*age2 + beta3d_HS + beta4*log(periodt)
+		 beta5 +  e
 
 		"""
 
 		age_ra=self.xwage[:,0].copy()
 		age=age_ra+periodt
 		age2=age**2
+		lt = np.log(np.zeros((self.N,1)) + periodt + 1)
 
 		xw=np.concatenate((np.reshape(age,(self.N,1)),
 					np.reshape(age2,(self.N,1)),
 					np.reshape(self.xwage[:,1],(self.N,1)),
+					lt,
 					np.reshape(self.xwage[:,2],(self.N,1))),axis=1)
 
 		betas=self.param.betaw[0:-1,0]
@@ -274,9 +277,11 @@ class Utility(object):
 
 			#Maximum level of CA
 			xstar=np.zeros(self.N)
-			xstar[kid[:,0]<=4]=1700-kid[kid[:,0]<=4,0]*100
-			xstar[kid[:,0]>4]=1300
-
+			xstar[kid[:,0]==1]=1600
+			xstar[kid[:,0]==2]=1600 + 1500
+			xstar[kid[:,0]==3]=1600 + 1500 + 1400
+			xstar[kid[:,0]>=4]=1600 + 1500 + 1400 + 1300
+			
 			#r_e: phase-out rate
 			beta_aux=xstar/(8500-bar_e)
 
@@ -286,11 +291,8 @@ class Utility(object):
 			childa[pwage>8500]=xstar[pwage>8500] - beta_aux[pwage>8500]*(pwage[pwage>8500] - 8500)
 			childa[childa<0]=0
 
-			#total child allowance
-			total_childa=childa*kid[:,0]
-
 			#disposable income
-			dincome_nh=pwage+wsubsidy+total_childa
+			dincome_nh=pwage+wsubsidy+childa
 			
 			if self.ws==1:
 				nh_supp=dincome_nh-dincome_eitc
@@ -363,7 +365,8 @@ class Utility(object):
 		dincome = pwage + afdc_benefit + nh_supp + snap + eitc_fed + eitc_state
 
 		#Back to real prices
-		return dincome*(self.param.cpi[8]/self.param.cpi[periodt])
+		return {'income': dincome*(self.param.cpi[8]/self.param.cpi[periodt]),
+		'NH': nh_supp }
 
 	def consumptiont(self,periodt,h,cc,dincome,marr,nkids,wage, free,price):
 		"""
@@ -520,7 +523,7 @@ class Utility(object):
 
 		"""
 
-		income=self.dincomet(periodt, self.hours,wage0,self.married0,self.nkids0)
+		income=self.dincomet(periodt, self.hours,wage0,self.married0,self.nkids0)['income']
 		#theta=self.thetat(periodt,self.theta0,self.hours,self.childcare,income,self.married0,self.nkids0)
 		
 

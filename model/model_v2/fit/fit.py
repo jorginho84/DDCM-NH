@@ -45,28 +45,28 @@ import estimate as estimate
 
 np.random.seed(1)
 
-betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv5_v1.npy')
+betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv6_v1.npy')
 
 #Utility function
-eta=.1
-alphap=-0.12
-alphaf=-0.15
-alpha_cc = -0.35
+eta=betas_nelder[0]
+alphap=betas_nelder[1]
+alphaf=-0.4
+alpha_cc=betas_nelder[3]
 
 #wage process
-wagep_betas=np.array([0.005,betas_nelder[4],betas_nelder[5],
-	1.2,0.94]).reshape((5,1))
+wagep_betas=np.array([-0.01,0.0002,betas_nelder[6],
+	0.35,1.5,betas_nelder[8]]).reshape((6,1))
 
 
 #Production function [young,old]
-gamma1=[betas_nelder[8],betas_nelder[10]]
-gamma2=[betas_nelder[9],betas_nelder[11]]
-tfp=betas_nelder[12]
+gamma1=[betas_nelder[9],betas_nelder[11]]
+gamma2=[betas_nelder[10],betas_nelder[12]]
+tfp=betas_nelder[13]
 sigmatheta=0
 
 #Measurement system: three measures for t=2, one for t=5
-kappas=[[betas_nelder[13],betas_nelder[14],betas_nelder[15],betas_nelder[16]],
-[betas_nelder[17],betas_nelder[18],betas_nelder[19],betas_nelder[20]]]
+kappas=[[betas_nelder[14],betas_nelder[15],betas_nelder[16],betas_nelder[17]],
+[betas_nelder[18],betas_nelder[19],betas_nelder[20],betas_nelder[21]]]
 
 #First measure is normalized. starting arbitrary values
 #All factor loadings are normalized
@@ -152,10 +152,10 @@ param0=util.Parameters(alphap, alphaf, eta, alpha_cc,gamma1, gamma2, tfp,sigmath
 
 
 ###Auxiliary estimates###
-moments_vector=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/aux_model/moments_vector_2.csv').values
+moments_vector=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/aux_model/moments_vector.csv').values
 
 #This is the var cov matrix of aux estimates
-var_cov=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/aux_model/var_cov_2.csv').values
+var_cov=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/aux_model/var_cov.csv').values
 
 #The vector of aux standard errors
 #Using diagonal of Var-Cov matrix of simulated moments
@@ -204,7 +204,7 @@ beta_childcare=np.mean(dic_betas['beta_childcare'],axis=0) #1x1
 beta_hours1=np.mean(dic_betas['beta_hours1'],axis=0) #1x1
 beta_hours2=np.mean(dic_betas['beta_hours2'],axis=0) #1x1
 beta_hours3=np.mean(dic_betas['beta_hours3'],axis=0) #1x1
-beta_wagep=np.mean(dic_betas['beta_wagep'],axis=1) # 5 x 1
+beta_wagep=np.mean(dic_betas['beta_wagep'],axis=1) # 6 x 1
 beta_kappas_t2=np.mean(dic_betas['beta_kappas_t2'],axis=1) #4 x 3
 beta_kappas_t5=np.mean(dic_betas['beta_kappas_t5'],axis=1) #4 x 1
 beta_inputs_old_sim=np.mean(dic_betas['beta_inputs_old'],axis=1) #2 x 1
@@ -213,30 +213,30 @@ beta_inputs_young_cc1_sim=np.mean(dic_betas['beta_inputs_young_cc1'],axis=1) #3 
 
 #################################################################################
 #################################################################################
-#FIGURE: ATE ON INCOME#
-#execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/fit/ate_inc.py')
+#FIGURE: ATE ON CONSUMPTION PC#
+execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/fit/ate_inc.py')
 
 #################################################################################
 #################################################################################
 #FIGURE: ATE ON CHILD CARE#
-#execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/fit/ate_cc.py')
+execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/fit/ate_cc.py')
 
 
 #################################################################################
 #################################################################################
 #FIGURE: ATE ON EMPLOYMENT#
-#execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/fit/ate_emp.py')
+execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/fit/ate_emp.py')
 
 #################################################################################
 #################################################################################
 #FIGURE: ATE ON THETA#
-#execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/fit/ate_theta.py')
+execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/fit/ate_theta.py')
 
 
 #################################################################################
 #################################################################################
 #TABLE: COMPARING OPROBITS#
-#execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/fit/oprobit.py')
+execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/fit/oprobit.py')
 
 #################################################################################
 #################################################################################
@@ -249,7 +249,7 @@ execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2
 
 #TABLE: model validation#
 
-"""
+
 ate_part_obs_2=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/fit/ate_part_2.csv').values
 se_ate_part_obs_2=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/fit/se_ate_part_2.csv').values
 ate_full_obs_2=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/fit/ate_full_2.csv').values
@@ -276,7 +276,7 @@ ate_full_2 = [np.mean(ate_full[0:3]), np.mean(ate_full[3:])]
 sim_list = [ate_cc_2,ate_inc_2,ate_part_2,ate_full_2,[beta_t2[0],beta_t5[0]]]
 obs_list = [ate_cc_obs,ate_inc_obs_2/1000,ate_part_obs_2,ate_full_obs_2,np.array([[betas_t2_obs[0,0]], [betas_t5_obs[0,0]]])]
 obs_list_se = [se_ate_cc_obs,se_ate_inc_obs_2/1000,se_ate_part_obs_2,se_ate_full_obs_2,np.array([[ses_betas_t2_obs[0,0]],[ses_betas_t5_obs[0,0]]])]
-var_list = ['ATE child care', 'ATE income', 'ATE part-time', 'ATE full-time', 'ATE SSRS']
+var_list = ['ATE child care', 'ATE consumption', 'ATE part-time', 'ATE full-time', 'ATE SSRS']
 
 with open('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/fit/table_validation.tex','w') as f:
 	f.write(r'\begin{tabular}{llccccc}'+'\n')
@@ -301,5 +301,3 @@ with open('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model
 	f.write(r'\end{tabular}' + '\n')
 	f.close()
 
-
-"""

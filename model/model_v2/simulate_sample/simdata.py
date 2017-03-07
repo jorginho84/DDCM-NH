@@ -108,7 +108,7 @@ class SimData:
 				self.hours_f,self.wr,self.cs,self.ws)
 
 			#current consumption to get future theta
-			dincome0=self.model.dincomet(periodt,hours,wage0,married0,nkids0)
+			dincome0=self.model.dincomet(periodt,hours,wage0,married0,nkids0)['income']
 			consumption0=self.model.consumptiont(periodt,hours,childcare,dincome0,
 					married0,nkids0,wage0,free0,price0)
 
@@ -156,6 +156,7 @@ class SimData:
 		theta_matrix=np.zeros((self.N,n_periods))
 		choice_matrix=np.zeros((self.N,n_periods))
 		dincome_matrix=np.zeros((self.N,n_periods))
+		nh_matrix=np.zeros((self.N,n_periods))
 		consumption_matrix=np.zeros((self.N,n_periods))
 		wage_matrix=np.zeros((self.N,n_periods))
 		hours_matrix=np.zeros((self.N,n_periods))
@@ -228,8 +229,9 @@ class SimData:
 				self.x_k,self.passign,theta0,nkids0,married0,hours_t,childcare_t,self.agech,
 				self.hours_p,self.hours_f,self.wr,self.cs,self.ws)
 			
-			dincome0=self.model.dincomet(periodt,hours_t,wage0,married0,nkids0)
+			dincome0=self.model.dincomet(periodt,hours_t,wage0,married0,nkids0)['income']
 			dincome_matrix[:,periodt]=dincome0.copy()
+			nh_matrix[:,periodt]=self.model.dincomet(periodt,hours_t,wage0,married0,nkids0)['NH'].copy()
 			consumption0=self.model.consumptiont(periodt,hours_t,childcare_t,dincome0,married0,nkids0,wage0,
 				free0,price0)
 			consumption_matrix[:,periodt]=consumption0.copy()
@@ -268,7 +270,7 @@ class SimData:
 		 'Income': dincome_matrix, 'Hours':hours_matrix, 'Childcare': childcare_matrix,
 		 'Wage': wage_matrix, 'Uti_values_dic': util_values_dic,'Uti_values_c_dic': util_values_c_dic,
 		 'Marriage': marr_matrix, 'Kids': kids_matrix,'Consumption': consumption_matrix,
-		 'SSRS_t2':ssrs_t2,'SSRS_t5':ssrs_t5}
+		 'SSRS_t2':ssrs_t2,'SSRS_t5':ssrs_t5, 'nh_matrix':nh_matrix}
 
 
 

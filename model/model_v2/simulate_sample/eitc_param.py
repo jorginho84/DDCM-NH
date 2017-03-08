@@ -25,7 +25,7 @@ from scipy import stats
 eitc_list=[]
 
 #The parameters
-for year in range(1995,2003):
+for year in range(1995,2004):
 
 	##Year 1995##
 	if year==1995:
@@ -169,8 +169,8 @@ for year in range(1995,2003):
 		#1 children
 		r1_1=.34
 		r2_1=.1598
-		b1_1=.7370
-		b2_1=.13520
+		b1_1=7370
+		b2_1=13520
 		state_eitc1=.04
 
 		#2+ children

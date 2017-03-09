@@ -1,8 +1,7 @@
 """
-execfile('nhpol.py')
+execfile('eitc_exp.py')
 
-This file computes ATE theta and inputs of different New Hope policies
-
+This file computes EITC experiments
 """
 
 from __future__ import division #omit for python 3.x
@@ -29,7 +28,8 @@ sys.path.append("/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/m
 import estimate as estimate
 sys.path.append("/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/experiments")
 from ate_gen import ATE
-
+sys.path.append("/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/experiments/NH")
+from bset import Budget
 
 np.random.seed(1)
 
@@ -41,6 +41,7 @@ eta=betas_nelder[0]
 alphap=betas_nelder[1]
 alphaf=-0.4
 alpha_cc=betas_nelder[3]
+
 
 
 #wage process
@@ -104,8 +105,11 @@ x_wmk=x_df[  ['age_ra', 'age_ra2', 'd_HS2', 'age_t0','age_t02','constant'] ].val
 #Data for treatment status
 passign=x_df[ ['d_RA']   ].values
 
-#The EITC parameters
-eitc_list = pickle.load( open( '/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/simulate_sample/eitc_list.p', 'rb' ) )
+#The EITC parameters: experiments 1 and 2
+#Exp 1: Full EITC vs No EITC
+#Exp 2: Full EITC vs fixed EITC
+eitc_list_1 = pickle.load( open( '/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/simulate_sample/eitc_dic_1.p', 'rb' ) )
+eitc_list_2 = pickle.load( open( '/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/simulate_sample/eitc_dic_2.p', 'rb' ) )
 
 #The AFDC parameters
 afdc_list = pickle.load( open( '/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/simulate_sample/afdc_list.p', 'rb' ) )
@@ -123,6 +127,7 @@ cpi =  pickle.load( open( '/mnt/Research/nealresearch/new-hope-secure/newhopemou
 #Assuming random start
 theta0=np.exp(np.random.randn(N))
 
+
 #number of kids at baseline
 nkids0=x_df[ ['nkids_baseline']   ].values
 
@@ -132,22 +137,20 @@ married0=x_df[ ['d_marital_2']   ].values
 #age of child at baseline
 agech0=x_df[['age_t0']].values
 
-#Defines the instance with parameters
-param0=util.Parameters(alphap, alphaf, eta, alpha_cc,gamma1, gamma2, tfp, sigmatheta,
-	wagep_betas, marriagep_betas, kidsp_betas, eitc_list,afdc_list,snap_list,
-	cpi,q,scalew,shapew,lambdas,kappas,pafdc,psnap)
+###Auxiliary estimates### 
 
-
-
-###Auxiliary estimates###
 moments_vector=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/aux_model/moments_vector.csv').values
+
 
 #This is the var cov matrix of aux estimates
 var_cov=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/aux_model/var_cov.csv').values
 
-#The vector of aux standard errors
+#The W matrix in Wald metric
 #Using diagonal of Var-Cov matrix of simulated moments
-se_vector  = np.sqrt(np.diagonal(var_cov))
+w_matrix  = np.zeros((var_cov.shape[0],var_cov.shape[0]))
+for i in range(var_cov.shape[0]):
+	w_matrix[i,i] = var_cov[i,i]
+
 
 #Creating a grid for the emax computation
 dict_grid=gridemax.grid()
@@ -155,73 +158,90 @@ dict_grid=gridemax.grid()
 #For montercarlo integration
 D=50
 
-#Number of samples to produce
+#For II procedure
 M=1000
 
 #How many hours is part- and full-time work
 hours_p=15
 hours_f=40
 
-#This is the list of models to compute [wr,cs,ws]. This order is fixed
-models_list = [[0,0,1], [0,1,1], [1,0,1],
-[0,1,0],[1,1,0],[1,1,1]]
+#Indicate if model includes a work requirement (wr), 
+#and child care subsidy (cs) and a wage subsidy (ws)
+wr=1
+cs=1
+ws=1
 
 #number of periods to consider for each input
-nperiods_cc = 3
-nperiods_ct = 3
-nperiods_emp = 3
-nperiods_theta = 3
+nperiods_cc = 5
+nperiods_ct = 9
+nperiods_emp = 9
+nperiods_theta = 9
 
-###Computing counterfactuals
-dics = []
-for j in range(len(models_list)):
+#To start model instance
+hours = np.zeros(N)
+childcare  = np.zeros(N)
+
+"""
+EXPERIMENT 1: full EITC vs non (eitc_list_1)
+EXPERIMENT 2: 1996 EITC vs 1995 EITC (eitc_list_2)
+
+"""
+experiments = [eitc_list_1,eitc_list_2]
+ate_exp = []
+
+for j in range(2): #the experiment loop
+
+	#Defines the instance with parameters
+	param0=util.Parameters(alphap, alphaf, eta, alpha_cc,gamma1, gamma2, tfp, sigmatheta,
+		wagep_betas, marriagep_betas, kidsp_betas, experiments[j],afdc_list,snap_list,
+		cpi,q,scalew,shapew,lambdas,kappas,pafdc,psnap)
+
 	output_ins=estimate.Estimate(param0,x_w,x_m,x_k,x_wmk,passign,agech0,theta0,nkids0,
 		married0,D,dict_grid,M,N,moments_vector,var_cov,hours_p,hours_f,
-		models_list[j][0],models_list[j][1],models_list[j][2])
+		wr,cs,ws)
 
-	hours = np.zeros(N) #arbitrary to initialize model instance
-	childcare  = np.zeros(N)
-	model = util.Utility(param0,N,x_w,x_m,x_k,passign,theta0,nkids0,married0,hours,childcare,
-		agech0,hours_p,hours_f,models_list[j][0],models_list[j][1],models_list[j][2])
+	#The model (utility instance)
+	
+	model = Budget(param0,N,x_w,x_m,x_k,passign,theta0,nkids0,married0,
+		hours,childcare,agech0,hours_p,hours_f,wr,cs,ws)
 
+	#Obtaining emax instances, samples, and betas for M samples
 	np.random.seed(1)
 	emax_instance = output_ins.emax(param0,model)
 	choices = output_ins.samples(param0,emax_instance,model)
+
+	#Obtaining ATEs and saving results
 	ate_ins = ATE(M,choices,agech0,passign,hours_p,hours_f,
 		nperiods_cc,nperiods_ct,nperiods_emp,nperiods_theta)
-	dics.append(ate_ins.sim_ate())
+	ate_exp.append(ate_ins.sim_ate())
 
 
 
-####The table###
-#the list of policies
+######Making the Table#######
+outcome_list = ['Consumption (US\$)', 'Part-time', 'Full-time', 'Child care',
+r'$\ln \theta$ (in $\sigma$s)', 'Utility']
 
+output_list = ['Consumption', 'Part-time', 'Full-time', 'CC', 'Theta', 'Welfare']
 
-pol_list = ['WS', 'CS/WS', 'WR/WS',
-'CS', 'WR/CS', 'WR/CS/WS']
+with open('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/experiments/EITC/table_eitc_exp.tex','w') as f:
 
-with open('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/experiments/NH/table_nhpol.tex','w') as f:
-	f.write(r'\begin{tabular}{llccccccccccc}'+'\n')
+	f.write(r'\begin{tabular}{lcccc}'+'\n')
 	f.write(r'\hline'+'\n')
-	f.write(r'Policies &       & Part-time &       & Full-time &       & Child care &       & Consumption &       & $\log \theta$ &       & Utility \bigstrut\\'+'\n')
-	f.write(r'\cline{1-1}\cline{3-3}\cline{5-5}\cline{7-7}\cline{9-9}\cline{11-11}\cline{13-13}      &       &       &       &       &       &       &       &       &       &       &       &  \bigstrut[t]\\'+'\n')
-	
-	for j in range(6): #there are five policies
-		f.write(pol_list[j] +r'&       & '+ '{:04.3f}'.format(dics[j]['Part-time']) +
-			r' & & ' + '{:04.3f}'.format(dics[j]['Full-time'])  + 
-			r' & &  '  '{:04.3f}'.format(dics[j]['CC']) + 
-			r' & &   '+ '{:04.3f}'.format(dics[j]['Consumption']) +
-			r' & & '+ '{:04.3f}'.format(dics[j]['Theta'])  )
-
-		#welfare effects relative to the baseline policy
-		if j==5:
-			f.write(r'&&' + '-' + r' \\'+'\n')
-		else:
-			f.write(r'&&' + '{:04.3f}'.format(dics[j]['Welfare']-dics[5]['Welfare']) + r' \\'+'\n')
+	f.write(r'\textbf{Impact} &   & \textbf{No EITC} &   & \textbf{1996 EITC} \bigstrut\\'+'\n')
+	f.write(r'\cline{1-1}\cline{3-3}\cline{5-5}  &   &   &    &  \bigstrut[t]\\'+'\n')
+	for j in range(len(outcome_list)):
+		f.write(outcome_list[j]+r' &       & '+ '{:04.3f}'.format(ate_exp[0][output_list[j]]) 
+			+r'   &       & '+ '{:04.3f}'.format(ate_exp[1][output_list[j]]) + r' \\'+'\n')
+		f.write(r'      &       &       &       &  \\'+'\n')
 
 	f.write(r'\hline'+'\n')
-	f.write(r'\end{tabular}' + '\n')
+	f.write(r'\end{tabular}'+'\n')
 	f.close()
+
+
+
+
+
 
 
 

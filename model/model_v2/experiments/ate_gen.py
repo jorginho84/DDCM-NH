@@ -7,20 +7,29 @@ import numpy as np
 
 
 class ATE:
-	def __init__(self,choices,agech0,passign,hours_p,hours_f):
+	"""
+	Computes a dictionary of ATEs
+	"""
+	def __init__(self,M,choices,agech0,passign,hours_p,hours_f,
+		nperiods_cc,nperiods_ct,nperiods_emp,nperiods_theta):
 
+
+		self.M=M
 		self.choices = choices
 		self.agech0=agech0
 		self.passign=passign
 		self.hours_p,self.hours_f=hours_p,hours_f
+		self.nperiods_cc = nperiods_cc
+		self.nperiods_ct = nperiods_ct
+		self.nperiods_emp = nperiods_emp
+		self.nperiods_theta = nperiods_theta
 		
 
 	def cc(self,choices):
 
 		#ATE on child care
-		nperiods = 3
-		cc_t = choices['choice_matrix']>=3
-		cc_t = cc_t[:,0:nperiods,:]
+		nperiods = self.nperiods_cc
+		cc_t = choices['choice_matrix'][:,0:nperiods,:]>=3
 		age_child = np.zeros((cc_t.shape[0],nperiods))
 		for x in range(nperiods):
 			age_child[:,x]=self.agech0[:,0] + x
@@ -38,7 +47,7 @@ class ATE:
 
 	def ct(self,choices):
 
-		nperiods = 3 #during new hope
+		nperiods = self.nperiods_ct
 		ct = choices['consumption_matrix'][:,0:nperiods,:]
 		ate_inc = np.mean( np.mean(ct[self.passign[:,0]==1,:,:],axis=0) - np.mean(ct[self.passign[:,0]==0,:,:],axis=0),axis=1)
 
@@ -46,7 +55,7 @@ class ATE:
 
 	def emp(self,choices):
 
-		nperiods = 3
+		nperiods = self.nperiods_emp
 		part = choices['hours_matrix']==self.hours_p
 		full = choices['hours_matrix']==self.hours_f
 		part = part[:,0:nperiods,:]
@@ -58,8 +67,12 @@ class ATE:
 		return [np.mean(ate_part), np.mean(ate_full)]
 
 	def theta(self,choices):
-
-		ltheta = np.log(choices['theta_matrix'][:,1:,:])
+		
+		nperiods=self.nperiods_theta
+		ltheta = np.log(choices['theta_matrix'][:,1:nperiods,:])
+		for j in range(self.M):
+			for t in range(nperiods-1):
+				ltheta[:,t,j] = ltheta[:,t,j]/np.std(ltheta[:,t,j],axis=0)
 		ate_ltheta = np.mean(np.mean(ltheta[self.passign[:,0]==1,:,:],axis=0) - np.mean(ltheta[self.passign[:,0]==0,:,:],axis=0),axis=1)
 		return np.mean(ate_ltheta)
 

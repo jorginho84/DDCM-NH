@@ -34,24 +34,24 @@ import se
 
 np.random.seed(1)
 
-betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv4_v2.npy')
+betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv6_v1.npy')
 
 
 #Utility function
 eta=betas_nelder[0]
-alphap=betas_nelder[1]
-alphaf=betas_nelder[2]
-alpha_cc = betas_nelder[3]
+alphap=-0.1
+alphaf=-0.24
+alpha_cc=-0.75
 
 #wage process
-wagep_betas=np.array([betas_nelder[4],betas_nelder[5],betas_nelder[6],
-	betas_nelder[7],betas_nelder[8]]).reshape((5,1))
+wagep_betas=np.array([-0.025,0.0003,betas_nelder[6],
+	0.37,1.5,0.8]).reshape((6,1))
 
 
 #Production function [young[cc0,cc1],old]
 gamma1=[betas_nelder[9],betas_nelder[11]]
 gamma2=[betas_nelder[10],betas_nelder[12]]
-tfp=betas_nelder[13]
+tfp=0.4
 sigmatheta=0
 
 #Measurement system: three measures for t=2, one for t=5
@@ -137,10 +137,10 @@ param0=util.Parameters(alphap, alphaf, eta, alpha_cc, gamma1, gamma2, tfp, sigma
 
 
 ###Auxiliary estimates###
-moments_vector=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/aux_model/moments_vector_2.csv').values
+moments_vector=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/aux_model/moments_vector.csv').values
 
 #This is the var cov matrix of aux estimates
-var_cov=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/aux_model/var_cov_2.csv').values
+var_cov=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/aux_model/var_cov.csv').values
 
 #The W matrix in Wald metric
 #Using diagonal of Var-Cov matrix of simulated moments
@@ -173,14 +173,22 @@ output_ins=estimate.Estimate(param0,x_w,x_m,x_k,x_wmk,passign,agech0,theta0,nkid
 	married0,D,dict_grid,M,N,moments_vector,w_matrix,hours_p,hours_f,
 	wr,cs,ws)
 
+
+betas_opt=np.array([eta, alphap,alphaf,alpha_cc,wagep_betas[0,0],
+	wagep_betas[1,0],wagep_betas[2,0],
+	wagep_betas[3,0],wagep_betas[4,0],wagep_betas[5,0],
+	gamma1[0],gamma2[0],gamma1[1],gamma2[1],tfp,
+	kappas[0][0],kappas[0][1],kappas[0][2],kappas[0][3],
+	kappas[1][0],kappas[0][1],kappas[0][2],kappas[0][3]])
+
 #The SE class
-se_ins=se.SEs(output_ins,var_cov,betas_nelder)
+se_ins=se.SEs(output_ins,var_cov,betas_opt)
 
 #Number of parameters and moments
-npar = betas_nelder.shape[0] + 1 #change this with new estimates!!
+npar = betas_opt.shape[0]
 nmom = moments_vector.shape[0]
 
 #The var-cov matrix of structural parameters
 ses = se_ins.big_sand(0.0001,nmom,npar) 
 
-np.save('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/estimation/sesv5_v1_e4.npy',ses)
+np.save('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/estimation/sesv5_v2_e4.npy',ses)

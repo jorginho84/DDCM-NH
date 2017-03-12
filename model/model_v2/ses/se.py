@@ -79,17 +79,17 @@ class SEs:
 		alpha_cc=bs[3]
 
 		#wage process
-		wagep_betas=np.array([bs[4],bs[5],bs[6],
-			bs[7],bs[8]]).reshape((5,1))
+		wagep_betas=np.array([bs[4],bs[5],bs[6],bs[7],
+			bs[8],bs[9]]).reshape((6,1))
 
 		#Production function [young[cc0,cc1],old]
-		gamma1=[bs[9],bs[11]]
-		gamma2=[bs[10],bs[12]] 
-		tfp=bs[13]
+		gamma1=[bs[10],bs[12]]
+		gamma2=[bs[11],bs[13]] 
+		tfp=bs[14]
 		sigmatheta=0
 
 		#Measurement system: three measures for t=2, one for t=5
-		kappas=[[bs[14],bs[15],bs[16],bs[17]],[bs[18],bs[19],bs[20],bs[21]]]
+		kappas=[[bs[15],bs[16],bs[17],bs[18]],[bs[19],bs[20],bs[21],bs[22]]]
 		lambdas=[1,1]
 
 
@@ -155,10 +155,13 @@ class SEs:
 		agech0=self.output_ins.__dict__['agech0']
 		hours_p=self.output_ins.__dict__['hours_p']
 		hours_f=self.output_ins.__dict__['hours_f']
+		wr=self.output_ins.__dict__['wr']
+		cs=self.output_ins.__dict__['cs']
+		ws=self.output_ins.__dict__['ws']
 
 
 		model  = util.Utility(param0,N,x_w,x_m,x_k,	passign,theta0,nkids0,
-			married0,hours,childcare,agech0,hours_p,hours_f)
+			married0,hours,childcare,agech0,hours_p,hours_f,wr,cs,ws)
 
 		#Computing the emax
 		emax_instance = self.emax(param0,model)
@@ -188,8 +191,8 @@ class SEs:
 		for s in range(S):
 			psi_low = psi.copy()
 			psi_high = psi.copy()
-			psi_low[s] = psi[s] - eps 
-			psi_high[s] = psi[s] + eps
+			psi_low[s] = psi[s] - eps*psi[s] 
+			psi_high[s] = psi[s] + eps*psi[s]
 
 			#Computing betas
 			betas_low = self.binding(psi_low)
@@ -210,7 +213,7 @@ class SEs:
 					betas_high_array = np.concatenate( (betas_high_array,betas_high[l].reshape(betas_high[l].shape[0],1)),axis=0 )
 
 
-			db_dt[:,s] = (betas_high_array[:,0] - betas_low_array[:,0]) / eps
+			db_dt[:,s] = (betas_high_array[:,0] - betas_low_array[:,0]) / (psi_high[s]-psi_low[s])
 
 
 

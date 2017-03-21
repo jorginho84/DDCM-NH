@@ -30,6 +30,7 @@ class Budget(Utility):
 		Utility.__init__(self,param,N,xwage,xmarr,xkid,ra,theta0,
 			nkids0,married0,hours,cc,age_t0,hours_p,hours_f,wr,cs,ws)
 
+
 	def dincomet(self, periodt,hours,wage,marr,kid):
 		"""
 		Computes annual disposable income given weekly hours worked, hourly wage,
@@ -89,18 +90,27 @@ class Budget(Utility):
 			eitc_fed[(pwage<b1_1[j]) & (kid_boo) ]=r1_1[j]*pwage[(pwage<b1_1[j]) & (kid_boo)]
 			eitc_fed[(pwage>=b1_1[j]) & (pwage<b2_1[j]) & (kid_boo)]=r1_1[j]*b1_1[j]
 			eitc_fed[(pwage>=b2_1[j]) & (kid_boo)]=np.maximum(r1_1[j]*b1_1[j]-r2_1[j]*(pwage[(pwage>=b2_1[j]) & (kid_boo)]-b2_1[j]),np.zeros(pwage[(pwage>=b2_1[j]) & (kid_boo)].shape[0]))
-			eitc_state[kid_boo]=state_eitc1[j]*eitc_fed[kid_boo]
-
+			if j==0:#the 1994 experiment consistent with the No eitc experiment (always 0)
+				eitc_state[kid_boo]=np.minimum(state_eitc1[j]*eitc_fed[kid_boo],92)
+			else:
+				eitc_state[kid_boo]=state_eitc1[j]*eitc_fed[kid_boo]
+			
 			#+2 children
 			kid_boo=(kid[:,0]>=2) & (self.ra==j)
 			eitc_fed[(pwage<b1_2[j]) & (kid_boo) ]=r1_2[j]*pwage[(pwage<b1_2[j]) & (kid_boo)]
 			eitc_fed[(pwage>=b1_2[j]) & (pwage<b2_2[j]) & (kid_boo)]=r1_2[j]*b1_2[j]
 			eitc_fed[(pwage>=b2_2[j]) & (kid_boo)]=np.maximum(r1_2[j]*b1_2[j]-r2_2[j]*(pwage[(pwage>=b2_2[j]) & (kid_boo)]-b2_2[j]),np.zeros(pwage[(pwage>=b2_2[j]) & (kid_boo)].shape[0]))
-			eitc_state[kid_boo]=state_eitc2[j]*eitc_fed[kid_boo]
+			if j==0:
+				eitc_state[kid_boo]=np.minimum(state_eitc2[j]*eitc_fed[kid_boo],499)
+			else:
+				eitc_state[kid_boo]=state_eitc2[j]*eitc_fed[kid_boo]
 			
 			#+3	children (only state EITC)
 			kid_boo=(kid[:,0]>=3) & (self.ra==j)
-			eitc_state[kid_boo]=state_eitc3[j]*eitc_fed[kid_boo]
+			if j==0:
+				eitc_state[kid_boo]=np.minimum(state_eitc3[j]*eitc_fed[kid_boo],1496)
+			else:
+				eitc_state[kid_boo]=state_eitc1[j]*eitc_fed[kid_boo]
 
 		
 		##Obtaining NH income supplement#
@@ -178,19 +188,33 @@ class Budget(Utility):
 		"""
 		pwage=np.reshape(h,self.N)*np.reshape(wage,self.N)*52
 
-		d_work=h>=self.hours_f
+		d_work=h>=self.hours_p
 		agech=np.reshape(self.age_t0,(self.N)) + periodt
+		young=agech<=6
+		boo_nfree = free==0
+		boo_ra = self.ra==1
 
 		nkids=np.reshape(nkids,self.N)
 		marr=np.reshape(marr,self.N)
 		ones=np.ones(self.N)
-		
-		#Child care cost
-		cc_cost = price[:,0]*(ones-free.reshape(self.N))
-		
-		#old kids don't pay for child care
-		cc_cost[agech>6]=0
 
+		#Assuming Wisconsin shares = NH
+		copayment=np.zeros(self.N)
+		copayment[price[:,0]<400]=price[price[:,0]<400,0].copy()
+		copayment[(price[:,0]>400) & (pwage<=8500) ] = 400
+		copayment[(price[:,0]>400) & (pwage>8500)] = 315 + 0.01*pwage[(price[:,0]>400) & (pwage>8500)] 
+		
+		#For those who copayment would be bigger than price
+		copayment[price[:,0]<copayment] = price[price[:,0]<copayment,0].copy()
+
+		cc_cost = np.zeros(self.N)
+		
+		#Child care cost: cc subsidy extended for all periods
+		cc_cost[young & boo_nfree] = price[young & boo_nfree,0].copy()
+		if self.cs==1:
+			cc_cost[boo_ra & d_work & boo_nfree & young] = copayment[boo_ra & d_work & boo_nfree & young].copy()
+			
+		
 		incomepc=(dincome - cc*cc_cost)/(ones+nkids+marr)
 		incomepc[incomepc<=0]=1
 		

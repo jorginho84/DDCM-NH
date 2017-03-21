@@ -28,8 +28,8 @@ set level=1 if you want to compare the level of employment between treatment and
 can't run both of them
 */
 
-local diff=0
-local level=1
+local diff=1
+local level=0
 
 
 /*
@@ -490,54 +490,71 @@ if `quarters_ra'==1{
 	do "$codes/time/drop_50.do"
 
 	********************************************************************************
+	/*
+	*To compute baseline av
+	collapse (mean) emp*, by(p_assign)
+	reshape long emp, i(p_assign) j(quarter)
+	replace quarter=quarter-8
 
+	sum emp if quarter>=0 & quarter<=12 & p_assign=="C"
+	
+	*/
 	
 	*Matrix of pvalues and confidence intervals
 	
+	*Saving data for analysis of hours.do
+	save "$results/Time/data_emp.dta", replace
 	
 	
 	**Overall**
-	replace emp0=emp0*100
-	qui xi: reg emp0 i.p_assign `control_var', vce(`SE')
-	mat betasx=_b[_Ip_assign_2]
-	mat beta=e(b)
-	mat variance=e(V)
-	mat betas=(beta[1,1],_b[_Ip_assign_2] - invttail(e(df_r),0.025)*_se[_Ip_assign_2],/*
-		*/ _b[_Ip_assign_2] + invttail(e(df_r),0.025)*_se[_Ip_assign_2])
-	qui: test _Ip_assign_2=0
-	mat pvalues=r(p)
-
-
-
+	
 	forvalues y=0/45{
 		replace emp`y'=emp`y'*100
 		qui xi: reg emp`y' i.p_assign `control_var', vce(`SE')
-		mat betasx=betasx\_b[_Ip_assign_2]
-		mat beta=e(b)
-		mat variance=e(V)
-		mat betas=betas\(beta[1,1],_b[_Ip_assign_2] - invttail(e(df_r),0.025)*_se[_Ip_assign_2],/*
-		*/ _b[_Ip_assign_2] + invttail(e(df_r),0.025)*_se[_Ip_assign_2])
-		qui: test _Ip_assign_2=0
-		mat pvalues=pvalues\r(p)
+		if `y'==0{
+			mat betasx=_b[_Ip_assign_2]
+			mat betas=(_b[_Ip_assign_2],_b[_Ip_assign_2] - invttail(e(df_r),0.025)*_se[_Ip_assign_2],/*
+			*/ _b[_Ip_assign_2] + invttail(e(df_r),0.025)*_se[_Ip_assign_2])
+			qui: test _Ip_assign_2=0
+			mat pvalues=r(p)
+
+		}
+		else{
+			mat betasx=betasx\_b[_Ip_assign_2]
+			mat betas=betas\(_b[_Ip_assign_2],_b[_Ip_assign_2] - invttail(e(df_r),0.025)*_se[_Ip_assign_2],/*
+			*/ _b[_Ip_assign_2] + invttail(e(df_r),0.025)*_se[_Ip_assign_2])
+			qui: test _Ip_assign_2=0
+			mat pvalues=pvalues\r(p)
+		
+		}
+		
 	}
 
-	**By employment status (just p-values)**
-
+	**By employment status **
+	
 	foreach status in "No" "Yes"{
 		forvalues y=0/45{
+
 			qui xi: reg emp`y' i.p_assign `control_var' if curremp=="`status'", vce(`SE')
 			
-			
-			
-			qui: test _Ip_assign_2=0
-			
 			if `y'==0{
+				mat betasx_`status'=_b[_Ip_assign_2]
+				mat betas_`status' = (_b[_Ip_assign_2],_b[_Ip_assign_2] - invttail(e(df_r),0.025)*_se[_Ip_assign_2],/*
+				*/ _b[_Ip_assign_2] + invttail(e(df_r),0.025)*_se[_Ip_assign_2])
+				qui: test _Ip_assign_2=0
 				mat pvalues_`status'=r(p)
+
 			}
-			
 			else{
+				mat betasx_`status'=betasx_`status'\_b[_Ip_assign_2]
+				mat betas_`status' = betas_`status'\(_b[_Ip_assign_2],_b[_Ip_assign_2] - invttail(e(df_r),0.025)*_se[_Ip_assign_2],/*
+				*/ _b[_Ip_assign_2] + invttail(e(df_r),0.025)*_se[_Ip_assign_2])
+				qui: test _Ip_assign_2=0
 				mat pvalues_`status'=pvalues_`status'\r(p)
+
+
 			}
+
 			
 		}
 	}
@@ -709,21 +726,58 @@ if `quarters_ra'==1{
 
 
 		svmat betas
+		svmat betas_Yes
+		svmat betas_No
+		svmat pvalues
+		svmat pvalues_Yes
+		svmat pvalues_No
 		drop if betas1==.
 
 		*Back to quarters since RA
 		egen quarter=seq()
 		replace quarter=quarter-9
 
+		*Labels for significance
+		gen mean_aux=betas1 if pvalues1<=0.05
+		gen mean_aux_Yes=betas_Yes1 if pvalues_Yes1<=0.05
+		gen mean_aux_No=betas_No1 if pvalues_No1<=0.05
+
 		*The figure
-		twoway (connected betas1 quarter if quarter>=-3 & quarter<=32 ) /*
-		*/(line betas2 quarter if quarter>=-3 & quarter<=32,lpattern(dash)) (line betas3 quarter if quarter>=-3 & quarter<=32,lpattern(dash)),/*
-		*/scheme(s2mono)/*
-		*/ytitle({&Delta}employment (in %)) xtitle(Quarters since RA) legend(off)/*
-		*/graphregion(fcolor(white) ifcolor(white) lcolor(white) ilcolor(white)) plotregion(fcolor(white) lcolor(white)  ifcolor(white) ilcolor(white))
+		twoway (connected betas1 quarter if quarter>=-3 & quarter<=32, msymbol(circle) mlcolor(blue) mfcolor(white) ) /*
+		*/ (scatter mean_aux quarter if quarter>=-3 & quarter<=32, msymbol(circle) mlcolor(blue) mfcolor(blue)) /* 
+		*/(line betas2 quarter if quarter>=-3 & quarter<=32,lpattern(dash)) /*
+		*/(line betas3 quarter if quarter>=-3 & quarter<=32,lpattern(dash)),/*
+		*/xline(12, lcolor(red)) yline(0, lcolor(black))/*
+		*/ytitle("{&Delta}employment (in %)") xtitle("Quarters since RA") legend(off)/*
+		*/ graphregion(fcolor(white) ifcolor(white) lcolor(white) ilcolor(white)) /*
+		*/plotregion(fcolor(white) lcolor(white)  ifcolor(white) ilcolor(white))  /*
+		*/ ylabel(-20(10)35, nogrid) scale(1.2) scheme(s2mono) 
 		
-		graph save "$results/Time/LS_admin_qra_diff.gph", replace
 		graph export "$results/Time/LS_admin_qra_diff.pdf", as(pdf) replace
+
+		twoway (connected betas_Yes1 quarter if quarter>=-3 & quarter<=32,mlcolor(blue) mfcolor(white) ) /*
+		*/ (scatter mean_aux_Yes quarter if quarter>=-3 & quarter<=32, msymbol(circle) mlcolor(blue) mfcolor(blue)) /* 
+		*/(line betas_Yes2 quarter if quarter>=-3 & quarter<=32,lpattern(dash)) /*
+		*/(line betas_Yes3 quarter if quarter>=-3 & quarter<=32,lpattern(dash)),/*
+		*/xline(12, lcolor(red)) yline(0, lcolor(black))/*
+		*/ytitle("{&Delta}employment (in %)") xtitle("Quarters since RA") legend(off)/*
+		*/ graphregion(fcolor(white) ifcolor(white) lcolor(white) ilcolor(white)) /*
+		*/plotregion(fcolor(white) lcolor(white)  ifcolor(white) ilcolor(white))  /*
+		*/ ylabel(-20(10)35, nogrid) scale(1.2) scheme(s2mono) 
+		
+		graph export "$results/Time/LS_admin_qra_diff_employed.pdf", as(pdf) replace
+
+		twoway (connected betas_No1 quarter if quarter>=-3 & quarter<=32,mlcolor(blue) mfcolor(white) ) /*
+		*/ (scatter mean_aux_No quarter if quarter>=-3 & quarter<=32, msymbol(circle) mlcolor(blue) mfcolor(blue)) /* 
+		*/(line betas_No2 quarter if quarter>=-3 & quarter<=32,lpattern(dash)) /*
+		*/(line betas_No3 quarter if quarter>=-3 & quarter<=32,lpattern(dash)),/*
+		*/xline(12, lcolor(red)) yline(0, lcolor(black))/*
+		*/ytitle("{&Delta}employment (in %)") xtitle("Quarters since RA") legend(off)/*
+		*/ graphregion(fcolor(white) ifcolor(white) lcolor(white) ilcolor(white)) /*
+		*/plotregion(fcolor(white) lcolor(white)  ifcolor(white) ilcolor(white))  /*
+		*/ ylabel(-20(10)35, nogrid) scale(1.2) scheme(s2mono) 
+		
+		graph export "$results/Time/LS_admin_qra_diff_unemployed.pdf", as(pdf) replace
 
 	}
 

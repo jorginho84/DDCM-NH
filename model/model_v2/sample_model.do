@@ -36,7 +36,7 @@ Recovering control variables
 */
 ***************************************************************************************
 
-qui: do "$codes/model/wage_process/Xs.do"
+qui: do "$codes/model_v2/aux_model/Xs.do"
 
 
 
@@ -128,7 +128,8 @@ gen d_born_year8=epi74e=="1"
 replace d_born_year8=. if epiinvyy==.
 
 
-keep sampleid d_RA age_ra age_ra2 d_marital* d_HS  nkids_baseline constant curremp higrade nkids* married*
+keep sampleid d_RA age_ra age_ra2 d_marital* d_HS  nkids_baseline /*
+*/ constant curremp higrade nkids* married* c91
 
 *Expanding to children
 tempfile data_temp
@@ -333,17 +334,15 @@ drop start_aux end_aux
 
 
 *Month and year of each spell: hours doesn't consider 0s
+*These consider hours in CSJs
 forvalues y=1994/1998{
 	forvalues mm=1/12{
-	gen hours`y'm`mm'=hours_end if csj!="100" & (( start<=monthly("`y'm`mm'","YM") & end>=monthly("`y'm`mm'","YM") )  | /*
+	gen hours`y'm`mm'=hours_end if (( start<=monthly("`y'm`mm'","YM") & end>=monthly("`y'm`mm'","YM") )  | /*
 	*/( start<=monthly("`y'm`mm'","YM")  & still==1 & monthly("`y'm`mm'","YM")==date_survey ) )
 	*replace  hours`y'm`mm'=0 if  hours`y'm`mm'==. & c1!=.
 	replace hours`y'm`mm'=. if monthly("`y'm`mm'","YM")>date_survey
 	
-	gen hoursCSJ`y'm`mm'=hours_end if csj=="100" & (( start<=monthly("`y'm`mm'","YM") & end>=monthly("`y'm`mm'","YM") )  | /*
-	*/( start<=monthly("`y'm`mm'","YM")  & still==1 & monthly("`y'm`mm'","YM")==date_survey ) )
-	*replace  hoursCSJ`y'm`mm'=0 if  hoursCSJ`y'm`mm'==. & c1!=.
-	replace hoursCSJ`y'm`mm'=. if monthly("`y'm`mm'","YM")>date_survey
+	
 	
 
 	
@@ -352,24 +351,25 @@ forvalues y=1994/1998{
 }
 
 
+
 *Reshape long again for month/year
 drop hours_start hours_end
-reshape long hours hoursCSJ, i(sampleid spell) j(month_aux) string
+reshape long hours, i(sampleid spell) j(month_aux) string
+
 
 *SD of hours (across periods)
 *sum hours
 *local sd_hours=r(sd)
 
 *Collapse my month. I'm averaging not considering 0s. If there are no jobs in the month: missing
-keep sampleid p_assign month_aux hours hoursCSJ date_ra year_ra
+keep sampleid p_assign month_aux hours date_ra year_ra
 gen month=monthly(month_aux, "YM")
 format month %tm
 sort sampleid month
-rename hours hours_aux
-egen hours=rowtotal(hours_aux hoursCSJ)
 replace hours=. if hours==0 
-drop hoursCSJ
 collapse (mean) hours (first) p_assign date_ra year_ra, by(sampleid month)
+
+
 
 *Collapse by year: if month did not work: hours=0
 gen year=yofd(dofm(month))
@@ -496,6 +496,13 @@ foreach x of numlist 0 1 4 7{
 }
 
 
+*For years 4 and 7, adjust for proportion of hours work
+
+foreach x of numlist 4 7{
+	replace hours_t`x'=hours_t`x'*employment_y`x'
+}
+
+
 
 *Hours Dummies
 local i=1
@@ -541,7 +548,7 @@ gen delta_emp=d_emp_t1-d_emp_t0
 **Using d_HS based on highgrade: correlates more with wage
 gen d_HS2=higrade>=12
 
-keep sampleid child d_RA p_assign age_ra age_ra2 d_marital* d_HS d_HS2 nkids* hours_t* d_CC* constant emp_baseline  delta_emp skills_* c1 piinvyy /*
+keep sampleid child d_RA p_assign age_ra age_ra2 d_marital* d_HS d_HS2 c91 nkids* hours_t* d_CC* constant emp_baseline  delta_emp skills_* c1 piinvyy /*
 */ epiinvyy total_income_y* married* cc_pay* gross_y* gross_nominal_y* grossv2_y* age_t0 age_t02 d_free afdc_y* fs_y* sup_y*
 
 save "$results/sample_model_theta_v2.dta", replace

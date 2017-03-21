@@ -215,39 +215,39 @@ for j in ['Full EITC', 'No EITC']:
 		eitc_dic[j] = eitc_aux
 
 	
-	elif j=='No EITC':
+	elif j=='No EITC': #The 1994 schedule
 		eitc_aux_new = copy.deepcopy(eitc_aux)
 
 		for t in range(9): # A fixed EITC
 
 			if t==0:
-				eitc_aux_new[t]['r1_1'] = .34
+				eitc_aux_new[t]['r1_1'] = .263
 				eitc_aux_new[t]['r2_1'] = .1598
-				eitc_aux_new[t]['b1_1'] = 6160
-				eitc_aux_new[t]['b2_1'] = 11290
+				eitc_aux_new[t]['b1_1'] = 7750
+				eitc_aux_new[t]['b2_1'] = 11000
 				eitc_aux_new[t]['state_eitc1'] = .04
 				
-				eitc_aux_new[t]['r1_2'] = .36
-				eitc_aux_new[t]['r2_2'] = .2022
-				eitc_aux_new[t]['b1_2'] = 8640
-				eitc_aux_new[t]['b2_2'] = 11290
+				eitc_aux_new[t]['r1_2'] = .30
+				eitc_aux_new[t]['r2_2'] = .1768
+				eitc_aux_new[t]['b1_2'] = 8425
+				eitc_aux_new[t]['b2_2'] = 11000
 				eitc_aux_new[t]['state_eitc2'] = .16
 
 				eitc_aux_new[t]['state_eitc3'] = .50
 			else:
-				eitc_aux_new[t]['r1_1'] = .34
+				eitc_aux_new[t]['r1_1'] = .263
 				eitc_aux_new[t]['r2_1'] = .1598
-				eitc_aux_new[t]['b1_1'] = 6160*(1+(eitc_aux[t]['b1_1']/eitc_aux[t-1]['b1_1']))
-				eitc_aux_new[t]['b2_1'] = 11290*(1+(eitc_aux[t]['b2_1']/eitc_aux[t-1]['b2_1']))
+				eitc_aux_new[t]['b1_1'] = 7750*(eitc_aux[t]['b1_1']/eitc_aux[t-1]['b1_1'])
+				eitc_aux_new[t]['b2_1'] = 11000*(eitc_aux[t]['b2_1']/eitc_aux[t-1]['b2_1'])
 				eitc_aux_new[t]['state_eitc1'] = .04
 				
-				eitc_aux_new[t]['r1_2'] = .36
-				eitc_aux_new[t]['r2_2'] = .2022
-				eitc_aux_new[t]['b1_2'] = 8640*(1+(eitc_aux[t]['b1_2']/eitc_aux[t-1]['b1_2']))
-				eitc_aux_new[t]['b2_2'] = 11290*(1+(eitc_aux[t]['b2_2']/eitc_aux[t-1]['b2_2']))
-				eitc_aux_new[t]['state_eitc2'] = .16
+				eitc_aux_new[t]['r1_2'] = .30
+				eitc_aux_new[t]['r2_2'] = .1768
+				eitc_aux_new[t]['b1_2'] = 8425*(eitc_aux[t]['b1_2']/eitc_aux[t-1]['b1_2'])
+				eitc_aux_new[t]['b2_2'] = 11000*(eitc_aux[t]['b2_2']/eitc_aux[t-1]['b2_2'])
+				eitc_aux_new[t]['state_eitc2'] = .14
 
-				eitc_aux_new[t]['state_eitc3'] = .50
+				eitc_aux_new[t]['state_eitc3'] = .43
 			
 		eitc_dic[j] = eitc_aux_new
 

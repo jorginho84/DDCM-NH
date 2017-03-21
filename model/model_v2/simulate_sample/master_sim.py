@@ -43,34 +43,34 @@ import gridemax
 import int_linear
 import emax as emax
 import simdata as simdata
-sys.path.append("/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/experiments/NH")
-import cc0_wr0 as cc0_wr0
+
 
 np.random.seed(1);
 #Sample size
 #N=315
 
-betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv5_v1.npy')
+betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv6_v1.npy')
 
 #Utility function
-eta=.2
-alphap=-0.07
-alphaf=-0.15
-alpha_cc = -.2
+eta=betas_nelder[0]
+alphap=-0.1
+alphaf=-0.24
+alpha_cc=-0.75
+
 
 #wage process
-wagep_betas=np.array([0.005,betas_nelder[4],betas_nelder[5],
-	1.2,0.94]).reshape((5,1))
+wagep_betas=np.array([-0.025,0.0003,betas_nelder[6],
+	0.37,1.5,0.8]).reshape((6,1))
 
 #Production function [young[cc0,cc1],old]
-gamma1=[betas_nelder[8],betas_nelder[10]]
-gamma2=[betas_nelder[9],betas_nelder[11]]
-tfp=betas_nelder[12]
+gamma1=[betas_nelder[9],betas_nelder[11]]
+gamma2=[betas_nelder[10],betas_nelder[12]]
+tfp=0.4
 sigmatheta=0
 
 #Measurement system: three measures for t=2, one for t=5
-kappas=[[betas_nelder[13],betas_nelder[14],betas_nelder[15],betas_nelder[16]],
-[betas_nelder[17],betas_nelder[18],betas_nelder[19],betas_nelder[20]]]
+kappas=[[betas_nelder[14],betas_nelder[15],betas_nelder[16],betas_nelder[17]],
+[betas_nelder[18],betas_nelder[19],betas_nelder[20],betas_nelder[21]]]
 #All factor loadings are normalized
 lambdas=[1,1]
 
@@ -116,6 +116,7 @@ x_wmk=x_df[  ['age_ra', 'age_ra2', 'd_HS2', 'age_t0','age_t02','constant'] ].val
 #Data for treatment status
 passign=x_df[ ['d_RA']   ].values
 
+
 #The EITC parameters
 eitc_list = pickle.load( open( '/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/simulate_sample/eitc_list.p', 'rb' ) )
 
@@ -160,7 +161,7 @@ hours_f=40
 
 hours = np.zeros(N)
 childcare = np.zeros(N)
-wr,cs,ws=1,0,1
+wr,cs,ws=1,1,1
 
 #This is an arbitrary initialization of Utility class
 model = util.Utility(param,N,x_w,x_m,x_k,passign,theta0,nkids0,married0,hours,childcare,
@@ -223,6 +224,7 @@ print ''
 
 ct=data_dic['Consumption']
 income=data_dic['Income']
+nh_sup=data_dic['nh_matrix']
 theta_t=data_dic['Theta']
 cc_t=data_dic['Childcare']
 hours_t=data_dic['Hours']
@@ -235,14 +237,23 @@ marr=data_dic['Marriage']
 #log theta in SD units
 ltheta=np.log(theta_t)
 np.mean(ltheta,axis=0)
+np.std(ltheta,axis=0)
 
 #Impact of NH on logtheta (SD units) in time
 ate_theta=np.mean(ltheta[passign[:,0]==1,:],axis=0) - np.mean(ltheta[passign[:,0]==0,:],axis=0)
+
+#NH supplement
+np.mean(nh_sup[passign[:,0]==1,:],axis=0)
+np.mean(nh_sup[passign[:,0]==1,:],axis=0)
+
+np.mean(nh_sup[(passign[:,0]==1) & (nh_sup[:,0]>0)  & (nkids0[:,0]==3),0])
 
 #Impact on income
 np.mean(income,axis=0)
 ate_income=np.mean(income[passign[:,0]==1,:],axis=0) - np.mean(income[passign[:,0]==0,:],axis=0)
 ate_ct=np.mean(ct[passign[:,0]==1,:],axis=0) - np.mean(ct[passign[:,0]==0,:],axis=0)
+
+np.mean(np.mean(ct[passign[:,0]==0,:],axis=0))
 
 
 #Children's ranking

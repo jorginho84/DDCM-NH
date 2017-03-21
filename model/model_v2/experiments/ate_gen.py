@@ -9,9 +9,15 @@ import numpy as np
 class ATE:
 	"""
 	Computes a dictionary of ATEs
+
+	nperiods_cc,nperiods_ct,nperiods_emp,nperiods_theta: # of periods to measure
+	changes in cc, ct, emp, and theta, from t=0...nperiodsx (in the case of theta
+	, starting at t=1)
+
+	period_y = I measure changes in inputs for the sample that were young until t=period_y
 	"""
 	def __init__(self,M,choices,agech0,passign,hours_p,hours_f,
-		nperiods_cc,nperiods_ct,nperiods_emp,nperiods_theta):
+		nperiods_cc,nperiods_ct,nperiods_emp,nperiods_theta,period_y):
 
 
 		self.M=M
@@ -23,6 +29,7 @@ class ATE:
 		self.nperiods_ct = nperiods_ct
 		self.nperiods_emp = nperiods_emp
 		self.nperiods_theta = nperiods_theta
+		self.period_y = period_y
 		
 
 	def cc(self,choices):
@@ -34,9 +41,10 @@ class ATE:
 		for x in range(nperiods):
 			age_child[:,x]=self.agech0[:,0] + x
 
+		boo_sample = age_child[:,self.period_y]<=6
 		boo_young = age_child<=6
-		boo_t = self.passign[:,0]==1
-		boo_c = self.passign[:,0]==0
+		boo_t = (self.passign[:,0]==1) & (boo_sample)
+		boo_c = (self.passign[:,0]==0) & (boo_sample)
 
 		ate_cc=np.zeros(nperiods)
 		for t in range(nperiods):
@@ -49,7 +57,15 @@ class ATE:
 
 		nperiods = self.nperiods_ct
 		ct = choices['consumption_matrix'][:,0:nperiods,:]
-		ate_inc = np.mean( np.mean(ct[self.passign[:,0]==1,:,:],axis=0) - np.mean(ct[self.passign[:,0]==0,:,:],axis=0),axis=1)
+		age_child = np.zeros((ct.shape[0],nperiods))
+		for x in range(nperiods):
+			age_child[:,x]=self.agech0[:,0] + x
+
+		boo_sample = age_child[:,self.period_y]<=6
+		boo_t = (self.passign[:,0]==1) & (boo_sample)
+		boo_c = (self.passign[:,0]==0) & (boo_sample)
+		
+		ate_inc = np.mean( np.mean(ct[boo_t,:,:],axis=0) - np.mean(ct[boo_c,:,:],axis=0),axis=1)
 
 		return np.mean(ate_inc)
 
@@ -60,9 +76,16 @@ class ATE:
 		full = choices['hours_matrix']==self.hours_f
 		part = part[:,0:nperiods,:]
 		full = full[:,0:nperiods,:]
+		age_child = np.zeros((part.shape[0],nperiods))
+		for x in range(nperiods):
+			age_child[:,x]=self.agech0[:,0] + x
 
-		ate_part = np.mean(np.mean(part[self.passign[:,0]==1,:,:],axis=0) - np.mean(part[self.passign[:,0]==0,:,:],axis=0),axis=1 )
-		ate_full = np.mean(np.mean(full[self.passign[:,0]==1,:,:],axis=0) - np.mean(full[self.passign[:,0]==0,:,:],axis=0),axis=1 )
+		boo_sample = age_child[:,self.period_y]<=6
+		boo_t = (self.passign[:,0]==1) & (boo_sample)
+		boo_c = (self.passign[:,0]==0) & (boo_sample)
+
+		ate_part = np.mean(np.mean(part[boo_t,:,:],axis=0) - np.mean(part[boo_c,:,:],axis=0),axis=1 )
+		ate_full = np.mean(np.mean(full[boo_t,:,:],axis=0) - np.mean(full[boo_c,:,:],axis=0),axis=1 )
 
 		return [np.mean(ate_part), np.mean(ate_full)]
 
@@ -73,10 +96,20 @@ class ATE:
 		for j in range(self.M):
 			for t in range(nperiods-1):
 				ltheta[:,t,j] = ltheta[:,t,j]/np.std(ltheta[:,t,j],axis=0)
-		ate_ltheta = np.mean(np.mean(ltheta[self.passign[:,0]==1,:,:],axis=0) - np.mean(ltheta[self.passign[:,0]==0,:,:],axis=0),axis=1)
+
+		age_child = np.zeros((ltheta.shape[0],nperiods))
+		for x in range(nperiods):
+			age_child[:,x]=self.agech0[:,0] + x
+
+		boo_sample = age_child[:,self.period_y]<=6
+		boo_t = (self.passign[:,0]==1) & (boo_sample)
+		boo_c = (self.passign[:,0]==0) & (boo_sample)
+
+
+		ate_ltheta = np.mean(np.mean(ltheta[boo_t,:,:],axis=0) - np.mean(ltheta[boo_c,:,:],axis=0),axis=1)
 		return np.mean(ate_ltheta)
 
-	#this is wrong b/c util includes emax! have to compute utility from model
+	
 	def util(self,choices): 
 
 		utils = choices['utils_c_periodt'] #current-value utils
@@ -97,7 +130,17 @@ class ATE:
 					else:
 						npv[argmax[:,t,m]==j,m] = npv[argmax[:,t,m]==j,m] + utils[argmax[:,t,m]==j,j,t,m]*0.95**t
 
-		return np.mean(npv)
+
+		age_child = np.zeros((N,9)) #all periods
+		for x in range(9):#all periods
+			age_child[:,x]=self.agech0[:,0] + x
+
+		boo_sample = age_child[:,self.period_y]<=6
+		boo_t = (self.passign[:,0]==1) & (boo_sample)
+		boo_c = (self.passign[:,0]==0) & (boo_sample)
+
+		return np.mean(np.mean(npv[boo_t,:],axis=0) - np.mean(npv[boo_c,:],axis=0) )
+		
 
 	def sim_ate(self):
 

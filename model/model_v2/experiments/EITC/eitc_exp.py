@@ -33,31 +33,30 @@ from bset import Budget
 
 np.random.seed(1)
 
-betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv6_v1.npy')
+betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv7_v2_e3.npy')
 
 
 #Utility function
 eta=betas_nelder[0]
 alphap=betas_nelder[1]
-alphaf=-0.4
+alphaf=betas_nelder[2]
 alpha_cc=betas_nelder[3]
 
 
-
 #wage process
-wagep_betas=np.array([-0.01,0.0002,betas_nelder[6],
-	0.35,1.5,betas_nelder[8]]).reshape((6,1))
+wagep_betas=np.array([betas_nelder[4],betas_nelder[5],betas_nelder[6],
+	betas_nelder[7],betas_nelder[8],betas_nelder[9]]).reshape((6,1))
 
 
 #Production function [young[cc0,cc1],old]
-gamma1=[betas_nelder[9],betas_nelder[11]]
-gamma2=[betas_nelder[10],betas_nelder[12]]
-tfp=betas_nelder[13]
+gamma1=[betas_nelder[10],betas_nelder[12]]
+gamma2=[betas_nelder[11],betas_nelder[13]]
+tfp=betas_nelder[14]
 sigmatheta=0
 
 #Measurement system: three measures for t=2, one for t=5
-kappas=[[betas_nelder[14],betas_nelder[15],betas_nelder[16],betas_nelder[17]],
-[betas_nelder[18],betas_nelder[19],betas_nelder[20],betas_nelder[21]]]
+kappas=[[betas_nelder[15],betas_nelder[16],betas_nelder[17],betas_nelder[18]],
+[betas_nelder[19],betas_nelder[20],betas_nelder[21],betas_nelder[22]]]
 #First measure is normalized. starting arbitrary values
 #All factor loadings are normalized
 lambdas=[1,1]
@@ -108,8 +107,10 @@ passign=x_df[ ['d_RA']   ].values
 #The EITC parameters: experiments 1 and 2
 #Exp 1: Full EITC vs No EITC
 #Exp 2: Full EITC vs fixed EITC
+#Exp 3: Full EITC vs Full EITC
 eitc_list_1 = pickle.load( open( '/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/simulate_sample/eitc_dic_1.p', 'rb' ) )
 eitc_list_2 = pickle.load( open( '/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/simulate_sample/eitc_dic_2.p', 'rb' ) )
+eitc_list_3 = pickle.load( open( '/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/simulate_sample/eitc_dic_3.p', 'rb' ) )
 
 #The AFDC parameters
 afdc_list = pickle.load( open( '/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/simulate_sample/afdc_list.p', 'rb' ) )
@@ -167,43 +168,57 @@ hours_f=40
 
 #Indicate if model includes a work requirement (wr), 
 #and child care subsidy (cs) and a wage subsidy (ws)
-wr=1
-cs=1
-ws=1
+
+#In these experiments, cs is the only one that matters
+wr=0
+cs=0
+ws=0
 
 #number of periods to consider for each input
-nperiods_cc = 5
+nperiods_cc = 3
 nperiods_ct = 9
 nperiods_emp = 9
 nperiods_theta = 9
+
+#Young until periodt=period_y
+period_y = 2
 
 #To start model instance
 hours = np.zeros(N)
 childcare  = np.zeros(N)
 
 """
-EXPERIMENT 1: full EITC vs non (eitc_list_1)
-EXPERIMENT 2: 1996 EITC vs 1995 EITC (eitc_list_2)
+EXPERIMENT 1: Full EITC vs No EITC (eitc_list_1)
+EXPERIMENT 2: 1996 EITC vs 1994 EITC (eitc_list_2)
+EXPERIMENT 3: CC subsidy + EITC vs EITC
+EXPERIMENT 4: CC subsidy + EITC vs 1994 EITC
+EXPERIMENT 5: CC subsidy + EITC vs No EITC
 
 """
-experiments = [eitc_list_1,eitc_list_2]
-ate_exp = []
+eitc_list = [eitc_list_1,eitc_list_2,eitc_list_3]
+cc_sub_list = [0,1]
 
-for j in range(2): #the experiment loop
+experiments=[ [eitc_list[0],cc_sub_list[0]],
+ [eitc_list[1],cc_sub_list[0]], [eitc_list[2],cc_sub_list[1]],
+ [eitc_list[1],cc_sub_list[1]], [eitc_list[0],cc_sub_list[1]]]
+
+dics = []
+
+for j in range(5): #the experiment loop
 
 	#Defines the instance with parameters
 	param0=util.Parameters(alphap, alphaf, eta, alpha_cc,gamma1, gamma2, tfp, sigmatheta,
-		wagep_betas, marriagep_betas, kidsp_betas, experiments[j],afdc_list,snap_list,
+		wagep_betas, marriagep_betas, kidsp_betas, experiments[j][0],afdc_list,snap_list,
 		cpi,q,scalew,shapew,lambdas,kappas,pafdc,psnap)
 
 	output_ins=estimate.Estimate(param0,x_w,x_m,x_k,x_wmk,passign,agech0,theta0,nkids0,
 		married0,D,dict_grid,M,N,moments_vector,var_cov,hours_p,hours_f,
-		wr,cs,ws)
+		wr,experiments[j][1],ws)
 
 	#The model (utility instance)
 	
 	model = Budget(param0,N,x_w,x_m,x_k,passign,theta0,nkids0,married0,
-		hours,childcare,agech0,hours_p,hours_f,wr,cs,ws)
+		hours,childcare,agech0,hours_p,hours_f,wr,experiments[j][1],ws)
 
 	#Obtaining emax instances, samples, and betas for M samples
 	np.random.seed(1)
@@ -212,36 +227,44 @@ for j in range(2): #the experiment loop
 
 	#Obtaining ATEs and saving results
 	ate_ins = ATE(M,choices,agech0,passign,hours_p,hours_f,
-		nperiods_cc,nperiods_ct,nperiods_emp,nperiods_theta)
-	ate_exp.append(ate_ins.sim_ate())
+		nperiods_cc,nperiods_ct,nperiods_emp,nperiods_theta,period_y)
+	dics.append(ate_ins.sim_ate())
 
-
+#HERE I AM: see if nperiods_cc=3 makes the ate_CC>0.
 
 ######Making the Table#######
 outcome_list = ['Consumption (US\$)', 'Part-time', 'Full-time', 'Child care',
-r'$\ln \theta$ (in $\sigma$s)', 'Utility']
+r'$\ln \theta$ ($\sigma$s)', 'Utility']
 
 output_list = ['Consumption', 'Part-time', 'Full-time', 'CC', 'Theta', 'Welfare']
 
 with open('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/experiments/EITC/table_eitc_exp.tex','w') as f:
-
-	f.write(r'\begin{tabular}{lcccc}'+'\n')
+	f.write(r'\begin{tabular}{lcccccccccc}'+'\n')
 	f.write(r'\hline'+'\n')
-	f.write(r'\textbf{Impact} &   & \textbf{No EITC} &   & \textbf{1996 EITC} \bigstrut\\'+'\n')
-	f.write(r'\cline{1-1}\cline{3-3}\cline{5-5}  &   &   &    &  \bigstrut[t]\\'+'\n')
+	f.write(r'ATE   &       & (1)   & & (2)   & & (3)   & & (4)   && (5) \bigstrut[b]\\'+'\n')
+	f.write(r'\cline{1-1}\cline{3-11}'+'\n')
 	for j in range(len(outcome_list)):
-		f.write(outcome_list[j]+r' &       & '+ '{:04.3f}'.format(ate_exp[0][output_list[j]]) 
-			+r'   &       & '+ '{:04.3f}'.format(ate_exp[1][output_list[j]]) + r' \\'+'\n')
-		f.write(r'      &       &       &       &  \\'+'\n')
+		
+		if j==0: #consumption w/ no decimals
+			
+			f.write(outcome_list[j])
+			for k in range(len(experiments)): #the policy loop
+				f.write(r'  && '+ '{:02.0f}'.format(dics[k][output_list[j]]))
+			f.write(r' \bigstrut[t]\\'+'\n')
+		else:
+			f.write(outcome_list[j])
+			for k in range(len(experiments)): #the policy loop
+				f.write(r'  && '+ '{:04.3f}'.format(dics[k][output_list[j]]))
+			f.write(r' \bigstrut[t]\\'+'\n')
 
+	f.write(r'\hline'+'\n')
+	f.write(r'\textit{Treatment group} &&&&&&&&&&  \bigstrut[t]\\'+'\n')
+	f.write(r'EITC (1995-2003) &       & $\checkmark$ &       & $\checkmark$ &       & $\checkmark$ &       & $\checkmark$ &       & $\checkmark$ \\'+'\n')
+	f.write(r'Child care subsidy &       &       &       &       &       & $\checkmark$ &       & $\checkmark$ &       & $\checkmark$ \bigstrut[b]\\'+'\n')
+	f.write(r'\hline'+'\n')
+	f.write(r'\textit{Control group} &       &       &       &       &       &       &       &       &       &  \bigstrut[t]\\'+'\n')
+	f.write(r'EITC (1995-2003) &       &       &       &       &       & $\checkmark$ &       &       &       &  \\'+'\n')
+	f.write(r'EITC (1994) &       &       &       & $\checkmark$ &       &       &       & $\checkmark$ &       &  \\'+'\n')
+	f.write(r'No EITC &       & $\checkmark$ &       &       &       &       &       &       &       & $\checkmark$ \bigstrut[b]\\'+'\n')
 	f.write(r'\hline'+'\n')
 	f.write(r'\end{tabular}'+'\n')
-	f.close()
-
-
-
-
-
-
-
-

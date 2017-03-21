@@ -33,30 +33,30 @@ from ate_gen import ATE
 
 np.random.seed(1)
 
-betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv6_v1.npy')
+betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv7_v2_e3.npy')
 
 
 #Utility function
 eta=betas_nelder[0]
 alphap=betas_nelder[1]
-alphaf=-0.4
+alphaf=betas_nelder[2]
 alpha_cc=betas_nelder[3]
 
 
 #wage process
-wagep_betas=np.array([-0.01,0.0002,betas_nelder[6],
-	0.35,1.5,betas_nelder[8]]).reshape((6,1))
+wagep_betas=np.array([betas_nelder[4],betas_nelder[5],betas_nelder[6],
+	betas_nelder[7],betas_nelder[8],betas_nelder[9]]).reshape((6,1))
 
 
 #Production function [young[cc0,cc1],old]
-gamma1=[betas_nelder[9],betas_nelder[11]]
-gamma2=[betas_nelder[10],betas_nelder[12]]
-tfp=betas_nelder[13]
+gamma1=[betas_nelder[10],betas_nelder[12]]
+gamma2=[betas_nelder[11],betas_nelder[13]]
+tfp=betas_nelder[14]
 sigmatheta=0
 
 #Measurement system: three measures for t=2, one for t=5
-kappas=[[betas_nelder[14],betas_nelder[15],betas_nelder[16],betas_nelder[17]],
-[betas_nelder[18],betas_nelder[19],betas_nelder[20],betas_nelder[21]]]
+kappas=[[betas_nelder[15],betas_nelder[16],betas_nelder[17],betas_nelder[18]],
+[betas_nelder[19],betas_nelder[20],betas_nelder[21],betas_nelder[22]]]
 #First measure is normalized. starting arbitrary values
 #All factor loadings are normalized
 lambdas=[1,1]
@@ -170,7 +170,10 @@ models_list = [[0,0,1], [0,1,1], [1,0,1],
 nperiods_cc = 3
 nperiods_ct = 3
 nperiods_emp = 3
-nperiods_theta = 3
+nperiods_theta = 9
+
+#Young until periodt=period_y
+period_y = 2
 
 ###Computing counterfactuals
 dics = []
@@ -188,8 +191,9 @@ for j in range(len(models_list)):
 	emax_instance = output_ins.emax(param0,model)
 	choices = output_ins.samples(param0,emax_instance,model)
 	ate_ins = ATE(M,choices,agech0,passign,hours_p,hours_f,
-		nperiods_cc,nperiods_ct,nperiods_emp,nperiods_theta)
+		nperiods_cc,nperiods_ct,nperiods_emp,nperiods_theta,period_y)
 	dics.append(ate_ins.sim_ate())
+
 
 
 
@@ -197,31 +201,35 @@ for j in range(len(models_list)):
 #the list of policies
 
 
-pol_list = ['WS', 'CS/WS', 'WR/WS',
-'CS', 'WR/CS', 'WR/CS/WS']
+outcome_list = ['Consumption (US\$)', 'Part-time', 'Full-time', 'Child care',
+r'$\ln \theta$ ($\sigma$s)', 'Utility']
+
+output_list = ['Consumption', 'Part-time', 'Full-time', 'CC', 'Theta', 'Welfare']
 
 with open('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/experiments/NH/table_nhpol.tex','w') as f:
-	f.write(r'\begin{tabular}{llccccccccccc}'+'\n')
+	f.write(r'\begin{tabular}{lcccccccccccc}'+'\n')
 	f.write(r'\hline'+'\n')
-	f.write(r'Policies &       & Part-time &       & Full-time &       & Child care &       & Consumption &       & $\log \theta$ &       & Utility \bigstrut\\'+'\n')
-	f.write(r'\cline{1-1}\cline{3-3}\cline{5-5}\cline{7-7}\cline{9-9}\cline{11-11}\cline{13-13}      &       &       &       &       &       &       &       &       &       &       &       &  \bigstrut[t]\\'+'\n')
-	
-	for j in range(6): #there are five policies
-		f.write(pol_list[j] +r'&       & '+ '{:04.3f}'.format(dics[j]['Part-time']) +
-			r' & & ' + '{:04.3f}'.format(dics[j]['Full-time'])  + 
-			r' & &  '  '{:04.3f}'.format(dics[j]['CC']) + 
-			r' & &   '+ '{:04.3f}'.format(dics[j]['Consumption']) +
-			r' & & '+ '{:04.3f}'.format(dics[j]['Theta'])  )
-
-		#welfare effects relative to the baseline policy
-		if j==5:
-			f.write(r'&&' + '-' + r' \\'+'\n')
+	f.write('ATE'+r'& & (1)   & & (2)&& (3)& & (4) && (5) && (6) \bigstrut[b]\\'+'\n')
+	f.write(r'\cline{1-1}\cline{3-13}'+'\n')
+	for j in range(len(outcome_list)):
+		
+		if j==0: #consumption w/ no decimals
+			
+			f.write(outcome_list[j])
+			for k in range(6): #the policy loop
+				f.write(r'  && '+ '{:03.0f}'.format(dics[k][output_list[j]]))
+			f.write(r' \bigstrut[t]\\'+'\n')
 		else:
-			f.write(r'&&' + '{:04.3f}'.format(dics[j]['Welfare']-dics[5]['Welfare']) + r' \\'+'\n')
+			f.write(outcome_list[j])
+			for k in range(6): #the policy loop
+				f.write(r'  && '+ '{:04.3f}'.format(dics[k][output_list[j]]))
+			f.write(r' \bigstrut[t]\\'+'\n')
 
 	f.write(r'\hline'+'\n')
-	f.write(r'\end{tabular}' + '\n')
-	f.close()
-
+	f.write(r'Wage subsidy && $\checkmark$ && $\checkmark$ && $\checkmark$ &&&&  & & $\checkmark$ \bigstrut[t]\\'+'\n')
+	f.write(r'Child care subsidy &       &       &       & $\checkmark$ &       &       &       & $\checkmark$ &       & $\checkmark$ &       & $\checkmark$ \\'+'\n')
+	f.write(r'Work requirement &       &       &       &       &       & $\checkmark$ &       &       &       & $\checkmark$ &       & $\checkmark$ \bigstrut[b]\\'+'\n')
+	f.write(r'\hline'+'\n')
+	f.write(r'\end{tabular}'+'\n')
 
 

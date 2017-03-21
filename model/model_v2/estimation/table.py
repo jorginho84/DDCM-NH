@@ -23,8 +23,8 @@ import time
 import openpyxl
 
 #Betas and var-cov matrix
-betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv4_v2.npy')
-var_cov=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/estimation/sesv4_v2_e5.npy')
+betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv7_v2_e3.npy')
+var_cov=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/estimation/ses_modelv7_v3_5pc.npy')
 se_vector  = np.sqrt(np.diagonal(var_cov))
 
 #Utility function
@@ -40,27 +40,27 @@ sigma_alpha_cc_opt=se_vector[3]
 
 #wage process
 wagep_betas=np.array([betas_nelder[4],betas_nelder[5],betas_nelder[6],
-	betas_nelder[7],betas_nelder[8]]).reshape((5,1))
+	betas_nelder[7],betas_nelder[8],betas_nelder[9]]).reshape((6,1))
 
-sigma_wagep_betas=np.array([se_vector[4],se_vector[5],se_vector[6],
-	se_vector[7],se_vector[8]]).reshape((5,1))
+sigma_wagep_betas=np.array([se_vector[4],se_vector[5],se_vector[6],se_vector[7],
+	se_vector[8],se_vector[9]]).reshape((6,1))
 
 
 #Production function [young[cc0,cc1],old]
-gamma1=[betas_nelder[9],betas_nelder[11]]
-gamma2=[betas_nelder[10],betas_nelder[12]]
-tfp=betas_nelder[13]
+gamma1=[betas_nelder[10],betas_nelder[12]]
+gamma2=[betas_nelder[11],betas_nelder[13]]
+tfp=betas_nelder[14]
 
-sigma_gamma1=[se_vector[9],se_vector[11]]
-sigma_gamma2=[se_vector[10],se_vector[12]]
-sigma_tfp=se_vector[13]
+sigma_gamma1=[se_vector[10],se_vector[12]]
+sigma_gamma2=[se_vector[11],se_vector[13]]
+sigma_tfp=se_vector[14]
 
 #Measurement system: three measures for t=2, one for t=5
-kappas=[[betas_nelder[14],betas_nelder[15],betas_nelder[16],betas_nelder[17]],
-[betas_nelder[18],betas_nelder[19],betas_nelder[20],betas_nelder[21]]]
+kappas=[[betas_nelder[15],betas_nelder[16],betas_nelder[17],betas_nelder[18]],
+[betas_nelder[19],betas_nelder[20],betas_nelder[21],betas_nelder[22]]]
 
-sigma_kappas=[[se_vector[14],se_vector[15],se_vector[16],se_vector[17]],
-[se_vector[18],se_vector[19],se_vector[20],se_vector[21]]]
+sigma_kappas=[[se_vector[15],se_vector[16],se_vector[17],se_vector[18]],
+[se_vector[19],se_vector[20],se_vector[21],se_vector[22]]]
 
 #First measure is normalized. starting arbitrary values
 lambdas=[1,1]
@@ -75,10 +75,11 @@ utility_names = [r'Preference for part-time work ($\alpha^p$)',
 r'Preference for full-time work ($\alpha^f$)',r'Preference for child care ($\alpha^c$)'
 ,r'Preference for human capital ($\eta$)']
 
-wage_list_beta = [wagep_betas[0,0],wagep_betas[1,0],wagep_betas[2,0],wagep_betas[3,0],wagep_betas[4,0]]
+wage_list_beta = [wagep_betas[0,0],wagep_betas[1,0],wagep_betas[2,0],wagep_betas[3,0],
+wagep_betas[4,0],wagep_betas[5,0]]
 wage_list_se = [sigma_wagep_betas[0,0],sigma_wagep_betas[1,0],
-sigma_wagep_betas[2,0],sigma_wagep_betas[3,0],sigma_wagep_betas[4,0]]
-wage_names = ['Age', r'Age$^2$', 'High school', 'Constant', 'Variance of error term']
+sigma_wagep_betas[2,0],sigma_wagep_betas[3,0],sigma_wagep_betas[4,0],sigma_wagep_betas[5,0]]
+wage_names = ['Age', r'Age$^2$', 'High school', 'Constant', r'$\log(t)$' ,'Variance of error term']
 
 prody_list_beta = [gamma1[0],gamma2[0],tfp]
 prody_list_se  = [sigma_gamma1[0],sigma_gamma2[0],sigma_tfp]
@@ -100,7 +101,7 @@ with open('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model
 	f.write(r'\begin{tabular}{lcccc}'+'\n')
 	f.write(r'\hline' + '\n')
 	f.write(r'\textbf{Parameter} &  & \textbf{Estimate} & & \textbf{S.E.} \bigstrut\\' + '\n')
-	f.write(r'\cline{1-1}\cline{3-3}\cline{5-5} &  & & &  \bigstrut[t]\\' + '\n')
+	f.write(r'\cline{1-1}\cline{3-5}' + '\n')
 	f.write(r'\emph{Utility function} &       &       &       &  \\' + '\n')
 	for j in range(len(utility_list_beta)):
 		f.write(utility_names[j]+r' &  &  '+ '{:04.3f}'.format(utility_list_beta[j]) +

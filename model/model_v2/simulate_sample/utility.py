@@ -287,7 +287,7 @@ class Utility(object):
 
 			#per-child allowance
 			childa=np.zeros(self.N) 
-			childa[pwage<=8500]=xstar[pwage<=8500]
+			childa[pwage<=8500]=xstar[pwage<=8500].copy()
 			childa[pwage>8500]=xstar[pwage>8500] - beta_aux[pwage>8500]*(pwage[pwage>8500] - 8500)
 			childa[childa<0]=0
 
@@ -378,8 +378,11 @@ class Utility(object):
 		"""
 		pwage=np.reshape(h,self.N)*np.reshape(wage,self.N)*52
 
-		d_work=h>=self.hours_f
+		d_full=h>=self.hours_f
 		agech=np.reshape(self.age_t0,(self.N)) + periodt
+		young=agech<=6
+		boo_nfree = free==0
+		boo_ra = self.ra==1
 
 		nkids=np.reshape(nkids,self.N)
 		marr=np.reshape(marr,self.N)
@@ -387,27 +390,24 @@ class Utility(object):
 		
 		#NH copayment
 		copayment=np.zeros(self.N)
-		copayment[price[:,0]<400]=price[price[:,0]<400,0]
+		copayment[price[:,0]<400]=price[price[:,0]<400,0].copy()
 		copayment[(price[:,0]>400) & (pwage<=8500) ] = 400
-		copayment[(price[:,0]>400) & (pwage>8500)] = 315 + 0.01*pwage[(price[:,0]>400) & (pwage>8500)] 
+		copayment[(price[:,0]>400) & (pwage>8500)] = 315 + 0.01*pwage[(price[:,0]>400) & (pwage>8500)]
+
+		#For those who copayment would be bigger than price
+		copayment[price[:,0]<copayment] = price[price[:,0]<copayment,0].copy()
 
 
-		#consumption pc (incorporate child care subsidy)
-		if periodt<=2:#NH eligibility period
+		#child care cost
+		cc_cost = np.zeros(self.N)
+
+		if periodt<=2:
+			cc_cost[young & boo_nfree] = price[young & boo_nfree,0].copy()
 			if self.cs==1:
 				if self.wr==1:
-					cc_cost =  (ones-self.ra.reshape(self.N))*price[:,0]*(ones-free.reshape(self.N)) +\
-					self.ra*( (ones-free.reshape(self.N))*(d_work*copayment + (1-d_work)*price[:,0] ) )
+					cc_cost[boo_ra & d_full & boo_nfree & young] = copayment[boo_ra & d_full & boo_nfree & young].copy()
 				else:
-					cc_cost =  (ones-self.ra.reshape(self.N))*price[:,0]*(ones-free.reshape(self.N)) +\
-					self.ra*( (ones-free.reshape(self.N))*copayment )
-			else:
-				cc_cost = price[:,0]*(ones-free.reshape(self.N))  
-		else:
-			cc_cost = price[:,0]*(ones-free.reshape(self.N))
-		
-		#old kids don't pay for child care
-		cc_cost[agech>6]=0
+					cc_cost[boo_ra &  boo_nfree & young] = copayment[boo_ra &  boo_nfree & young].copy()
 
 		incomepc=(dincome - cc*cc_cost)/(ones+nkids+marr)
 		incomepc[incomepc<=0]=1

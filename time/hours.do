@@ -33,7 +33,7 @@ local year2=1
 local year5_8=0
 
 *Scale of graphs
-local scale = 1.3
+*local scale = 1
 
 
 /*
@@ -71,7 +71,7 @@ drop zboy* agechild*
 ********************************************************************************
 */
 
-keep sampleid p_assign p_radatr piinvyy/*
+keep sampleid p_assign p_radatr piinvyy /*
 */ pthwjbf1 /*Hours worked away home (CFS)
 */r*smof1 r*syrf1 r*atjf1 r*emof1 r*eyrf1 r*hwsf1 r*hwef1 /*Year 2 variables*/
 
@@ -79,6 +79,7 @@ keep sampleid p_assign p_radatr piinvyy/*
 replace p_radatr=19000000+ p_radatr
 tostring p_radatr, force replace
 gen date_ra=mofd(date(p_radatr,"YMD"))
+gen quarter_ra=qofd(date(p_radatr,"YMD"))
 format %tm date_ra
 gen date_survey=date_ra+24
 format %tm date_survey
@@ -118,13 +119,13 @@ format %tm end
 drop start_aux end_aux
 
 
-*Month and year of each spell: leving missing on 0's
+*Month and year of each spell: missing = 0's
 forvalues y=1994/1998{
 	forvalues mm=1/12{
 	gen hours`y'm`mm'=hours_end if ( start<=monthly("`y'm`mm'","YM") & end>=monthly("`y'm`mm'","YM") )  | /*
 	*/( start<=monthly("`y'm`mm'","YM")  & still==1 & monthly("`y'm`mm'","YM")==date_survey )
 	
-	replace hours`y'm`mm'=0 if monthly("`y'm`mm'","YM")>date_survey
+	replace hours`y'm`mm'=. if monthly("`y'm`mm'","YM")>date_survey
 	}
 
 }
@@ -139,109 +140,270 @@ reshape long hours, i(sampleid spell) j(month_aux) string
 *sum hours
 *local sd_hours=r(sd)
 
-*Collapse my month: and we are done!
-keep sampleid p_assign month_aux hours date_ra
+*Collapse my month: and we are done! (this doesn't consider 0s)
+keep sampleid p_assign month_aux hours date_ra quarter_ra
 gen month=monthly(month_aux, "YM")
 format month %tm
+replace hours=. if hours==0
+collapse (mean) hours (first) p_assign date_ra quarter_ra, by(sampleid month)
 
+*Collapse by quarter
+gen quarter = qofd(dofm(month))
+drop month
+replace hours=0 if hours==.
+sort sampleid quarter
+collapse (mean) hours (first) p_assign date_ra quarter_ra, by(sampleid quarter)
 
-
-
-/*
-*For each individual, average hours by month. 
-*/
-collapse (mean) hours (first) p_assign date_ra, by(sampleid month)
-
-*Months since RA
-gen months_ra=month-date_ra
-
-*Now we count . and 0's
-*replace hours=0 if hours==.
-
+*Quarter since RA
+gen q_ra = quarter - quarter_ra
 
 *Reshape again to build the graph using collapse
-replace months_ra=months_ra+23 /*trick to reshape*/
-keep hours sampleid months_ra p_assign
-reshape wide hours, i(sampleid) j(months_ra)
+replace q_ra=q_ra+7 /*trick to reshape. from q=-2 is full sample*/
+keep hours sampleid q_ra p_assign
+reshape wide hours, i(sampleid) j(q_ra)
+
+*recovering curremp
+sort sampleid
+tempfile data_aux
+save `data_aux', replace
+use "$databases/CFS_original.dta", clear
+do "$codes/data_cfs.do"
+keep sampleid curremp
+merge 1:1 sampleid using `data_aux'
+drop if _merge!=3
+drop _merge
+	
 
 
 *Obtaining control variables
 if `controls'==1{
 
 	do "$codes/income/Xs.do"
-	local control_var age_ra i.marital i.ethnic d_HS higrade i.pastern2
+	local control_var age_ra i.marital i.ethnic d_HS2 higrade i.pastern2
 	
 }
 
+*Earnings less than 1000
+gen d_e_low =  pastern2<=4
 	
 *Dropping 50 observations with no children
 do "$codes/time/drop_50.do"
 
-
-
 *Don't have full sample here
-drop hours0 hours1 hours2 hours3
+drop hours0-hours4 hours16-hours24
 
-*Matrix of p-values (the first 3 will not show up in the graph anyways)
-forvalues x=4/47{
-	*Including 0s
-	replace hours`x'=0 if hours`x'==.
-	qui xi: reg hours`x' i.p_assign `control_var', vce(`SE')
-	qui: test _Ip_assign_2=0
-		
-	if `x'==4{
-		mat pvalue=r(p)
+
+*Getting data of employment from UI
+tempfile data_aux1
+save `data_aux1', replace
+
+use "$results/Time/data_emp.dta", clear
+merge 1:1 sampleid using `data_aux1'
+keep if _merge==3
+drop _merge
+
+*One additional clean up
+forvalues x=5/15{
+	local y = `x'-1 /*getting the right time for emp*/
+	replace hours`x'=0 if emp`y'==0
+}
+
+*dummy RA for ivqte
+gen d_ra = .
+replace d_ra = 1 if p_assign=="E"
+replace d_ra = 0 if p_assign=="C"
+
+
+
+*Estimates
+local start = 7
+forvalues x=`start'/15{
+	
+	****Exercise 1: hours for those who h0
+	qui xi: reg hours`x' i.p_assign `control_var' if hours`x'>0, vce(`SE')
+			
+	if `x'==`start'{
+		mat betas_1 = (_b[_Ip_assign_2],_b[_Ip_assign_2] - invttail(e(df_r),0.025)*_se[_Ip_assign_2],/*
+			*/ _b[_Ip_assign_2] + invttail(e(df_r),0.025)*_se[_Ip_assign_2])
+		qui: test _Ip_assign_2=0
+		mat pvalues_1=r(p)
 	}
 		
 	else{
-		mat pvalue=pvalue\r(p)
+
+		mat betas_1 = betas_1\(_b[_Ip_assign_2],_b[_Ip_assign_2] - invttail(e(df_r),0.025)*_se[_Ip_assign_2],/*
+			*/ _b[_Ip_assign_2] + invttail(e(df_r),0.025)*_se[_Ip_assign_2])
+		qui: test _Ip_assign_2=0
+		mat pvalues_1=pvalues_1\r(p)
+	}
+
+	****Exercise 2: hours for those who h0>0 & employed at baseline
+	qui xi: reg hours`x' i.p_assign `control_var' if hours`x'>0 & curremp=="Yes", vce(`SE')
+			
+	if `x'==`start'{
+		mat betas_2 = (_b[_Ip_assign_2],_b[_Ip_assign_2] - invttail(e(df_r),0.025)*_se[_Ip_assign_2],/*
+			*/ _b[_Ip_assign_2] + invttail(e(df_r),0.025)*_se[_Ip_assign_2])
+		qui: test _Ip_assign_2=0
+		mat pvalues_2=r(p)
 	}
 		
+	else{
+
+		mat betas_2 = betas_2\(_b[_Ip_assign_2],_b[_Ip_assign_2] - invttail(e(df_r),0.025)*_se[_Ip_assign_2],/*
+			*/ _b[_Ip_assign_2] + invttail(e(df_r),0.025)*_se[_Ip_assign_2])
+		qui: test _Ip_assign_2=0
+		mat pvalues_2=pvalues_2\r(p)
+	}
+
+	****Exercise 3: hours for those who h0>0 & employed at baseline & low earnings
+	qui xi: reg hours`x' i.p_assign `control_var' if hours`x'>0 & curremp=="Yes" /*
+	*/ & d_e_low==1, vce(`SE')
+			
+	if `x'==`start'{
+		mat betas_3 = (_b[_Ip_assign_2],_b[_Ip_assign_2] - invttail(e(df_r),0.025)*_se[_Ip_assign_2],/*
+			*/ _b[_Ip_assign_2] + invttail(e(df_r),0.025)*_se[_Ip_assign_2])
+		qui: test _Ip_assign_2=0
+		mat pvalues_3=r(p)
+	}
+		
+	else{
+
+		mat betas_3 = betas_3\(_b[_Ip_assign_2],_b[_Ip_assign_2] - invttail(e(df_r),0.025)*_se[_Ip_assign_2],/*
+			*/ _b[_Ip_assign_2] + invttail(e(df_r),0.025)*_se[_Ip_assign_2])
+		qui: test _Ip_assign_2=0
+		mat pvalues_3=pvalues_3\r(p)
+	}
+
+	****Exercise 4: hours for those who h0>0 & employed at baseline & high earnings
+	qui xi: reg hours`x' i.p_assign `control_var' if hours`x'>0 & curremp=="Yes" /*
+	*/ & d_e_low==0, vce(`SE')
+			
+	if `x'==`start'{
+		mat betas_4 = (_b[_Ip_assign_2],_b[_Ip_assign_2] - invttail(e(df_r),0.025)*_se[_Ip_assign_2],/*
+			*/ _b[_Ip_assign_2] + invttail(e(df_r),0.025)*_se[_Ip_assign_2])
+		qui: test _Ip_assign_2=0
+		mat pvalues_4=r(p)
+	}
+		
+	else{
+
+		mat betas_4 = betas_4\(_b[_Ip_assign_2],_b[_Ip_assign_2] - invttail(e(df_r),0.025)*_se[_Ip_assign_2],/*
+			*/ _b[_Ip_assign_2] + invttail(e(df_r),0.025)*_se[_Ip_assign_2])
+		qui: test _Ip_assign_2=0
+		mat pvalues_4=pvalues_4\r(p)
+	}
+
+	****Exercise 5: quantile regressions with ht=0
+
+	qui: ivqte hours`x' (d_ra), quantiles(.25 .5 .75 .90) variance
+			
+	if `x'==`start'{
+
+		forvalues q = 1/4{
+			mat betas_5`q' = (_b[Quantile_`q'],_b[Quantile_`q'] - invnorm(0.975)*_se[Quantile_`q'],/*
+			*/ _b[Quantile_`q'] + invnorm(0.975)*_se[Quantile_`q'])
+			qui: test Quantile_`q'=0
+			mat pvalues_5`q'=r(p)
+
+		}
+		
+	}
+		
+	else{
+
+		forvalues q = 1/4{
+			mat betas_5`q' = betas_5`q'\(_b[Quantile_`q'],_b[Quantile_`q'] - invnorm(0.975)*_se[Quantile_`q'],/*
+			*/ _b[Quantile_`q'] + invnorm(0.975)*_se[Quantile_`q'])
+			qui: test Quantile_`q'=0
+			mat pvalues_5`q'=pvalues_5`q'\r(p)
+
+		}
+	}
+
+	
 
 
 }
 
 
 
-*Average hours by levels
-collapse (mean) hours*, by(p_assign)
-reshape long hours, i(p_assign) j(month)
-replace month=month-23 /*back to the original number*/
 
-*Recovering matrix of pvalues (fake labels for figure)
-gen p_assign_aux=1 if p_assign=="E"
-replace p_assign_aux=2 if p_assign=="C"
-sort p_assign_aux month
-drop p_assign_aux
-svmat pvalue
+
+
+*Average hours by levels
+forvalues x=1/5{
+	if `x'==5{
+		forvalues q=1/4{
+			svmat betas_`x'`q'	
+			svmat pvalues_`x'`q'		
+		}
+		
+
+	}
+	else{
+		svmat betas_`x'	
+		svmat pvalues_`x'	
+	}
+	
+}
+
+
+drop if betas_11==.
+egen quarter = seq()
+replace quarter=quarter-1 /*back to the original number*/
 
 *After this month, there are no records
-drop if month>24
+*drop if quarter>9
 
-*This is the pvalue label
-gen label_aux=""
-replace label_aux="*" if pvalue1<=0.1
-replace label_aux="**" if pvalue1<=0.05
-replace label_aux="***" if pvalue1<=0.01
+*Recovering matrix of pvalues (fake labels for figure)
 
-gen mean_aux1=hours if p_assign=="E" & pvalue1<=0.01
-gen mean_aux2=hours if p_assign=="E" & pvalue1<=0.05 &  pvalue1>0.01
-gen mean_aux3=hours if p_assign=="E" & pvalue1<=0.1 &  pvalue1>0.05
+*The experiment loop
+forvalues x=1/5{
 
-*According to the LS_survey: full sample from -7 onwards.
-*Before 0, I have data for individuals who where working
-twoway (line hours month if p_assign=="E" & month>=0 ,  lpattern(solid) lwidth(thin) ) /*
-*/ (scatter mean_aux1 month if p_assign=="E" & month>=0 ,  msymbol(circle) mcolor(blue) mfcolor(blue)) /*
-*/ (scatter mean_aux2 month if p_assign=="E" & month>=0 ,  msymbol(circle) mcolor(blue) mfcolor(ltblue)) /*
-*/ (scatter mean_aux3 month if p_assign=="E" & month>=0 ,  msymbol(circle) mcolor(blue) mfcolor(none)) /*
-*/(line hours month if p_assign=="C" & month>=0,  lpattern(dash) lwidth(thin)),/*
-*/scheme(s2mono) legend(order(1 "Treatment" 5 "Control")  )/*
-*/ytitle(Hours worked (weekly)) xtitle(Months since RA)/*
-*/graphregion(fcolor(white) ifcolor(white) lcolor(white) ilcolor(white)) plotregion(fcolor(white) lcolor(white)  ifcolor(white) ilcolor(white))/*
-*/xlabel(0(5)24) ylabel(, nogrid) scale(`scale')
+	if `x'==5{
+		forvalues q=1/4{
+			*Labels for significance
+			gen mean_aux_`x'`q'=betas_`x'`q'1 if pvalues_`x'`q'1<=0.05
 
-graph save "$results/Time/hours_mra.gph", replace
-graph export "$results/Time/hours_mra.pdf", as(pdf) replace
+			twoway (connected betas_`x'`q'1 quarter , msymbol(circle) mlcolor(blue) mfcolor(white) ) /*
+			*/ (scatter mean_aux_`x'`q' quarter , msymbol(circle) mlcolor(blue) mfcolor(blue)) /* 
+			*/(line betas_`x'`q'2 quarter ,lpattern(dash)) /*
+			*/(line betas_`x'`q'3 quarter ,lpattern(dash)),/*
+			*/ yline(0, lcolor(black))/*
+			*/ytitle("{&Delta}hours") xtitle("Quarters since RA") legend(off)/*
+			*/ graphregion(fcolor(white) ifcolor(white) lcolor(white) ilcolor(white)) /*
+			*/plotregion(fcolor(white) lcolor(white)  ifcolor(white) ilcolor(white))  /*
+			*/ ylabel(, nogrid)scale(1.2) scheme(s2mono) 
+
+			graph export "$results/Time/hours_diff_experiment`x'`q'.pdf", as(pdf) replace
+
+		}
+		
+
+	}
+
+
+	else{
+		*Labels for significance
+		gen mean_aux_`x'=betas_`x'1 if pvalues_`x'1<=0.05
+
+		twoway (connected betas_`x'1 quarter , msymbol(circle) mlcolor(blue) mfcolor(white) ) /*
+		*/ (scatter mean_aux_`x' quarter , msymbol(circle) mlcolor(blue) mfcolor(blue)) /* 
+		*/(line betas_`x'2 quarter ,lpattern(dash)) /*
+		*/(line betas_`x'3 quarter ,lpattern(dash)),/*
+		*/ yline(0, lcolor(black))/*
+		*/ytitle("{&Delta}hours") xtitle("Quarters since RA") legend(off)/*
+		*/ graphregion(fcolor(white) ifcolor(white) lcolor(white) ilcolor(white)) /*
+		*/plotregion(fcolor(white) lcolor(white)  ifcolor(white) ilcolor(white))  /*
+		*/ ylabel(, nogrid)scale(1.2) scheme(s2mono) 
+
+		graph export "$results/Time/hours_diff_experiment`x'.pdf", as(pdf) replace
+	}
+	
+	
+}
+
+
 
 }
 
@@ -286,6 +448,9 @@ drop zboy* agechild*
 */
 *These are the hours variables
 destring piq66 epi54, replace force
+rename piq66 hours_t4
+rename epi54 hours_t7
+
 
 *Ra indicator
 gen RA=1 if p_assign=="E"
@@ -299,11 +464,24 @@ gen d_year8=epiinvyy==" "
 
 
 *****Employment variables*****
-gen employment_year5=(piq49=="7" ) | (piq49=="1" & piq51=="6")
-replace employment_year5=. if d_year5==1
+destring piinvyy epiinvyy, force replace
+destring piq49 piq50 piq51 piq54 piq55 piq56, replace force 
+gen emp_y4= piq49==7 | piq50==4 | piq51==6 | piq54==3 | piq55==5 | piq56==2
+replace emp_y4=. if  piinvyy==.
 
-gen employment_year8=(epi33=="7" ) | (epi33=="0" & epi35=="6")
-replace employment_year8=. if d_year8==1
+*worked last 12 months according to survey y8
+destring epi33 epi34 epi35 epi37 epi38 epi39, force replace
+gen emp_y7= epi33==7 | epi34==4 | epi35==6 | epi37==3 | epi38==5 | epi39==2
+replace emp_y7=. if epiinvyy==.
+
+replace hours_t4=0 if emp_y4==0
+replace hours_t4=. if piinvyy==.
+
+replace hours_t7=0 if emp_y7==0
+replace hours_t7=. if epiinvyy==.
+
+
+
 
 
 *Obtaining control variables
@@ -314,21 +492,58 @@ if `controls'==1{
 	
 }
 
-*Replacing 0s
-replace piq66=0 if piq66==. & d_year5==0
-replace epi54=0 if epi54==. & d_year8==0
+
+
+tempfile data_hours
+save `data_hours', replace
+use "/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Income/data_income.dta", clear
+merge 1:m sampleid using `data_hours'
+keep if _merge==3
+drop _merge
+
+drop total_income_y0 gross_y0 gross_nominal_y0 grossv2_y0 employment_y0 /*
+*/ fs_y0 afdc_y0 sup_y0
+forvalues x=1/9{
+	local z=`x'-1
+	rename total_income_y`x' total_income_y`z'
+	rename gross_y`x' gross_y`z'
+	rename grossv2_y`x' grossv2_y`z'
+	rename gross_nominal_y`x' gross_nominal_y`z'
+	rename employment_y`x' employment_y`z'
+	rename afdc_y`x' afdc_y`z'
+	rename fs_y`x' fs_y`z'
+	rename sup_y`x' sup_y`z'
+
+}
+
+
+foreach x of numlist 4 7{
+	replace hours_t`x'=0 if grossv2_y`x'==0 & hours_t`x'!=.
+}
+
+
+*For years 4 and 7, adjust for proportion of hours work
+
+foreach x of numlist 4 7{
+	replace hours_t`x'=hours_t`x'*employment_y`x'
+}
+
+
+
+
+
 
 *Regressions and table
 local j=7
 local y=5
-foreach variable of varlist piq66 epi54{
+foreach variable of varlist hours_t4 hours_t7{
 
 
 	*qui ttest `variable' if employment_year`y'==1, by(RA)
 	qui ttest `variable', by(RA)
 	mat A=(r(mu_1),r(mu_2),0\r(sd_1), r(sd_2), 0)
 
-	 xi: reg `variable' i.RA `control_var' if employment_year`y'==1, vce(`SE')
+	 xi: reg `variable' i.RA `control_var', vce(`SE')
 	mat variance=e(V)
 	mat A[2,3]=variance[1,1]^0.5/*replace it with S.E.*/
 	mat A[1,3]=_b[_IRA_2]

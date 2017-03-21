@@ -366,8 +366,10 @@ gen ra_year=yofd(date(p_radatr,"YMD"))
 format ra_year %ty
 tab ra_year
 
-keep total_income_y* gross_y* gross_nominal_y* grossv2_y* employment_y* sampleid ra_year afdc_y* fs_y* sup_y*
-reshape long total_income_y gross_y gross_nominal_y grossv2_y employment_y afdc_y fs_y sup_y, i(sampleid) j(year)
+keep total_income_y* gross_y* gross_nominal_y* grossv2_y* employment_y* /*
+*/ sampleid ra_year afdc_y* fs_y* sup_y* eitc_fed_y* eitc_fed_y* eitc_state_y*
+reshape long total_income_y gross_y gross_nominal_y grossv2_y employment_y /*
+*/ afdc_y fs_y sup_y eitc_fed_y eitc_state_y, i(sampleid) j(year)
 
 *Years since RA
 gen year_ra=year-ra_year
@@ -377,8 +379,10 @@ gen year_ra=year-ra_year
 
 *only one year behind
 replace year_ra=year_ra+1 
-keep year_ra total_income_y sampleid gross_y gross_nominal_y grossv2_y employment_y afdc_y fs_y sup_y
-reshape wide total_income_y gross_y gross_nominal_y grossv2_y employment_y afdc_y fs_y sup_y, i(sampleid) j(year_ra)
+keep year_ra total_income_y sampleid gross_y gross_nominal_y grossv2_y employment_y /*
+*/afdc_y fs_y sup_y eitc_fed_y eitc_state_y
+reshape wide total_income_y gross_y gross_nominal_y grossv2_y employment_y /*
+*/ afdc_y fs_y sup_y eitc_fed_y eitc_state_y, i(sampleid) j(year_ra)
 
 *This database if for using it in the sample_model.do
 sort sampleid

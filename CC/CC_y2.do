@@ -6,7 +6,7 @@ This do-file estimates the impact of New Hope on CC utilization
 
 global databases "/mnt/Research/nealresearch/new-hope-secure/newhopemount/Data/databases"
 global codes "/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes"
-global results "/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/"
+global results "/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/CC"
 
 /*
 robust SE for small samples. Set to hc3 for more conservatives. 
@@ -115,61 +115,71 @@ label values cat_age ages_lbl
 
 
 
-/*CC use in young children*/
+/*CC use across age*/
 
-*girls
-xi: reg d_CC2_t1 i.p_assign `control_var' if cat_age==2 & zboy==0, vce(`SE')
-do "$codes/CC/reg_aux.do"
-putexcel B3=matrix(results) using "$results/CC/CC", sheet("data") modify
+forvalues x=1/3{ /*young, old, everybody*/
+	preserve
+	if `x'<=2 {
+		keep if cat_age==`x'
+	}
+	qui: sum d_CC2_t1 if p_assign=="C" 
+	local mean_c_cat`x' = string(round(r(mean)*100,0.1),"%9.1f") 
+	qui: sum d_CC2_t1 if p_assign=="E" 
+	local mean_t_cat`x' = string(round(r(mean)*100,0.1),"%9.1f")
+	
+	qui xi: reg d_CC2_t1 i.p_assign , vce(`SE')
+	local effect_model1_cat`x'  =string(round(_b[_Ip_assign_2]*100,0.1),"%9.1f")
+	local se_model1_cat`x'  = string(round(_se[_Ip_assign_2]*100,0.1),"%9.1f")
+	qui: test _Ip_assign_2=0
+	scalar define pvalue_model1_cat`x' = r(p)
 
-xi: reg d_CC2_t1 i.p_assign `control_var' if cat_age==1 & zboy==0, vce(`SE')
-do "$codes/CC/reg_aux.do"
-putexcel B6=matrix(results) using "$results/CC/CC", sheet("data") modify
+	
 
-xi: reg d_CC2_t1 i.p_assign `control_var' if zboy==0, vce(`SE')
-do "$codes/CC/reg_aux.do"
-putexcel B9=matrix(results) using "$results/CC/CC", sheet("data") modify
+	qui xi: reg d_CC2_t1 i.p_assign `control_var', vce(`SE')
+	local effect_model2_cat`x'  =string(round(_b[_Ip_assign_2]*100,0.1),"%9.1f")
+	local se_model2_cat`x'  = string(round(_se[_Ip_assign_2]*100,0.1),"%9.1f")
+	qui: test _Ip_assign_2=0
+	scalar define pvalue_model2_cat`x' = r(p)
 
+	forvalues mm=1/2{
+		if pvalue_model`mm'_cat`x'<=0.01{
+			local pval_model`mm'_cat`x' "***"
+		}
+		else if pvalue_model`mm'_cat`x'>0.01 & pvalue_model`mm'_cat`x'<=0.05{
+			local pval_model`mm'_cat`x' "**"
 
-*boys
-xi: reg d_CC2_t1 i.p_assign `control_var' if cat_age==2 & zboy==1, vce(`SE')
-do "$codes/CC/reg_aux.do"
-putexcel D3=matrix(results) using "$results/CC/CC", sheet("data") modify
+		}
+		else if pvalue_model`mm'_cat`x'>0.05 & pvalue_model`mm'_cat`x'<=0.1{
+			local pval_model`mm'_cat`x' "*"
 
-xi: reg d_CC2_t1 i.p_assign `control_var' if cat_age==1 & zboy==1, vce(`SE')
-do "$codes/reg_aux.do"
-putexcel D6=matrix(results) using "$results/CC/CC", sheet("data") modify
-
-xi: reg d_CC2_t1 i.p_assign `control_var' if zboy==1, vce(`SE')
-do "$codes/reg_aux.do"
-putexcel D9=matrix(results) using "$results/CC/CC", sheet("data") modify
-
-
-
-
-
-
-*overall
-xi: reg d_CC2_t1 i.p_assign `control_var' if cat_age==2, vce(`SE')
-do "$codes/reg_aux.do"
-putexcel F3=matrix(results) using "$results/CC/CC", sheet("data") modify
-
-xi: reg d_CC2_t1 i.p_assign `control_var' if cat_age==1, vce(`SE')
-do "$codes/CC/reg_aux.do"
-putexcel F6=matrix(results) using "$results/CC/CC", sheet("data") modify
-
-xi: reg d_CC2_t1 i.p_assign `control_var', vce(`SE')
-do "$codes/CC/reg_aux.do"
-putexcel F9=matrix(results) using "$results/CC/CC", sheet("data") modify
+		}
+		else{
+			local pval_model`mm'_cat`x' ""
+		}
+	}
+	restore
+}
 
 
-*Table
-putexcel A3=("Old (8-13 years old)") using "$results/CC/CC", sheet("data") modify
-putexcel A6=("Young (0-7 years old)") using "$results/CC/CC", sheet("data") modify
-putexcel A9=("Overall") using "$results/CC/CC", sheet("data") modify
-putexcel B1=("Girls") using "$results/CC/CC", sheet("data") modify
-putexcel D1=("Boys") using "$results/CC/CC", sheet("data") modify
-putexcel F1=("Overall") using "$results/CC/CC", sheet("data") modify
+/*The Table*/
+file open cc_table using "$results/cc_table.tex", write replace
+file write cc_table "\begin{tabular}{llccccccc}"_n
+file write cc_table "\hline"_n
+file write cc_table "&& Control && Treatment && Diff 1 && Diff 2 \bigstrut\\"_n
+file write cc_table "\cline{1-1}\cline{3-9}"_n
 
-*Display summary statistics on child care utilization
-table p_assign, c(mean d_CC2_t1)
+file write cc_table "Young (0-6 years old) && `mean_c_cat1' && `mean_t_cat1'  && `effect_model1_cat1'`pval_model1_cat1' && `effect_model2_cat1'`pval_model2_cat1' \\"_n
+file write cc_table "&&&&       &       & (`se_model1_cat1') &       & (`se_model2_cat1') \\"_n
+file write cc_table "&&&&&&& &  \\"_n
+
+file write cc_table "Old ($>$6 years old) && `mean_c_cat2' && `mean_t_cat2'  && `effect_model1_cat2'`pval_model1_cat2' && `effect_model2_cat2'`pval_model2_cat2' \\"_n
+file write cc_table "&&&&       &       & (`se_model1_cat2') &       & (`se_model2_cat2') \\"_n
+file write cc_table "&&&&&&& &  \\"_n
+
+file write cc_table "Overall && `mean_c_cat3' && `mean_t_cat3'  && `effect_model1_cat3'`pval_model1_cat3' && `effect_model2_cat3'`pval_model2_cat3' \\"_n
+file write cc_table "&&&&       &       & (`se_model1_cat3') &       & (`se_model2_cat3') \\"_n
+file write cc_table "\hline"_n
+file write cc_table "\end{tabular}"_n
+file close cc_table
+
+

@@ -34,29 +34,29 @@ import se
 
 np.random.seed(1)
 
-betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv6_v1.npy')
+betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv7_v2_e3.npy')
 
 
 #Utility function
 eta=betas_nelder[0]
-alphap=-0.1
-alphaf=-0.24
-alpha_cc=-0.75
+alphap=betas_nelder[1]
+alphaf=betas_nelder[2]
+alpha_cc=betas_nelder[3]
 
 #wage process
-wagep_betas=np.array([-0.025,0.0003,betas_nelder[6],
-	0.37,1.5,0.8]).reshape((6,1))
+wagep_betas=np.array([betas_nelder[4],betas_nelder[5],betas_nelder[6],
+	betas_nelder[7],betas_nelder[8],betas_nelder[9]]).reshape((6,1))
 
 
 #Production function [young[cc0,cc1],old]
-gamma1=[betas_nelder[9],betas_nelder[11]]
-gamma2=[betas_nelder[10],betas_nelder[12]]
-tfp=0.4
+gamma1=[betas_nelder[10],betas_nelder[12]]
+gamma2=[betas_nelder[11],betas_nelder[13]]
+tfp=betas_nelder[14]
 sigmatheta=0
 
 #Measurement system: three measures for t=2, one for t=5
-kappas=[[betas_nelder[14],betas_nelder[15],betas_nelder[16],betas_nelder[17]],
-[betas_nelder[18],betas_nelder[19],betas_nelder[20],betas_nelder[21]]]
+kappas=[[betas_nelder[15],betas_nelder[16],betas_nelder[17],betas_nelder[18]],
+[betas_nelder[19],betas_nelder[20],betas_nelder[21],betas_nelder[22]]]
 #First measure is normalized. starting arbitrary values
 #All factor loadings are normalized
 lambdas=[1,1]
@@ -189,6 +189,6 @@ npar = betas_opt.shape[0]
 nmom = moments_vector.shape[0]
 
 #The var-cov matrix of structural parameters
-ses = se_ins.big_sand(0.0001,nmom,npar) 
+ses = se_ins.big_sand(0.05,nmom,npar) 
 
-np.save('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/estimation/sesv5_v2_e4.npy',ses)
+np.save('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/estimation/ses_modelv7_v3_5pc.npy',ses)

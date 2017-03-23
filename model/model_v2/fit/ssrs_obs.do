@@ -11,7 +11,7 @@ set maxvar 15000
 set matsize 2000
 
 
-use "/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/sample_model_v2.dta", clear
+use "/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/sample_model_theta_v2.dta", clear
 set seed 2828
 local reps = 800
 

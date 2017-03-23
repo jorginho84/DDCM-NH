@@ -277,7 +277,7 @@ ate_full_2 = [np.mean(ate_full[0:3]), np.mean(ate_full[3:])]
 sim_list = [ate_cc_2,ate_inc_2,ate_part_2,ate_full_2,[beta_t2[0],beta_t5[0]]]
 obs_list = [ate_cc_obs,ate_inc_obs_2/1000,ate_part_obs_2,ate_full_obs_2,np.array([[betas_t2_obs[0,0]], [betas_t5_obs[0,0]]])]
 obs_list_se = [se_ate_cc_obs,se_ate_inc_obs_2/1000,se_ate_part_obs_2,se_ate_full_obs_2,np.array([[ses_betas_t2_obs[0,0]],[ses_betas_t5_obs[0,0]]])]
-var_list = ['ATE child care', 'ATE consumption', 'ATE part-time', 'ATE full-time', 'ATE SSRS']
+var_list = ['Child care', 'Consumption', 'Part-time', 'Full-time', 'SSRS']
 
 with open('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/fit/table_validation.tex','w') as f:
 	f.write(r'\begin{tabular}{llccccc}'+'\n')

@@ -165,7 +165,7 @@ forvalues x=1/3{ /*young, old, everybody*/
 file open cc_table using "$results/cc_table.tex", write replace
 file write cc_table "\begin{tabular}{llccccccc}"_n
 file write cc_table "\hline"_n
-file write cc_table "&& Control && Treatment && Model 1 && Model 2 \bigstrut\\"_n
+file write cc_table "&& Control && Treatment && Diff 1 && Diff 2 \bigstrut\\"_n
 file write cc_table "\cline{1-1}\cline{3-9}"_n
 
 file write cc_table "Young (0-6 years old) && `mean_c_cat1' && `mean_t_cat1'  && `effect_model1_cat1'`pval_model1_cat1' && `effect_model2_cat1'`pval_model2_cat1' \\"_n

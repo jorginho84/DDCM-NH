@@ -410,13 +410,8 @@ forvalues y=0/8{
 }
 
 *Cumultivate effect: baseline is "wel"
-gen effect_total  = effect_sup + effect_wel + effect_gross
-gen effect_wel_sup_pc = (effect_sup + effect_wel)/effect_total
-gen effect_sup_pc = (effect_sup)/effect_total
-gen effect_wel_pc = (effect_wel)/effect_total
-gen effect_total_pc = 1
-
-
+gen effect_wel_sup = effect_sup + effect_wel
+gen effect_total  = effect_wel_sup + effect_gross
 gen year2=year*2
 
 gen effect_sup_2 = effect_sup/effect_total
@@ -426,7 +421,7 @@ gen effect_gross_2 = effect_gross/effect_total
 
 replace effect_sup_2=. if effect_sup_2==0
 
-/*
+
 graph bar effect_sup_2 effect_wel_2 effect_gross_2, over(year) stack /*
 */legend(order(1 "New Hope supplement" 2 "Welfare" 3 "Earnings" )) /*
 */ bar(1, lwidth(medthick)  lcolor(black) fcolor(white))/*
@@ -440,23 +435,8 @@ graph bar effect_sup_2 effect_wel_2 effect_gross_2, over(year) stack /*
 
 
 graph export "$results/Income/income_decomposition.pdf", as(pdf) replace
-*/
-twoway (area effect_wel_pc year, lwidth(medthick)  lcolor(black) fcolor(white))/*
-*/ (rarea effect_wel_sup_pc effect_wel_pc year,lwidth(medium) lcolor(black))/*
-*/ (rarea effect_total_pc effect_wel_sup_pc year, lcolor(black) fcolor(ltblue))/*
-*/ (pcarrowi -0.8 6 -0.6 6), /*
-*//*legend(order(1 "Welfare" 2 "New Hope" 3 "Earnings" )) *//*
-*/ legend(off)/*
-*/ ytitle("Change in income (2003 dollars)") xtitle("Year after random assignment") /*
-*/ graphregion(fcolor(white) ifcolor(white) lcolor(white) ilcolor(white)) /*
-*/plotregion(fcolor(white) lcolor(white)  ifcolor(white) ilcolor(white))  /*
-*/ scheme(s2mono) ylabel(, nogrid) /*
-*/ yline(1, lpattern(dash) lcolor(black)) scale(1.2) /*
-*/ text(-0.9 6 "Welfare") text(0.6 6 "Earnings") /*
-*/ text(0.1 2 "New Hope")
 
 
-graph export "$results/Income/income_decomposition.pdf", as(pdf) replace
 
 
 

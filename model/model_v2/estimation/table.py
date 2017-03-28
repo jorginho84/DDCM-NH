@@ -102,37 +102,37 @@ with open('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model
 	f.write(r'\hline' + '\n')
 	f.write(r'\textbf{Parameter} &  & \textbf{Estimate} & & \textbf{S.E.} \bigstrut\\' + '\n')
 	f.write(r'\cline{1-1}\cline{3-5}' + '\n')
-	f.write(r'\emph{A. Utility function} &       &       &       &  \\' + '\n')
+	f.write(r'\emph{Utility function} &       &       &       &  \\' + '\n')
 	for j in range(len(utility_list_beta)):
 		f.write(utility_names[j]+r' &  &  '+ '{:04.3f}'.format(utility_list_beta[j]) +
 			r' &  & '+ '{:04.3f}'.format(utility_list_se[j])+r' \\' + '\n')
 
 	f.write(r' &       &       &       &  \\' + '\n')
-	f.write(r'\emph{B. Wage offer} &       &       &       &  \\' + '\n')
+	f.write(r'\emph{Wage offer} &       &       &       &  \\' + '\n')
 	for j in range(len(wage_list_beta)):
 		f.write(wage_names[j]+r' &  &  '+ '{:04.3f}'.format(wage_list_beta[j]) +
 			r' &  & '+ '{:04.3f}'.format(wage_list_se[j])+r' \\' + '\n')
 
 	f.write(r' &       &       &       &  \\' + '\n')
-	f.write(r'\emph{C. Production function: young} &       &       &       &  \\' + '\n')
+	f.write(r'\emph{Production function: young} &       &       &       &  \\' + '\n')
 	for j in range(len(prody_list_beta)):
 		f.write(prody_names[j]+r' &  &  '+ '{:04.3f}'.format(prody_list_beta[j]) +
 			r' &  & '+ '{:04.3f}'.format(prody_list_se[j])+r' \\' + '\n')
 
 	f.write(r' &       &       &       &  \\' + '\n')
-	f.write(r'\emph{D. Production function: old} &       &       &       &  \\' + '\n')
+	f.write(r'\emph{Production function: old} &       &       &       &  \\' + '\n')
 	for j in range(len(prodo_list_beta)):
 		f.write(prodo_names[j]+r' &  &  '+ '{:04.3f}'.format(prodo_list_beta[j]) +
 			r' &  & '+ '{:04.3f}'.format(prodo_list_se[j])+r' \\' + '\n')
 
 	f.write(r' &       &       &       &  \\' + '\n')
-	f.write(r'\emph{E. SSRS ($t=2$)} &       &       &       &  \\' + '\n')
+	f.write(r'\emph{SSRS ($t=2$)} &       &       &       &  \\' + '\n')
 	for j in range(len(ssrs2_list_beta)):
 		f.write(ssrs_names[j]+r' &  &  '+ '{:04.3f}'.format(ssrs2_list_beta[j]) +
 			r' &  & '+ '{:04.3f}'.format(ssrs2_list_se[j])+r' \\' + '\n')
 
 	f.write(r' &       &       &       &  \\' + '\n')
-	f.write(r'\emph{F. SSRS ($t=5$)} &       &       &       &  \\' + '\n')
+	f.write(r'\emph{SSRS ($t=5$)} &       &       &       &  \\' + '\n')
 	for j in range(len(ssrs5_list_beta)):
 		f.write(ssrs_names[j]+r' &  &  '+ '{:04.3f}'.format(ssrs5_list_beta[j]) +
 			r' &  & '+ '{:04.3f}'.format(ssrs5_list_se[j])+r' \\' + '\n')

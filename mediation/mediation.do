@@ -7,7 +7,7 @@ of the model
 
 global databases "/mnt/Research/nealresearch/new-hope-secure/newhopemount/Data/databases"
 global codes "/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes"
-global results "/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Mediation"
+global results "/mnt/Research/nealresearch/new-hope-secure/newhopemount/results"
 
 /*
 robust SE for small samples. Set to hc3 for more conservatives. 
@@ -24,151 +24,138 @@ clear mata
 set maxvar 15000
 set more off
 
-use "/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/sample_model_theta_v2.dta", clear
+use "/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/sample_model_theta.dta", clear
 
 
-*Standardized measures
-foreach x of numlist 2 5 8{
+*Standardize measures
+forvalues x=1/3{
 rename skills_t`x' skills_t`x'_aux
 egen skills_t`x'=std(skills_t`x'_aux)
 
 }
 
-*Leisure: 148-hours
-foreach x of numlist 1 4 7{
-	gen l_t`x'=148-hours_t`x'
+*Considering income per capita
+gen incomepc_t0=(total_income_t0)/(1 + nkids_baseline + married_y0)
+gen incomepc_t1=(total_income_t1)/(1 + nkids_year2 + married_year2)
+gen incomepc_t2=(total_income_t2)/(1 + nkids_year5 + married_year5)
+
+*Log of income
+foreach x of numlist 0 1 2 {
+	gen l_earn_t`x'=log(incomepc_t`x')
 	
 }
-
-*Considering income per capita
-gen incomepc_t1=(total_income_y1-cc_pay_t1*12)/(1 + nkids_year2 + married_year2)
-gen incomepc_t4=(total_income_y4-cc_pay_t4*12)/(1 + nkids_year5 + married_year5)
-gen incomepc_t7=(total_income_y7)/(1 + nkids_year8 + married_year8)
-
-replace incomepc_t1=0 if incomepc_t1<0
-replace incomepc_t4=0 if incomepc_t4<0
-replace incomepc_t7=0 if incomepc_t7<0
-
-
-*Age of child
-foreach x of numlist 1 2 4 5 7 8{
-	gen age_t`x'=age_t0+`x'
-}
-
-replace d_CC2_t1=0  if age_t2>6 & d_CC2_t1!=.
 
 
 *******************************************************************************************************************
 **********************************YEAR-2 REGRESSION****************************************************************
 *******************************************************************************************************************
 
-*ATE: sample: young old while in New Hope
-qui xi: reg skills_t2 i.p_assign if age_t2<=6
-local cont_total_2_obs=string(round(_b[_Ip_assign_2],0.01),"%3.2f")
-qui xi: reg skills_t2 i.p_assign if age_t2>6
-local cont_total_3_obs=string(round(_b[_Ip_assign_2],0.01),"%3.2f")
-qui xi: reg skills_t2 i.p_assign 
-local cont_total_1_obs=string(round(_b[_Ip_assign_2],0.01),"%3.2f")
+*ATE
+qui xi: reg skills_t1 i.p_assign
+scalar ate=_b[_Ip_assign_2]
 
-forvalues x=1/3{ /*the age loop*/
 
+
+*Regression: can't do fixed effects b/c there is no variation in random assignment within family.
+xi: reg skills_t1 i.p_assign d_CC l_earn_t0 hours_t0 age_ra d_marital_2 d_HS2
+
+*saving coeffs
+scalar n_y2=e(N)
+scalar b_tau=_b[_Ip_assign_2]
+scalar alpha_d_CC=_b[d_CC]
+scalar alpha_l_earn_t0=_b[l_earn_t0]
+scalar alpha_hours_t0=_b[hours_t0]
+
+
+*Contributions
+foreach variable of varlist d_CC l_earn_t0 hours_t0{
+	qui xi: reg `variable' i.p_assign
+	scalar delta_`variable'=_b[_Ip_assign_2]
 	
-	if `x'==1{
-		qui xi: reg skills_t2 i.p_assign d_CC2_t1 incomepc_t1 l_t1 age_ra d_marital_2 d_HS2	
-	}
-	else if `x'==2{
-		qui xi: reg skills_t2 i.p_assign d_CC2_t1 incomepc_t1 l_t1 age_ra d_marital_2 d_HS2 if age_t2<=6
-	}
-	else{
-		qui xi: reg skills_t2 i.p_assign d_CC2_t1 incomepc_t1 l_t1 age_ra d_marital_2 d_HS2 if age_t2>6
-	}
-
-	local n_`x'=e(N)
-	local b_tau_`x'=_b[_Ip_assign_2]
-	local alpha_d_CC2_t1_`x'=_b[d_CC]
-	local alpha_incomepc_t1_`x'=_b[incomepc_t1]
-	local alpha_l_t1_`x'=_b[l_t1]
-
-
-	*Contributions of measured inputs
-	foreach variable of varlist d_CC2_t1 incomepc_t1 l_t1{
-		if `x'==1{
-			qui xi: reg `variable' i.p_assign	
-		}
-		else if `x'==2{
-			qui xi: reg `variable' i.p_assign if age_t2<=6
-		}
-		else{
-			qui xi: reg `variable' i.p_assign if age_t2>6
-		}
-		
-		local delta_`variable'_`x'=_b[_Ip_assign_2]
-		
-		local cont_`variable'_`x'=string(round(_b[_Ip_assign_2]*`alpha_`variable'_`x'',0.01),"%9.2f")
-
-
-		
-		
-	}
-
-	*Contribution of unmeasured
-	local cont_tau_`x' = string(round(`b_tau_`x'',0.01),"%9.2f")
-	
-		
+	scalar cont_`variable'=_b[_Ip_assign_2]*alpha_`variable'
 }
 
-*Making % contributions
-forvalues x=1/3{
-	local cont_total_`x' = 	`con_d_CC2_t1_`x'' + `cont_incomepc_t1_`x'' + `cont_l_t1_`x'' + `cont_tau_`x''
-	
 
-	foreach variable in l_t1 incomepc_t1 d_CC2_t1 tau{
-		local cont_`variable'_`x'_pc = `cont_`variable'_`x''/`cont_total_`x''
-		local cont_`variable'_`x'_pc = string(round(`cont_`variable'_`x'_pc'*100,1),"%3.0f")
-	}
-	local cont_total_`x' = string(round(`cont_total_`x'',0.01),"%3.2f")
-	local cont_total_`x'_pc= string(100,"%3.0f")
+*******************************************************************************************************************
+**********************************YEAR-5 REGRESSION****************************************************************
+*******************************************************************************************************************
+qui xi: reg skills_t2 i.p_assign
+scalar ate_y5=_b[_Ip_assign_2]
+
+*Regression: can't do fixed effects b/c there is no variation in random assignment within family.
+xi: reg skills_t2 skills_t1 i.p_assign l_earn_t1 hours_t1 /* Current inputs
+*/ d_CC  l_earn_t0 hours_t0 /* Past inputs
+*/ age_ra d_marital_2 d_HS2 /*X's*/
+
+
+*saving coeff
+scalar n_y5=e(N)
+scalar b_tau_y5=_b[_Ip_assign_2]
+scalar alpha_skills_t1=_b[skills_t1]
+scalar alpha_l_earn_t1=_b[l_earn_t1]
+scalar alpha_hours_t1=_b[hours_t1]
+scalar alpha_d_CC_y5=_b[d_CC]
+scalar alpha_l_earn_t0=_b[l_earn_t0]
+scalar alpha_hours_t0=_b[hours_t0]
+
+*Contributions
+foreach variable of varlist skills_t1 l_earn_t1 hours_t1 l_earn_t0 hours_t0{
+	qui xi: reg `variable' i.p_assign
+	scalar delta_`variable'_y5=_b[_Ip_assign_2]
+	scalar cont_`variable'_y5=_b[_Ip_assign_2]*alpha_`variable'
 }
+scalar cont_d_CC_y5=delta_d_CC*alpha_d_CC_y5
+
+
+*******************************************************************************************************************
+**********************************YEAR-8 REGRESSION****************************************************************
+*******************************************************************************************************************
+*ATE
+qui xi: reg skills_t3 i.p_assign
+scalar ate_y8=_b[_Ip_assign_2]
+
+
+*Regression: can't do fixed effects b/c there is no variation in random assignment within family.
+xi: reg skills_t3 skills_t2 i.p_assign l_earn_t2 hours_t2 /* Current inputs
+*/ d_CC  l_earn_t1 hours_t1 l_earn_t0 hours_t0 /* Past inputs
+*/ age_ra d_marital_2 d_HS2/*X's*/
+
+*saving coeff
+scalar n_y8=e(N)
+scalar b_tau_y8=_b[_Ip_assign_2]
+scalar alpha_skills_t2=_b[skills_t2]
+scalar alpha_l_earn_t2=_b[l_earn_t2]
+scalar alpha_hours_t2=_b[hours_t2]
+scalar alpha_l_earn_t1=_b[l_earn_t1]
+scalar alpha_hours_t1=_b[hours_t1]
+scalar alpha_d_CC_y8=_b[d_CC]
+scalar alpha_l_earn_t0=_b[l_earn_t0]
+scalar alpha_hours_t0=_b[hours_t0]
+
+
+*Contributions
+foreach variable of varlist skills_t2  l_earn_t2 hours_t2 l_earn_t1 hours_t1 l_earn_t0 hours_t0{
+	qui xi: reg `variable' i.p_assign
+	scalar delta_`variable'_y8=_b[_Ip_assign_2]
+	scalar cont_`variable'_y8=_b[_Ip_assign_2]*alpha_`variable'
+}
+scalar cont_d_CC_y8=delta_d_CC*alpha_d_CC_y8
 
 
 *********The table**************************
 
-file open med_table using "$results/med_table.tex", write replace
-file write med_table "\begin{tabular}{llccc}"_n
-file write med_table "\hline"_n
-file write med_table "&& \$\sigma\$s &&  \% \bigstrut\\"_n
-file write med_table "\hline"_n
-local x = 1 
-foreach variable in l_t1 incomepc_t1 d_CC2_t1 tau total{
+*The matrix:
+mat A_y2=(cont_d_CC\0\cont_l_earn_t0\0\cont_hours_t0\0\b_tau\0\1\0\ate\0\n_y2)
 
-	if `x'==1{
-		local name "Time"
-	}
-	else if `x'==2{
-		local name "Consumption"
-	}
-	else if `x'==3{
-		local name "Child care"
-	}
-	else if `x'==4{
-		local name "Unmeasured"
-	}
-	else{
-		local name "Total"
-	}
-	local x = `x' + 1
+mat A_y5=(cont_d_CC_y5\0\cont_l_earn_t0_y5\0\cont_hours_t0_y5\0\b_tau_y5\0\cont_skills_t1_y5\0\ate_y5\0\n_y5)
 
-	file write med_table "`name'  &       & `cont_`variable'_1'& & `cont_`variable'_1_pc'  \bigstrut[t]\\"_n
-		file write med_table "  &       & & &\\"_n
-}
-file write med_table " Observed  &       & `cont_total_2_obs'  & & \\"_n
-file write med_table "\hline"_n
-file write med_table "\end{tabular}"_n
-file close med_table
+mat A_y8=(cont_d_CC_y8\0\cont_l_earn_t0_y8\0\cont_hours_t0_y8\0\b_tau_y8\0\cont_skills_t2_y8\0\ate_y8\0\n_y8)
 
 
+mat A=A_y2,A_y5,A_y8
 
-
+*Saving in excel
+putexcel C4=matrix(A) using "$results/Mediation/med_table", sheet("data") modify
 
 
 

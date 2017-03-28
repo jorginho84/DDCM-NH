@@ -177,6 +177,7 @@ period_y = 2
 
 ###Computing counterfactuals
 dics = []
+choices_list = []
 for j in range(len(models_list)):
 	output_ins=estimate.Estimate(param0,x_w,x_m,x_k,x_wmk,passign,agech0,theta0,nkids0,
 		married0,D,dict_grid,M,N,moments_vector,var_cov,hours_p,hours_f,
@@ -190,6 +191,7 @@ for j in range(len(models_list)):
 	np.random.seed(1)
 	emax_instance = output_ins.emax(param0,model)
 	choices = output_ins.samples(param0,emax_instance,model)
+	choices_list.append(choices)
 	ate_ins = ATE(M,choices,agech0,passign,hours_p,hours_f,
 		nperiods_cc,nperiods_ct,nperiods_emp,nperiods_theta,period_y)
 	dics.append(ate_ins.sim_ate())

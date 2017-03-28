@@ -28,7 +28,7 @@ sys.path.append("/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/m
 import estimate as estimate
 sys.path.append("/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/experiments")
 from ate_gen import ATE
-sys.path.append("/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/experiments/NH")
+sys.path.append("/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/experiments/EITC")
 from bset import Budget
 
 np.random.seed(1)

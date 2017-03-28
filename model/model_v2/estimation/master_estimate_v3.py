@@ -29,34 +29,35 @@ import int_linear
 import emax as emax
 import simdata as simdata
 sys.path.append("/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/estimation")
-import estimate_v3 as estimate
+import estimate as estimate
 
 np.random.seed(1)
 
-betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv5_v1.npy')
+betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv6_v1.npy')
 
 
 #Utility function
-eta=.1
+eta=betas_nelder[0]
 alphap=-0.1
-alphaf=-0.15
-alpha_cc = -0.35
+alphaf=-0.24
+alpha_cc=-0.75
+
 
 
 #wage process
-wagep_betas=np.array([0.005,betas_nelder[4],betas_nelder[5],
-	1.2,0.94]).reshape((5,1))
+wagep_betas=np.array([-0.025,0.0003,betas_nelder[6],
+	0.37,1.5,0.8]).reshape((6,1))
 
 
 #Production function [young[cc0,cc1],old]
-gamma1=[betas_nelder[8],betas_nelder[10]]
-gamma2=[betas_nelder[9],betas_nelder[11]]
-tfp=betas_nelder[12]
+gamma1=[betas_nelder[9],betas_nelder[11]]
+gamma2=[betas_nelder[10],betas_nelder[12]]
+tfp=0.4
 sigmatheta=0
 
 #Measurement system: three measures for t=2, one for t=5
-kappas=[[betas_nelder[13],betas_nelder[14],betas_nelder[15],betas_nelder[16]],
-[betas_nelder[17],betas_nelder[18],betas_nelder[19],betas_nelder[20]]]
+kappas=[[betas_nelder[14],betas_nelder[15],betas_nelder[16],betas_nelder[17]],
+[betas_nelder[18],betas_nelder[19],betas_nelder[20],betas_nelder[21]]]
 #First measure is normalized. starting arbitrary values
 #All factor loadings are normalized
 lambdas=[1,1]
@@ -141,11 +142,11 @@ param0=util.Parameters(alphap, alphaf, eta, alpha_cc,gamma1, gamma2, tfp, sigmat
 
 ###Auxiliary estimates### 
 
-moments_vector=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/aux_model/moments_vector_2.csv').values
+moments_vector=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/aux_model/moments_vector.csv').values
 
 
 #This is the var cov matrix of aux estimates
-var_cov=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/aux_model/var_cov_2.csv').values
+var_cov=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/aux_model/var_cov.csv').values
 
 #The W matrix in Wald metric
 #Using diagonal of Var-Cov matrix of simulated moments
@@ -167,8 +168,16 @@ M=1000
 hours_p=15
 hours_f=40
 
+#Indicate if model includes a work requirement (wr), 
+#and child care subsidy (cs) and a wage subsidy (ws)
+wr=1
+cs=1
+ws=1
+
 output_ins=estimate.Estimate(param0,x_w,x_m,x_k,x_wmk,passign,agech0,theta0,nkids0,
-	married0,D,dict_grid,M,N,moments_vector,w_matrix,hours_p,hours_f)
+	married0,D,dict_grid,M,N,moments_vector,w_matrix,hours_p,hours_f,
+	wr,cs,ws)
+
 
 start_time = time.time()
 output=output_ins.optimizer()
@@ -189,29 +198,30 @@ betaw0=output.x[4]
 betaw1=output.x[5]
 betaw2=output.x[6]
 betaw3=output.x[7]
-betaw4=np.exp(output.x[8])
-gamma1_young_cc1=sym(output.x[9])
-gamma2_young_cc1=sym(output.x[10])
-gamma1_old=sym(output.x[11])
-gamma2_old=sym(output.x[12])
-tfp_opt=output.x[13]
-kappas_00=output.x[14]
-kappas_01=output.x[15]
-kappas_02=output.x[16]
-kappas_03=output.x[17]
-kappas_10=output.x[18]
-kappas_11=output.x[19]
-kappas_12=output.x[20]
-kappas_13=output.x[21]
+betaw4=output.x[8]
+betaw5=np.exp(output.x[9])
+gamma1_young_cc1=sym(output.x[10])
+gamma2_young_cc1=sym(output.x[11])
+gamma1_old=sym(output.x[12])
+gamma2_old=sym(output.x[13])
+tfp_opt=output.x[14]
+kappas_00=output.x[15]
+kappas_01=output.x[16]
+kappas_02=output.x[17]
+kappas_03=output.x[18]
+kappas_10=output.x[19]
+kappas_11=output.x[20]
+kappas_12=output.x[21]
+kappas_13=output.x[22]
 
 
 betas_opt=np.array([eta_opt, alphap_opt,alphaf_opt,alphacc_opt,betaw0,betaw1,betaw2,
-	betaw3,betaw4,gamma1_young_cc1,gamma2_young_cc1,
+	betaw3,betaw4,betaw5,gamma1_young_cc1,gamma2_young_cc1,
 	gamma1_old,gamma2_old,tfp_opt,
 	kappas_00,kappas_01,kappas_02,kappas_03,
 	kappas_10,kappas_11,kappas_12,kappas_13])
 
-np.save('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv6_v1.npy',betas_opt)
+np.save('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv7_v2.npy',betas_opt)
 
 
 

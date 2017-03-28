@@ -29,8 +29,8 @@ year5_8=1: runs years 5 and 8. This will produce a table
 
 */
 
-local year2=1
-local year5_8=0
+local year2=0
+local year5_8=1
 
 *Scale of graphs
 *local scale = 1
@@ -212,7 +212,6 @@ forvalues x=5/15{
 gen d_ra = .
 replace d_ra = 1 if p_assign=="E"
 replace d_ra = 0 if p_assign=="C"
-
 
 
 *Estimates
@@ -540,10 +539,10 @@ foreach variable of varlist hours_t4 hours_t7{
 
 
 	*qui ttest `variable' if employment_year`y'==1, by(RA)
-	qui ttest `variable', by(RA)
+	qui ttest `variable' if `variable'>0, by(RA)
 	mat A=(r(mu_1),r(mu_2),0\r(sd_1), r(sd_2), 0)
 
-	 xi: reg `variable' i.RA `control_var', vce(`SE')
+	 xi: reg `variable' i.RA `control_var' if `variable'>0, vce(`SE')
 	mat variance=e(V)
 	mat A[2,3]=variance[1,1]^0.5/*replace it with S.E.*/
 	mat A[1,3]=_b[_IRA_2]

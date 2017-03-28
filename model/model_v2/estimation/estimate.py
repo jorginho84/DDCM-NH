@@ -426,7 +426,7 @@ class Estimate:
 
 		
 		#Here we go
-		opt = minimize(self.ll, beta0,  method='Nelder-Mead', options={'maxiter':2000, 'maxfev': 90000, 'ftol': 1e-1, 'disp': True});
+		opt = minimize(self.ll, beta0,  method='Nelder-Mead', options={'maxiter':2000, 'maxfev': 90000, 'ftol': 1e-3, 'disp': True});
 		
 		return opt
 

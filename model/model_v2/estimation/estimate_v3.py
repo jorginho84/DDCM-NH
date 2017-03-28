@@ -23,7 +23,8 @@ import simdata as simdata
 
 class Estimate:
 	def __init__(self,param0,x_w,x_m,x_k,x_wmk,passign,agech0,theta0,
-		nkids0,married0,D,dict_grid,M,N,moments_vector,w_matrix,hours_p,hours_f):
+		nkids0,married0,D,dict_grid,M,N,moments_vector,w_matrix,hours_p,hours_f,
+		wr,cs,ws):
 
 		self.param0=param0
 		self.x_w,self.x_m,self.x_k,self.x_wmk=x_w,x_m,x_k,x_wmk
@@ -33,6 +34,7 @@ class Estimate:
 		self.M,self.N=M,N
 		self.moments_vector,self.w_matrix=moments_vector,w_matrix
 		self.hours_p,self.hours_f=hours_p,hours_f
+		self.wr,self.cs,self.ws=wr,cs,ws
 
 	def emax(self,param1,model):
 		"""
@@ -41,7 +43,8 @@ class Estimate:
 		"""
 		#updating with new betas
 		np.random.seed(1) #always the same emax, for a given set of beta
-		emax_ins_1=emax.Emaxt(param1,self.D,self.dict_grid,self.hours_p,self.hours_f,model)
+		emax_ins_1=emax.Emaxt(param1,self.D,self.dict_grid,self.hours_p,
+			self.hours_f,self.wr,self.cs,self.ws,model)
 		return emax_ins_1.recursive(8) #t=1 to t=8
 
 	def samples(self,param1,emaxins,model):
@@ -55,7 +58,8 @@ class Estimate:
 		#updating sample with new betas and emax
 		simdata_ins= simdata.SimData(self.N,param1,emaxins,
 			self.x_w,self.x_m,self.x_k,self.x_wmk,self.passign,self.theta0,
-			self.nkids0,self.married0,self.agech0,self.hours_p,self.hours_f,model)
+			self.nkids0,self.married0,self.agech0,self.hours_p,self.hours_f,
+			self.wr,self.cs,self.ws,model)
 
 		#save here
 		util_list=[]
@@ -63,6 +67,7 @@ class Estimate:
 		consumption_matrix=np.zeros((self.N,9,self.M))
 		choice_matrix=np.zeros((self.N,9,self.M))
 		utils_periodt=np.zeros((self.N,J,9,self.M))
+		utils_c_periodt=np.zeros((self.N,J,9,self.M))
 		theta_matrix=np.zeros((self.N,9,self.M))
 		wage_matrix=np.zeros((self.N,9,self.M))
 		hours_matrix=np.zeros((self.N,9,self.M))
@@ -88,12 +93,15 @@ class Estimate:
 			hours_matrix[:,:,j]=dics[j]['Hours']
 			ssrs_t2_matrix[:,j]=dics[j]['SSRS_t2']
 			ssrs_t5_matrix[:,j]=dics[j]['SSRS_t5']
+			ssrs_t5_matrix[:,j]=dics[j]['SSRS_t5']
 			
 
 			for periodt in range(0,9):
 				utils_periodt[:,:,periodt,j]=dics[j]['Uti_values_dic'][periodt]
+				utils_c_periodt[:,:,periodt,j]=dics[j]['Uti_values_c_dic'][periodt]
 
-		return {'utils_periodt': utils_periodt,'income_matrix':income_matrix,
+		return {'utils_periodt': utils_periodt,'utils_c_periodt': utils_c_periodt,
+				'income_matrix':income_matrix,
 				'choice_matrix': choice_matrix,'theta_matrix': theta_matrix,
 				'wage_matrix': wage_matrix,'consumption_matrix':consumption_matrix,
 				'hours_matrix': hours_matrix, 'ssrs_t2_matrix':ssrs_t2_matrix,
@@ -168,18 +176,25 @@ class Estimate:
 		age_aux=np.reshape(np.concatenate((age[:,0],age[:,1],age[:,4],age[:,7]),axis=0),(self.N*4,1))
 		age2_aux=np.square(age_aux)
 
+		period0=np.log(np.zeros(self.N) + 1)
+		period1=np.log(np.zeros(self.N) + 2)
+		period4=np.log(np.zeros(self.N) + 5)
+		period7=np.log(np.zeros(self.N) + 8)
+		lt = np.reshape(np.concatenate((period0,period1,period4,period7),axis=0),(self.N*4,1))
+
 		dhs_aux=np.reshape(np.concatenate((self.x_w[:,1],self.x_w[:,1],self.x_w[:,1],self.x_w[:,1]),axis=0),(self.N*4,1))
 		choices_aux=np.concatenate((choice_matrix[:,0,:],choice_matrix[:,1,:],
 			choice_matrix[:,4,:],choice_matrix[:,7,:]),axis=0)
 		boo_work=(choices_aux==1) | (choices_aux==2) | (choices_aux==4) | (choices_aux==5)
 		
-		beta_w=np.zeros((4,self.M))
+		beta_w=np.zeros((5,self.M)) #5 parameters
 		sigma_w=np.zeros((1,self.M))
 		const=np.ones((self.N*4,1)) #4 periods:0,1,4,7
 		for j in range(self.M):
 			xw_aux=np.concatenate((age_aux[boo_work[:,j]==1,:],
 				age2_aux[boo_work[:,j]==1,:],
 				dhs_aux[boo_work[:,j]==1,:],
+				lt[boo_work[:,j]==1,:],
 				const[boo_work[:,j]==1,:]),axis=1)
 
 			#If nonsingular matrix
@@ -273,20 +288,21 @@ class Estimate:
 		self.param0.betaw[1]=beta[5]
 		self.param0.betaw[2]=beta[6]
 		self.param0.betaw[3]=beta[7]
-		self.param0.betaw[4]=np.exp(beta[8])
-		self.param0.gamma1[0]=sym(beta[9])
-		self.param0.gamma2[0]=sym(beta[10])
-		self.param0.gamma1[1]=sym(beta[11])
-		self.param0.gamma2[1]=sym(beta[12])
-		self.param0.tfp=beta[13]
-		self.param0.kappas[0][0]=beta[14]
-		self.param0.kappas[0][1]=beta[15]
-		self.param0.kappas[0][2]=beta[16]
-		self.param0.kappas[0][3]=beta[17]
-		self.param0.kappas[1][0]=beta[18]
-		self.param0.kappas[1][1]=beta[19]
-		self.param0.kappas[1][2]=beta[20]
-		self.param0.kappas[1][3]=beta[21]
+		self.param0.betaw[4]=beta[8]
+		self.param0.betaw[5]=np.exp(beta[9])
+		self.param0.gamma1[0]=sym(beta[10])
+		self.param0.gamma2[0]=sym(beta[11])
+		self.param0.gamma1[1]=sym(beta[12])
+		self.param0.gamma2[1]=sym(beta[13])
+		self.param0.tfp=beta[14]
+		self.param0.kappas[0][0]=beta[15]
+		self.param0.kappas[0][1]=beta[16]
+		self.param0.kappas[0][2]=beta[17]
+		self.param0.kappas[0][3]=beta[18]
+		self.param0.kappas[1][0]=beta[19]
+		self.param0.kappas[1][1]=beta[20]
+		self.param0.kappas[1][2]=beta[21]
+		self.param0.kappas[1][3]=beta[22]
 			
 
 		#The model (utility instance)
@@ -295,7 +311,7 @@ class Estimate:
 
 		model  = util.Utility(self.param0,self.N,self.x_w,self.x_m,self.x_k,self.passign,
 			self.theta0,self.nkids0,self.married0,hours,childcare,
-			self.agech0,self.hours_p,self.hours_f)
+			self.agech0,self.hours_p,self.hours_f,self.wr,self.cs,self.ws)
 
 		##obtaining emax instance##
 		emax_instance=self.emax(self.param0,model)
@@ -397,8 +413,8 @@ class Estimate:
 				
 		beta0=np.array([self.param0.eta,self.param0.alphap,self.param0.alphaf,
 			self.param0.alpha_cc,self.param0.betaw[0],self.param0.betaw[1],
-			self.param0.betaw[2],self.param0.betaw[3],
-			np.log(self.param0.betaw[4]),
+			self.param0.betaw[2],self.param0.betaw[3],self.param0.betaw[4],
+			np.log(self.param0.betaw[5]),
 			syminv(self.param0.gamma1[0]),syminv(self.param0.gamma2[0]),
 			syminv(self.param0.gamma1[1]),syminv(self.param0.gamma2[1]),
 			self.param0.tfp,

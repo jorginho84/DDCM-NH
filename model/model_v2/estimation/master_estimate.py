@@ -33,7 +33,7 @@ import estimate as estimate
 
 np.random.seed(1)
 
-betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv7_v2.npy')
+betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv7_v2_e3.npy')
 
 
 #Utility function
@@ -159,7 +159,7 @@ for i in range(var_cov.shape[0]):
 dict_grid=gridemax.grid()
 
 #For montercarlo integration
-D=50
+D=100
 
 #For II procedure
 M=1000
@@ -221,7 +221,7 @@ betas_opt=np.array([eta_opt, alphap_opt,alphaf_opt,alphacc_opt,betaw0,betaw1,bet
 	kappas_00,kappas_01,kappas_02,kappas_03,
 	kappas_10,kappas_11,kappas_12,kappas_13])
 
-np.save('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv7_v2_e3.npy',betas_opt)
+np.save('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv7_v2_e3_d100.npy',betas_opt)
 
 
 

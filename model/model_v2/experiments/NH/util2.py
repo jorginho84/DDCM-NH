@@ -21,13 +21,13 @@ class Prod2(Utility):
 	This class modifies the production function
 	"""
 
-	def __init__(self,param,N,xwage,xmarr,xkid,ra,theta0,
+	def __init__(self,param,N,xwage,xmarr,xkid,ra,
 		nkids0,married0,hours,cc,age_t0,hours_p,hours_f,wr,cs,ws):
 		"""	
 		ec, el: E[log()] of consumption and leisure from original (simulated)
 		data
 		"""
-		Utility.__init__(self,param,N,xwage,xmarr,xkid,ra,theta0,
+		Utility.__init__(self,param,N,xwage,xmarr,xkid,ra,
 			nkids0,married0,hours,cc,age_t0,hours_p,hours_f,wr,cs,ws)
 	
 	def elec(self):

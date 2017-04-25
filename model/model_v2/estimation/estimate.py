@@ -22,13 +22,13 @@ import simdata as simdata
 
 
 class Estimate:
-	def __init__(self,param0,x_w,x_m,x_k,x_wmk,passign,agech0,theta0,
+	def __init__(self,param0,x_w,x_m,x_k,x_wmk,passign,agech0,
 		nkids0,married0,D,dict_grid,M,N,moments_vector,w_matrix,hours_p,hours_f,
 		wr,cs,ws):
 
 		self.param0=param0
 		self.x_w,self.x_m,self.x_k,self.x_wmk=x_w,x_m,x_k,x_wmk
-		self.passign,self.theta0,self.nkids0,self.married0=passign,theta0,nkids0,married0
+		self.passign,self.nkids0,self.married0=passign,nkids0,married0
 		self.D,self.dict_grid =D,dict_grid
 		self.agech0=agech0
 		self.M,self.N=M,N
@@ -57,7 +57,7 @@ class Estimate:
 
 		#updating sample with new betas and emax
 		simdata_ins= simdata.SimData(self.N,param1,emaxins,
-			self.x_w,self.x_m,self.x_k,self.x_wmk,self.passign,self.theta0,
+			self.x_w,self.x_m,self.x_k,self.x_wmk,self.passign,
 			self.nkids0,self.married0,self.agech0,self.hours_p,self.hours_f,
 			self.wr,self.cs,self.ws,model)
 
@@ -310,7 +310,7 @@ class Estimate:
 		childcare  = np.zeros(self.N)
 
 		model  = util.Utility(self.param0,self.N,self.x_w,self.x_m,self.x_k,self.passign,
-			self.theta0,self.nkids0,self.married0,hours,childcare,
+			self.nkids0,self.married0,hours,childcare,
 			self.agech0,self.hours_p,self.hours_f,self.wr,self.cs,self.ws)
 
 		##obtaining emax instance##

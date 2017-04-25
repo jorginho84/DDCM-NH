@@ -54,12 +54,12 @@ class Emaxt:
 		self.model = model
 
 	def change_util(self,param,N,x_w,x_m,x_k,passign,
-				theta0,nkids0,married0,hours,childcare,agech,hours_p,hours_f,
+				nkids0,married0,hours,childcare,agech,hours_p,hours_f,
 				wr,cs,ws):
 		"""
 		This function changes parameters of util instance
 		"""
-		self.model.__init__(param,N,x_w,x_m,x_k,passign,theta0,nkids0,married0,
+		self.model.__init__(param,N,x_w,x_m,x_k,passign,nkids0,married0,
 			hours,childcare,agech,hours_p,hours_f,wr,cs,ws)
 
 		
@@ -103,7 +103,7 @@ class Emaxt:
 		hours=np.zeros(ngrid)
 		childcare=np.zeros(ngrid)
 
-		self.change_util(self.param,ngrid,x_w,x_m,x_k,passign,theta0,
+		self.change_util(self.param,ngrid,x_w,x_m,x_k,passign,
 			nkids0,married0,hours,childcare,agech,self.hours_p,self.hours_f,
 			self.wr,self.cs,self.ws)
 		wage0=self.model.waget(7)
@@ -150,7 +150,7 @@ class Emaxt:
 
 				#States at T
 				self.change_util(self.param,ngrid,x_w,x_m,x_k,
-					passign,theta0,nkids0,married0,hours,childcare,agech,
+					passign,nkids0,married0,hours,childcare,agech,
 					self.hours_p,self.hours_f,self.wr,self.cs,self.ws)
 
 				periodt=8 
@@ -187,11 +187,11 @@ class Emaxt:
 					childcare_t1=np.ones((ngrid,1))				
 
 				self.change_util(self.param,ngrid,x_w,x_m,x_k,
-					passign,theta_t1,nkids_t1,married_t1,hours_t1,childcare,agech,
+					passign,nkids_t1,married_t1,hours_t1,childcare,agech,
 					self.hours_p,self.hours_f,self.wr,self.cs,self.ws)
 				
 				#This is the terminal value!
-				u_vec[:,i,j]=self.model.simulate(8,wage_t1,free_t1,price_t1) #Last period is T=8. Terminal value=0
+				u_vec[:,i,j]=self.model.simulate(8,wage_t1,free_t1,price_t1,theta_t1) #Last period is T=8. Terminal value=0
 			
 
 			#obtaining max over choices by random schocks: young vs old
@@ -267,7 +267,7 @@ class Emaxt:
 		childcare=np.zeros(ngrid)
 		
 		self.change_util(self.param,ngrid,x_w,x_m,x_k,passign,
-			theta0,nkids0,married0,hours,childcare,agech,
+			nkids0,married0,hours,childcare,agech,
 			self.hours_p,self.hours_f,self.wr,self.cs,self.ws)
 		wage0=self.model.waget(periodt)
 		free0=self.model.q_prob()
@@ -326,7 +326,7 @@ class Emaxt:
 				
 				#Computing states at t
 				self.change_util(self.param,ngrid,x_w,x_m,x_k,
-					passign,theta0,nkids0,married0,hours,childcare,agech,
+					passign,nkids0,married0,hours,childcare,agech,
 					self.hours_p,self.hours_f,self.wr,self.cs,self.ws)
 				
 				
@@ -363,11 +363,11 @@ class Emaxt:
 				
 				#Instance at period t
 				self.change_util(self.param,ngrid,x_w,x_m,x_k,
-					passign,theta_t1,nkids_t1,married_t1,hours_t1,childcare_t1,agech,
+					passign,nkids_t1,married_t1,hours_t1,childcare_t1,agech,
 					self.hours_p,self.hours_f,self.wr,self.cs,self.ws)
 
 				#Current-period utility at t
-				u_vec[:,i,j]=self.model.simulate(periodt+1,wage_t1,free_t1,price_t1) 
+				u_vec[:,i,j]=self.model.simulate(periodt+1,wage_t1,free_t1,price_t1,theta_t1) 
 
 				#getting next-period already computed emaxt+1
 				data_int_ex=np.concatenate(( np.reshape(np.log(theta_t1),(ngrid,1)), 

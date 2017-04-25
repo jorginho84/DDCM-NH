@@ -25,26 +25,26 @@ class SimData:
 	The rest are state variables at period 0
 	"""
 	def __init__(self,N,param,emax_function,
-		x_w,x_m,x_k,x_wmk,passign,theta0,nkids0,married0,agech,hours_p,hours_f,
+		x_w,x_m,x_k,x_wmk,passign,nkids0,married0,agech,hours_p,hours_f,
 		wr,cs,ws,model):
 		"""
 		model: a utility instance (with arbitrary parameters)
 		"""
 		self.N,self.param,self.emax_function=N,param,emax_function
 		self.x_w,self.x_m,self.x_k,self.x_wmk=x_w,x_m,x_k,x_wmk
-		self.passign,self.theta0,self.nkids0,self.married0=passign,theta0,nkids0,married0
+		self.passign,self.nkids0,self.married0=passign,nkids0,married0
 		self.agech=agech
 		self.hours_p, self.hours_f=hours_p,hours_f
 		self.wr,self.cs,self.ws=wr,cs,ws
 		self.model = model
 		
 	def change_util(self,param,N,x_w,x_m,x_k,passign,
-				theta0,nkids0,married0,hours,childcare,agech,hours_p,hours_f,
+				nkids0,married0,hours,childcare,agech,hours_p,hours_f,
 				wr,cs,ws):
 		"""
 		This function changes parameters of util instance
 		"""
-		self.model.__init__(param,N,x_w,x_m,x_k,passign,theta0,nkids0,married0,
+		self.model.__init__(param,N,x_w,x_m,x_k,passign,nkids0,married0,
 			hours,childcare,agech,hours_p,hours_f,wr,cs,ws)
 
 		
@@ -104,7 +104,7 @@ class SimData:
 			
 			#Computing utility
 			self.change_util(self.param,self.N,self.x_w,self.x_m,self.x_k,self.passign,
-				theta0,nkids0,married0,hours,childcare,self.agech,self.hours_p,
+				nkids0,married0,hours,childcare,self.agech,self.hours_p,
 				self.hours_f,self.wr,self.cs,self.ws)
 
 			#current consumption to get future theta
@@ -112,7 +112,7 @@ class SimData:
 			consumption0=self.model.consumptiont(periodt,hours,childcare,dincome0,
 					married0,nkids0,wage0,free0,price0)
 
-			util_values[:,j]=self.model.simulate(periodt,wage0,free0,price0)
+			util_values[:,j]=self.model.simulate(periodt,wage0,free0,price0,theta0)
 			util_values_c[:,j]=util_values[:,j].copy()
 
 
@@ -169,7 +169,6 @@ class SimData:
 		ssrs_t5=np.zeros(self.N)
 
 		#initialize state variables
-		theta0=self.theta0.copy()
 		married0=self.married0.copy()
 		nkids0=self.nkids0.copy()
 		#wage0=np.zeros((self.N,1))
@@ -178,11 +177,12 @@ class SimData:
 		hours=np.zeros(self.N)
 		childcare=np.zeros(self.N)
 		self.change_util(self.param,self.N,self.x_w,self.x_m,self.x_k,self.passign,
-			theta0,nkids0,married0,hours,childcare,self.agech,self.hours_p,
+			nkids0,married0,hours,childcare,self.agech,self.hours_p,
 			self.hours_f,self.wr,self.cs,self.ws)
 		wage0=self.model.waget(0)
 		free0=self.model.q_prob()
 		price0=self.model.price_cc()
+		theta0=self.model.theta_init()
 		
 	
 		for periodt in range(0,n_periods): #from t=0 to t=8
@@ -226,7 +226,7 @@ class SimData:
 
 			#Current income
 			self.change_util(self.param,self.N,self.x_w,self.x_m,
-				self.x_k,self.passign,theta0,nkids0,married0,hours_t,childcare_t,self.agech,
+				self.x_k,self.passign,nkids0,married0,hours_t,childcare_t,self.agech,
 				self.hours_p,self.hours_f,self.wr,self.cs,self.ws)
 			
 			dincome0=self.model.dincomet(periodt,hours_t,wage0,married0,nkids0)['income']

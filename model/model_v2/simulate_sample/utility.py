@@ -47,7 +47,7 @@ class Utility(object):
 	This class defines the economic environment of the agent
 
 	"""
-	def __init__(self,param,N,xwage,xmarr,xkid,ra,theta0,
+	def __init__(self,param,N,xwage,xmarr,xkid,ra,
 		nkids0,married0,hours,cc,age_t0,hours_p,hours_f,wr,cs,ws):
 		"""
 		Set up model's data and paramaters
@@ -61,11 +61,14 @@ class Utility(object):
 		
 		self.param=param
 		self.N,self.xwage,self.xmarr=N,xwage,xmarr
-		self.xkid,self.ra,self.theta0=xkid,np.reshape(ra,self.N),theta0
+		self.xkid,self.ra=xkid,np.reshape(ra,self.N)
 		self.nkids0,self.married0= nkids0,married0
 		self.hours,self.cc,self.age_t0=hours,cc,age_t0
 		self.hours_p,self.hours_f=hours_p,hours_f
 		self.wr,self.cs,self.ws=wr,cs,ws
+
+	def theta_init(self):
+		return np.exp(np.random.randn(self.N))
 
 
 
@@ -516,7 +519,7 @@ class Utility(object):
 		return ut
 
 
-	def simulate(self,periodt,wage0,free,price):
+	def simulate(self,periodt,wage0,free,price,theta0):
 		"""
 		Takes states (theta0, nkids0, married0, wage0) and given choices
 		(self: hours and childcare) to compute current-period utility value.
@@ -528,7 +531,7 @@ class Utility(object):
 		
 
 		return self.Ut(periodt,income,self.married0,self.cc,self.nkids0,self.hours,
-			self.theta0,wage0,free,price)
+			theta0,wage0,free,price)
 
 	def measures(self,periodt,thetat):
 		"""

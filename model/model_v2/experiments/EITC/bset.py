@@ -21,13 +21,13 @@ class Budget(Utility):
 	"""
 	This class modifies the income and consumption processes
 	"""
-	def __init__(self,param,N,xwage,xmarr,xkid,ra,theta0,
+	def __init__(self,param,N,xwage,xmarr,xkid,ra,
 		nkids0,married0,hours,cc,age_t0,hours_p,hours_f,wr,cs,ws):
 		"""
 		wr, cs, ws control working requirements, child care subsidy,
 		and wage subsidy parameters
 		"""
-		Utility.__init__(self,param,N,xwage,xmarr,xkid,ra,theta0,
+		Utility.__init__(self,param,N,xwage,xmarr,xkid,ra,
 			nkids0,married0,hours,cc,age_t0,hours_p,hours_f,wr,cs,ws)
 
 

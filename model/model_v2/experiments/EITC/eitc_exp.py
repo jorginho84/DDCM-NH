@@ -211,13 +211,13 @@ for j in range(5): #the experiment loop
 		wagep_betas, marriagep_betas, kidsp_betas, experiments[j][0],afdc_list,snap_list,
 		cpi,q,scalew,shapew,lambdas,kappas,pafdc,psnap)
 
-	output_ins=estimate.Estimate(param0,x_w,x_m,x_k,x_wmk,passign,agech0,theta0,nkids0,
+	output_ins=estimate.Estimate(param0,x_w,x_m,x_k,x_wmk,passign,agech0,nkids0,
 		married0,D,dict_grid,M,N,moments_vector,var_cov,hours_p,hours_f,
 		wr,experiments[j][1],ws)
 
 	#The model (utility instance)
 	
-	model = Budget(param0,N,x_w,x_m,x_k,passign,theta0,nkids0,married0,
+	model = Budget(param0,N,x_w,x_m,x_k,passign,nkids0,married0,
 		hours,childcare,agech0,hours_p,hours_f,wr,experiments[j][1],ws)
 
 	#Obtaining emax instances, samples, and betas for M samples
@@ -234,9 +234,9 @@ for j in range(5): #the experiment loop
 
 ######Making the Table#######
 outcome_list = ['Consumption (US\$)', 'Part-time', 'Full-time', 'Child care',
-r'$\ln \theta$ ($\sigma$s)', 'Utility']
+r'$\ln \theta$ ($\sigma$s)']
 
-output_list = ['Consumption', 'Part-time', 'Full-time', 'CC', 'Theta', 'Welfare']
+output_list = ['Consumption', 'Part-time', 'Full-time', 'CC', 'Theta']
 
 with open('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/experiments/EITC/table_eitc_exp.tex','w') as f:
 	f.write(r'\begin{tabular}{lcccccccccc}'+'\n')

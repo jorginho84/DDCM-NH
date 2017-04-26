@@ -121,7 +121,7 @@ cpi =  pickle.load( open( '/mnt/Research/nealresearch/new-hope-secure/newhopemou
 ###
 
 #Assuming random start
-theta0=np.exp(np.random.randn(N))
+#theta0=np.exp(np.random.randn(N))
 
 #number of kids at baseline
 nkids0=x_df[ ['nkids_baseline']   ].values
@@ -179,13 +179,13 @@ period_y = 2
 dics = []
 choices_list = []
 for j in range(len(models_list)):
-	output_ins=estimate.Estimate(param0,x_w,x_m,x_k,x_wmk,passign,agech0,theta0,nkids0,
+	output_ins=estimate.Estimate(param0,x_w,x_m,x_k,x_wmk,passign,agech0,nkids0,
 		married0,D,dict_grid,M,N,moments_vector,var_cov,hours_p,hours_f,
 		models_list[j][0],models_list[j][1],models_list[j][2])
 
 	hours = np.zeros(N) #arbitrary to initialize model instance
 	childcare  = np.zeros(N)
-	model = util.Utility(param0,N,x_w,x_m,x_k,passign,theta0,nkids0,married0,hours,childcare,
+	model = util.Utility(param0,N,x_w,x_m,x_k,passign,nkids0,married0,hours,childcare,
 		agech0,hours_p,hours_f,models_list[j][0],models_list[j][1],models_list[j][2])
 
 	np.random.seed(1)
@@ -204,9 +204,9 @@ for j in range(len(models_list)):
 
 
 outcome_list = ['Consumption (US\$)', 'Part-time', 'Full-time', 'Child care',
-r'$\ln \theta$ ($\sigma$s)', 'Utility']
+r'$\ln \theta$ ($\sigma$s)']
 
-output_list = ['Consumption', 'Part-time', 'Full-time', 'CC', 'Theta', 'Welfare']
+output_list = ['Consumption', 'Part-time', 'Full-time', 'CC', 'Theta']
 
 with open('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/experiments/NH/table_nhpol.tex','w') as f:
 	f.write(r'\begin{tabular}{lcccccccccccc}'+'\n')

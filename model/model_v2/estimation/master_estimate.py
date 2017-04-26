@@ -122,7 +122,7 @@ cpi =  pickle.load( open( '/mnt/Research/nealresearch/new-hope-secure/newhopemou
 ###
 
 #Assuming random start
-theta0=np.exp(np.random.randn(N))
+#theta0=np.exp(np.random.randn(N))
 
 #number of kids at baseline
 nkids0=x_df[ ['nkids_baseline']   ].values
@@ -159,7 +159,7 @@ for i in range(var_cov.shape[0]):
 dict_grid=gridemax.grid()
 
 #For montercarlo integration
-D=100
+D=50
 
 #For II procedure
 M=1000
@@ -174,7 +174,7 @@ wr=1
 cs=1
 ws=1
 
-output_ins=estimate.Estimate(param0,x_w,x_m,x_k,x_wmk,passign,agech0,theta0,nkids0,
+output_ins=estimate.Estimate(param0,x_w,x_m,x_k,x_wmk,passign,agech0,nkids0,
 	married0,D,dict_grid,M,N,moments_vector,w_matrix,hours_p,hours_f,
 	wr,cs,ws)
 

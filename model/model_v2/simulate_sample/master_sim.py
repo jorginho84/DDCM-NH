@@ -134,7 +134,7 @@ cpi =  pickle.load( open( '/mnt/Research/nealresearch/new-hope-secure/newhopemou
 ###
 
 #Assuming random start
-theta0=np.exp(np.random.randn(N))
+#theta0=np.exp(np.random.randn(N))
 
 
 #number of kids at baseline
@@ -164,7 +164,7 @@ childcare = np.zeros(N)
 wr,cs,ws=1,1,1
 
 #This is an arbitrary initialization of Utility class
-model = util.Utility(param,N,x_w,x_m,x_k,passign,theta0,nkids0,married0,hours,childcare,
+model = util.Utility(param,N,x_w,x_m,x_k,passign,nkids0,married0,hours,childcare,
 	agech0,hours_p,hours_f,wr,cs,ws)
 
 #This modifes model's budget set
@@ -208,8 +208,7 @@ print ''
 print ''
 
 
-sim_ins=simdata.SimData(N,param,emax_dic,x_w,x_m,x_k,x_wmk,passign,theta0,\
-	nkids0,married0,agech0,hours_p,hours_f,wr,cs,ws,model)
+sim_ins=simdata.SimData(N,param,emax_dic,x_w,x_m,x_k,x_wmk,passign,nkids0,married0,agech0,hours_p,hours_f,wr,cs,ws,model)
 data_dic=sim_ins.fake_data(9) #9 periods (t=0 to t=8)
 
 

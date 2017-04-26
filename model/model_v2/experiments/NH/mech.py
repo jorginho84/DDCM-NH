@@ -122,8 +122,8 @@ cpi =  pickle.load( open( '/mnt/Research/nealresearch/new-hope-secure/newhopemou
 ###
 
 #Assuming random start
-theta0=np.exp(np.random.randn(N))
-#theta0=np.ones(N)
+#theta0=np.exp(np.random.randn(N))
+
 
 #number of kids at baseline
 nkids0=x_df[ ['nkids_baseline']   ].values
@@ -170,7 +170,7 @@ cs=1
 ws=1
 
 #The estimate class
-output_ins=estimate.Estimate(param0,x_w,x_m,x_k,x_wmk,passign,agech0,theta0,nkids0,
+output_ins=estimate.Estimate(param0,x_w,x_m,x_k,x_wmk,passign,agech0,nkids0,
 	married0,D,dict_grid,M,N,moments_vector,var_cov,hours_p,hours_f,
 	wr,cs,ws)
 
@@ -179,7 +179,7 @@ hours = np.zeros(N)
 childcare  = np.zeros(N)
 
 model  = util.Utility(param0,N,x_w,x_m,x_k,passign,
-	theta0,nkids0,married0,hours,childcare,agech0,hours_p,hours_f,wr,cs,ws)
+	nkids0,married0,hours,childcare,agech0,hours_p,hours_f,wr,cs,ws)
 
 #Obtaining emax instance: this is fixed throughout the exercise
 emax_instance = output_ins.emax(param0,model)
@@ -205,7 +205,7 @@ models = []
 for j in range(2):
 	passign_aux=j*np.ones((N,1))
 	models.append(Prod2(param0,N,x_w,x_m,x_k,passign,
-		theta0,nkids0,married0,hours,childcare,agech0,hours_p,hours_f,wr,cs,ws))
+		nkids0,married0,hours,childcare,agech0,hours_p,hours_f,wr,cs,ws))
 	output_ins.__dict__['passign'] = passign_aux
 	choices_c['Choice_' + str(j)] = output_ins.samples(param0,emax_instance,models[j])
 

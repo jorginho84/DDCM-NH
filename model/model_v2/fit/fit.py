@@ -45,7 +45,7 @@ import estimate as estimate
 
 np.random.seed(1)
 
-betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv7_v2_e3.npy')
+betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv7_v2_e5.npy')
 
 #Utility function
 eta=betas_nelder[0]
@@ -134,7 +134,7 @@ cpi =  pickle.load( open( '/mnt/Research/nealresearch/new-hope-secure/newhopemou
 ###
 
 #Assuming random start
-theta0=np.exp(np.random.randn(N))
+#theta0=np.exp(np.random.randn(N))
 
 #number of kids at baseline
 nkids0=x_df[ ['nkids_baseline']   ].values
@@ -182,7 +182,7 @@ wr=1
 cs=1
 ws=1
 
-output_ins=estimate.Estimate(param0,x_w,x_m,x_k,x_wmk,passign,agech0,theta0,nkids0,
+output_ins=estimate.Estimate(param0,x_w,x_m,x_k,x_wmk,passign,agech0,nkids0,
 	married0,D,dict_grid,M,N,moments_vector,var_cov,hours_p,hours_f,
 	wr,cs,ws)
 
@@ -191,7 +191,7 @@ hours = np.zeros(N)
 childcare  = np.zeros(N)
 
 model  = util.Utility(param0,N,x_w,x_m,x_k,passign,
-	theta0,nkids0,married0,hours,childcare,agech0,hours_p,hours_f,wr,cs,ws)
+	nkids0,married0,hours,childcare,agech0,hours_p,hours_f,wr,cs,ws)
 
 #Obtaining emax instances, samples, and betas for M samples
 np.random.seed(1)

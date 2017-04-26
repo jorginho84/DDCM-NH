@@ -147,7 +147,6 @@ class SEs:
 		x_m=self.output_ins.__dict__['x_m']
 		x_k=self.output_ins.__dict__['x_k']
 		passign=self.output_ins.__dict__['passign']
-		theta0=self.output_ins.__dict__['theta0']
 		nkids0=self.output_ins.__dict__['nkids0']
 		married0=self.output_ins.__dict__['married0']
 		hours = np.zeros(N)
@@ -160,7 +159,7 @@ class SEs:
 		ws=self.output_ins.__dict__['ws']
 
 
-		model  = util.Utility(param0,N,x_w,x_m,x_k,	passign,theta0,nkids0,
+		model  = util.Utility(param0,N,x_w,x_m,x_k,	passign,nkids0,
 			married0,hours,childcare,agech0,hours_p,hours_f,wr,cs,ws)
 
 		#Computing the emax

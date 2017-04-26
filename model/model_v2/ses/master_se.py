@@ -118,7 +118,7 @@ cpi =  pickle.load( open( '/mnt/Research/nealresearch/new-hope-secure/newhopemou
 
 
 #Assuming random start
-theta0=np.exp(np.random.randn(N))
+#theta0=np.exp(np.random.randn(N))
 
 #number of kids at baseline
 nkids0=x_df[ ['nkids_baseline']   ].values
@@ -169,7 +169,7 @@ cs=1
 ws=1
 
 #The estimate class
-output_ins=estimate.Estimate(param0,x_w,x_m,x_k,x_wmk,passign,agech0,theta0,nkids0,
+output_ins=estimate.Estimate(param0,x_w,x_m,x_k,x_wmk,passign,agech0,nkids0,
 	married0,D,dict_grid,M,N,moments_vector,w_matrix,hours_p,hours_f,
 	wr,cs,ws)
 

@@ -25,7 +25,7 @@ import simdata as simdata
 
 np.random.seed(1)
 
-betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv6_v1.npy')
+betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv7_v2_e5.npy')
 
 #Utility function
 eta=betas_nelder[0]
@@ -35,18 +35,18 @@ alpha_cc=betas_nelder[3]
 
 
 #wage process
-wagep_betas=np.array([-betas_nelder[4],-betas_nelder[5],betas_nelder[6],
-	0.3,1.3,betas_nelder[8]]).reshape((6,1))
+wagep_betas=np.array([betas_nelder[4],betas_nelder[5],betas_nelder[6],
+	betas_nelder[7],betas_nelder[8],betas_nelder[9]]).reshape((6,1))
 
 #Production function [young[cc0,cc1],old]
-gamma1=[betas_nelder[9],betas_nelder[11]]
-gamma2=[betas_nelder[10],betas_nelder[12]]
-tfp=betas_nelder[13]
+gamma1=[betas_nelder[10],betas_nelder[12]]
+gamma2=[betas_nelder[11],betas_nelder[13]]
+tfp=betas_nelder[14]
 sigmatheta=0
 
 #Measurement system: three measures for t=2, one for t=5
-kappas=[[betas_nelder[14],betas_nelder[15],betas_nelder[16],betas_nelder[17]],
-[betas_nelder[18],betas_nelder[19],betas_nelder[20],betas_nelder[21]]]
+kappas=[[betas_nelder[15],betas_nelder[16],betas_nelder[17],betas_nelder[18]],
+[betas_nelder[19],betas_nelder[20],betas_nelder[21],betas_nelder[22]]]
 #First measure is normalized. starting arbitrary values
 lambdas=[1,1]
 
@@ -138,7 +138,7 @@ childcare = np.zeros(N)
 wr,cs,ws=1,1,1
 
 #This is an arbitrary initialization of Utility class
-model = util.Utility(param0,N,x_w,x_m,x_k,passign,theta0,nkids0,married0,hours,childcare,
+model = util.Utility(param0,N,x_w,x_m,x_k,passign,nkids0,married0,hours,childcare,
 	agech0,hours_p,hours_f,wr,cs,ws)
 
 ######################################################################

@@ -49,28 +49,30 @@ np.random.seed(1);
 #Sample size
 #N=315
 
-betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv6_v1.npy')
+betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv7_v2_e5.npy')
 
 #Utility function
 eta=betas_nelder[0]
-alphap=-0.1
-alphaf=-0.24
-alpha_cc=-0.75
+alphap=betas_nelder[1]
+alphaf=betas_nelder[2]
+alpha_cc=betas_nelder[3]
+alpha_home_hf=-0.3
+
 
 
 #wage process
-wagep_betas=np.array([-0.025,0.0003,betas_nelder[6],
-	0.37,1.5,0.8]).reshape((6,1))
+wagep_betas=np.array([betas_nelder[4],betas_nelder[5],betas_nelder[6],
+	betas_nelder[7],betas_nelder[8],betas_nelder[9]]).reshape((6,1))
 
 #Production function [young[cc0,cc1],old]
-gamma1=[betas_nelder[9],betas_nelder[11]]
-gamma2=[betas_nelder[10],betas_nelder[12]]
-tfp=0.4
+gamma1=[betas_nelder[10],betas_nelder[12]]
+gamma2=[betas_nelder[11],betas_nelder[13]]
+tfp=betas_nelder[14]
 sigmatheta=0
 
 #Measurement system: three measures for t=2, one for t=5
-kappas=[[betas_nelder[14],betas_nelder[15],betas_nelder[16],betas_nelder[17]],
-[betas_nelder[18],betas_nelder[19],betas_nelder[20],betas_nelder[21]]]
+kappas=[[betas_nelder[15],betas_nelder[16],betas_nelder[17],betas_nelder[18]],
+[betas_nelder[19],betas_nelder[20],betas_nelder[21],betas_nelder[22]]]
 #All factor loadings are normalized
 lambdas=[1,1]
 
@@ -147,7 +149,7 @@ married0=x_df[ ['d_marital_2']   ].values
 agech0=x_df[['age_t0']].values
 
 #Defines the instance with parameters
-param=util.Parameters(alphap, alphaf, eta, alpha_cc,gamma1, gamma2,tfp,sigmatheta,
+param=util.Parameters(alphap,alphaf,eta,alpha_cc,alpha_home_hf,gamma1,gamma2,tfp,sigmatheta,
 	wagep_betas, marriagep_betas, kidsp_betas, eitc_list,afdc_list,snap_list,
 	cpi,q,scalew,shapew,lambdas,kappas,pafdc,psnap)
 

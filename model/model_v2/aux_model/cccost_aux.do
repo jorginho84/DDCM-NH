@@ -28,11 +28,11 @@ set maxvar 15000
 use "/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/sample_model_v2.dta", clear
 
 *Share of individuals with free child care
-sum d_free if p_assign=="C" &  cc_pay_t1!=. & age_t0<=5 & d_CC2_t1==1
+sum d_free if p_assign=="C" &  cc_pay_t1!=. & age_t0<=6 & d_CC2_t1==1
 mat q_prob=r(mean)
 
 *Distribution of prices for formal care users
-keep if cc_pay_t1>0 & p_assign=="C" & cc_pay_t1!=. & age_t0<=5 & d_CC2_t1==1
+keep if cc_pay_t1>0 & p_assign=="C" & cc_pay_t1!=. & age_t0<=6 & d_CC2_t1==1
 rename cc_pay_t1 x
 replace x=x*12
 mlexp ( ln( exp({k}) ) + (exp({k})-1)*ln(x) - exp({k})*ln(exp({lambda})) - (x/exp({lambda}))^(exp({k})) )

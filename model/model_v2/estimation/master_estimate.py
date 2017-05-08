@@ -41,6 +41,7 @@ eta=betas_nelder[0]
 alphap=betas_nelder[1]
 alphaf=betas_nelder[2]
 alpha_cc=betas_nelder[3]
+alpha_home_hf=-0.3
 
 
 
@@ -134,7 +135,7 @@ married0=x_df[ ['d_marital_2']   ].values
 agech0=x_df[['age_t0']].values
 
 #Defines the instance with parameters
-param0=util.Parameters(alphap, alphaf, eta, alpha_cc,gamma1, gamma2, tfp, sigmatheta,
+param0=util.Parameters(alphap, alphaf, eta, alpha_cc,alpha_home_hf,gamma1, gamma2, tfp, sigmatheta,
 	wagep_betas, marriagep_betas, kidsp_betas, eitc_list,afdc_list,snap_list,
 	cpi,q,scalew,shapew,lambdas,kappas,pafdc,psnap)
 
@@ -194,25 +195,26 @@ eta_opt=output.x[0]
 alphap_opt=output.x[1]
 alphaf_opt=output.x[2]
 alphacc_opt=output.x[3]
-betaw0=output.x[4]
-betaw1=output.x[5]
-betaw2=output.x[6]
-betaw3=output.x[7]
-betaw4=output.x[8]
-betaw5=np.exp(output.x[9])
-gamma1_young_cc1=sym(output.x[10])
-gamma2_young_cc1=sym(output.x[11])
-gamma1_old=sym(output.x[12])
-gamma2_old=sym(output.x[13])
-tfp_opt=output.x[14]
-kappas_00=output.x[15]
-kappas_01=output.x[16]
-kappas_02=output.x[17]
-kappas_03=output.x[18]
-kappas_10=output.x[19]
-kappas_11=output.x[20]
-kappas_12=output.x[21]
-kappas_13=output.x[22]
+alpha_home_hf_opt=output.x[4]
+betaw0=output.x[5]
+betaw1=output.x[6]
+betaw2=output.x[7]
+betaw3=output.x[8]
+betaw4=output.x[9]
+betaw5=np.exp(output.x[10])
+gamma1_young_cc1=sym(output.x[11])
+gamma2_young_cc1=sym(output.x[12])
+gamma1_old=sym(output.x[13])
+gamma2_old=sym(output.x[14])
+tfp_opt=output.x[15]
+kappas_00=output.x[16]
+kappas_01=output.x[17]
+kappas_02=output.x[18]
+kappas_03=output.x[19]
+kappas_10=output.x[20]
+kappas_11=output.x[21]
+kappas_12=output.x[22]
+kappas_13=output.x[23]
 
 
 betas_opt=np.array([eta_opt, alphap_opt,alphaf_opt,alphacc_opt,betaw0,betaw1,betaw2,

@@ -160,6 +160,17 @@ class Estimate:
 		beta_hours2=np.mean(hours_aux_2[boo_h,:],axis=0)
 		beta_hours3=np.mean(hours_aux_3[boo_h,:],axis=0)
 
+		#Change in full-time b/c of cc
+		choices_aux=choice_matrix[:,1,:].copy() #t=1
+		age_aux = age_child[:,1].copy()
+		boo_age=age_aux<=6
+		cc_logit=(choices_aux>=3)
+		home_logit=(choices_aux<3)
+		full_logit = (choices_aux==2) | (choices_aux==5)
+		beta_cc_home = np.zeros(self.M) #1 moment
+		for j in range(self.M):
+			beta_cc_home[j] = np.mean(full_logit[(cc_logit[:,j]) & (boo_age),j]) - np.mean(full_logit[(home_logit[:,j]) & (boo_age),j]) 
+
 		############################################################
 		####Aux to identify wage process############################
 		############################################################
@@ -261,9 +272,10 @@ class Estimate:
 		
 		
 		return{'beta_childcare':beta_childcare,'beta_hours1': beta_hours1,
-		'beta_hours2':beta_hours2,'beta_hours3':beta_hours3,'beta_wagep': beta_wagep, 
-		'beta_kappas_t2': beta_kappas_t2,'beta_inputs_old':beta_inputs_old,
-		'beta_inputs_young_cc1':beta_inputs_young_cc1,'beta_kappas_t5':beta_kappas_t5		}
+		'beta_hours2':beta_hours2,'beta_hours3':beta_hours3,'beta_cc_home':beta_cc_home,
+		'beta_wagep': beta_wagep,'beta_kappas_t2': beta_kappas_t2,
+		'beta_inputs_old':beta_inputs_old,'beta_inputs_young_cc1':beta_inputs_young_cc1,
+		'beta_kappas_t5':beta_kappas_t5		}
 	
 	
 	def ll(self,beta):
@@ -284,25 +296,26 @@ class Estimate:
 		self.param0.alphap=beta[1]
 		self.param0.alphaf=beta[2]
 		self.param0.alpha_cc=beta[3]
-		self.param0.betaw[0]=beta[4]
-		self.param0.betaw[1]=beta[5]
-		self.param0.betaw[2]=beta[6]
-		self.param0.betaw[3]=beta[7]
-		self.param0.betaw[4]=beta[8]
-		self.param0.betaw[5]=np.exp(beta[9])
-		self.param0.gamma1[0]=sym(beta[10])
-		self.param0.gamma2[0]=sym(beta[11])
-		self.param0.gamma1[1]=sym(beta[12])
-		self.param0.gamma2[1]=sym(beta[13])
-		self.param0.tfp=beta[14]
-		self.param0.kappas[0][0]=beta[15]
-		self.param0.kappas[0][1]=beta[16]
-		self.param0.kappas[0][2]=beta[17]
-		self.param0.kappas[0][3]=beta[18]
-		self.param0.kappas[1][0]=beta[19]
-		self.param0.kappas[1][1]=beta[20]
-		self.param0.kappas[1][2]=beta[21]
-		self.param0.kappas[1][3]=beta[22]
+		self.param0.alpha_home_hf=beta[4]
+		self.param0.betaw[0]=beta[5]
+		self.param0.betaw[1]=beta[6]
+		self.param0.betaw[2]=beta[7]
+		self.param0.betaw[3]=beta[8]
+		self.param0.betaw[4]=beta[9]
+		self.param0.betaw[5]=np.exp(beta[10])
+		self.param0.gamma1[0]=sym(beta[11])
+		self.param0.gamma2[0]=sym(beta[12])
+		self.param0.gamma1[1]=sym(beta[13])
+		self.param0.gamma2[1]=sym(beta[14])
+		self.param0.tfp=beta[15]
+		self.param0.kappas[0][0]=beta[16]
+		self.param0.kappas[0][1]=beta[17]
+		self.param0.kappas[0][2]=beta[18]
+		self.param0.kappas[0][3]=beta[19]
+		self.param0.kappas[1][0]=beta[20]
+		self.param0.kappas[1][1]=beta[21]
+		self.param0.kappas[1][2]=beta[22]
+		self.param0.kappas[1][3]=beta[23]
 			
 
 		#The model (utility instance)
@@ -341,6 +354,7 @@ class Estimate:
 		beta_hours1=np.mean(dic_betas['beta_hours1'],axis=0) #1x1
 		beta_hours2=np.mean(dic_betas['beta_hours2'],axis=0) #1x1
 		beta_hours3=np.mean(dic_betas['beta_hours3'],axis=0) #1x1
+		beta_cc_home=np.mean(dic_betas['beta_cc_home'],axis=0) #1x1
 		beta_wagep=np.mean(dic_betas['beta_wagep'],axis=1) # 5 x 1
 		beta_kappas_t2=np.mean(dic_betas['beta_kappas_t2'],axis=1) #4 x 1
 		beta_kappas_t5=np.mean(dic_betas['beta_kappas_t5'],axis=1) #4 x 1
@@ -354,7 +368,7 @@ class Estimate:
 		###########################################################################
 
 		#Number of moments to match
-		num_par=beta_childcare.size + beta_hours1.size + beta_hours2.size + beta_hours3.size + beta_wagep.size + beta_kappas_t2.size +  beta_kappas_t5.size + beta_inputs_old.size + beta_inputs_young_cc1.size
+		num_par=beta_childcare.size + beta_hours1.size + beta_hours2.size + beta_hours3.size + beta_cc_home.size + beta_wagep.size + beta_kappas_t2.size +  beta_kappas_t5.size + beta_inputs_old.size + beta_inputs_young_cc1.size
 		
 		#Outer matrix
 		x_vector=np.zeros((num_par,1))
@@ -372,6 +386,9 @@ class Estimate:
 		x_vector[ind:ind + beta_hours3.size,0]=beta_hours3 - self.moments_vector[ind,0]
 		
 		ind = ind + beta_hours3.size
+		x_vector[ind: ind+ beta_cc_home.size,0]=beta_cc_home - self.moments_vector[ind:ind+ beta_cc_home.size,0]
+		
+		ind = ind + beta_cc_home.size
 		x_vector[ind: ind+ beta_wagep.size,0]=beta_wagep - self.moments_vector[ind:ind+ beta_wagep.size,0]
 		
 		ind = ind + beta_wagep.size
@@ -412,9 +429,9 @@ class Estimate:
 		
 				
 		beta0=np.array([self.param0.eta,self.param0.alphap,self.param0.alphaf,
-			self.param0.alpha_cc,self.param0.betaw[0],self.param0.betaw[1],
-			self.param0.betaw[2],self.param0.betaw[3],self.param0.betaw[4],
-			np.log(self.param0.betaw[5]),
+			self.param0.alpha_cc,self.param0.alpha_home_hf,self.param0.betaw[0],
+			self.param0.betaw[1],self.param0.betaw[2],self.param0.betaw[3],
+			self.param0.betaw[4],np.log(self.param0.betaw[5]),
 			syminv(self.param0.gamma1[0]),syminv(self.param0.gamma2[0]),
 			syminv(self.param0.gamma1[1]),syminv(self.param0.gamma2[1]),
 			self.param0.tfp,

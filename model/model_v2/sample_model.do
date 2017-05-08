@@ -520,10 +520,13 @@ foreach x of numlist 0 1 4 7 {
 
 *Child care payments are divided by two if Child A and B are in a family
 *To real numbers
-duplicates tag sampleid, gen(dupli)
-replace cc_pay_t1=cc_pay_t1*1.1653595/2 if dupli==1
-replace cc_pay_t4=cc_pay_t4*1.0958820/2 if dupli==1
+*duplicates tag sampleid, gen(dupli)
+*replace cc_pay_t1=cc_pay_t1*1.1653595/2 if dupli==1
+*replace cc_pay_t4=cc_pay_t4*1.0958820/2 if dupli==1
 
+replace cc_pay_t1=cc_pay_t1*1.1653595/nkids_baseline
+
+replace cc_pay_t1=cc_pay_t4*1.0958820/nkids_year5
 
 /*
 This is how I'm deciding on hours categories NOT ANYMORE

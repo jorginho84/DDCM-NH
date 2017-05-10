@@ -163,7 +163,7 @@ class Estimate:
 		#Change in full-time b/c of cc
 		choices_aux=choice_matrix[:,1,:].copy() #t=1
 		age_aux = age_child[:,1].copy()
-		boo_age=age_aux<=6
+		boo_age=(age_aux<=6) & (self.passign[:,0]==0)
 		cc_logit=(choices_aux>=3)
 		home_logit=(choices_aux<3)
 		full_logit = (choices_aux==2) | (choices_aux==5)

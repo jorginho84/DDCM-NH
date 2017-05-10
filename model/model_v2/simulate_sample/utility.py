@@ -404,8 +404,9 @@ class Utility(object):
 		#child care cost
 		cc_cost = np.zeros(self.N)
 
+		cc_cost[young & boo_nfree] = price[young & boo_nfree,0].copy()
 		if periodt<=2:
-			cc_cost[young & boo_nfree] = price[young & boo_nfree,0].copy()
+			
 			if self.cs==1:
 				if self.wr==1:
 					cc_cost[boo_ra & d_full & boo_nfree & young] = copayment[boo_ra & d_full & boo_nfree & young].copy()

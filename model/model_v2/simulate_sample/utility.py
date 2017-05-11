@@ -26,12 +26,12 @@ class Parameters:
 	List of structural parameters and prices
 
 	"""
-	def __init__(self,alphap,alphaf,eta,alpha_cc,gamma1,gamma2,tfp,
+	def __init__(self,alphap,alphaf,eta,alpha_cc,alpha_home_hf,gamma1,gamma2,tfp,
 		sigmatheta,betaw,betam,betak,eitc,afdc,snap,cpi,q,scalew,shapew,
 		lambdas,kappas,pafdc,psnap,):
 
 		self.alphap,self.alphaf,self.eta=alphap,alphaf,eta
-		self.alpha_cc=alpha_cc
+		self.alpha_cc,self.alpha_home_hf=alpha_cc,alpha_home_hf
 		self.gamma1,self.gamma2=gamma1,gamma2
 		self.tfp=tfp
 		self.sigmatheta,self.betaw,self.betam,self.betak=sigmatheta,betaw,betam,betak
@@ -404,8 +404,9 @@ class Utility(object):
 		#child care cost
 		cc_cost = np.zeros(self.N)
 
+		cc_cost[young & boo_nfree] = price[young & boo_nfree,0].copy()
 		if periodt<=2:
-			cc_cost[young & boo_nfree] = price[young & boo_nfree,0].copy()
+			
 			if self.cs==1:
 				if self.wr==1:
 					cc_cost[boo_ra & d_full & boo_nfree & young] = copayment[boo_ra & d_full & boo_nfree & young].copy()
@@ -490,9 +491,10 @@ class Utility(object):
 		#parameters
 		ap=self.param.alphap
 		af=self.param.alphaf
+		af_home=self.param.alpha_home_hf
 		eta=self.param.eta
 		ac = self.param.alpha_cc
-		ut_h=d_workp*ap + d_workf*af + cc*ac*d_age
+		ut_h=d_workp*ap + d_workf*(af + (1-cc)*af_home*d_age) + cc*ac*d_age
 
 		#Current-period utility
 		ut=np.log(ct) + ut_h +  eta*ltheta

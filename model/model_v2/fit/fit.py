@@ -51,7 +51,8 @@ betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/re
 eta=betas_nelder[0]
 alphap=betas_nelder[1]
 alphaf=betas_nelder[2]
-alpha_cc=betas_nelder[3]
+alpha_cc=-0.81
+alpha_home_hf=-0.08
 
 
 #wage process
@@ -146,7 +147,7 @@ married0=x_df[ ['d_marital_2']   ].values
 agech0=x_df[['age_t0']].values
 
 #Defines the instance with parameters
-param0=util.Parameters(alphap, alphaf, eta, alpha_cc,gamma1, gamma2, tfp,sigmatheta,
+param0=util.Parameters(alphap, alphaf, eta, alpha_cc,alpha_home_hf,	gamma1, gamma2, tfp,sigmatheta,
 	wagep_betas, marriagep_betas, kidsp_betas, eitc_list,afdc_list,snap_list,
 	cpi,q,scalew,shapew,lambdas,kappas,pafdc,psnap)
 
@@ -205,6 +206,7 @@ beta_childcare=np.mean(dic_betas['beta_childcare'],axis=0) #1x1
 beta_hours1=np.mean(dic_betas['beta_hours1'],axis=0) #1x1
 beta_hours2=np.mean(dic_betas['beta_hours2'],axis=0) #1x1
 beta_hours3=np.mean(dic_betas['beta_hours3'],axis=0) #1x1
+beta_cc_home=np.mean(dic_betas['beta_cc_home'],axis=0) #1x1
 beta_wagep=np.mean(dic_betas['beta_wagep'],axis=1) # 6 x 1
 beta_kappas_t2=np.mean(dic_betas['beta_kappas_t2'],axis=1) #4 x 3
 beta_kappas_t5=np.mean(dic_betas['beta_kappas_t5'],axis=1) #4 x 1

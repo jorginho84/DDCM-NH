@@ -542,11 +542,11 @@ foreach variable of varlist hours_t4 hours_t7{
 	qui ttest `variable' if `variable'>0, by(RA)
 	mat A=(r(mu_1),r(mu_2),0\r(sd_1), r(sd_2), 0)
 
-	 xi: reg `variable' i.RA `control_var' if `variable'>0, vce(`SE')
+	 xi: reg `variable' i.p_assign if `variable'>0, vce(`SE')
 	mat variance=e(V)
 	mat A[2,3]=variance[1,1]^0.5/*replace it with S.E.*/
-	mat A[1,3]=_b[_IRA_2]
-	qui test _IRA_2=0
+	mat A[1,3]=_b[_Ip_assign_2]
+	qui test _Ip_assign_2=0
 	mat b_aux=(r(p)\0)
 	mat data=A,b_aux/*add p-value*/
 

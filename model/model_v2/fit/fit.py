@@ -48,10 +48,10 @@ np.random.seed(1)
 betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv7_v2_e5.npy')
 
 #Utility function
-eta=betas_nelder[0]
-alphap=betas_nelder[1]
-alphaf=betas_nelder[2]
-alpha_cc=-0.81
+eta=0.05
+alphap=-0.02
+alphaf=-0.8
+alpha_cc=-0.3
 alpha_home_hf=-0.08
 
 

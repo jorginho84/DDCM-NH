@@ -128,32 +128,27 @@ class Estimate:
 		############################################################
 
 		#child care at period t=0,1 and 4
-		choices_aux=np.concatenate((choice_matrix[:,1,:], 
-			choice_matrix[:,4,:]),axis=0) #t=1,4
-		age_aux=np.concatenate((age_child[:,1],age_child[:,4]),axis=0)
-		passign_aux=np.concatenate((self.passign[:,0],self.passign[:,0]),axis=0)
+		choices_aux=choice_matrix[:,1,:].copy()
+		age_aux=age_child[:,1].copy()
+		passign_aux=self.passign[:,0].copy()
 		cc_logit=choices_aux>=3
 		boo=(age_aux<=6) & (passign_aux==0)
 		beta_childcare=np.mean(cc_logit[boo,:],axis=0) #beta for every m
 
 
-		#unemployment at period t=0,1 and 4
-		choices_aux=np.concatenate((choice_matrix[:,0,:],choice_matrix[:,1,:], 
-			choice_matrix[:,4,:]),axis=0) #t=1,4
-		age_aux=np.concatenate((age_child[:,0],age_child[:,1],age_child[:,4]),axis=0)
-		passign_aux=np.concatenate((self.passign[:,0],self.passign[:,0],self.passign[:,0]),axis=0)
+		#unemployment at period t=0
+		choices_aux=choice_matrix[:,0,:].copy()
+		age_aux=age_child[:,0].copy()
+		passign_aux=self.passign[:,0].copy()
 		cc_logit=(choices_aux==0) | (choices_aux==3)
 		boo=(age_aux<=6) & (passign_aux==0)
 		beta_hours1=np.mean(cc_logit[boo,:],axis=0) #beta for every m
 				
 
-		#mean hours at t=0,1,4 and 7
-		choices_aux=np.concatenate((choice_matrix[:,0,:],choice_matrix[:,1,:],
-			choice_matrix[:,4,:],choice_matrix[:,7,:]),axis=0)
-		passign_aux=np.concatenate((self.passign[:,0],self.passign[:,0],
-			self.passign[:,0],self.passign[:,0]),axis=0)
-		age_aux=np.concatenate((age_child[:,0],age_child[:,1],age_child[:,4],
-			age_child[:,7]),axis=0)
+		#mean hours at t=0
+		choices_aux==choice_matrix[:,0,:].copy()
+		passign_aux=self.passign[:,0].copy()
+		age_aux==age_child[:,0].copy()
 		hours_aux_2=(choices_aux==1) | (choices_aux==4)
 		hours_aux_3=(choices_aux==2) | (choices_aux==5)
 		boo_h=(passign_aux==0) & (age_aux>6)

@@ -51,8 +51,9 @@ wagep_betas=np.array([betas_nelder[4],betas_nelder[5],betas_nelder[6],
 
 
 #Production function [young[cc0,cc1],old]
-gamma1=[betas_nelder[10],betas_nelder[12]]
-gamma2=[betas_nelder[11],betas_nelder[13]]
+gamma1=betas_nelder[10]
+gamma2=betas_nelder[11]
+gamma3= 1 - gamma1 - gamma2
 tfp=betas_nelder[14]
 sigmatheta=0
 
@@ -135,9 +136,9 @@ married0=x_df[ ['d_marital_2']   ].values
 agech0=x_df[['age_t0']].values
 
 #Defines the instance with parameters
-param0=util.Parameters(alphap, alphaf, eta, alpha_cc,alpha_home_hf,gamma1, gamma2, tfp, sigmatheta,
-	wagep_betas, marriagep_betas, kidsp_betas, eitc_list,afdc_list,snap_list,
-	cpi,q,scalew,shapew,lambdas,kappas,pafdc,psnap)
+param0=util.Parameters(alphap, alphaf, eta, alpha_cc,alpha_home_hf,gamma1,gamma2,
+	gamma3, tfp, sigmatheta,wagep_betas, marriagep_betas, kidsp_betas, 
+	eitc_list,afdc_list,snap_list,cpi,q,scalew,shapew,lambdas,kappas,pafdc,psnap)
 
 
 

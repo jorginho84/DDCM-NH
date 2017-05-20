@@ -10,15 +10,17 @@ This do-file estimates moments based on the SSRS measure.
 *******************************************************
 use "$results/data_aux.dta", clear
 
+*Standardized measures
+foreach x of numlist 2 5 8{
+rename skills_t`x' skills_t`x'_aux
+egen skills_t`x'=std(skills_t`x'_aux)
+
+}
 
 
 *Leisure: 148-hours
 foreach x of numlist 1 4 7{
 	gen l_t`x'=148-hours_t`x'
-	gen ll_t`x'_aux=log(l_t`x')
-	egen mean_ll_t`x'_aux=mean(ll_t`x'_aux)
-	gen ll_t`x'=ll_t`x'_aux - mean_ll_t`x'_aux
-	drop mean_ll_t`x'_aux ll_t`x'_aux
 }
 
 *Income
@@ -27,18 +29,9 @@ gen incomepc_t1=(total_income_y1-cc_pay_t1*12)/(1 + nkids_year2 + married_year2)
 gen incomepc_t4=(total_income_y4-cc_pay_t4*12)/(1 + nkids_year5 + married_year5)
 gen incomepc_t7=(total_income_y7)/(1 + nkids_year8 + married_year8)
 
-replace incomepc_t1=0 if incomepc_t1<0
-replace incomepc_t4=0 if incomepc_t4<0
-replace incomepc_t7=0 if incomepc_t7<0
-
-foreach x of numlist 1 4 7{
-	
-	gen lincomepc_t`x'_aux=log(incomepc_t`x')
-	egen mean_lincomepc_t`x'_aux=mean(lincomepc_t`x'_aux)
-	gen lincomepc_t`x'=lincomepc_t`x'_aux - mean_lincomepc_t`x'_aux
-	drop lincomepc_t`x'_aux mean_lincomepc_t`x'_aux
-
-}
+replace incomepc_t1=1 if incomepc_t1<=0
+replace incomepc_t4=1 if incomepc_t4<=0
+replace incomepc_t7=1 if incomepc_t7<=0
 
 *Age of child
 gen age_t1=age_t0+1
@@ -99,50 +92,12 @@ program input_theta, rclass
 	return scalar mean_out=`mean_1'
 end
 	
-*Old children: prod function
-preserve
-keep if age_t4>6
-*input_diff lincomepc_t4 skills_t5 if (lincomepc_t4!=. & skills_t5!=.)
-qui: corr lincomepc_t4 skills_t5
-mat m_aux = r(C)
-mat inputs_moments_old[1,1]=m_aux[2,1]
-
-*input_diff ll_t4 skills_t5 if (ll_t4!=. & skills_t5!=.)
-qui: corr ll_t4 skills_t5
-mat m_aux = r(C)
-mat inputs_moments_old[2,1]=m_aux[2,1]
-
-*input_theta skills_t2 skills_t5 if (skills_m1_t2!=. & skills_t5!=.)
-*corr skills_t2 skills_t5
-*mat m_aux = r(C)
-*mat inputs_moments_old[3,1]=m_aux[2,1]
-
-restore
 
 
 
 *Young children/cc=0 and 1: production function
 
-preserve
-keep if age_t1<=6 
-*input_diff lincomepc_t1 skills_t2  if (lincomepc_t1!=. & skills_m1_t2!=.)
-qui: corr lincomepc_t1 skills_t2
-mat m_aux = r(C)
-mat inputs_moments_young_cc1[1,1]=m_aux[2,1]
 
-*input_diff ll_t1 skills_t2  if (ll_t1!=. & skills_m1_t2!=.)
-corr ll_t1 skills_t2
-mat m_aux = r(C)
-mat inputs_moments_young_cc1[2,1]=m_aux[2,1]
-
-*input_theta skills_t2 skills_t5 if (skills_m1_t2!=. & skills_t5!=.)
-*corr skills_t2 skills_t5
-*mat m_aux = r(C)
-*mat inputs_moments_young_cc1[3,1]=m_aux[2,1]
-
-restore
-		
-	
 
 
 preserve
@@ -182,4 +137,5 @@ mat betas_prod = prob_inc_t2\prob_inc_t5\inputs_moments_old\/*
 
 
 program drop input_diff input_theta 
+
 

@@ -51,34 +51,20 @@ for c in range(4):
 
 #C. Measures of academic achievement and family choices
 ind = ind +4
-#C.1 and C.2 Age>5 and Age<=5
-list_aux = [beta_inputs_old_sim, beta_inputs_young_cc1_sim]
-list_obs = [moments_vector[ind:ind + 2,0], moments_vector[ind+2 : ind + 5,0]]
-list_sig = [se_vector[ind:ind + 2], se_vector[ind+2: ind + 5]]
+#C. prod fn
+list_aux = [beta_inputs]
+list_obs = [moments_vector[ind:ind +4 ,0]]
+list_sig = [se_vector[ind:ind + 4]]
 
 for j in range(2):
-	if j==0:
-		pos = 21
-		for c in range(2): 
-			sim_moment = ws.cell('B' + str(c + pos))
-			obs_moment = ws.cell('D' + str(c + pos))
-			obs_sigma = ws.cell('F' + str(c + pos))
-			sim_moment.value = np.float(list_aux[j][c])
-			obs_moment.value = np.float(list_obs[j][c])
-			obs_sigma.value = np.float(list_sig[j][c])
+	pos = 21
+	for c in range(3): 
+		sim_moment = ws.cell('B' + str(c + pos))
+		obs_moment = ws.cell('D' + str(c + pos))
+		obs_sigma = ws.cell('F' + str(c + pos))
+		sim_moment.value = np.float(list_aux[0][c])
+		obs_moment.value = np.float(list_obs[0][c])
+		obs_sigma.value = np.float(list_sig[0][c])
 		
-	#the last one identified tfp
-	else:
-		pos = 23
-			
-		for c in range(3):
-			sim_moment = ws.cell('B' + str(c + pos))
-			obs_moment = ws.cell('D' + str(c + pos))
-			obs_sigma = ws.cell('F' + str(c + pos))
-			sim_moment.value = np.float(list_aux[j][c])
-			obs_moment.value = np.float(list_obs[j][c])
-			obs_sigma.value = np.float(list_sig[j][c])
-
-
-
+	
 wb.save('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/fit/fit.xlsx')

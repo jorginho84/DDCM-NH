@@ -47,7 +47,7 @@ gen age_t7=age_t0+7
 matrix prob_inc_t2=J(4,1,.)
 local obs=1
 foreach j of numlist 2 3 4 5{
-	gen d_prob=skills_t2==`j'
+	gen d_prob=skills_t2_aux==`j'
 	replace d_prob=. if  skills_t2==.
 	qui: sum d_prob if d_prob!=.
 	mat beta_aux=r(mean)
@@ -64,47 +64,23 @@ foreach j of numlist 2 3 4 5{
 ********************************************************************
 
 *To identify gammas (production function): 2 x 1 matrix
-mat inputs_moments_old=J(2,1,.)
-mat inputs_moments_young_cc1=J(3,1,.)
-
-mat sigma_inputs_moments_old=J(2,1,.)
-mat sigma_inputs_moments_young_cc1=J(3,1,.)
-
-program input_diff, rclass
-	version 13
-	args loginput z_m
-	tempname  mean_1 mean_2
-	qui: sum `loginput' if `z_m'>=3
-	scalar `mean_1'=r(mean)
-	qui: sum `loginput' if `z_m'<3
-	scalar `mean_2'=r(mean)
-	return scalar diff=`mean_1' - `mean_2'
-end
-
-program input_theta, rclass
-	version 13
-	args z_t2 z_t5
-	tempname dummy_t5 dummy_t2 mean_1
-	gen `dummy_t2'=`z_t2'>=3
-	gen `dummy_t5'=`z_t5'>=3
-	qui: sum `dummy_t5' if `dummy_t2'==1
-	scalar `mean_1'=r(mean)
-	return scalar mean_out=`mean_1'
-end
-	
+mat inputs_moments=J(4,1,.)
 
 
 
-*Young children/cc=0 and 1: production function
+corr skills_t2 skills_t5
+mat inputs_moments[1,1] = r(rho)
+
+corr skills_t2 incomepc_t1
+mat inputs_moments[2,1] = r(rho)
+
+corr skills_t2 l_t1
+mat inputs_moments[3,1] = r(rho)
+
+reg skills_t2 d_CC2_t1 if age_t1<=6
+mat inputs_moments[4,1] = _b[d_CC2_t1]
 
 
-
-
-preserve
-keep if age_t1<=6
-qui: reg skills_t2 d_CC2_t1
-mat inputs_moments_young_cc1[3,1]=_b[d_CC2_t1]
-restore
 
 **********************************************************************************************
 **********************************************************************************************
@@ -115,7 +91,7 @@ restore
 matrix prob_inc_t5=J(4,1,.)
 local jj=1
 foreach j of numlist 2 3 4 5{
-	gen d_prob=skills_t5==`j'
+	gen d_prob=skills_t5_aux==`j'
 	replace d_prob=. if  skills_t5==.
 	sum d_prob if d_prob!=.
 	mat prob_inc_t5[`jj',1]=r(mean)
@@ -132,10 +108,9 @@ foreach j of numlist 2 3 4 5{
 **********************************************
 /*Saving betas*/
 
-mat betas_prod = prob_inc_t2\prob_inc_t5\inputs_moments_old\/*
-*/inputs_moments_young_cc1 
+mat betas_prod = prob_inc_t2\prob_inc_t5\inputs_moments
 
 
-program drop input_diff input_theta 
+
 
 

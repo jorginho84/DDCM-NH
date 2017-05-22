@@ -224,6 +224,14 @@ class Estimate:
 
 		ssrs_t2_matrix=choices['ssrs_t2_matrix'].copy()
 		ssrs_t5_matrix=choices['ssrs_t5_matrix'].copy()
+
+		ssrs_t2_matrix_se=np.zeros((self.N,self.M))
+		ssrs_t5_matrix_se=np.zeros((self.N,self.M))
+
+		for j in range(self.M):
+			ssrs_t2_matrix_se[:,j]=(ssrs_t2_matrix[:,j] - np.mean(ssrs_t2_matrix[:,j]))/np.std(ssrs_t2_matrix[:,j])
+			ssrs_t5_matrix_se[:,j]=(ssrs_t5_matrix[:,j] - np.mean(ssrs_t5_matrix[:,j]))/np.std(ssrs_t5_matrix[:,j])
+
 		
 		consumption_matrix=choices['consumption_matrix'].copy()
 		lconsumption_matrix=np.log(consumption_matrix) - np.mean(np.log(consumption_matrix),axis=0)
@@ -232,6 +240,18 @@ class Estimate:
 		hours_matrix=choices['hours_matrix'].copy()
 		leisure_matrix=148-hours_matrix
 		lleisure_matrix=np.log(leisure_matrix) - np.mean(np.log(leisure_matrix),axis=0)
+
+		#to panel
+		consumption_aux=np.concatenate((consumption_matrix[:,1,:],
+			consumption_matrix[:,4,:]),axis=0)
+		leisure_aux=np.concatenate((leisure_matrix[:,1,:],
+			leisure_matrix[:,4,:]),axis=0)
+		choice_aux=np.concatenate((choice_matrix[:,1,:],
+			choice_matrix[:,4,:]),axis=0)
+		age_aux=np.concatenate((age_child[:,1],
+			age_child[:,4]),axis=0)
+		ssrs_aux=np.concatenate((ssrs_t2_matrix_se,
+			ssrs_t5_matrix_se),axis=0)
 
 		beta_kappas_t2=np.zeros((4,self.M)) #4 moments
 		beta_inputs=np.zeros((4,self.M)) #4 moments
@@ -242,21 +262,16 @@ class Estimate:
 			beta_kappas_t2[z-2,:]=np.mean(boo,axis=0)
 
 			
-		boo_old=age_child[:,4]>6 #older than 6 at t=4
-		boo_young=age_child[:,1]<=6 #less than 6 at t=1
-
-
 		for j in range(self.M):
-			boo_ssrs2=(ssrs_t2_matrix[:,j]>=3) & (boo_old)
-			beta_inputs[0,j] = np.corrcoef(ssrs_t2_matrix[:,j],ssrs_t5_matrix[:,j])[1,0]
-			beta_inputs[1,j] = np.corrcoef(ssrs_t2_matrix[:,j],consumption_matrix[:,1,j])[1,0]
-			beta_inputs[2,j] = np.corrcoef(ssrs_t2_matrix[:,j],leisure_matrix[:,1,j])[1,0]
+			beta_inputs[0,j] = np.corrcoef(ssrs_t2_matrix_se[:,j],ssrs_t5_matrix_se[:,j])[1,0]
+			beta_inputs[1,j] = np.corrcoef(ssrs_aux[:,j],consumption_aux[:,j])[1,0]
+			beta_inputs[2,j] = np.corrcoef(ssrs_aux[:,j],leisure_aux[:,j])[1,0]
 			
-			b_cc0=choice_matrix[:,1,j]<3 #child care choice=0 at t=1
-			b_cc1=choice_matrix[:,1,j]>=3 #child care choice=1 at t=1
-			boo_young_cc0 = (boo_young==True) & (b_cc0==True)
-			boo_young_cc1 = (boo_young==True) & (b_cc1==True)
-			beta_inputs[3,j] = np.mean(ssrs_t2_matrix[boo_young_cc1,j]) - np.mean(ssrs_t2_matrix[boo_young_cc0,j])
+			b_cc0=choice_aux[:,j]<3 #child care choice=0 at t=1
+			b_cc1=choice_aux[:,j]>=3 #child care choice=1 at t=1
+			boo_young_cc0 = (age_aux<=6) & (b_cc0==True)
+			boo_young_cc1 = (age_aux<=6) & (b_cc1==True)
+			beta_inputs[3,j] = np.mean(ssrs_aux[boo_young_cc1,j]) - np.mean(ssrs_aux[boo_young_cc0,j])
 
 		
 		for z in range(2,6): #4 rankings

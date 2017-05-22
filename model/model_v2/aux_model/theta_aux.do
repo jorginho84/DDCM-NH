@@ -62,26 +62,35 @@ foreach j of numlist 2 3 4 5{
 *******************************************************************
 /*Identifying period 5 measurement system and prod function*/
 ********************************************************************
+preserve
 
 *To identify gammas (production function): 2 x 1 matrix
 mat inputs_moments=J(4,1,.)
 
-
-
+*To identify gamma1
 corr skills_t2 skills_t5
 mat inputs_moments[1,1] = r(rho)
 
-corr skills_t2 incomepc_t1
+egen id_child = seq()
+rename skills_t2 skills_t1
+rename skills_t5 skills_t4
+keep incomepc_t1 incomepc_t4 skills_t1 skills_t4 l_t1 l_t4 d_CC2_t1 d_CC2_t4 id_child age_t1 age_t4 
+
+reshape long incomepc_t skills_t l_t d_CC2_t age_t, i(id_child) j(year)
+
+
+corr skills_t incomepc_t
 mat inputs_moments[2,1] = r(rho)
 
-corr skills_t2 l_t1
+corr skills_t l_t
 mat inputs_moments[3,1] = r(rho)
 
-reg skills_t2 d_CC2_t1 if age_t1<=6
-mat inputs_moments[4,1] = _b[d_CC2_t1]
+reg skills_t d_CC2_t if age_t<=6
+mat inputs_moments[4,1] = _b[d_CC2_t]
 
 
 
+restore
 **********************************************************************************************
 **********************************************************************************************
 **********************************************************************************************

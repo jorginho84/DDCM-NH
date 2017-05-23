@@ -33,17 +33,15 @@ import estimate as estimate
 
 np.random.seed(1)
 
-betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv7_v2_e3.npy')
+betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv7_v2_e5.npy')
 
 
 #Utility function
-eta=betas_nelder[0]
-alphap=betas_nelder[1]
-alphaf=betas_nelder[2]
-alpha_cc=betas_nelder[3]
-alpha_home_hf=-0.3
-
-
+eta=0.06
+alphap=-0.02
+alphaf=-0.8
+alpha_cc=-0.24
+alpha_home_hf=-0.06
 
 #wage process
 wagep_betas=np.array([betas_nelder[4],betas_nelder[5],betas_nelder[6],
@@ -51,9 +49,9 @@ wagep_betas=np.array([betas_nelder[4],betas_nelder[5],betas_nelder[6],
 
 
 #Production function [young[cc0,cc1],old]
-gamma1=betas_nelder[10]
-gamma2=betas_nelder[11]
-gamma3= 1 - gamma1 - gamma2
+gamma1=0.9
+gamma2= 0.05
+gamma3= 0.05
 tfp=betas_nelder[14]
 sigmatheta=0
 
@@ -217,7 +215,8 @@ kappas_12=output.x[21]
 kappas_13=output.x[22]
 
 
-betas_opt=np.array([eta_opt, alphap_opt,alphaf_opt,alphacc_opt,betaw0,betaw1,betaw2,
+betas_opt=np.array([eta_opt, alphap_opt,alphaf_opt,alphacc_opt,alpha_home_hf_opt,
+	betaw0,betaw1,betaw2,
 	betaw3,betaw4,betaw5,gamma1_opt,gamma2_opt,
 	gamma3_opt,tfp_opt,kappas_00,kappas_01,kappas_02,kappas_03,
 	kappas_10,kappas_11,kappas_12,kappas_13])

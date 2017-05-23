@@ -96,32 +96,218 @@ gen d_ra = .
 replace d_ra = 1 if p_assign=="E"
 replace d_ra = 0 if p_assign=="C"
 
-
-forvalues y=0/8{
-
-	qui xi: reg total_income_y`y' i.p_assign `control_var', vce(`SE')
-	local mean_`y' = _b[_Ip_assign_2]
-	local lb_`y'=_b[_Ip_assign_2] - invttail(e(df_r),0.025)*_se[_Ip_assign_2]
-	local ub_`y'=_b[_Ip_assign_2] + invttail(e(df_r),0.025)*_se[_Ip_assign_2]
-	qui: test _Ip_assign_2=0
-	local pvalue_`y'=r(p)
-
-	qui xi: reg gross_y`y' i.p_assign `control_var', vce(`SE')
-	local mean_gross_`y' = _b[_Ip_assign_2]
-	local lb_gross_`y'=_b[_Ip_assign_2] - invttail(e(df_r),0.025)*_se[_Ip_assign_2]
-	local ub_gross_`y'=_b[_Ip_assign_2] + invttail(e(df_r),0.025)*_se[_Ip_assign_2]
-	qui: test _Ip_assign_2=0
-	local pvalue_gross_`y'=r(p)
-
-	
+*Save temporal data (before panel)
+tempfile data_aux
+save `data_aux', replace
 
 
+*To panel
+keep total_income_y* gross_y* employment_y* afdc_y* fs_y* sup_y* eitc_fed_y* /*
+*/ eitc_state_y* sampleid d_ra p_assign emp_baseline age_ra marital ethnic d_HS2 higrade pastern2
+
+reshape long total_income_y gross_y employment_y afdc_y fs_y eitc_fed_y sup_y  /*
+*/ eitc_state_y, i(sampleid) j(year)
+
+drop if year>8
+
+*Save panel data
+tempfile data_panel
+save `data_panel', replace
+
+
+*Welfare
+egen welfare=rowtotal(afdc_y fs_y)
+
+egen eitc=rowtotal(eitc_fed_y eitc_state_y)
+
+
+**********************************************************************************
+**********************************************************************************
+/*TOTAL INCOME ESTIMATES*/
+
+
+*The regressions
+forvalues t=0/1{/*the periods loop*/
+	preserve
+
+	if `t'==1{
+		keep if year<=2	
+
+	}
+	forvalues j=0/1{/*the control var loop*/
+
+		if `j'==0{
+			local controls ""
+		}
+		else{
+			local controls `control_var'
+		}
+		forvalues x=0/2{/*the sample loop*/
+			if `x'<=1{
+				qui xi: reg total_income_y i.p_assign `controls' if emp_baseline==`x', vce(`SE')	
+			}
+			else{
+				qui xi: reg total_income_y i.p_assign `controls', vce(`SE')		
+			}
+			
+			local total_emp`x'_control`j'_period`t' = string(round(_b[_Ip_assign_2]/1000,0.001),"%9.3f")
+			local se_total_emp`x'_control`j'_period`t'  =string(round(_se[_Ip_assign_2]/1000,0.001),"%9.3f")
+			qui: test _Ip_assign_2=0
+			local pv_total_emp`x'_control`j'_period`t'=r(p)
+
+			if `pv_total_emp`x'_control`j'_period`t''<=.01{
+				local ast_total_emp`x'_control`j'_period`t' ="***"	
+			}
+			else if `pv_total_emp`x'_control`j'_period`t''<=.05 {
+				local ast_total_emp`x'_control`j'_period`t' ="**"		
+			}
+			else if `pv_total_emp`x'_control`j'_period`t''<=.1 {
+				local ast_total_emp`x'_control`j'_period`t' ="*"		
+			}
+			else{
+				local ast_total_emp`x'_control`j'_period`t'=""
+			}
+			
+
+
+
+
+		}
+
+	}
+	restore
 
 }
 
-egen gross_nh_period = rowmean(gross_y0 gross_y1 gross_y2)
 
-qui: ivqte gross_nh_period (d_ra), quantiles(.5 .1 .15 .2 .25 .3 .35 .4 .45 .5 /*
+
+*The Table
+file open tab_income using "$results/Income/table_total_income.tex", write replace
+file write tab_income
+file write tab_income "\begin{tabular}{llccccccc}" _n
+file write tab_income "\hline" _n
+file write tab_income "Sample & & (1)   && (2) & & (3)   & & (4) \bigstrut\\" _n
+file write tab_income "\cline{1-1}\cline{3-3}\cline{5-5}\cline{7-7}\cline{9-9}"_n
+
+file write tab_income "Overall &   & `total_emp2_control0_period0'`ast_total_emp2_control0_period0'   &  & `total_emp2_control0_period1'`ast_total_emp2_control0_period1'  &  & `total_emp2_control1_period0'`ast_total_emp2_control1_period0'   &  & `total_emp2_control1_period1'`ast_total_emp2_control1_period1' \bigstrut[t]\\" _n
+file write tab_income " &   & (`se_total_emp2_control0_period0')   &  & (`se_total_emp2_control0_period1')  &  & (`se_total_emp2_control1_period0')   &  & (`se_total_emp2_control0_period1') \bigstrut[t]\\" _n
+
+file write tab_income "Unemployed at baseline &   & `total_emp0_control0_period0'`ast_total_emp0_control0_period0'   &  & `total_emp0_control0_period1'`ast_total_emp0_control0_period1'  &  & `total_emp0_control1_period0'`ast_total_emp0_control1_period0'   &  & `total_emp0_control1_period1'`ast_total_emp0_control1_period1' \bigstrut[t]\\" _n
+file write tab_income " &   & (`se_total_emp0_control0_period0')   &  & (`se_total_emp0_control0_period1')  &  & (`se_total_emp0_control1_period0')   &  & (`se_total_emp0_control0_period1') \bigstrut[t]\\" _n
+
+file write tab_income "Employed at baseline &   & `total_emp1_control0_period0'`ast_total_emp1_control0_period0'   &  & `total_emp1_control0_period1'`ast_total_emp1_control0_period1'  &  & `total_emp1_control1_period0'`ast_total_emp1_control1_period0'   &  & `total_emp1_control1_period1'`ast_total_emp1_control1_period1' \bigstrut[t]\\" _n
+file write tab_income " &   & (`se_total_emp1_control0_period0')   &  & (`se_total_emp1_control0_period1')  &  & (`se_total_emp1_control1_period0')   &  & (`se_total_emp1_control0_period1') \bigstrut[t]\\" _n
+
+
+file write tab_income "\hline" _n
+file write tab_income "All years &       & $\checkmark$ &       &       &       & $\checkmark$ &       &  \bigstrut[t]\\" _n
+file write tab_income "Years 0-2 &       &       &       & $\checkmark$ &       &       &       & $\checkmark$ \\" _n
+file write tab_income "No controls &       & $\checkmark$ &       & $\checkmark$ &       &       &       &  \\" _n
+file write tab_income "W/ controls &       &       &       &       &       & $\checkmark$ &       & $\checkmark$ \bigstrut[b]\\" _n
+file write tab_income "\hline" _n
+file write tab_income "\end{tabular}" _n
+file close tab_income
+
+*************************************************************************************
+*************************************************************************************
+*************************************************************************************
+/*CONTRIBUTION OF EARNINGS/WELFARE/NH/EITC*/
+
+
+
+************************************************************************************
+*
+
+*For t<=2
+forvalues x=0/2{
+
+	if `x'<=1{
+		qui xi: reg gross_y i.p_assign if emp_baseline==`x' & year<=2, vce(`SE')
+		local dec1_emp`x' = _b[_Ip_assign_2]
+
+		qui xi: reg welfare i.p_assign if emp_baseline==`x' & year<=2, vce(`SE')
+		local dec2_emp`x' = _b[_Ip_assign_2]
+
+		qui xi: reg eitc i.p_assign if emp_baseline==`x' & year<=2, vce(`SE')
+		local dec3_emp`x' = _b[_Ip_assign_2]
+
+		qui xi: reg sup_y i.p_assign if emp_baseline==`x' & year<=2, vce(`SE')
+		local dec4_emp`x' = _b[_Ip_assign_2]
+
+		*shares
+		qui xi: reg total_income_y i.p_assign if emp_baseline==`x' & year<=2, vce(`SE')
+		local tot = _b[_Ip_assign_2]
+
+		forvalues j=1/4{
+			local share_dec`j'_emp`x' = string(round((`dec`j'_emp`x''/`tot')*100,0.01),"%9.2f")
+			local dec`j'_emp`x'=string(round(`dec`j'_emp`x''/1000,0.001),"%9.3f")/*rounding*/
+		}
+		
+
+
+	}
+	else{
+		qui xi: reg gross_y i.p_assign if year<=2, vce(`SE')
+		local dec1_emp`x' = _b[_Ip_assign_2]
+
+		qui xi: reg welfare i.p_assign if year<=2, vce(`SE')
+		local dec2_emp`x' = _b[_Ip_assign_2]
+
+		qui xi: reg eitc i.p_assign if year<=2, vce(`SE')
+		local dec3_emp`x' = _b[_Ip_assign_2]
+
+		qui xi: reg sup_y i.p_assign if year<=2, vce(`SE')
+		local dec4_emp`x' = _b[_Ip_assign_2]
+
+		*shares
+		qui xi: reg total_income_y i.p_assign if year<=2, vce(`SE')
+		local tot = _b[_Ip_assign_2]
+
+		forvalues j=1/4{
+			local share_dec`j'_emp`x' = string(round((`dec`j'_emp`x''/`tot')*100,0.01),"%9.2f")
+			local dec`j'_emp`x'=string(round(`dec`j'_emp`x''/1000,0.001),"%9.3f")/*rounding*/
+		}
+		
+	}
+		
+	
+}
+
+file open tab_dec using "$results/Income/table_income_decomposition.tex", write replace
+file write tab_dec
+file write tab_dec "\begin{tabular}{llccccc}"_n
+file write tab_dec "\hline"_n
+file write tab_dec "      &       & (1)   &       & (2)   &       & (3) \bigstrut\\"_n
+file write tab_dec "   \cline{1-1}\cline{3-3}\cline{5-5}\cline{7-7}"_n
+*the estimates here
+
+local x=1
+foreach name in "Earnings" "Welfare" "EITC" "New Hope"{
+	file write tab_dec " `name' && `dec`x'_emp2'  && `dec`x'_emp0'  && `dec`x'_emp1' \bigstrut[t]\\"_n	
+	file write tab_dec "  && [`share_dec`x'_emp2'\%]  && [`share_dec`x'_emp0'\%]  && [`share_dec`x'_emp1'\%] \bigstrut[t]\\"_n
+	local x=`x'+1
+}
+
+file write tab_dec " Total &&  `total_emp2_control0_period1' && `total_emp0_control0_period1'  && `total_emp1_control0_period1' \bigstrut[t]\\"_n
+file write tab_dec "  &&  [100\%] && [100\%]  && [100\%] \bigstrut[t]\\"_n
+
+file write tab_dec "\hline"_n
+file write tab_dec "Overall & & $\checkmark$      &&        &&   \bigstrut[t]\\"_n
+file write tab_dec "Unemployed at baseline &&       && $\checkmark$      &&  \bigstrut[t]\\"_n
+file write tab_dec "Employed at baseline &&       &&       && $\checkmark$  \bigstrut[t]\\"_n
+file write tab_dec "\hline"_n
+file write tab_dec "\end{tabular}"_n
+file close tab_dec
+
+
+
+***************************************************************************************************
+***************************************************************************************************
+/*QTE*/
+
+
+qui: ivqte gross_y (d_ra) if year<=2, /*
+*/quantiles(.5 .1 .15 .2 .25 .3 .35 .4 .45 .5 /*
 */ .55 .60 .65 .7 .75 .8 .85 .90 .95) variance
 	forvalues q=1/19{
 		local mean_q`q' = _b[Quantile_`q']
@@ -132,79 +318,6 @@ qui: ivqte gross_nh_period (d_ra), quantiles(.5 .1 .15 .2 .25 .3 .35 .4 .45 .5 /
 
 	}
 
-*********************
-/*The figure*/
-*********************
-preserve
-
-clear
-set obs 10
-gen year=.
-gen effect=.
-gen lb=.
-gen ub=.
-gen pvalues=.
-gen effect_gross=.
-gen lb_gross=.
-gen ub_gross=.
-gen pvalues_gross=.
-
-
-
-local obs=1
-forvalues year=0/8{
-	replace effect=`mean_`year'' if _n==`obs'
-	replace lb=`lb_`year'' if _n==`obs'
-	replace ub=`ub_`year'' if _n==`obs'
-	replace pvalues=`pvalue_`year'' if _n==`obs'
-
-	replace effect_gross=`mean_gross_`year'' if _n==`obs'
-	replace lb_gross=`lb_gross_`year'' if _n==`obs'
-	replace ub_gross=`ub_gross_`year'' if _n==`obs'
-	replace pvalues_gross=`pvalue_gross_`year'' if _n==`obs'
-	
-
-	
-	replace year=`year' - 1 if _n==`obs' /*original timing*/
-	local obs=`obs'+1
-	
-	
-}
-
-gen mean_aux_1=effect if pvalues<0.05
-gen mean_gross_aux_1=effect_gross if pvalues_gross<0.05
-
-
-gen year2=year*2
-
-twoway (connected effect year2,msymbol(circle) mlcolor(blue) mfcolor(white))/*
-*/ (scatter mean_aux_1 year2, msymbol(circle) mlcolor(blue) mfcolor(blue)) /* 
-*/ (line ub  year2, lpattern(dash)) /*
-*/ (line lb year2, lpattern(dash)), /*
-*/ ytitle("Change in annual income (2003 dollars)")  xtitle("Years after random assignment") legend(off) /*
-*/ xlabel( -2 "-1" 0 "0" 2 "1" 4 "2" 6 "3" 8 "4" 10 "5" 12 "6" 14 "7" 16 "8", noticks) /*
-*/ graphregion(fcolor(white) ifcolor(white) lcolor(white) ilcolor(white)) /*
-*/plotregion(fcolor(white) lcolor(white)  ifcolor(white) ilcolor(white))  /*
-*/ scheme(s2mono) ylabel(, nogrid) yline(0, lpattern(solid) lcolor(black)) scale(1.2) /*
-*/ xline(5, lcolor(red))
-
-graph export "$results/Income/total_income_annual_controls`controls'_emp`emp'.pdf", as(pdf) replace
-
-twoway (connected effect_gross year2,msymbol(circle) mlcolor(blue) mfcolor(white))/*
-*/ (scatter mean_gross_aux_1 year2, msymbol(circle) mlcolor(blue) mfcolor(blue)) /* 
-*/ (line ub_gross  year2, lpattern(dash)) /*
-*/ (line lb_gross year2, lpattern(dash)) ,/*
-*/ ytitle("Change in earnings (2003 dollars)")  xtitle("Years after random assignment") legend(off) /*
-*/ graphregion(fcolor(white) ifcolor(white) lcolor(white) ilcolor(white)) /*
-*/plotregion(fcolor(white) lcolor(white)  ifcolor(white) ilcolor(white))  /*
-*/ scheme(s2mono) ylabel(, nogrid) yline(0, lpattern(solid) lcolor(black)) scale(1.2) /*
-*/ xline(5, lcolor(red))
-
-graph export "$results/Income/earnings_annual_controls`controls'_emp`emp'.pdf", as(pdf) replace
-
-
-
-restore
 
 /*The QTE figure*/
 preserve
@@ -238,7 +351,7 @@ twoway (connected effect quan,msymbol(circle) mlcolor(blue) mfcolor(white))/*
 */ (scatter mean_aux_1 quan, msymbol(circle) mlcolor(blue) mfcolor(blue)) /* 
 */ (line ub  quan, lpattern(dash)) /*
 */ (line lb quan, lpattern(dash)), /*
-*/ ytitle("Change in earnings (2003 dollars)")  xtitle("Quantile") legend(off) /*
+*/ ytitle("Effect on earnings (2003 dollars)")  xtitle("Quantile") legend(off) /*
 */ xlabel( 2 "10" 4 "20" 6 "30" 8 "40" 10 "50" 12 "60" 14 "70" 16 "80" 18 "90", noticks) /*
 */ graphregion(fcolor(white) ifcolor(white) lcolor(white) ilcolor(white)) /*
 */plotregion(fcolor(white) lcolor(white)  ifcolor(white) ilcolor(white))  /*
@@ -250,32 +363,13 @@ graph export "$results/Income/earnings_QTE.pdf", as(pdf) replace
 
 restore
 
-/*These numbers go in the text*/
-/*
-forvalues x=1/3{
-	qui xi: reg total_income_y`x' i.p_assign `control_var', vce(`SE')
-	local beta_year`x'=_b[_Ip_assign_2]
-	display `beta_year`x''
-	qui: sum total_income_y`x' if p_assign=="C"
-	local m_`y'_control=r(mean)
-	display `m_`y'_control'
-	
-}
-*/
 
-egen total_income_raperiod=rowmean(total_income_y1 total_income_y2 total_income_y3)
-xi: reg total_income_raperiod i.p_assign age_ra i.marital i.ethnic d_HS2 higrade i.pastern2, vce(`SE')
-sum total_income_raperiod if p_assign=="C"
-
-
-xi: reg total_income_y2 i.p_assign age_ra i.marital i.ethnic d_HS2 higrade i.pastern2, vce(`SE')
-sum total_income_y2 if p_assign=="C"
 
 
 **********************************
 /*Diff-in-Diff analysis*/
 **********************************
-preserve
+use `data_aux', clear
 keep sampleid total_income_y* p_assign age_ra marital ethnic d_HS2 higrade pastern2
 
 *the panel
@@ -344,121 +438,6 @@ twoway (bar effect year2) (rcap ub lb year2) /* These are the mean effect and th
 */ scheme(s2mono) ylabel(, nogrid) yline(0, lpattern(solid) lcolor(black))
 
 graph export "$results/Income/income_diffdiff.pdf", as(pdf) replace
-
-
-
-
-
-restore
-
-
-**********************************
-/*Decomposition*/
-**********************************
-
-*Welfare payments
-forvalues y=0/8{
-	egen wel_y`y' = rowtotal(afdc_y`y' fs_y`y' eitc_fed_y`y' eitc_state_y`y')
-}
-
-*Earnings: gross_y
-
-*New Hope supplement: supy0-supy2
-
-forvalues y=3/8{
-	replace sup_y`y'=0
-}
-
-*Total
-forvalues y=0/8{
-	egen income_y`y' = rowtotal(gross_y`y' sup_y`y' wel_y`y')
-}
-
-
-
-forvalues y=0/8{
-	xi: reg gross_y`y' i.p_assign
-	local effect_gross_y`y' = _b[_Ip_assign_2]
-
-	xi: reg sup_y`y' i.p_assign
-	local effect_sup_y`y' = _b[_Ip_assign_2]
-
-	xi: reg wel_y`y' i.p_assign
-	local effect_wel_y`y' = _b[_Ip_assign_2]
-
-	xi: reg income_y`y' i.p_assign
-	local effect_total_y`y' = _b[_Ip_assign_2]
-
-}
-
-*Graph: area
-
-clear
-set obs 9
-gen year=.
-gen effect_gross=.
-gen effect_wel=.
-gen effect_sup=.
-gen effect=.
-
-forvalues y=0/8{
-	replace effect_gross = `effect_gross_y`y'' if _n==`y'+1
-	replace effect_wel = `effect_wel_y`y'' if _n==`y'+1
-	replace effect_sup = `effect_sup_y`y'' if _n==`y'+1
-	replace effect = `effect_total_y`y'' if _n==`y'+1
-	replace year = `y' if _n==`y'+1
-}
-
-*Cumultivate effect: baseline is "wel"
-gen effect_total  = effect_sup + effect_wel + effect_gross
-gen effect_wel_sup_pc = (effect_sup + effect_wel)/effect_total
-gen effect_sup_pc = (effect_sup)/effect_total
-gen effect_wel_pc = (effect_wel)/effect_total
-gen effect_total_pc = 1
-
-
-gen year2=year*2
-
-gen effect_sup_2 = effect_sup/effect_total
-gen effect_wel_2 = effect_wel/effect_total
-gen effect_gross_2 = effect_gross/effect_total
-
-
-replace effect_sup_2=. if effect_sup_2==0
-
-/*
-graph bar effect_sup_2 effect_wel_2 effect_gross_2, over(year) stack /*
-*/legend(order(1 "New Hope supplement" 2 "Welfare" 3 "Earnings" )) /*
-*/ bar(1, lwidth(medthick)  lcolor(black) fcolor(white))/*
-*/ bar(2, lwidth(medium) lcolor(black))/*
-*/ bar(3, lcolor(black) fcolor(ltblue)) /*
-*/ ytitle("Change in income (2003 dollars)")  b1title("Years after random assignment") /*
-*/ graphregion(fcolor(white) ifcolor(white) lcolor(white) ilcolor(white)) /*
-*/plotregion(fcolor(white) lcolor(white)  ifcolor(white) ilcolor(white))  /*
-*/ scheme(s2mono) ylabel(, nogrid) yline(0, lpattern(solid) lcolor(black)) /*
-*/ yline(1, lpattern(dash) lcolor(black)) scale(1.2) 
-
-
-graph export "$results/Income/income_decomposition.pdf", as(pdf) replace
-*/
-twoway (area effect_wel_pc year, lwidth(medthick)  lcolor(black) fcolor(white))/*
-*/ (rarea effect_wel_sup_pc effect_wel_pc year,lwidth(medium) lcolor(black))/*
-*/ (rarea effect_total_pc effect_wel_sup_pc year, lcolor(black) fcolor(ltblue))/*
-*/ (pcarrowi -0.8 6 -0.6 6), /*
-*//*legend(order(1 "Welfare" 2 "New Hope" 3 "Earnings" )) *//*
-*/ legend(off)/*
-*/ ytitle("Change in income (2003 dollars)") xtitle("Year after random assignment") /*
-*/ graphregion(fcolor(white) ifcolor(white) lcolor(white) ilcolor(white)) /*
-*/plotregion(fcolor(white) lcolor(white)  ifcolor(white) ilcolor(white))  /*
-*/ scheme(s2mono) ylabel(, nogrid) /*
-*/ yline(1, lpattern(dash) lcolor(black)) scale(1.2) /*
-*/ text(-0.9 6 "Welfare") text(0.6 6 "Earnings") /*
-*/ text(0.1 2 "New Hope")
-
-
-graph export "$results/Income/income_decomposition.pdf", as(pdf) replace
-
-
 
 
 

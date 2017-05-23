@@ -270,13 +270,8 @@ forvalues y=1994/2003{
 	
 	}
 	
-	*Total income
-	egen total_income_y`y'=rowtotal(gross_y`y' eitc_fed_y`y' eitc_state_y`y')
 	
-	*For those who are in the treatment group
-	if `y'<=2000{
-		replace total_income_y`y'=total_income_y`y' + sup_y`y'
-	}
+
 
 }
 
@@ -322,10 +317,6 @@ sort sampleid
 merge 1:1 sampleid using `data_earn'
 drop _merge
 
-forvalues y=1994/2003{
-	replace total_income_y`y'=total_income_y`y'+ welfare_y`y'
-
-}
 
 *Gross earnings v2: takes into account ww payments (assumed to be from 1997 onward)
 forvalues y=1994/2003{
@@ -349,9 +340,16 @@ qui: do "$codes/income/cpi.do"
 
 forvalues y=1994/2002{
 	gen gross_nominal_y`y'=gross_y`y'
-	replace total_income_y`y'=total_income_y`y'*cpi_`y'
 	replace gross_y`y'=gross_y`y'*cpi_`y'
 	replace grossv2_y`y'=grossv2_y`y'*cpi_`y'
+	replace afdc_y`y'=afdc_y`y'*cpi_`y'
+	replace fs_y`y'=fs_y`y'*cpi_`y'
+	replace eitc_fed_y`y'=eitc_fed_y`y'*cpi_`y'
+	replace eitc_state_y`y'=eitc_state_y`y'*cpi_`y'
+	if `y'<=2000{
+		replace sup_y`y'=sup_y`y'*cpi_`y'	
+	}
+	
 
 }
 
@@ -366,9 +364,9 @@ gen ra_year=yofd(date(p_radatr,"YMD"))
 format ra_year %ty
 tab ra_year
 
-keep total_income_y* gross_y* gross_nominal_y* grossv2_y* employment_y* /*
+keep  gross_y* gross_nominal_y* grossv2_y* employment_y* /*
 */ sampleid ra_year afdc_y* fs_y* sup_y* eitc_fed_y* eitc_fed_y* eitc_state_y*
-reshape long total_income_y gross_y gross_nominal_y grossv2_y employment_y /*
+reshape long  gross_y gross_nominal_y grossv2_y employment_y /*
 */ afdc_y fs_y sup_y eitc_fed_y eitc_state_y, i(sampleid) j(year)
 
 *Years since RA
@@ -379,10 +377,35 @@ gen year_ra=year-ra_year
 
 *only one year behind
 replace year_ra=year_ra+1 
-keep year_ra total_income_y sampleid gross_y gross_nominal_y grossv2_y employment_y /*
+keep year_ra sampleid gross_y gross_nominal_y grossv2_y employment_y /*
 */afdc_y fs_y sup_y eitc_fed_y eitc_state_y
-reshape wide total_income_y gross_y gross_nominal_y grossv2_y employment_y /*
+reshape wide gross_y gross_nominal_y grossv2_y employment_y /*
 */ afdc_y fs_y sup_y eitc_fed_y eitc_state_y, i(sampleid) j(year_ra)
+
+*Total income
+
+forvalues y=0/10{
+	
+	*Adding EITC
+	gen total_income_y`y'=gross_y`y' + eitc_fed_y`y'+ eitc_state_y`y'
+	
+	*Adding NH
+	if `y'<=3{
+		replace sup_y`y'=0 if sup_y`y'==.
+		replace total_income_y`y'=total_income_y`y' + sup_y`y'
+		
+	}
+
+	if `y'>3{
+		replace sup_y`y'=0
+
+	}
+
+	*Adding welfare
+	replace total_income_y`y'=total_income_y`y'+ afdc_y`y' + fs_y`y'
+}
+	
+	
 
 *This database if for using it in the sample_model.do
 sort sampleid

@@ -34,23 +34,24 @@ from util2 import Prod2
 
 np.random.seed(1)
 
-betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv7_v2_e5.npy')
+betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv8_v1_e3.npy')
 
 #Utility function
 eta=betas_nelder[0]
 alphap=betas_nelder[1]
 alphaf=betas_nelder[2]
-alpha_cc=-0.81
-alpha_home_hf=-0.08
+alpha_cc=betas_nelder[3]
+alpha_home_hf=betas_nelder[4]
+
 
 #wage process
-wagep_betas=np.array([betas_nelder[4],betas_nelder[5],betas_nelder[6],
-	betas_nelder[7],betas_nelder[8],betas_nelder[9]]).reshape((6,1))
-
+wagep_betas=np.array([betas_nelder[5],betas_nelder[6],betas_nelder[7],
+	betas_nelder[8],betas_nelder[9],betas_nelder[10]]).reshape((6,1))
 
 #Production function [young,old]
-gamma1=[betas_nelder[10],betas_nelder[12]]
-gamma2=[betas_nelder[11],betas_nelder[13]]
+gamma1= betas_nelder[11]
+gamma2= betas_nelder[12]
+gamma3= betas_nelder[13]
 tfp=betas_nelder[14]
 sigmatheta=0
 
@@ -136,7 +137,8 @@ married0=x_df[ ['d_marital_2']   ].values
 agech0=x_df[['age_t0']].values
 
 #Defines the instance with parameters
-param0=util.Parameters(alphap, alphaf, eta, alpha_cc,alpha_home_hf,gamma1, gamma2, tfp,sigmatheta,
+param0=util.Parameters(alphap, alphaf, eta, alpha_cc,alpha_home_hf,gamma1, gamma2, 
+	gamma3,tfp,sigmatheta,
 	wagep_betas, marriagep_betas, kidsp_betas, eitc_list,afdc_list,snap_list,
 	cpi,q,scalew,shapew,lambdas,kappas,pafdc,psnap)
 
@@ -344,11 +346,11 @@ for j in range(3): #the experiment loop
 	total = y1 + y2 + y3 + y4
 
 	fig, ax=plt.subplots()
-	ax.stackplot(x,y2/total, colors=['k'] )
-	ax.fill_between(x,y2/total,(y2+y1)/total, color='k' ,alpha=.7)
-	ax.fill_between(x,(y2+y1)/total,(y2+y1+y3)/total, color='k' ,alpha=.4)
-	ax.fill_between(x,(y2+y1+y3)/total,(total)/total, color='k' ,alpha=.15)
-	ax.set_ylabel(r'Decomposition of $E[\ln \theta_{t}\mid D=1] - E[\ln \theta_{t}\mid D=0]$', fontsize=14)
+	ax.plot(x,y2/total, color='k',zorder=1,linewidth=3)
+	ax.fill_between(x,y2/total,(y2+y1)/total, color='k' ,alpha=.7,zorder=2)
+	ax.fill_between(x,(y2+y1)/total,(y2+y1+y3)/total, color='k' ,alpha=.4,zorder=3)
+	ax.fill_between(x,(y2+y1+y3)/total,(total)/total, color='k' ,alpha=.15,zorder=4)
+	ax.set_ylabel(r'Decomposition of $E[\ln \theta_{t+1}\mid D=1] - E[\ln \theta_{t+1}\mid D=0]$', fontsize=14)
 	ax.set_xlabel(r'Years after random assignment ($t$)', fontsize=14)
 	ax.spines['right'].set_visible(False)
 	ax.spines['top'].set_visible(False)
@@ -360,7 +362,6 @@ for j in range(3): #the experiment loop
 	plt.show()
 	fig.savefig('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/experiments/NH/mech_' + exp[j] + '.pdf', format='pdf')
 	plt.close()
-
 
 #Contribution % pc
 j=0

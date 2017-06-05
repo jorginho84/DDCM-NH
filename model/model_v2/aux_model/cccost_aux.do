@@ -26,6 +26,18 @@ set maxvar 15000
 /*Child care payments at t=1*/
 ****************************************
 use "/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/sample_model_v2.dta", clear
+drop cc_pay_t1
+tempfile data_aux
+save `data_aux', replace
+
+use "/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/sample_model_v2.dta", clear
+*assigning individual payment
+keep sampleid cc_pay_t1 d_CC2_t1
+collapse (sum) d_CC2_t1 (first) cc_pay_t1, by(sampleid)
+replace cc_pay_t1=cc_pay_t1/2 if d_CC2_t1==2
+keep cc_pay_t1 sampleid
+merge 1:m sampleid using `data_aux'
+drop _merge
 
 *Share of individuals with free child care
 sum d_free if p_assign=="C" &  cc_pay_t1!=. & age_t0<=6 & d_CC2_t1==1

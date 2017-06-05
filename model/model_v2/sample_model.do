@@ -213,9 +213,11 @@ replace d_CC2_t4=. if max_months_t4==.
 *Payments child care
 * year 1
 rename c73 cc_pay_t1
+replace cc_pay_t1=0 if d_CC2_t1==0
 gen d_free=.
 replace d_free=1 if cc_pay_t1==0
-replace d_free=0 if cc_pay_t1>0 & cc_pay_t1!=.
+replace d_free=0 if cc_pay_t1>0 & cc_pay_t1!=. 
+
 
 *Year 4
 rename piq128a cc_pay_t4 
@@ -524,9 +526,9 @@ foreach x of numlist 0 1 4 7 {
 *replace cc_pay_t1=cc_pay_t1*1.1653595/2 if dupli==1
 *replace cc_pay_t4=cc_pay_t4*1.0958820/2 if dupli==1
 
-replace cc_pay_t1=cc_pay_t1*1.1653595/nkids_baseline
+replace cc_pay_t1=cc_pay_t1*1.1653595
 
-replace cc_pay_t1=cc_pay_t4*1.0958820/nkids_year5
+replace cc_pay_t1=cc_pay_t4*1.0958820
 
 /*
 This is how I'm deciding on hours categories NOT ANYMORE

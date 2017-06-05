@@ -50,8 +50,8 @@ betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/re
 #Utility function
 eta=betas_nelder[0]
 alphap=betas_nelder[1]
-alphaf=-0.3
-alpha_cc=-0.2
+alphaf=betas_nelder[2]
+alpha_cc=betas_nelder[3]
 alpha_home_hf=betas_nelder[4]
 
 
@@ -268,10 +268,10 @@ se_ate_cc_obs=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemou
 #from oprobits: beta_t2, beta_t5, betas_t2_obs, betas_t5_obs
 
 #Simulated before/after
-ate_cc_2 = [np.mean(ate_cc[0:3]), np.mean(ate_cc[3:])]
-ate_inc_2 = [np.mean(ate_inc[0:3])/1000, np.mean(ate_inc[3:])/1000]
-ate_part_2 = [np.mean(ate_part[0:3]), np.mean(ate_part[3:])]
-ate_full_2 = [np.mean(ate_full[0:3]), np.mean(ate_full[3:])]
+ate_cc_2 = [np.mean(ate_cc[1]), np.mean(ate_cc[4])] #period vs and 4
+ate_inc_2 = [np.mean(ate_inc[1])/1000, (ate_inc[4] +ate_inc[7])/(2*1000)]
+ate_part_2 = [np.mean(ate_part[0:2]), (ate_part[4] + ate_part[7])/2]
+ate_full_2 = [np.mean(ate_full[0:2]), (ate_full[4] + ate_full[7])/2]
 
 #The table
 
@@ -279,7 +279,8 @@ ate_full_2 = [np.mean(ate_full[0:3]), np.mean(ate_full[3:])]
 sim_list = [ate_cc_2,ate_inc_2,ate_part_2,ate_full_2,[beta_t2[0],beta_t5[0]]]
 obs_list = [ate_cc_obs,ate_inc_obs_2/1000,ate_part_obs_2,ate_full_obs_2,np.array([[betas_t2_obs[0,0]], [betas_t5_obs[0,0]]])]
 obs_list_se = [se_ate_cc_obs,se_ate_inc_obs_2/1000,se_ate_part_obs_2,se_ate_full_obs_2,np.array([[ses_betas_t2_obs[0,0]],[ses_betas_t5_obs[0,0]]])]
-var_list = ['Child care', 'Consumption', 'Part-time', 'Full-time', 'SSRS']
+var_list = [r'Child care ($t=1,4$)', r'Consumption ($t=0,...,8$)', r'Part-time ($t=0,1,4,7$)', 
+r'Full-time ($t=0,1,4,7$)', r'SSRS ($t=2,5)$']
 
 with open('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/fit/table_validation.tex','w') as f:
 	f.write(r'\begin{tabular}{llccccc}'+'\n')

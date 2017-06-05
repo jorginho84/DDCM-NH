@@ -29,8 +29,8 @@ year5_8=1: runs years 5 and 8. This will produce a table
 
 */
 
-local year2=0
-local year5_8=1
+local year2=1
+local year5_8=0
 
 *Scale of graphs
 *local scale = 1
@@ -167,7 +167,7 @@ sort sampleid
 tempfile data_aux
 save `data_aux', replace
 use "$databases/CFS_original.dta", clear
-do "$codes/data_cfs.do"
+qui: do "$codes/data_cfs.do"
 keep sampleid curremp
 merge 1:1 sampleid using `data_aux'
 drop if _merge!=3
@@ -292,64 +292,53 @@ forvalues x=`start'/15{
 		mat pvalues_4=pvalues_4\r(p)
 	}
 
-	****Exercise 5: quantile regressions with ht=0
-
-	qui: ivqte hours`x' (d_ra), quantiles(.25 .5 .75 .90) variance
-			
-	if `x'==`start'{
-
-		forvalues q = 1/4{
-			mat betas_5`q' = (_b[Quantile_`q'],_b[Quantile_`q'] - invnorm(0.975)*_se[Quantile_`q'],/*
-			*/ _b[Quantile_`q'] + invnorm(0.975)*_se[Quantile_`q'])
-			qui: test Quantile_`q'=0
-			mat pvalues_5`q'=r(p)
-
-		}
-		
-	}
-		
-	else{
-
-		forvalues q = 1/4{
-			mat betas_5`q' = betas_5`q'\(_b[Quantile_`q'],_b[Quantile_`q'] - invnorm(0.975)*_se[Quantile_`q'],/*
-			*/ _b[Quantile_`q'] + invnorm(0.975)*_se[Quantile_`q'])
-			qui: test Quantile_`q'=0
-			mat pvalues_5`q'=pvalues_5`q'\r(p)
-
-		}
-	}
 
 	
 
 
 }
 
+****Exercise 5: quantile regressions with ht=0 (0-2 years)
+preserve
+keep hours* d_ra sampleid
+reshape long hours, i(sampleid) j(quarter)
 
-
-
-
-
-*Average hours by levels
-forvalues x=1/5{
-	if `x'==5{
-		forvalues q=1/4{
-			svmat betas_`x'`q'	
-			svmat pvalues_`x'`q'		
-		}
+qui: ivqte hours (d_ra), quantiles(.05 .1 .15 .2 .25 .3 .35 .4 .45 .5 .55 .60 .65 .7 .75 .8 .85 .90 .95) variance
 		
-
+forvalues q = 1/19{
+	if `q'==1{
+		mat betas_5 = (_b[Quantile_`q'],_b[Quantile_`q'] - invnorm(0.975)*_se[Quantile_`q'],/*
+	*/ _b[Quantile_`q'] + invnorm(0.975)*_se[Quantile_`q'])
+		qui: test Quantile_`q'=0
+		mat pvalues_5=r(p)
 	}
 	else{
-		svmat betas_`x'	
-		svmat pvalues_`x'	
+		mat betas_5 = betas_5\(_b[Quantile_`q'],_b[Quantile_`q'] - invnorm(0.975)*_se[Quantile_`q'],/*
+	*/ _b[Quantile_`q'] + invnorm(0.975)*_se[Quantile_`q'])
+		qui: test Quantile_`q'=0
+		mat pvalues_5=pvalues_5\r(p)
+
 	}
+	
+}
+restore
+
+
+*For the first 4 experiments
+forvalues x=1/4{
+	svmat betas_`x'	
+	svmat pvalues_`x'	
 	
 }
 
 
+*Graphs for the first 4 experiments
+preserve
 drop if betas_11==.
 egen quarter = seq()
 replace quarter=quarter-1 /*back to the original number*/
+
+
 
 *After this month, there are no records
 *drop if quarter>9
@@ -357,53 +346,56 @@ replace quarter=quarter-1 /*back to the original number*/
 *Recovering matrix of pvalues (fake labels for figure)
 
 *The experiment loop
-forvalues x=1/5{
+forvalues x=1/4{
 
-	if `x'==5{
-		forvalues q=1/4{
-			*Labels for significance
-			gen mean_aux_`x'`q'=betas_`x'`q'1 if pvalues_`x'`q'1<=0.05
+	
+	*Labels for significance
+	gen mean_aux_`x'=betas_`x'1 if pvalues_`x'1<=0.05
 
-			twoway (connected betas_`x'`q'1 quarter , msymbol(circle) mlcolor(blue) mfcolor(white) ) /*
-			*/ (scatter mean_aux_`x'`q' quarter , msymbol(circle) mlcolor(blue) mfcolor(blue)) /* 
-			*/(line betas_`x'`q'2 quarter ,lpattern(dash)) /*
-			*/(line betas_`x'`q'3 quarter ,lpattern(dash)),/*
-			*/ yline(0, lcolor(black))/*
-			*/ytitle("{&Delta}hours") xtitle("Quarters since RA") legend(off)/*
-			*/ graphregion(fcolor(white) ifcolor(white) lcolor(white) ilcolor(white)) /*
-			*/plotregion(fcolor(white) lcolor(white)  ifcolor(white) ilcolor(white))  /*
-			*/ ylabel(, nogrid)scale(1.2) scheme(s2mono) 
+	twoway (connected betas_`x'1 quarter , msymbol(circle) mlcolor(blue) mfcolor(white) ) /*
+	*/ (scatter mean_aux_`x' quarter , msymbol(circle) mlcolor(blue) mfcolor(blue)) /* 
+	*/(line betas_`x'2 quarter ,lpattern(dash)) /*
+	*/(line betas_`x'3 quarter ,lpattern(dash)),/*
+	*/ yline(0, lcolor(black))/*
+	*/ytitle("{&Delta}hours") xtitle("Quarters since RA") legend(off)/*
+	*/ graphregion(fcolor(white) ifcolor(white) lcolor(white) ilcolor(white)) /*
+	*/plotregion(fcolor(white) lcolor(white)  ifcolor(white) ilcolor(white))  /*
+	*/ ylabel(, nogrid)scale(1.2) scheme(s2mono) 
 
-			graph export "$results/Time/hours_diff_experiment`x'`q'.pdf", as(pdf) replace
+	graph export "$results/Time/hours_diff_experiment`x'.pdf", as(pdf) replace
 
-		}
-		
-
-	}
-
-
-	else{
-		*Labels for significance
-		gen mean_aux_`x'=betas_`x'1 if pvalues_`x'1<=0.05
-
-		twoway (connected betas_`x'1 quarter , msymbol(circle) mlcolor(blue) mfcolor(white) ) /*
-		*/ (scatter mean_aux_`x' quarter , msymbol(circle) mlcolor(blue) mfcolor(blue)) /* 
-		*/(line betas_`x'2 quarter ,lpattern(dash)) /*
-		*/(line betas_`x'3 quarter ,lpattern(dash)),/*
-		*/ yline(0, lcolor(black))/*
-		*/ytitle("{&Delta}hours") xtitle("Quarters since RA") legend(off)/*
-		*/ graphregion(fcolor(white) ifcolor(white) lcolor(white) ilcolor(white)) /*
-		*/plotregion(fcolor(white) lcolor(white)  ifcolor(white) ilcolor(white))  /*
-		*/ ylabel(, nogrid)scale(1.2) scheme(s2mono) 
-
-		graph export "$results/Time/hours_diff_experiment`x'.pdf", as(pdf) replace
-	}
 	
 	
 }
 
 
+*Experiment #5 (QTE)
+restore
+svmat betas_5
+svmat pvalues_5
+drop if betas_51==.
+egen quant = seq()
 
+
+
+gen mean_aux_5=betas_51 if pvalues_51<=0.05
+
+
+
+twoway (connected betas_51 quant , msymbol(circle) mlcolor(blue) mfcolor(white) ) /*
+*/ (scatter mean_aux_5 quant , msymbol(circle) mlcolor(blue) mfcolor(blue)) /* 
+*/(line betas_52 quant ,lpattern(dash)) /*
+*/(line betas_53 quant ,lpattern(dash)),/*
+*/ yline(0, lcolor(black))/*
+*/ytitle("{&Delta}hours") xtitle("Quantile") legend(off)/*
+*/ xlabel( 2 "10" 4 "20" 6 "30" 8 "40" 10 "50" 12 "60" 14 "70" 16 "80" 18 "90", noticks) /*
+*/ graphregion(fcolor(white) ifcolor(white) lcolor(white) ilcolor(white)) /*
+*/plotregion(fcolor(white) lcolor(white)  ifcolor(white) ilcolor(white))  /*
+*/ ylabel(, nogrid)scale(1.2) scheme(s2mono) 
+
+graph export "$results/Time/hours_diff_experiment5.pdf", as(pdf) replace
+
+	
 }
 
 *Show me the sd of hours

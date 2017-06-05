@@ -14,8 +14,8 @@ ate_inc_obs_long=np.empty((ate_inc.shape))
 se_ate_inc_obs_long=np.empty((ate_inc.shape))
 i = 0
 for x in [1,4,7]:
-	ate_inc_obs_long[x] = ate_inc_obs[i,0]
-	se_ate_inc_obs_long[x] = se_ate_inc_obs[i,0]
+	ate_inc_obs_long[x] = ate_inc_obs[i,0].copy()
+	se_ate_inc_obs_long[x] = se_ate_inc_obs[i,0].copy()
 	i = i + 1
 
 
@@ -32,7 +32,7 @@ plt.setp(plot2,linewidth=3)
 plt.setp(plot3,linewidth=1)
 ax.legend()
 ax.set_xticks([-1,0, 1, 2, 3, 4,5,6,7,8,9])
-ax.set_ylabel(r'Impact on income (2003 dollars)', fontsize=14)
+ax.set_ylabel(r'Impact on consumption pc (2003 dollars)', fontsize=14)
 ax.set_xlabel(r'Years after random assignment ($t$)', fontsize=14)
 ax.spines['right'].set_visible(False)
 ax.spines['top'].set_visible(False)

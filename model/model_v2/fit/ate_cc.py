@@ -28,8 +28,8 @@ ate_cc_obs_long=np.empty((ate_cc.shape))
 se_ate_cc_obs_long=np.empty((ate_cc.shape))
 i = 0
 for x in [1,4]:
-	ate_cc_obs_long[x] = ate_cc_obs[i,0]
-	se_ate_cc_obs_long[x] = se_ate_cc_obs[i,0]
+	ate_cc_obs_long[x] = ate_cc_obs[i,0].copy()
+	se_ate_cc_obs_long[x] = se_ate_cc_obs[i,0].copy()
 	i = i + 1
 
 #figure

@@ -34,24 +34,25 @@ import se
 
 np.random.seed(1)
 
-betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv7_v2_e3_d100.npy')
+betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv8_v1_e3.npy')
 
 
 #Utility function
 eta=betas_nelder[0]
 alphap=betas_nelder[1]
 alphaf=betas_nelder[2]
-alpha_cc=-0.81
-alpha_home_hf=-0.08
+alpha_cc=betas_nelder[3]
+alpha_home_hf=betas_nelder[4]
 
 #wage process
-wagep_betas=np.array([betas_nelder[4],betas_nelder[5],betas_nelder[6],
-	betas_nelder[7],betas_nelder[8],betas_nelder[9]]).reshape((6,1))
+wagep_betas=np.array([betas_nelder[5],betas_nelder[6],betas_nelder[7],
+	betas_nelder[8],betas_nelder[9],betas_nelder[10]]).reshape((6,1))
 
 
 #Production function [young[cc0,cc1],old]
-gamma1=[betas_nelder[10],betas_nelder[12]]
-gamma2=[betas_nelder[11],betas_nelder[13]]
+gamma1= betas_nelder[11]
+gamma2= betas_nelder[12]
+gamma3= betas_nelder[13]
 tfp=betas_nelder[14]
 sigmatheta=0
 
@@ -131,7 +132,8 @@ married0=x_df[ ['d_marital_2']   ].values
 agech0=x_df[['age_t0']].values
 
 #Defines the instance with parameters
-param0=util.Parameters(alphap, alphaf, eta, alpha_cc,alpha_home_hf, gamma1, gamma2, tfp, sigmatheta,
+param0=util.Parameters(alphap, alphaf, eta, alpha_cc,alpha_home_hf, 
+	gamma1, gamma2, gamma3,tfp, sigmatheta,
 	wagep_betas, marriagep_betas, kidsp_betas, eitc_list,afdc_list,snap_list,
 	cpi,q,scalew,shapew,lambdas,kappas,pafdc,psnap)
 
@@ -178,7 +180,7 @@ output_ins=estimate.Estimate(param0,x_w,x_m,x_k,x_wmk,passign,agech0,nkids0,
 betas_opt=np.array([eta, alphap,alphaf,alpha_cc,alpha_home_hf,wagep_betas[0,0],
 	wagep_betas[1,0],wagep_betas[2,0],
 	wagep_betas[3,0],wagep_betas[4,0],wagep_betas[5,0],
-	gamma1[0],gamma2[0],gamma1[1],gamma2[1],tfp,
+	gamma1,gamma2,gamma3,tfp,
 	kappas[0][0],kappas[0][1],kappas[0][2],kappas[0][3],
 	kappas[1][0],kappas[0][1],kappas[0][2],kappas[0][3]])
 
@@ -190,6 +192,6 @@ npar = betas_opt.shape[0]
 nmom = moments_vector.shape[0]
 
 #The var-cov matrix of structural parameters
-ses = se_ins.big_sand(0.03,nmom,npar) 
+ses = se_ins.big_sand(0.05,nmom,npar) 
 
-np.save('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/estimation/ses_modelv8.npy',ses)
+np.save('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/estimation/ses_modelv8_e3.npy',ses)

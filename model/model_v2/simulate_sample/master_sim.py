@@ -49,25 +49,25 @@ np.random.seed(1);
 #Sample size
 #N=315
 
-betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv7_v2_e5.npy')
+betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv8_v1_e3.npy')
 
 #Utility function
 eta=betas_nelder[0]
 alphap=betas_nelder[1]
 alphaf=betas_nelder[2]
 alpha_cc=betas_nelder[3]
-alpha_home_hf=-0.3
+alpha_home_hf=betas_nelder[4]
 
 
 
 #wage process
-wagep_betas=np.array([betas_nelder[4],betas_nelder[5],betas_nelder[6],
-	betas_nelder[7],betas_nelder[8],betas_nelder[9]]).reshape((6,1))
+wagep_betas=np.array([betas_nelder[5],betas_nelder[6],betas_nelder[7],
+	betas_nelder[8],betas_nelder[9],betas_nelder[10]]).reshape((6,1))
 
 #Production function
-gamma1=betas_nelder[10]
-gamma2=betas_nelder[11]
-gamma3= 1 - gamma1 - gamma2
+gamma1= betas_nelder[11]
+gamma2= betas_nelder[12]
+gamma3= betas_nelder[13]
 tfp=betas_nelder[14]
 sigmatheta=0
 
@@ -284,6 +284,8 @@ np.mean(cc_t[(agech0[:,0]<=6) & (hours_t[:,0]==15),0],axis=0)
 unemp_t=hours_t==0
 part_t=hours_t==hours_p
 full_t=hours_t==hours_f
+
+np.mean(hours_t[passign[:,0]==0,:],axis=0)
 
 np.mean(unemp_t[agech0[:,0]<=6,:],axis=0)
 

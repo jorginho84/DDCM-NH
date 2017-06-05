@@ -66,23 +66,25 @@ class Prod2(Utility):
 		#Parameters
 		gamma1=self.param.gamma1
 		gamma2=self.param.gamma2
+		gamma3=self.param.gamma3
 		tfp=self.param.tfp
 		
 		theta1=np.zeros(self.N)
 
+		
 		#The production of HC: young, cc=0
 		boo=(agech<=6) & (cc==0)
-		theta1[boo] = gamma1[0]*np.log(theta0[boo]) + gamma2[0]*incomepc[boo] +\
-		(1 - gamma1[0] - gamma2[0] )*leisure[boo] + omega[boo]
+		theta1[boo] = gamma1*np.log(theta0[boo]) + gamma2*incomepc[boo] +\
+		gamma3*leisure[boo] + omega[boo]
 
 		#The production of HC: young, cc=1
 		boo=(agech<=6) & (cc==1)
-		theta1[boo] = gamma1[0]*np.log(theta0[boo]) + gamma2[0]*incomepc[boo] +\
-		(1 - gamma1[0] - gamma2[0] )*leisure[boo] + tfp + omega[boo]
+		theta1[boo] = gamma1*np.log(theta0[boo]) + gamma2*incomepc[boo] +\
+		gamma3*leisure[boo] + tfp + omega[boo]
 
 		#The production of HC: old
 		boo=(agech>6)
-		theta1[boo] = gamma1[1]*np.log(theta0[boo]) + gamma2[1]*incomepc[boo] +\
-		(1 - gamma1[1] - gamma2[1] )*leisure[boo] + omega[boo]
+		theta1[boo] = gamma1*np.log(theta0[boo]) + gamma2*incomepc[boo] +\
+		gamma3*leisure[boo] + omega[boo]
 
 		return np.exp(theta1)

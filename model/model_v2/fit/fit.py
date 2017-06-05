@@ -50,8 +50,8 @@ betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/re
 #Utility function
 eta=betas_nelder[0]
 alphap=betas_nelder[1]
-alphaf=betas_nelder[2]
-alpha_cc=betas_nelder[3]
+alphaf=-0.3
+alpha_cc=-0.2
 alpha_home_hf=betas_nelder[4]
 
 

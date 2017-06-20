@@ -45,7 +45,7 @@ import estimate as estimate
 
 np.random.seed(1)
 
-betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv8_v1_e3.npy')
+betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv9_v1_e3.npy')
 
 #Utility function
 eta=betas_nelder[0]
@@ -57,19 +57,19 @@ alpha_home_hf=betas_nelder[4]
 
 #wage process
 wagep_betas=np.array([betas_nelder[5],betas_nelder[6],betas_nelder[7],
-	betas_nelder[8],betas_nelder[9],betas_nelder[10]]).reshape((6,1))
+	betas_nelder[8],betas_nelder[9],betas_nelder[10],betas_nelder[11]]).reshape((7,1))
 
 
 #Production function [young,old]
-gamma1= betas_nelder[11]
-gamma2= betas_nelder[12]
-gamma3= betas_nelder[13]
-tfp=betas_nelder[14]
+gamma1= betas_nelder[12]
+gamma2= betas_nelder[13]
+gamma3= betas_nelder[14]
+tfp=betas_nelder[15]
 sigmatheta=0
 
 #Measurement system: three measures for t=2, one for t=5
-kappas=[[betas_nelder[15],betas_nelder[16],betas_nelder[17],betas_nelder[18]],
-[betas_nelder[19],betas_nelder[20],betas_nelder[21],betas_nelder[22]]]
+kappas=[[betas_nelder[16],betas_nelder[17],betas_nelder[18],betas_nelder[19]],
+[betas_nelder[20],betas_nelder[21],betas_nelder[22],betas_nelder[23]]]
 
 #First measure is normalized. starting arbitrary values
 #All factor loadings are normalized
@@ -285,7 +285,7 @@ r'Full-time ($t=0,1,4,7$)', r'SSRS ($t=2,5)$']
 with open('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/fit/table_validation.tex','w') as f:
 	f.write(r'\begin{tabular}{llccccc}'+'\n')
 	f.write(r'\hline' + '\n')
-	f.write(r' && \multicolumn{2}{c}{\textbf{During NH}} & & \multicolumn{2}{c}{\textbf{After NH}} \bigstrut[t]\\' + '\n')
+	f.write(r' && \multicolumn{2}{c}{\textbf{During NH ($t\leq 2$)}} & & \multicolumn{2}{c}{\textbf{After NH ($t>3$)}} \bigstrut[t]\\' + '\n')
 	f.write(r'&& \textbf{Model} & \textbf{Data} &  & \textbf{Model} & \textbf{Data} \bigstrut[b]\\'+'\n')
 	f.write(r'\cline{1-1}\cline{3-4}\cline{6-7} & &  &  && &  \bigstrut[t]\\'+'\n')
 	

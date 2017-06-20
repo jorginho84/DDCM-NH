@@ -18,7 +18,7 @@ for c in range(5):
 
 ind = 5
 #B. Log wage equation
-for c in range(6):
+for c in range(7):
 	sim_moment = ws.cell('B' + str(c + 7))
 	obs_moment = ws.cell('D' + str(c + 7))
 	obs_sigma = ws.cell('F' + str(c + 7))
@@ -26,13 +26,13 @@ for c in range(6):
 	obs_moment.value = np.float(moments_vector[ind+c,0])
 	obs_sigma.value = np.float(se_vector[ind+c])
 
-ind = ind + 6
+ind = ind + 7
 
 #A. t=2, kappas
 for c in range(4):
-	sim_moment = ws.cell('B' + str(c + 13))
-	obs_moment = ws.cell('D' + str(c + 13))
-	obs_sigma = ws.cell('F' + str(c + 13))
+	sim_moment = ws.cell('B' + str(c + 14))
+	obs_moment = ws.cell('D' + str(c + 14))
+	obs_sigma = ws.cell('F' + str(c + 14))
 	sim_moment.value = np.float(beta_kappas_t2[c])
 	obs_moment.value = np.float(moments_vector[ind + c,0])
 	obs_sigma.value = np.float(se_vector[ind + c])
@@ -41,9 +41,9 @@ for c in range(4):
 ind = ind + 4
 #B. t=5, kappas
 for c in range(4):
-	sim_moment = ws.cell('B' + str(c + 17))
-	obs_moment = ws.cell('D' + str(c + 17))
-	obs_sigma = ws.cell('F' + str(c + 17))
+	sim_moment = ws.cell('B' + str(c + 18))
+	obs_moment = ws.cell('D' + str(c + 18))
+	obs_sigma = ws.cell('F' + str(c + 18))
 	sim_moment.value = np.float(beta_kappas_t5[c])
 	obs_moment.value = np.float(moments_vector[ind + c,0])
 	obs_sigma.value = np.float(se_vector[ind + c])
@@ -57,7 +57,7 @@ list_obs = [moments_vector[ind:ind +4 ,0]]
 list_sig = [se_vector[ind:ind + 4]]
 
 for j in range(2):
-	pos = 21
+	pos = 22
 	for c in range(3): 
 		sim_moment = ws.cell('B' + str(c + pos))
 		obs_moment = ws.cell('D' + str(c + pos))

@@ -82,17 +82,17 @@ class SEs:
 
 		#wage process
 		wagep_betas=np.array([bs[5],bs[6],bs[7],bs[8],
-			bs[9],bs[10]]).reshape((6,1))
+			bs[9],bs[10],bs[11]]).reshape((7,1))
 
 		#Production function [young[cc0,cc1],old]
-		gamma1=bs[11]
-		gamma2=bs[12]
-		gamma3=bs[13]
-		tfp=bs[14]
+		gamma1=bs[12]
+		gamma2=bs[13]
+		gamma3=bs[14]
+		tfp=bs[15]
 		sigmatheta=0
 
 		#Measurement system: three measures for t=2, one for t=5
-		kappas=[[bs[15],bs[16],bs[17],bs[18]],[bs[19],bs[20],bs[21],bs[22]]]
+		kappas=[[bs[16],bs[17],bs[18],bs[19]],[bs[20],bs[21],bs[22],bs[23]]]
 		lambdas=[1,1]
 
 

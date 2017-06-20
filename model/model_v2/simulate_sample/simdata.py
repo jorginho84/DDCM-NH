@@ -49,7 +49,7 @@ class SimData:
 
 		
 
-	def choice(self,periodt,bigt,theta0,nkids0,married0,wage0,free0,price0):
+	def choice(self,periodt,bigt,theta0,nkids0,married0,wage0,epsilon0,free0,price0):
 		"""
 		Takes a set of state variables and computes the utility +option value
 		of different set of choices for a given periodt
@@ -60,6 +60,8 @@ class SimData:
 
 		It returns a list containing the utility value and the emaxt+1 that is 
 		computed in period t
+
+		epsilon 0: shock consistent with wage0
 
 
 		"""
@@ -126,12 +128,15 @@ class SimData:
 					married0)+nkids0
 				
 				theta_t1=self.model.thetat(periodt,theta0,hours,childcare,consumption0) #theta at t+1 uses inputs at t
+				epsilon_t1=self.model.epsilon(epsilon0)
 
 			
 				data_int_t1=np.concatenate((np.reshape(np.log(theta_t1),(self.N,1)), 
 					np.reshape(nkids_t1,(self.N,1)),married_t1,
 					np.reshape(np.square(np.log(theta_t1)),(self.N,1)),
 					np.reshape(self.passign,(self.N,1)), 
+					np.reshape(epsilon_t1,(self.N,1)),
+					np.reshape(np.square(epsilon_t1),(self.N,1)),
 					self.x_wmk), axis=1)
 
 				#Getting dictionary to incorporate emax_t+1, choice j
@@ -179,7 +184,9 @@ class SimData:
 		self.change_util(self.param,self.N,self.x_w,self.x_m,self.x_k,self.passign,
 			nkids0,married0,hours,childcare,self.agech,self.hours_p,
 			self.hours_f,self.wr,self.cs,self.ws)
-		wage0=self.model.waget(0)
+		wage_init_dic = self.model.wage_init()
+		epsilon0= wage_init_dic['epsilon']
+		wage0= wage_init_dic['wage']
 		free0=self.model.q_prob()
 		price0=self.model.price_cc()
 		theta0=self.model.theta_init()
@@ -198,9 +205,9 @@ class SimData:
 			#Use self.choice function to obtain choices and saving u_ijt
 			#array of J columns
 			utiliy_values=self.choice(periodt,n_periods-1,theta0,nkids0,married0,wage0,
-				free0,price0)[0]
+				epsilon0,free0,price0)[0]
 			utiliy_values_c=self.choice(periodt,n_periods-1,theta0,nkids0,married0,wage0,
-				free0,price0)[1]
+				epsilon0,free0,price0)[1]
 			util_values_dic.append(utiliy_values)
 			util_values_c_dic.append(utiliy_values_c)
 
@@ -253,7 +260,8 @@ class SimData:
 					married0)+nkids0 #baseline kids + if they have a kid next period
 				
 				theta_t1=self.model.thetat(periodt,theta0,hours_t,childcare_t,consumption0) #theta at t+1 uses inputs at t
-				wage_t1=self.model.waget(periodt+1)
+				epsilon_t1=self.model.epsilon(epsilon0)
+				wage_t1=self.model.waget(periodt+1,epsilon_t1)
 				free_t1=self.model.q_prob()
 				price_t1=self.model.price_cc()
 
@@ -262,6 +270,7 @@ class SimData:
 				nkids0=nkids_t1.copy()
 				theta0=theta_t1.copy()
 				wage0=wage_t1.copy()
+				epsilon0=epsilon_t1.copy()
 				free0=free_t1.copy()
 				price0=price_t1.copy()
 

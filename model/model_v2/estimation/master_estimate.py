@@ -33,31 +33,33 @@ import estimate as estimate
 
 np.random.seed(1)
 
-betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv7_v2_e5.npy')
+betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv9_v1_e3.npy')
 
 
 #Utility function
-eta=0.06
-alphap=-0.02
-alphaf=-0.8
-alpha_cc=-0.24
-alpha_home_hf=-0.06
+#Utility function
+eta=betas_nelder[0]
+alphap=betas_nelder[1]
+alphaf=betas_nelder[2]
+alpha_cc=betas_nelder[3]
+alpha_home_hf=betas_nelder[4]
+
 
 #wage process
-wagep_betas=np.array([betas_nelder[4],betas_nelder[5],betas_nelder[6],
-	betas_nelder[7],betas_nelder[8],betas_nelder[9]]).reshape((6,1))
+wagep_betas=np.array([betas_nelder[5],betas_nelder[6],betas_nelder[7],
+	betas_nelder[8],betas_nelder[9],betas_nelder[10],betas_nelder[11]]).reshape((7,1))
 
 
-#Production function [young[cc0,cc1],old]
-gamma1=0.9
-gamma2= 0.05
-gamma3= 0.05
-tfp=betas_nelder[14]
+#Production function [young,old]
+gamma1= betas_nelder[12]
+gamma2= betas_nelder[13]
+gamma3= betas_nelder[14]
+tfp=betas_nelder[15]
 sigmatheta=0
 
 #Measurement system: three measures for t=2, one for t=5
-kappas=[[betas_nelder[15],betas_nelder[16],betas_nelder[17],betas_nelder[18]],
-[betas_nelder[19],betas_nelder[20],betas_nelder[21],betas_nelder[22]]]
+kappas=[[betas_nelder[16],betas_nelder[17],betas_nelder[18],betas_nelder[19]],
+[betas_nelder[20],betas_nelder[21],betas_nelder[22],betas_nelder[23]]]
 #First measure is normalized. starting arbitrary values
 #All factor loadings are normalized
 lambdas=[1,1]
@@ -201,62 +203,27 @@ betaw2=output.x[7]
 betaw3=output.x[8]
 betaw4=output.x[9]
 betaw5=np.exp(output.x[10])
-gamma1_opt=output.x[11]
-gamma2_opt=output.x[12]
-gamma3_opt=output.x[13]
-tfp_opt=output.x[14]
-kappas_00=output.x[15]
-kappas_01=output.x[16]
-kappas_02=output.x[17]
-kappas_03=output.x[18]
-kappas_10=output.x[19]
-kappas_11=output.x[20]
-kappas_12=output.x[21]
-kappas_13=output.x[22]
+betaw6=output.x[11]
+gamma1_opt=output.x[12]
+gamma2_opt=output.x[13]
+gamma3_opt=output.x[14]
+tfp_opt=output.x[15]
+kappas_00=output.x[16]
+kappas_01=output.x[17]
+kappas_02=output.x[18]
+kappas_03=output.x[19]
+kappas_10=output.x[20]
+kappas_11=output.x[21]
+kappas_12=output.x[22]
+kappas_13=output.x[23]
 
 
 betas_opt=np.array([eta_opt, alphap_opt,alphaf_opt,alphacc_opt,alpha_home_hf_opt,
 	betaw0,betaw1,betaw2,
-	betaw3,betaw4,betaw5,gamma1_opt,gamma2_opt,
+	betaw3,betaw4,betaw5,betaw6,gamma1_opt,gamma2_opt,
 	gamma3_opt,tfp_opt,kappas_00,kappas_01,kappas_02,kappas_03,
 	kappas_10,kappas_11,kappas_12,kappas_13])
 
-np.save('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv8_v1_e3.npy',betas_opt)
-
-
-
-
-#this will not be necessary once running optimizer (this will go in optimizer(.))
-#beta0=np.array([np.log(eta),alphap,alphaf,wagep_betas[0],wagep_betas[1],wagep_betas[2],
-#	wagep_betas[3],np.log(wagep_betas[4]),gamma1[0][0],gamma2[0][0],
-#	gamma1[0][1],gamma2[0][1],gamma1[1],gamma2[1]])
-
-#dic_qw=output_ins.ll(beta0)
-
-
-"""
-##obtaining emax instance##
-emax_instance=output_ins.emax(param0)
-		
-##obtaining samples##
-choices=output_ins.samples(param0,emax_instance)
-
-
-
-##Getting the betas of the auxiliary model##
-dic_betas=output_ins.aux_model(choices)
-
-beta_inputs_old=dic_betas['beta_inputs_old']
-beta_inputs_old.shape
-
-
-beta_kappas_t5=dic_betas['beta_kappas_t5']
-beta_kappas_t5.shape
-beta_lambdas_t5=dic_betas['beta_lambdas_t5']
-beta_lambdas_t5.shape
-beta_lambdas_t2=dic_betas['beta_lambdas_t2']
-beta_lambdas_t2.shape
-"""
-
+np.save('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv9_v1_e5.npy',betas_opt)
 
 

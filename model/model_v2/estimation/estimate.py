@@ -127,7 +127,7 @@ class Estimate:
 		####Aux to identify utility function########################
 		############################################################
 
-		#child care at period t=1 and 4
+		#child care at period t=1
 		choices_aux=choice_matrix[:,1,:].copy()
 		age_aux=age_child[:,1].copy()
 		passign_aux=self.passign[:,0].copy()
@@ -186,40 +186,72 @@ class Estimate:
 		age_aux=np.reshape(np.concatenate((age[:,0],age[:,1],age[:,4],age[:,7]),axis=0),(self.N*4,1))
 		age2_aux=np.square(age_aux)
 
-		period0=np.log(np.zeros(self.N) + 1)
-		period1=np.log(np.zeros(self.N) + 2)
-		period4=np.log(np.zeros(self.N) + 5)
-		period7=np.log(np.zeros(self.N) + 8)
-		lt = np.reshape(np.concatenate((period0,period1,period4,period7),axis=0),(self.N*4,1))
+		logt_dic={'period0':np.log(np.zeros((self.N,1)) + 1),
+		'period1': np.log(np.zeros((self.N,1)) + 2),
+		'period4': np.log(np.zeros((self.N,1)) + 5),
+		'period7':np.log(np.zeros((self.N,1)) + 8)}
+		
+		lt = np.reshape(np.concatenate((logt_dic['period0'][:,0],
+			logt_dic['period1'][:,0],logt_dic['period4'][:,0],
+			logt_dic['period7'][:,0]),axis=0),(self.N*4,1))
 
 		dhs_aux=np.reshape(np.concatenate((self.x_w[:,1],self.x_w[:,1],self.x_w[:,1],self.x_w[:,1]),axis=0),(self.N*4,1))
 		choices_aux=np.concatenate((choice_matrix[:,0,:],choice_matrix[:,1,:],
 			choice_matrix[:,4,:],choice_matrix[:,7,:]),axis=0)
 		boo_work=(choices_aux==1) | (choices_aux==2) | (choices_aux==4) | (choices_aux==5)
 		
+		#sample who work all years
+		boo_sample = ((choice_matrix[:,0,:]==1) | (choice_matrix[:,0,:]==2) | (choice_matrix[:,0,:]==4) | (choice_matrix[:,0,:]==5)) & ((choice_matrix[:,1,:]==1) | (choice_matrix[:,1,:]==2) | (choice_matrix[:,1,:]==4) | (choice_matrix[:,1,:]==5)) 	& ((choice_matrix[:,4,:]==1) | (choice_matrix[:,4,:]==2) | (choice_matrix[:,4,:]==4) | (choice_matrix[:,4,:]==5)) 	& ((choice_matrix[:,7,:]==1) | (choice_matrix[:,7,:]==2) | (choice_matrix[:,7,:]==4) | (choice_matrix[:,7,:]==5))
+
 		beta_w=np.zeros((5,self.M)) #5 parameters
 		sigma_w=np.zeros((1,self.M))
+		rho_eps=np.zeros((1,self.M))
 		const=np.ones((self.N*4,1)) #4 periods:0,1,4,7
-		for j in range(self.M):
+
+		for j in range(self.M): #the sample loop
 			xw_aux=np.concatenate((age_aux[boo_work[:,j]==1,:],
 				age2_aux[boo_work[:,j]==1,:],
 				dhs_aux[boo_work[:,j]==1,:],
 				lt[boo_work[:,j]==1,:],
 				const[boo_work[:,j]==1,:]),axis=1)
 
-			#If nonsingular matrix
+			
 			if np.linalg.cond(np.dot(np.transpose(xw_aux),
-					xw_aux)) < 1/sys.float_info.epsilon:
+					xw_aux)) < 1/sys.float_info.epsilon: #If nonsingular matrix
+
 				xx_inv=np.linalg.inv(np.dot(np.transpose(xw_aux),xw_aux))
 				xy=np.dot(np.transpose(xw_aux),wage_aux[boo_work[:,j],j])
 				beta_w[:,j]=np.dot(xx_inv,xy)
-				e=wage_aux[boo_work[:,j],j]-np.dot(xw_aux,beta_w[:,j])
-				sigma_w[:,j]=np.sum(np.square(e))/(wage_aux[boo_work[:,j],j].shape[0] 
-					- beta_w[:,j].shape[0])
+
+				#obtaining residuals by period for those who work all periods
+				e_list = []
+				cons_2 = np.ones((self.N,1))
+				n_work = cons_2[boo_sample[:,j]==1,0].shape[0]
+
+				for k in [0,1,4,7]:
+
+					#Xs for those working all periods
+					xw_aux_2=np.concatenate((np.reshape(age[boo_sample[:,j]==1,k],(n_work,1)),
+						np.reshape(age[boo_sample[:,j]==1,k]**2,(n_work,1)),
+						np.reshape(self.x_w[boo_sample[:,j]==1,1],(n_work,1)),
+						np.reshape(logt_dic['period' + str(k)][boo_sample[:,j]==1],(n_work,1)),
+						cons_2[boo_sample[:,j]==1,:]),axis=1)
+					
+					e = np.log(wage_matrix[boo_sample[:,j]==1,k,j]) - np.dot(xw_aux_2,beta_w[:,j])
+					e_list.append(e)
+
+				e  = np.concatenate((e_list[1],e_list[2],e_list[3]),axis=0).reshape((n_work*3,1))
+				e_t1  = np.concatenate((e_list[0],e_list[1],e_list[2]),axis=0).reshape((n_work*3,1)) #lagged
+				
+				ee_inv = np.linalg.inv(np.dot(np.transpose(e_t1),e_t1))
+				ey = np.dot(np.transpose(e_t1),e)
+				rho_eps[:,j] = np.dot(ee_inv,ey)
+				u = e - e_t1*rho_eps[:,j]
+				sigma_w[:,j]=np.sum(np.square(u))/(e.shape[0] - rho_eps[:,j].shape[0])
 			else:
 				print 'disregarding m sample: singular matrix in wage process estimation'
 				pass
-		beta_wagep=np.concatenate((beta_w,sigma_w),axis=0)
+		beta_wagep=np.concatenate((beta_w,sigma_w,rho_eps),axis=0)
 
 		
 		############################################################
@@ -314,18 +346,19 @@ class Estimate:
 		self.param0.betaw[3]=beta[8]
 		self.param0.betaw[4]=beta[9]
 		self.param0.betaw[5]=np.exp(beta[10])
-		self.param0.gamma1=beta[11]
-		self.param0.gamma2=beta[12]
-		self.param0.gamma3=beta[13]
-		self.param0.tfp=beta[14]
-		self.param0.kappas[0][0]=beta[15]
-		self.param0.kappas[0][1]=beta[16]
-		self.param0.kappas[0][2]=beta[17]
-		self.param0.kappas[0][3]=beta[18]
-		self.param0.kappas[1][0]=beta[19]
-		self.param0.kappas[1][1]=beta[20]
-		self.param0.kappas[1][2]=beta[21]
-		self.param0.kappas[1][3]=beta[22]
+		self.param0.betaw[6]=beta[11]
+		self.param0.gamma1=beta[12]
+		self.param0.gamma2=beta[13]
+		self.param0.gamma3=beta[14]
+		self.param0.tfp=beta[15]
+		self.param0.kappas[0][0]=beta[16]
+		self.param0.kappas[0][1]=beta[17]
+		self.param0.kappas[0][2]=beta[18]
+		self.param0.kappas[0][3]=beta[19]
+		self.param0.kappas[1][0]=beta[20]
+		self.param0.kappas[1][1]=beta[21]
+		self.param0.kappas[1][2]=beta[22]
+		self.param0.kappas[1][3]=beta[23]
 			
 
 		#The model (utility instance)
@@ -365,7 +398,7 @@ class Estimate:
 		beta_hours2=np.mean(dic_betas['beta_hours2'],axis=0) #1x1
 		beta_hours3=np.mean(dic_betas['beta_hours3'],axis=0) #1x1
 		beta_cc_home=np.mean(dic_betas['beta_cc_home'],axis=0) #1x1
-		beta_wagep=np.mean(dic_betas['beta_wagep'],axis=1) # 5 x 1
+		beta_wagep=np.mean(dic_betas['beta_wagep'],axis=1) # 6 x 1
 		beta_kappas_t2=np.mean(dic_betas['beta_kappas_t2'],axis=1) #4 x 1
 		beta_kappas_t5=np.mean(dic_betas['beta_kappas_t5'],axis=1) #4 x 1
 		beta_inputs=np.mean(dic_betas['beta_inputs'],axis=1) #4 x 1
@@ -438,7 +471,7 @@ class Estimate:
 		beta0=np.array([self.param0.eta,self.param0.alphap,self.param0.alphaf,
 			self.param0.alpha_cc,self.param0.alpha_home_hf,self.param0.betaw[0],
 			self.param0.betaw[1],self.param0.betaw[2],self.param0.betaw[3],
-			self.param0.betaw[4],np.log(self.param0.betaw[5]),
+			self.param0.betaw[4],np.log(self.param0.betaw[5]),self.param0.betaw[6],
 			self.param0.gamma1,self.param0.gamma2,self.param0.gamma3,	
 			self.param0.tfp,
 			self.param0.kappas[0][0],self.param0.kappas[0][1],#kappa: t=2, m0
@@ -449,7 +482,7 @@ class Estimate:
 
 		
 		#Here we go
-		opt = minimize(self.ll, beta0,  method='Nelder-Mead', options={'maxiter':2000, 'maxfev': 90000, 'ftol': 1e-3, 'disp': True});
+		opt = minimize(self.ll, beta0,  method='Nelder-Mead', options={'maxiter':2000, 'maxfev': 90000, 'ftol': 1e-5, 'disp': True});
 		
 		return opt
 

@@ -70,11 +70,41 @@ class Utility(object):
 	def theta_init(self):
 		return np.exp(np.random.randn(self.N))
 
-
-
-	def waget(self,periodt):
+	def wage_init(self):
 		"""
-		Computes w (hourly wage) for periodt
+		Initial shock to wages
+		"""
+		
+
+		periodt = 0
+		age_ra=self.xwage[:,0].copy()
+		age=age_ra+periodt
+		age2=age**2
+		lt = np.log(np.zeros((self.N,1)) + periodt + 1)
+
+		xw=np.concatenate((np.reshape(age,(self.N,1)),
+					np.reshape(age2,(self.N,1)),
+					np.reshape(self.xwage[:,1],(self.N,1)),
+					lt,
+					np.reshape(self.xwage[:,2],(self.N,1)),),axis=1)
+
+		betas=self.param.betaw[0:-2,0] #everything but rho and variance
+		epsilon_t=np.sqrt(self.param.betaw[-2,0])*np.random.randn(self.N)
+
+		return {'wage':np.exp( np.dot(xw,betas)+ epsilon_t ), 'epsilon': epsilon_t}
+
+	def epsilon(self,epsilon_1):
+		"""
+		the law of motion of wage shock
+		"""
+		rho_eps = self.param.betaw[-1,0]*np.reshape(epsilon_1,self.N)
+		nu = np.sqrt(self.param.betaw[-2,0])*np.random.randn(self.N)
+		return rho_eps + nu 
+
+
+	def waget(self,periodt,epsilon):
+		"""
+		Computes w (hourly wage) for periodt+1
 
 		
 		This method returns t=0,1...,8 
@@ -83,6 +113,10 @@ class Utility(object):
 
 		lnw =beta1*age + beta1*age2 + beta3d_HS + beta4*log(periodt)
 		 beta5 +  e
+
+		 where e = rho*e(-1) + nu
+
+		 nu iid normal
 
 		"""
 
@@ -95,11 +129,11 @@ class Utility(object):
 					np.reshape(age2,(self.N,1)),
 					np.reshape(self.xwage[:,1],(self.N,1)),
 					lt,
-					np.reshape(self.xwage[:,2],(self.N,1))),axis=1)
+					np.reshape(self.xwage[:,2],(self.N,1)),),axis=1)
 
-		betas=self.param.betaw[0:-1,0]
-		epsilon=np.sqrt(self.param.betaw[-1,0])*np.random.randn(self.N)
-		return np.exp( np.dot(xw,betas)+epsilon )
+		betas=self.param.betaw[0:-2,0] #everything but rho and variance
+
+		return np.exp( np.dot(xw,betas)+ epsilon )
 
 	def q_prob(self):
 		"""
@@ -111,7 +145,9 @@ class Utility(object):
 		"""
 		Draws a price offer for a child care slot
 		"""
-		return (np.random.weibull(self.param.shapew,(self.N,1)))*self.param.scalew
+		#return (np.random.weibull(self.param.shapew,(self.N,1)))*self.param.scalew
+		monthly = np.exp(np.random.randn(self.N)*1.31 + np.log(750))
+		return monthly.reshape((self.N,1))*12
 
 	def prob_afdc(self):
 		"""

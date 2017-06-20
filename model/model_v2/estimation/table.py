@@ -23,8 +23,8 @@ import time
 import openpyxl
 
 #Betas and var-cov matrix
-betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv8_v1_e3.npy')
-var_cov=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/estimation/ses_modelv8_e3.npy')
+betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv9_v1_e3.npy')
+var_cov=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/estimation/ses_modelv9_e3.npy')
 se_vector  = np.sqrt(np.diagonal(var_cov))
 
 #Utility function
@@ -42,29 +42,29 @@ sigma_alpha_home_hf_opt=se_vector[4]
 
 #wage process
 wagep_betas=np.array([betas_nelder[5],betas_nelder[6],betas_nelder[7],
-	betas_nelder[8],betas_nelder[9],betas_nelder[10]]).reshape((6,1))
+	betas_nelder[8],betas_nelder[9],betas_nelder[10],betas_nelder[11]]).reshape((7,1))
 
 sigma_wagep_betas=np.array([se_vector[5],se_vector[6],se_vector[7],se_vector[8],
-	se_vector[9],se_vector[10]]).reshape((6,1))
+	se_vector[9],se_vector[10],se_vector[11]]).reshape((7,1))
 
 
 #Production function [young[cc0,cc1],old]
-gamma1= betas_nelder[11]
-gamma2= betas_nelder[12]
-gamma3= betas_nelder[13]
-tfp=betas_nelder[14]
+gamma1= betas_nelder[12]
+gamma2= betas_nelder[13]
+gamma3= betas_nelder[14]
+tfp=betas_nelder[15]
 
-sigma_gamma1=se_vector[11]
-sigma_gamma2=se_vector[12]
-sigma_gamma3=se_vector[13]
-sigma_tfp=se_vector[14]
+sigma_gamma1=se_vector[12]
+sigma_gamma2=se_vector[13]
+sigma_gamma3=se_vector[14]
+sigma_tfp=se_vector[15]
 
 #Measurement system: three measures for t=2, one for t=5
-kappas=[[betas_nelder[15],betas_nelder[16],betas_nelder[17],betas_nelder[18]],
-[betas_nelder[19],betas_nelder[20],betas_nelder[21],betas_nelder[22]]]
+kappas=[[betas_nelder[16],betas_nelder[17],betas_nelder[18],betas_nelder[19]],
+[betas_nelder[20],betas_nelder[21],betas_nelder[22],betas_nelder[23]]]
 
-sigma_kappas=[[se_vector[15],se_vector[16],se_vector[17],se_vector[18]],
-[se_vector[19],se_vector[20],se_vector[21],se_vector[22]]]
+sigma_kappas=[[se_vector[16],se_vector[17],se_vector[18],se_vector[19]],
+[se_vector[20],se_vector[21],se_vector[22],se_vector[23]]]
 
 #First measure is normalized. starting arbitrary values
 lambdas=[1,1]
@@ -81,10 +81,11 @@ r'Preference for full-time work ($\alpha^f$)',r'Preference for child care ($\alp
 r'Cost of home care and full-time work ($\alpha^{c,f}$)']
 
 wage_list_beta = [wagep_betas[0,0],wagep_betas[1,0],wagep_betas[2,0],wagep_betas[3,0],
-wagep_betas[4,0],wagep_betas[5,0]]
+wagep_betas[4,0],wagep_betas[5,0],wagep_betas[6,0]]
 wage_list_se = [sigma_wagep_betas[0,0],sigma_wagep_betas[1,0],
-sigma_wagep_betas[2,0],sigma_wagep_betas[3,0],sigma_wagep_betas[4,0],sigma_wagep_betas[5,0]]
-wage_names = ['Age', r'Age$^2$', 'High school', 'Constant', r'$\log(t)$' ,'Variance of error term']
+sigma_wagep_betas[2,0],sigma_wagep_betas[3,0],sigma_wagep_betas[4,0],
+sigma_wagep_betas[5,0],sigma_wagep_betas[6,0]]
+wage_names = ['Age', r'Age$^2$', 'High school', 'Constant', r'$\log(t)$','AR(1) error term' ,'Variance of error term']
 
 prod_list_beta = [gamma1,gamma2,gamma3,tfp]
 prod_list_se  = [sigma_gamma1,sigma_gamma2,sigma_gamma3,sigma_tfp]

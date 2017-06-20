@@ -80,6 +80,7 @@ class Emaxt:
 		nkids0=self.grid_dict['nkids0']
 		married0=self.grid_dict['married0']
 		agech=self.grid_dict['agech']
+		epsilon_1=self.grid_dict['epsilon_1']#initial shock
 		
 
 		x_w=self.grid_dict['x_w']
@@ -106,7 +107,7 @@ class Emaxt:
 		self.change_util(self.param,ngrid,x_w,x_m,x_k,passign,
 			nkids0,married0,hours,childcare,agech,self.hours_p,self.hours_f,
 			self.wr,self.cs,self.ws)
-		wage0=self.model.waget(7)
+		wage0=self.model.waget(7,epsilon_1)
 		free0=self.model.q_prob()
 		price0=self.model.price_cc()		
 		
@@ -159,7 +160,8 @@ class Emaxt:
 				married_t1=np.reshape(married_t1,(ngrid,1))
 				nkids_t1=self.model.kidst(periodt,np.reshape(nkids0,(ngrid,1)),
 					married0)+nkids0
-				wage_t1=self.model.waget(periodt)
+				epsilon_t1 = self.model.epsilon(epsilon_1)
+				wage_t1=self.model.waget(periodt,epsilon_t1)
 				free_t1=self.model.q_prob()
 				price_t1=self.model.price_cc()
 				#using t-1 income to get theta_T
@@ -208,6 +210,8 @@ class Emaxt:
 				np.reshape(nkids0,(ngrid,1)),np.reshape(married0,(ngrid,1)),
 				np.reshape(np.square(np.log(theta0)),(ngrid,1)),
 				np.reshape(passign,(ngrid,1)), 
+				np.reshape(epsilon_1,(ngrid,1)),#using present shock
+				np.reshape(np.square(epsilon_1),(ngrid,1)),
 				x_wmk ), axis=1)
 
 
@@ -246,6 +250,7 @@ class Emaxt:
 		nkids0=self.grid_dict['nkids0']
 		married0=self.grid_dict['married0']
 		agech=self.grid_dict['agech']
+		epsilon_1=self.grid_dict['epsilon_1']#initial shock
 		
 
 		x_w=self.grid_dict['x_w']
@@ -269,7 +274,7 @@ class Emaxt:
 		self.change_util(self.param,ngrid,x_w,x_m,x_k,passign,
 			nkids0,married0,hours,childcare,agech,
 			self.hours_p,self.hours_f,self.wr,self.cs,self.ws)
-		wage0=self.model.waget(periodt)
+		wage0=self.model.waget(periodt,epsilon_1)
 		free0=self.model.q_prob()
 		price0=self.model.price_cc()
 
@@ -334,7 +339,8 @@ class Emaxt:
 				married_t1=np.reshape(married_t1,(ngrid,1))
 				nkids_t1=self.model.kidst(periodt+1,np.reshape(nkids0,(ngrid,1)),
 					married0)+nkids0 #previous kids + if they have a kid next period
-				wage_t1=self.model.waget(periodt+1)
+				epsilon_t1=self.model.epsilon(epsilon_1)
+				wage_t1=self.model.waget(periodt+1,epsilon_t1)
 				free_t1=self.model.q_prob()
 				price_t1=self.model.price_cc()
 				#income at t-1 to compute theta_t
@@ -374,6 +380,8 @@ class Emaxt:
 					np.reshape(nkids_t1,(ngrid,1)),np.reshape(married_t1,(ngrid,1)),
 					np.reshape(np.square(np.log(theta_t1)),(ngrid,1)),
 					np.reshape(passign,(ngrid,1)), 
+					np.reshape(epsilon_t1,(ngrid,1)),
+					np.reshape(np.square(epsilon_t1),(ngrid,1)),
 					x_wmk ), axis=1)
 
 				#
@@ -399,6 +407,8 @@ class Emaxt:
 				np.reshape(nkids0,(ngrid,1)),np.reshape(married0,(ngrid,1)),
 				np.reshape(np.square(np.log(theta0)),(ngrid,1)),
 				np.reshape(passign,(ngrid,1)), 
+				np.reshape(epsilon_1,(ngrid,1)),#current period shock
+				np.reshape(np.square(epsilon_1),(ngrid,1)),
 				x_wmk ), axis=1)
 
 			

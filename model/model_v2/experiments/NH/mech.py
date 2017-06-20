@@ -34,7 +34,7 @@ from util2 import Prod2
 
 np.random.seed(1)
 
-betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv8_v1_e3.npy')
+betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv9_v1_e3.npy')
 
 #Utility function
 eta=betas_nelder[0]
@@ -43,21 +43,21 @@ alphaf=betas_nelder[2]
 alpha_cc=betas_nelder[3]
 alpha_home_hf=betas_nelder[4]
 
-
 #wage process
 wagep_betas=np.array([betas_nelder[5],betas_nelder[6],betas_nelder[7],
-	betas_nelder[8],betas_nelder[9],betas_nelder[10]]).reshape((6,1))
+	betas_nelder[8],betas_nelder[9],betas_nelder[10],betas_nelder[11]]).reshape((7,1))
 
-#Production function [young,old]
-gamma1= betas_nelder[11]
-gamma2= betas_nelder[12]
-gamma3= betas_nelder[13]
-tfp=betas_nelder[14]
+
+#Production function [young[cc0,cc1],old]
+gamma1= betas_nelder[12]
+gamma2= betas_nelder[13]
+gamma3= betas_nelder[14]
+tfp=betas_nelder[15]
 sigmatheta=0
 
 #Measurement system: three measures for t=2, one for t=5
-kappas=[[betas_nelder[15],betas_nelder[16],betas_nelder[17],betas_nelder[18]],
-[betas_nelder[19],betas_nelder[20],betas_nelder[21],betas_nelder[22]]]
+kappas=[[betas_nelder[16],betas_nelder[17],betas_nelder[18],betas_nelder[19]],
+[betas_nelder[20],betas_nelder[21],betas_nelder[22],betas_nelder[23]]]
 
 #All factor loadings are normalized
 lambdas=[1,1]
@@ -239,10 +239,16 @@ theta_sim_matrix = []
 for j in range(2):
 	theta_sim_matrix.append(choices_c['Choice_' + str(j)]['theta_matrix'])
 
-ate_theta_sim = np.mean(np.mean(np.log(theta_sim_matrix[1]) - np.log(theta_sim_matrix[0]),axis=0),axis=1)
-ate_theta_sim_sd = np.mean(np.mean((np.log(theta_sim_matrix[1]) - np.log(theta_sim_matrix[0]))/sd_matrix,axis=0),axis=1)
-
 #For measuring in SD units
+theta_sd = [np.zeros((N,9,M)),np.zeros((N,9,M))]
+for j in range(M):
+	for t in range(9):
+		for k in range(2):
+			theta_sd[k][:,t,j] = np.log(theta_sim_matrix[k][:,t,j])/sd_matrix[t,j]
+
+
+
+
 
 #Choices
 cc_sim_matrix = []
@@ -267,6 +273,19 @@ h_sim_matrix = []
 for j in range(2):
 	h_sim_matrix.append(choices_c['Choice_' + str(j)]['hours_matrix'])
 
+#samples
+
+sample1 = (h_sim_matrix[1][:,0,:]==40) & (h_sim_matrix[0][:,0,:]<40)
+sample2	=((h_sim_matrix[1][:,0,:]==40) & (h_sim_matrix[0][:,0,:]==40)) | (h_sim_matrix[1][:,0,:]<40)
+
+
+ate_theta_sim_sd = np.zeros((9,M))
+for j  in range(M):
+	for t in range(9):
+		ate_theta_sim_sd[t,j] = 	np.mean(theta_sd[1][sample1[:,j],t,j] - theta_sd[0][sample1[:,j],t,j],axis=0)
+
+np.mean(ate_theta_sim_sd,axis=1)
+
 
 
 #Computing contribution to ATE theta by age [young,old,overall]
@@ -275,64 +294,63 @@ ate_cont_lt  = [np.zeros((8,M)),np.zeros((8,M)),np.zeros((8,M))]
 ate_cont_cc  = [np.zeros((8,M)),np.zeros((8,M)),np.zeros((8,M))]
 ate_cont_ct  = [np.zeros((8,M)),np.zeros((8,M)),np.zeros((8,M))]
 
-#the sample
-boo_y = age_ch[:,2]<=6
-boo_o = age_ch[:,2]>6
 
 for periodt in range(8):
 
-
-	#the theta contribution
 	for j in range(M):
+	#the theta contribution
+	
+		
+		#the sample
+		boo_y = (h_sim_matrix[1][:,0,j]==40) & (h_sim_matrix[0][:,0,j]<40)
+		boo_o = ((h_sim_matrix[1][:,0,j]==40) & (h_sim_matrix[0][:,0,j]==40)) | (h_sim_matrix[1][:,0,j]<40)
+		
+		
 		ltheta_th1 = models[1].thetat(periodt,theta_sim_matrix[1][:,periodt,j],
 			h_sim_matrix[0][:,periodt,j],cc_sim_matrix[0][:,periodt,j],
 			ct_sim_matrix[0][:,periodt,j])
 		ltheta_th0 = models[0].thetat(periodt,theta_sim_matrix[0][:,periodt,j],
 			h_sim_matrix[0][:,periodt,j],cc_sim_matrix[0][:,periodt,j],
 			ct_sim_matrix[0][:,periodt,j])
-		ate_cont_theta[0][periodt,j] = np.mean(np.log(ltheta_th1[boo_y]) - np.log(ltheta_th0[boo_y]))
-		ate_cont_theta[1][periodt,j] = np.mean(np.log(ltheta_th1[boo_o]) - np.log(ltheta_th0[boo_o]))
-		ate_cont_theta[2][periodt,j] = np.mean(np.log(ltheta_th1) - np.log(ltheta_th0))
+		ate_cont_theta[0][periodt,j] = np.mean(np.log(ltheta_th1[boo_y]) - np.log(ltheta_th0[boo_y]))/sd_matrix[periodt,j]
+		ate_cont_theta[1][periodt,j] = np.mean(np.log(ltheta_th1[boo_o]) - np.log(ltheta_th0[boo_o]))/sd_matrix[periodt,j]
+		ate_cont_theta[2][periodt,j] = np.mean(np.log(ltheta_th1) - np.log(ltheta_th0))/sd_matrix[periodt,j]
 
 
 	#The leisure contribution
-	for j in range(M):
 		ltheta_th1 = models[1].thetat(periodt,theta_sim_matrix[1][:,periodt,j],
 			h_sim_matrix[1][:,periodt,j],cc_sim_matrix[0][:,periodt,j],
 			ct_sim_matrix[0][:,periodt,j])
 		ltheta_th0 = models[0].thetat(periodt,theta_sim_matrix[1][:,periodt,j],
 			h_sim_matrix[0][:,periodt,j],cc_sim_matrix[0][:,periodt,j],
 			ct_sim_matrix[0][:,periodt,j])
-		ate_cont_lt[0][periodt,j] = np.mean(np.log(ltheta_th1[boo_y]) - np.log(ltheta_th0[boo_y]))
-		ate_cont_lt[1][periodt,j] = np.mean(np.log(ltheta_th1[boo_o]) - np.log(ltheta_th0[boo_o]))
-		ate_cont_lt[2][periodt,j] = np.mean(np.log(ltheta_th1) - np.log(ltheta_th0))
+		ate_cont_lt[0][periodt,j] = np.mean(np.log(ltheta_th1[boo_y]) - np.log(ltheta_th0[boo_y]))/sd_matrix[periodt,j]
+		ate_cont_lt[1][periodt,j] = np.mean(np.log(ltheta_th1[boo_o]) - np.log(ltheta_th0[boo_o]))/sd_matrix[periodt,j]
+		ate_cont_lt[2][periodt,j] = np.mean(np.log(ltheta_th1) - np.log(ltheta_th0))/sd_matrix[periodt,j]
 
 	#The CC contribution
-	for j in range(M):
 		ltheta_th1 = models[1].thetat(periodt,theta_sim_matrix[1][:,periodt,j],
 			h_sim_matrix[1][:,periodt,j],cc_sim_matrix[1][:,periodt,j],
 			ct_sim_matrix[0][:,periodt,j])
 		ltheta_th0 = models[0].thetat(periodt,theta_sim_matrix[1][:,periodt,j],
 			h_sim_matrix[1][:,periodt,j],cc_sim_matrix[0][:,periodt,j],
 			ct_sim_matrix[0][:,periodt,j])
-		ate_cont_cc[0][periodt,j] = np.mean(np.log(ltheta_th1[boo_y]) - np.log(ltheta_th0[boo_y]))
-		ate_cont_cc[1][periodt,j] = np.mean(np.log(ltheta_th1[boo_o]) - np.log(ltheta_th0[boo_o]))
-		ate_cont_cc[2][periodt,j] = np.mean(np.log(ltheta_th1) - np.log(ltheta_th0))
+		ate_cont_cc[0][periodt,j] = np.mean(np.log(ltheta_th1[boo_y]) - np.log(ltheta_th0[boo_y]))/sd_matrix[periodt,j]
+		ate_cont_cc[1][periodt,j] = np.mean(np.log(ltheta_th1[boo_o]) - np.log(ltheta_th0[boo_o]))/sd_matrix[periodt,j]
+		ate_cont_cc[2][periodt,j] = np.mean(np.log(ltheta_th1) - np.log(ltheta_th0))/sd_matrix[periodt,j]
 
 	#The consumption contribution
-	for j in range(M):
 		ltheta_th1 = models[1].thetat(periodt,theta_sim_matrix[1][:,periodt,j],
 			h_sim_matrix[1][:,periodt,j],cc_sim_matrix[1][:,periodt,j],
 			ct_sim_matrix[1][:,periodt,j])
 		ltheta_th0 = models[0].thetat(periodt,theta_sim_matrix[1][:,periodt,j],
 			h_sim_matrix[1][:,periodt,j],cc_sim_matrix[1][:,periodt,j],
 			ct_sim_matrix[0][:,periodt,j])
-		ate_cont_ct[0][periodt,j] = np.mean(np.log(ltheta_th1[boo_y]) - np.log(ltheta_th0[boo_y]))
-		ate_cont_ct[1][periodt,j] = np.mean(np.log(ltheta_th1[boo_o]) - np.log(ltheta_th0[boo_o]))
-		ate_cont_ct[2][periodt,j] = np.mean(np.log(ltheta_th1) - np.log(ltheta_th0))
+		ate_cont_ct[0][periodt,j] = np.mean(np.log(ltheta_th1[boo_y]) - np.log(ltheta_th0[boo_y]))/sd_matrix[periodt,j]
+		ate_cont_ct[1][periodt,j] = np.mean(np.log(ltheta_th1[boo_o]) - np.log(ltheta_th0[boo_o]))/sd_matrix[periodt,j]
+		ate_cont_ct[2][periodt,j] = np.mean(np.log(ltheta_th1) - np.log(ltheta_th0))/sd_matrix[periodt,j]
 
 	
-
 ###The graphs##
 
 exp = ['young', 'old', 'overall']
@@ -346,10 +364,10 @@ for j in range(3): #the experiment loop
 	total = y1 + y2 + y3 + y4
 
 	fig, ax=plt.subplots()
-	ax.plot(x,y2/total, color='k',zorder=1,linewidth=3)
-	ax.fill_between(x,y2/total,(y2+y1)/total, color='k' ,alpha=.7,zorder=2)
-	ax.fill_between(x,(y2+y1)/total,(y2+y1+y3)/total, color='k' ,alpha=.4,zorder=3)
-	ax.fill_between(x,(y2+y1+y3)/total,(total)/total, color='k' ,alpha=.15,zorder=4)
+	ax.plot(x,y2, color='k',zorder=1,linewidth=3)
+	ax.fill_between(x,y2,(y2+y1), color='k' ,alpha=.7,zorder=2)
+	ax.fill_between(x,(y2+y1),(y2+y1+y3), color='k' ,alpha=.4,zorder=3)
+	ax.fill_between(x,(y2+y1+y3),(total), color='k' ,alpha=.15,zorder=4)
 	ax.set_ylabel(r'Decomposition of $E[\ln \theta_{t+1}\mid D=1] - E[\ln \theta_{t+1}\mid D=0]$', fontsize=14)
 	ax.set_xlabel(r'Years after random assignment ($t$)', fontsize=14)
 	ax.spines['right'].set_visible(False)
@@ -357,11 +375,13 @@ for j in range(3): #the experiment loop
 	ax.yaxis.set_ticks_position('left')
 	ax.xaxis.set_ticks_position('bottom')
 	ax.margins(0, 0)
-	ax.set_ylim(-0.1,1)
+	#ax.set_ylim(-0.01,.20)
 	ax.legend(['Time', r'$\theta_t$','Child care','Consumption'])
 	plt.show()
 	fig.savefig('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/experiments/NH/mech_' + exp[j] + '.pdf', format='pdf')
 	plt.close()
+
+
 
 #Contribution % pc
 j=0
@@ -371,3 +391,7 @@ np.mean(ate_cont_lt[j],axis=1)/ (np.mean(ate_cont_theta[j],axis=1)+ np.mean(ate_
 
 #Impact of income, sd units, for 1st period
 ate_theta_sim_sd[1]*ate_cont_ct_pc[0] 
+
+(y2[0] + y3[0] + y4[0])*gamma1
+
+

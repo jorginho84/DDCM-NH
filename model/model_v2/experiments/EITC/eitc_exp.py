@@ -33,25 +33,26 @@ from bset import Budget
 
 np.random.seed(1)
 
-betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv7_v2_e5.npy')
+betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv8_v1_e3.npy')
 
 
 #Utility function
-eta=betas_nelder[0]
-alphap=betas_nelder[1]
-alphaf=betas_nelder[2]
-alpha_cc=-0.81
-alpha_home_hf=-0.08
+eta=0.12
+alphap=-0.15
+alphaf=-0.28
+alpha_cc=-0.6
+alpha_home_hf=betas_nelder[4]
 
 
 #wage process
-wagep_betas=np.array([betas_nelder[4],betas_nelder[5],betas_nelder[6],
-	betas_nelder[7],betas_nelder[8],betas_nelder[9]]).reshape((6,1))
+wagep_betas=np.array([betas_nelder[5],betas_nelder[6],betas_nelder[7],
+	betas_nelder[8],1.52,0.3,0.65]).reshape((7,1))
 
 
 #Production function [young[cc0,cc1],old]
-gamma1=[betas_nelder[10],betas_nelder[12]]
-gamma2=[betas_nelder[11],betas_nelder[13]]
+gamma1= 0.93
+gamma2= betas_nelder[12]
+gamma3= betas_nelder[13]
 tfp=betas_nelder[14]
 sigmatheta=0
 
@@ -191,9 +192,13 @@ childcare  = np.zeros(N)
 """
 EXPERIMENT 1: Full EITC vs No EITC (eitc_list_1)
 EXPERIMENT 2: 1996 EITC vs 1994 EITC (eitc_list_2)
-EXPERIMENT 3: CC subsidy + EITC vs EITC
+EXPERIMENT 3: CC subsidy + EITC vs EITC (eitc_list_3)
 EXPERIMENT 4: CC subsidy + EITC vs 1994 EITC
 EXPERIMENT 5: CC subsidy + EITC vs No EITC
+
+#EXPERIMENT 6
+EXPERIMENT 6.1: Everybody has full EITC (eitc_list_2)
+EXPERIMENT 6.2: Nobddy has EITC (eitc_list_4)
 
 """
 eitc_list = [eitc_list_1,eitc_list_2,eitc_list_3]
@@ -208,7 +213,8 @@ dics = []
 for j in range(5): #the experiment loop
 
 	#Defines the instance with parameters
-	param0=util.Parameters(alphap, alphaf, eta, alpha_cc,alpha_home_hf,gamma1, gamma2, tfp, sigmatheta,
+	param0=util.Parameters(alphap, alphaf, eta, alpha_cc,alpha_home_hf,gamma1, gamma2,
+		gamma3, tfp, sigmatheta,
 		wagep_betas, marriagep_betas, kidsp_betas, experiments[j][0],afdc_list,snap_list,
 		cpi,q,scalew,shapew,lambdas,kappas,pafdc,psnap)
 
@@ -231,7 +237,7 @@ for j in range(5): #the experiment loop
 		nperiods_cc,nperiods_ct,nperiods_emp,nperiods_theta,period_y)
 	dics.append(ate_ins.sim_ate())
 
-#HERE I AM: see if nperiods_cc=3 makes the ate_CC>0.
+
 
 ######Making the Table#######
 outcome_list = ['Consumption (US\$)', 'Part-time', 'Full-time', 'Child care',

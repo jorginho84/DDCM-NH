@@ -16,7 +16,7 @@ See Angrist and Pischke for more information
 local SE="hc2"
 
 *Set # bsamples
-local reps=1000
+local n_boot = 500
 
 clear
 clear matrix
@@ -26,6 +26,9 @@ program drop _all
 set seed 100
 set maxvar 15000
 set more off
+set seed 100
+
+
 
 use "$databases/Youth_original2.dta", clear
 keep  sampleid child p_assign zboy agechild p_assign  /*
@@ -173,10 +176,21 @@ label variable epi124d "Overall"
 gen d_RA = p_assign=="E"
 replace d_RA=0 if p_assign=="C"
 
-/*These are oprobits*/
-foreach variable of varlist `Y2_B1' `Y2_B2' `Y5_B2' `Y5_B3' `Y5_B5' `Y8_B2' `Y8_B3' `Y8_B5'{ 
-	
+*******************************************************************
+*******************************************************************
+*******************************************************************
 
+/*THESE ARE OPROBITS*/
+*******************************************************************
+*******************************************************************
+*******************************************************************
+tempfile data_aux
+save `data_aux', replace
+
+
+*Original estimates
+
+foreach variable of varlist `Y2_B1' `Y2_B2' `Y5_B2' `Y5_B3' `Y5_B5' `Y8_B2' `Y8_B3' `Y8_B5'{
 	preserve
 	qui: keep if `variable'!=.
 	qui: count
@@ -187,37 +201,182 @@ foreach variable of varlist `Y2_B1' `Y2_B2' `Y5_B2' `Y5_B3' `Y5_B5' `Y8_B2' `Y8_
 	qui: sum d_30 if p_assign=="C"
 	local baseline_`variable' = string(round(r(mean),0.001),"%9.3f")
 
-	*Model 1
 	qui: oprobit `variable' i.d_RA
-	local pval_model1_`variable'_aux = 2*(1-normal(abs(_b[1.d_RA]/_se[1.d_RA])))
-	local pval_model1_`variable' = string(round(`pval_model1_`variable'_aux',0.001),"%9.3f")
-	predict xbetas, xb
+	qui: predict xbetas, xb
 	gen xbetas_tilde = xbetas - _b[1.d_RA]*d_RA
 	gen pr_1 = 1-normal(_b[/cut3]- (xbetas_tilde + _b[1.d_RA]))
 	gen pr_0 = 1-normal(_b[/cut3]- (xbetas_tilde))
 	gen dpr = pr_1 - pr_0
 	qui: sum dpr
+	local beta_model1_orig_`variable'=r(mean)
 	local beta_model1_`variable' = string(round(r(mean),0.001),"%9.3f")
 	drop xbetas* pr_0 pr_1 dpr
 
-
-	*Model 2
 	qui: oprobit `variable' i.d_RA age_ra agechild i.marital i.ethnic d_HS higrade i.pastern2
-	local pval_model2_`variable'_aux = 2*(1-normal(abs(_b[1.d_RA]/_se[1.d_RA])))
-	local pval_model2_`variable' = string(round(`pval_model2_`variable'_aux',0.001),"%9.3f")
-	predict xbetas, xb
+	qui: predict xbetas, xb
 	gen xbetas_tilde = xbetas - _b[1.d_RA]*d_RA
 	gen pr_1 = 1-normal(_b[/cut3]- (xbetas_tilde + _b[1.d_RA]))
 	gen pr_0 = 1-normal(_b[/cut3]- (xbetas_tilde))
 	gen dpr = pr_1 - pr_0
 	qui: sum dpr
+	local beta_model2_orig_`variable'=r(mean)
 	local beta_model2_`variable' = string(round(r(mean),0.001),"%9.3f")
 	drop xbetas* pr_0 pr_1 dpr
 
+
 	restore
+}
+
+
+
+
+forvalues x=1/`n_boot'{
+	foreach variable of varlist `Y2_B1' `Y2_B2' `Y5_B2' `Y5_B3' `Y5_B5' `Y8_B2' `Y8_B3' `Y8_B5'{
+		preserve
+		qui: keep if `variable'!=.
+		bsample
+
+
+		gen d_30 = `variable'==4 | `variable'==5
+		qui: oprobit `variable' i.d_RA
+		qui: predict xbetas, xb
+		gen xbetas_tilde = xbetas - _b[1.d_RA]*d_RA
+		gen pr_1 = 1-normal(_b[/cut3]- (xbetas_tilde + _b[1.d_RA]))
+		gen pr_0 = 1-normal(_b[/cut3]- (xbetas_tilde))
+		gen dpr = pr_1 - pr_0
+		qui: sum dpr
+		local beta`x'_model1_`variable' = r(mean)
+		drop xbetas* pr_0 pr_1 dpr
+
+		qui: oprobit `variable' i.d_RA age_ra agechild i.marital i.ethnic d_HS higrade i.pastern2
+		qui: predict xbetas, xb
+		gen xbetas_tilde = xbetas - _b[1.d_RA]*d_RA
+		gen pr_1 = 1-normal(_b[/cut3]- (xbetas_tilde + _b[1.d_RA]))
+		gen pr_0 = 1-normal(_b[/cut3]- (xbetas_tilde))
+		gen dpr = pr_1 - pr_0
+		qui: sum dpr
+		local beta`x'_model2_`variable' = r(mean)
+		drop xbetas* pr_0 pr_1 dpr
+
+
+		restore
+
+	}	
+}
+
+clear
+set obs `n_boot'
+
+foreach variable of newlist `Y2_B1' `Y2_B2' `Y5_B2' `Y5_B3' `Y5_B5' `Y8_B2' `Y8_B3' `Y8_B5'{
+	gen beta_model1_`variable' = .
+	gen beta_model2_`variable' = .
+	
+	
+	forvalues x=1/`n_boot'{
+		qui: replace beta_model1_`variable' = `beta`x'_model1_`variable'' if _n==`x'
+		qui: replace beta_model2_`variable' = `beta`x'_model2_`variable'' if _n==`x'
+	}
+
+	*Computing pval
+	forvalues j=1/2{
+		sum beta_model`j'_`variable'
+		*local beta_mean_`variable' = r(mean)
+		gen beta_model`j'_`variable'_dev = (beta_model`j'_`variable'  - r(mean))^2
+		egen se_model`j'_`variable' = total(beta_model`j'_`variable'_dev)
+		replace se_model`j'_`variable' = (se_model`j'_`variable'/(`n_boot'-1))^.5
+		qui: sum se_model`j'_`variable'
+		local pval_model`j'_`variable' = 2*(1-normal(abs(`beta_model`j'_orig_`variable''/r(mean))))
+		local pval_model`j'_`variable'_aux = string(round(`pval_model`j'_`variable'',0.001),"%9.3f")
 	
 
+	}
+	
+	
 }
+
+/*Graph: SSRS*/
+
+
+clear
+set obs 10
+
+forvalues x=1/2{
+	gen model`x'_year2=.
+	gen sig_model`x'_year2=.
+	gen model`x'_year5=.
+	gen sig_model`x'_year5=.
+	gen model`x'_year8=.
+	gen sig_model`x'_year8=.
+
+
+}
+
+
+
+*Recovering values
+local i=1
+foreach variable in `Y2_B1'{
+
+	forvalues x=1/2{
+		if `pval_model`x'_`variable''<=0.05{
+			replace sig_model`x'_year2=`beta_model`x'_orig_`variable''  if _n==`i'	
+		}
+		else{
+			replace model`x'_year2=`beta_model`x'_orig_`variable''  if _n==`i'		
+		}
+		
+	}
+	
+	local i = `i' + 1
+}
+
+
+foreach year in 5 8{
+	local i=1
+	foreach variable in `Y`year'_B2'{
+
+		forvalues x=1/2{
+			if `pval_model`x'_`variable''<=0.05{
+			replace sig_model`x'_year`year'=`beta_model`x'_orig_`variable''  if _n==`i'	
+		}
+		else{
+			replace model`x'_year`year'=`beta_model`x'_orig_`variable''  if _n==`i'		
+		}
+			
+		}
+	
+	local i = `i' + 1
+	}
+
+}
+
+egen id = seq()
+reshape long model1_year model2_year sig_model1_year sig_model2_year, i(id) j(year)
+
+forvalues x=1/2{
+	twoway (scatter model`x' year, mlcolor(blue) mfcolor(none) msize(large)) /*
+	*/ (scatter sig_model`x' year, mlcolor(blue) mfcolor(blue) msize(large)),/*
+	*/ legend(off) ytitle("Impact on prob of being in the top 30%")  /*
+	*/xtitle("Years after random assignment") /*
+	*/ xlabel(2 5 8 , noticks) ylabel(, nogrid)/*
+	*/ graphregion(fcolor(white) ifcolor(white) lcolor(white) ilcolor(white))/*
+	*/ plotregion(fcolor(white) lcolor(white)  ifcolor(white) ilcolor(white)) scale(1.4)
+
+	graph export "$results/ssrs_model`x'.pdf", as(pdf) replace
+
+}
+
+
+
+*******************************************************************
+*******************************************************************
+*******************************************************************
+
+/*THESE ARE OLS*/
+*******************************************************************
+*******************************************************************
+*******************************************************************
+use `data_aux', clear
 
 
 /*These are OLS*/
@@ -235,23 +394,29 @@ foreach variable of varlist `Y5_B1' `Y5_B4' `Y8_B1' `Y8_B4'{
 
 	*Model 1
 	qui: regress `variable' i.d_RA
-	local pval_model1_`variable'_aux = 2*(1-normal(abs(_b[1.d_RA]/_se[1.d_RA])))
-	local pval_model1_`variable' = string(round(`pval_model1_`variable'_aux',0.001),"%9.3f")
+	local pval_model1_`variable' = 2*(1-normal(abs(_b[1.d_RA]/_se[1.d_RA])))
+	local pval_model1_`variable'_aux = string(round(`pval_model1_`variable'',0.001),"%9.3f")
 	local beta_model1_`variable' = string(round(_b[1.d_RA],0.001),"%9.3f")
 	
 	*Model 2
 	qui: regress `variable' i.d_RA age_ra agechild i.marital i.ethnic d_HS higrade i.pastern2
-	local pval_model2_`variable'_aux = 2*(1-normal(abs(_b[1.d_RA]/_se[1.d_RA])))
-	local pval_model2_`variable' = string(round(`pval_model2_`variable'_aux',0.001),"%9.3f")
+	local pval_model2_`variable' = 2*(1-normal(abs(_b[1.d_RA]/_se[1.d_RA])))
+	local pval_model2_`variable'_aux = string(round(`pval_model2_`variable'',0.001),"%9.3f")
 	local beta_model2_`variable' = string(round(_b[1.d_RA],0.001),"%9.3f")
 	
 	restore
-	
 
 }
+*******************************************************************
+*******************************************************************
+*******************************************************************
 
+/*Tables*/
+*******************************************************************
+*******************************************************************
+*******************************************************************
+	
 
-*******************************************************
 /*Table of Year 2*/
 file open Y2 using "$results/Y2_raw.tex", write replace
 file write Y2 "\begin{tabular}{llccccccc}"_n
@@ -265,18 +430,18 @@ foreach variable in `Y2_B1' {
 	local lab: variable label `variable'
 	file write Y2 "`lab' (\$n=`n_`variable''\$) &       & `baseline_`variable'' & "
 	
-	if `pval_model1_`variable'_aux'<0.05{
-		file write Y2 "      & \textbf{`beta_model1_`variable''} & `pval_model1_`variable'' & "
+	if `pval_model1_`variable''<0.05{
+		file write Y2 "      & \textbf{`beta_model1_`variable''} & `pval_model1_`variable'_aux' & "
 	}
 	else{
-		file write Y2 "      & `beta_model1_`variable'' & `pval_model1_`variable'' & "
+		file write Y2 "      & `beta_model1_`variable'' & `pval_model1_`variable'_aux' & "
 	}
 	
-	if `pval_model2_`variable'_aux'<0.05{
-		file write Y2 "      & \textbf{`beta_model2_`variable''} & `pval_model2_`variable'' \\ " _n
+	if `pval_model2_`variable''<0.05{
+		file write Y2 "      & \textbf{`beta_model2_`variable''} & `pval_model2_`variable'_aux' \\ " _n
 	}
 	else{
-		file write Y2 "      & `beta_model2_`variable'' & `pval_model2_`variable'' \\ " _n
+		file write Y2 "      & `beta_model2_`variable'' & `pval_model2_`variable'_aux' \\ " _n
 	}
 
 
@@ -288,18 +453,18 @@ foreach variable in `Y2_B2' {
 	local lab: variable label `variable'
 	file write Y2 "`lab' (\$n=`n_`variable''\$) &       & `baseline_`variable'' & "
 	
-	if `pval_model1_`variable'_aux'<0.05{
-		file write Y2 "      & \textbf{`beta_model1_`variable''} & `pval_model1_`variable'' & "
+	if `pval_model1_`variable''<0.05{
+		file write Y2 "      & \textbf{`beta_model1_`variable''} & `pval_model1_`variable'_aux' & "
 	}
 	else{
-		file write Y2 "      & `beta_model1_`variable'' & `pval_model1_`variable'' & "
+		file write Y2 "      & `beta_model1_`variable'' & `pval_model1_`variable'_aux' & "
 	}
 	
-	if `pval_model2_`variable'_aux'<0.05{
-		file write Y2 "      & \textbf{`beta_model2_`variable''} & `pval_model2_`variable'' \\ " _n
+	if `pval_model2_`variable''<0.05{
+		file write Y2 "      & \textbf{`beta_model2_`variable''} & `pval_model2_`variable'_aux' \\ " _n
 	}
 	else{
-		file write Y2 "      & `beta_model2_`variable'' & `pval_model2_`variable'' \\ " _n
+		file write Y2 "      & `beta_model2_`variable'' & `pval_model2_`variable'_aux' \\ " _n
 	}
 }
 
@@ -338,18 +503,18 @@ foreach year in 5 8{
 		foreach variable of varlist `Y`year'_B`x''{
 			local lab: variable label `variable'
 			file write Y`year' "`lab' (\$n=`n_`variable''\$) &       & `baseline_`variable'' & "
-			if `pval_model1_`variable'_aux'<0.05{
-				file write Y`year' "      & \textbf{`beta_model1_`variable''} & `pval_model1_`variable'' & "
+			if `pval_model1_`variable''<0.05{
+				file write Y`year' "      & \textbf{`beta_model1_`variable''} & `pval_model1_`variable'_aux' & "
 			}
 			else{
-				file write Y`year' "      & `beta_model1_`variable'' & `pval_model1_`variable'' & "
+				file write Y`year' "      & `beta_model1_`variable'' & `pval_model1_`variable'_aux' & "
 			}
 			
-			if `pval_model2_`variable'_aux'<0.05{
-				file write Y`year' "      & \textbf{`beta_model2_`variable''} & `pval_model2_`variable'' \\ " _n
+			if `pval_model2_`variable''<0.05{
+				file write Y`year' "      & \textbf{`beta_model2_`variable''} & `pval_model2_`variable'_aux' \\ " _n
 			}
 			else{
-				file write Y`year' "      & `beta_model2_`variable'' & `pval_model2_`variable'' \\ " _n
+				file write Y`year' "      & `beta_model2_`variable'' & `pval_model2_`variable'_aux' \\ " _n
 			}
 
 
@@ -364,94 +529,5 @@ foreach year in 5 8{
 	file close Y`year'
 
 }
-
-*****************************************************************************************
-/*Graph: SSRS*/
-
-
-clear
-set obs 10
-
-forvalues x=1/2{
-	gen model`x'_year2=.
-	gen sig_model`x'_year2=.
-	gen model`x'_year5=.
-	gen sig_model`x'_year5=.
-	gen model`x'_year8=.
-	gen sig_model`x'_year8=.
-
-
-}
-
-
-
-*Recovering values
-local i=1
-foreach variable in `Y2_B1'{
-
-	forvalues x=1/2{
-		if `pval_model`x'_`variable''<=0.05{
-			replace sig_model`x'_year2=`beta_model`x'_`variable''  if _n==`i'	
-		}
-		else{
-			replace model`x'_year2=`beta_model`x'_`variable''  if _n==`i'		
-		}
-		
-	}
-	
-	local i = `i' + 1
-}
-
-
-foreach year in 5 8{
-	local i=1
-	foreach variable in `Y`year'_B2'{
-
-		forvalues x=1/2{
-			if `pval_model`x'_`variable''<=0.05{
-			replace sig_model`x'_year`year'=`beta_model`x'_`variable''  if _n==`i'	
-		}
-		else{
-			replace model`x'_year`year'=`beta_model`x'_`variable''  if _n==`i'		
-		}
-			
-		}
-	
-	local i = `i' + 1
-	}
-
-}
-
-egen id = seq()
-reshape long model1_year model2_year sig_model1_year sig_model2_year, i(id) j(year)
-
-forvalues x=1/2{
-	twoway (scatter model`x' year, mlcolor(blue) mfcolor(none) msize(large)) /*
-	*/ (scatter sig_model`x' year, mlcolor(blue) mfcolor(blue) msize(large)),/*
-	*/ legend(off) ytitle("Impact on prob of being in the top 30%")  /*
-	*/xtitle("Years after random assignment") /*
-	*/ xlabel(2 5 8 , noticks) ylabel(, nogrid)/*
-	*/ graphregion(fcolor(white) ifcolor(white) lcolor(white) ilcolor(white))/*
-	*/ plotregion(fcolor(white) lcolor(white)  ifcolor(white) ilcolor(white)) scale(1.6)
-
-	graph export "$results/ssrs_model`x'.pdf", as(pdf) replace
-
-}
-
-/*
-*MOdel 1
-twoway (hist year2_model1, fcolor(none) lcolor(black) ) /*
-*/ (hist year5_model1, fcolor(none) lcolor(blue) ) /*
-*/(hist year8_model1, fcolor(none) lcolor(red)),/*
-*/ legend(order(1 "Year two" 2 "Year five" 3 "Year 8") region(lcolor(white)))/*
-*/ytitle("Density")  xtitle("Impact on prob of being in the top 30%") /*
-*/ xlabel( , noticks) ylabel(, nogrid)/*
-*/ graphregion(fcolor(white) ifcolor(white) lcolor(white) ilcolor(white))/*
-*/ plotregion(fcolor(white) lcolor(white)  ifcolor(white) ilcolor(white))
-
-graph export "$results/ssrs_model1.pdf", as(pdf) replace
-
-*/
-
 
 

@@ -205,7 +205,7 @@ for j in range(len(models_list)):
 #the list of policies
 
 
-outcome_list = ['Consumption (US\$)', 'Part-time', 'Full-time', 'Child care',
+outcome_list = [r'Consumption (US\$)', 'Part-time', 'Full-time', 'Child care',
 r'$\ln \theta$ ($\sigma$s)']
 
 output_list = ['Consumption', 'Part-time', 'Full-time', 'CC', 'Theta']
@@ -221,7 +221,7 @@ with open('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model
 			
 			f.write(outcome_list[j])
 			for k in range(6): #the policy loop
-				f.write(r'  && '+ '{:03.0f}'.format(dics[k][output_list[j]]))
+				f.write(r'  && '+ '{:02.0f}'.format(dics[k][output_list[j]]))
 			f.write(r' \bigstrut[t]\\'+'\n')
 		else:
 			f.write(outcome_list[j])

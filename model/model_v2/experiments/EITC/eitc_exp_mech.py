@@ -422,7 +422,7 @@ plt.close()
 
 
 #Table: average effects
-outcome_list = ['Consumption (US\$/1000)', 'Part-time', 'Full-time', 'Child care',
+outcome_list = [r'Consumption (US\$ 1,000)', 'Part-time', 'Full-time', 'Child care',
 r'$\ln \theta$ ($\sigma$s)']
 
 ate_theta = [np.zeros((9)),np.zeros((9)),np.zeros((9))]
@@ -440,9 +440,10 @@ with open('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model
 	f.write(r'ATE   && (1)   && (2)   && (3) \bigstrut[b]\\'+'\n')
 	f.write(r'\cline{1-1}\cline{3-7}')
 	for j in range(len(output_list)):
-		f.write(outcome_list[j]+ r'&&'+ '{:3.2f}'.format(np.mean(output_list[j][0][0:periods[j]]))  
+		f.write(outcome_list[j]+ '&&'+ '{:3.2f}'.format(np.mean(output_list[j][0][0:periods[j]]))  
 			+'&& '+ '{:3.2f}'.format(np.mean(output_list[j][1][0:periods[j]])) 
-			+'&& '+ '{:3.2f}'.format(np.mean(output_list[j][2][0:periods[j]]))+'\n')
+			+'&& '+ '{:3.2f}'.format(np.mean(output_list[j][2][0:periods[j]])))
+		f.write(r' \bigstrut[t]\\'+'\n')
 
 	f.write(r'\hline'+'\n')
 	f.write(r'\textit{Treatment} &       &       &       &       &       &  \bigstrut[t]\\'+'\n')

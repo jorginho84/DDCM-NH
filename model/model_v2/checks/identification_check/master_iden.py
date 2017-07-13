@@ -30,19 +30,17 @@ import int_linear
 import emax as emax
 import simdata as simdata
 sys.path.append("/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/estimation")
-import estimate_v3 as estimate
+import estimate as estimate
 
 np.random.seed(1)
 
 execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/load_param.py')
 
 ###Auxiliary estimates### 
-
-moments_vector=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/aux_model/moments_vector_2.csv').values
-
+moments_vector=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/aux_model/moments_vector.csv').values
 
 #This is the var cov matrix of aux estimates
-var_cov=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/aux_model/var_cov_2.csv').values
+var_cov=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/aux_model/var_cov.csv').values
 
 #The W matrix in Wald metric
 #Using diagonal of Var-Cov matrix of simulated moments
@@ -64,24 +62,36 @@ D=50
 #For II procedure
 M=1000
 
+#How many hours is part- and full-time work
+hours_p=15
+hours_f=40
+
+#Indicate if model includes a work requirement (wr), 
+#and child care subsidy (cs) and a wage subsidy (ws)
+wr=1
+cs=1
+ws=1
+
 #The model (utility instance)
 hours = np.zeros(N)
 childcare  = np.zeros(N)
 
 model  = util.Utility(param0,N,x_w,x_m,x_k,passign,
-	theta0,nkids0,married0,hours,childcare,agech0,hours_p,hours_f)
+	nkids0,married0,hours,childcare,agech0,hours_p,hours_f,wr,cs,ws)
 
 #The instance for computing samples
-output_ins=estimate.Estimate(param0,x_w,x_m,x_k,x_wmk,passign,agech0,theta0,nkids0,
-	married0,D,dict_grid,M,N,moments_vector,w_matrix,hours_p,hours_f)
+output_ins=estimate.Estimate(param0,x_w,x_m,x_k,x_wmk,passign,agech0,nkids0,
+	married0,D,dict_grid,M,N,moments_vector,w_matrix,hours_p,hours_f,
+	wr,cs,ws)
 
-def syminv(g):
-	out = -np.log((2/(g+1)) - 1)
-	return out
+def sym(a):
+	return ((1/(1+np.exp(-a))) - 0.5)*2
+
+
 
 #########################################################
 ####ETA###
-execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/eta.py')
+#execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/eta.py')
 
 
 #########################################################
@@ -90,20 +100,20 @@ execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2
 
 #########################################################
 ####Full-time work###
-#qexecfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/alphaf.py')
+#execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/alphaf.py')
 
 
 #########################################################
-####\gamma_1 (young)###
-#execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/gamma1_young.py')
+####\gamma_1###
+#execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/gamma1.py')
 
 #########################################################
 ####\gamma_2 (young)###
 #execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/gamma2_young.py')
 
 #########################################################
-####\gamma_2 (old)###
-#execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/gamma2_old.py')
+####\gamma_3###
+#execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/gamma3.py')
 
 
 #########################################################

@@ -1,27 +1,33 @@
-betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv5_v1.npy')
+betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv9_v1_e3.npy')
 
 
 #Utility function
 eta=betas_nelder[0]
 alphap=betas_nelder[1]
 alphaf=betas_nelder[2]
+alpha_cc=betas_nelder[3]
+alpha_home_hf=betas_nelder[4]
+
 
 #wage process
-wagep_betas=np.array([betas_nelder[3],betas_nelder[4],betas_nelder[5],
-	betas_nelder[6],betas_nelder[7]]).reshape((5,1))
+wagep_betas=np.array([betas_nelder[5],betas_nelder[6],betas_nelder[7],
+	betas_nelder[8],betas_nelder[9],betas_nelder[10],betas_nelder[11]]).reshape((7,1))
 
-#Production function [young[cc0,cc1],old]
-gamma1=[betas_nelder[8],betas_nelder[10]]
-gamma2=[betas_nelder[9],betas_nelder[11]]
-tfp=betas_nelder[12]
+
+#Production function [young,old]
+gamma1= betas_nelder[12]
+gamma2= betas_nelder[13]
+gamma3= betas_nelder[14]
+tfp=betas_nelder[15]
 sigmatheta=0
 
 #Measurement system: three measures for t=2, one for t=5
-kappas=[[betas_nelder[13],betas_nelder[14],betas_nelder[15],betas_nelder[16]],
-[betas_nelder[17],betas_nelder[18],betas_nelder[19],betas_nelder[20]]]
+kappas=[[betas_nelder[16],betas_nelder[17],betas_nelder[18],betas_nelder[19]],
+[betas_nelder[20],betas_nelder[21],betas_nelder[22],betas_nelder[23]]]
 #First measure is normalized. starting arbitrary values
 #All factor loadings are normalized
 lambdas=[1,1]
+
 
 
 #Weibull distribution of cc prices
@@ -83,7 +89,7 @@ cpi =  pickle.load( open( '/mnt/Research/nealresearch/new-hope-secure/newhopemou
 ###
 
 #Assuming random start
-theta0=np.exp(np.random.randn(N))
+#theta0=np.exp(np.random.randn(N))
 
 #number of kids at baseline
 nkids0=x_df[ ['nkids_baseline']   ].values
@@ -95,7 +101,7 @@ married0=x_df[ ['d_marital_2']   ].values
 agech0=x_df[['age_t0']].values
 
 #Defines the instance with parameters
-param0=util.Parameters(alphap, alphaf, eta, gamma1, gamma2, tfp, sigmatheta,
-	wagep_betas, marriagep_betas, kidsp_betas, eitc_list,afdc_list,snap_list,
-	cpi,q,scalew,shapew,lambdas,kappas,pafdc,psnap)
+param0=util.Parameters(alphap, alphaf, eta, alpha_cc,alpha_home_hf,gamma1,gamma2,
+	gamma3, tfp, sigmatheta,wagep_betas, marriagep_betas, kidsp_betas, 
+	eitc_list,afdc_list,snap_list,cpi,q,scalew,shapew,lambdas,kappas,pafdc,psnap)
 

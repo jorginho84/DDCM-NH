@@ -1,9 +1,11 @@
 part = choices['hours_matrix']==hours_p
 full = choices['hours_matrix']==hours_f
+hours = choices['hours_matrix'].copy()
 
 #simulated
 ate_part = np.mean(np.mean(part[passign[:,0]==1,:,:],axis=0) - np.mean(part[passign[:,0]==0,:,:],axis=0),axis=1 )
 ate_full = np.mean(np.mean(full[passign[:,0]==1,:,:],axis=0) - np.mean(full[passign[:,0]==0,:,:],axis=0),axis=1 )
+ate_hours = np.mean(np.mean(hours[passign[:,0]==1,:,:],axis=0) - np.mean(hours[passign[:,0]==0,:,:],axis=0),axis=1 )
 
 #data
 dofile = "/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/fit/ate_emp.do"
@@ -13,16 +15,18 @@ ate_part_obs=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemoun
 se_ate_part_obs=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/fit/se_ate_part.csv').values
 ate_full_obs=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/fit/ate_full.csv').values
 se_ate_full_obs=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/fit/se_ate_full.csv').values
+ate_hours_obs=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/fit/ate_hours.csv').values
+se_ate_hours_obs=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/fit/se_ate_hours.csv').values
 
 
-ate_sim_list = [ate_part,ate_full]
-ate_list = [ate_part_obs,ate_full_obs]
-se_list = [se_ate_part_obs,se_ate_full_obs]
-name_list = ["part-time employment", "full-time employment"]
-graph_list = ["part", "full"]
+ate_sim_list = [ate_part,ate_full,ate_hours]
+ate_list = [ate_part_obs,ate_full_obs,ate_hours_obs]
+se_list = [se_ate_part_obs,se_ate_full_obs,se_ate_hours_obs]
+name_list = ["part-time employment", "full-time employment", "weekly hours worked"]
+graph_list = ["part", "full", "hours"]
 
 
-for j in range(2):
+for j in range(3):
 	ate_emp_obs_long=np.empty((ate_sim_list[j].shape))
 	ate_emp_obs_long[:] =np.NAN
 	se_ate_emp_obs_long=np.empty((ate_sim_list[j].shape))

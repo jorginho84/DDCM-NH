@@ -102,9 +102,10 @@ forvalues x=1/3{ /*the age loop*/
 			qui xi: reg `variable' i.p_assign if age_t2>6
 		}
 		
-		local delta_`variable'_`x'=_b[_Ip_assign_2]
+				
+		*local cont_`variable'_`x'=string(round(_b[_Ip_assign_2]*`alpha_`variable'_`x'',0.01),"%9.2f")
+		local cont_`variable'_`x'=_b[_Ip_assign_2]*`alpha_`variable'_`x''
 		
-		local cont_`variable'_`x'=string(round(_b[_Ip_assign_2]*`alpha_`variable'_`x'',0.01),"%9.2f")
 
 
 		
@@ -112,19 +113,23 @@ forvalues x=1/3{ /*the age loop*/
 	}
 
 	*Contribution of unmeasured
-	local cont_tau_`x' = string(round(`b_tau_`x'',0.01),"%9.2f")
+	*local cont_tau_`x' = string(round(`b_tau_`x'',0.01),"%9.2f")
+	local cont_tau_`x' = `b_tau_`x''
 	
 		
 }
 
 *Making % contributions
 forvalues x=1/3{
-	local cont_total_`x' = 	`con_d_CC2_t1_`x'' + `cont_incomepc_t1_`x'' + `cont_l_t1_`x'' + `cont_tau_`x''
+	local cont_total_`x' = 	`cont_d_CC2_t1_`x'' + `cont_incomepc_t1_`x'' + `cont_l_t1_`x'' + `cont_tau_`x''
 	
 
 	foreach variable in l_t1 incomepc_t1 d_CC2_t1 tau{
 		local cont_`variable'_`x'_pc = `cont_`variable'_`x''/`cont_total_`x''
+		
+		*Making them strings
 		local cont_`variable'_`x'_pc = string(round(`cont_`variable'_`x'_pc'*100,1),"%3.0f")
+		local cont_`variable'_`x' = string(round(`cont_`variable'_`x'',0.01),"%9.2f")
 	}
 	local cont_total_`x' = string(round(`cont_total_`x'',0.01),"%3.2f")
 	local cont_total_`x'_pc= string(100,"%3.0f")
@@ -151,20 +156,21 @@ foreach variable in l_t1 incomepc_t1 d_CC2_t1 tau total{
 		local name "Child care"
 	}
 	else if `x'==4{
-		local name "Unmeasured"
+		local name "Unmeasured (\$\tau_t^1 - \tau_t^0\$)"
 	}
 	else{
-		local name "Total"
+		local name "Total (\$ E[A_{it}^1 - A_{it}^0] \$)"
 	}
 	local x = `x' + 1
 
-	file write med_table "`name'  &       & `cont_`variable'_1'& & `cont_`variable'_1_pc'  \bigstrut[t]\\"_n
-		file write med_table "  &       & & &\\"_n
+	file write med_table "`name'  && `cont_`variable'_1'& & `cont_`variable'_1_pc' \bigstrut[t]\\"_n
+	file write med_table "  &       & & &\\"_n
 }
-file write med_table " Observed  &       & `cont_total_2_obs'  & & \\"_n
+file write med_table " Observed  &       & `cont_total_1_obs'  & & \\"_n
 file write med_table "\hline"_n
 file write med_table "\end{tabular}"_n
 file close med_table
+
 
 
 

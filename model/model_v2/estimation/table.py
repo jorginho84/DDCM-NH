@@ -80,12 +80,13 @@ r'Preference for full-time work ($\alpha^f$)',r'Preference for child care ($\alp
 ,r'Preference for human capital ($\eta$)', 
 r'Cost of home care and full-time work ($\alpha^{c,f}$)']
 
+#beware of change of coefficients here (5-6)
 wage_list_beta = [wagep_betas[0,0],wagep_betas[1,0],wagep_betas[2,0],wagep_betas[3,0],
-wagep_betas[4,0],wagep_betas[5,0],wagep_betas[6,0]]
+wagep_betas[4,0],wagep_betas[6,0],wagep_betas[5,0],]
 wage_list_se = [sigma_wagep_betas[0,0],sigma_wagep_betas[1,0],
 sigma_wagep_betas[2,0],sigma_wagep_betas[3,0],sigma_wagep_betas[4,0],
-sigma_wagep_betas[5,0],sigma_wagep_betas[6,0]]
-wage_names = ['Age', r'Age$^2$', 'High school', 'Constant', r'$\log(t)$','AR(1) error term' ,'Variance of error term']
+sigma_wagep_betas[6,0],sigma_wagep_betas[5,0]]
+wage_names = ['Age', r'Age$^2$', 'High school', r'$\log(t)$','Constant', 'AR(1) error term' ,'Variance of error term']
 
 prod_list_beta = [gamma1,gamma2,gamma3,tfp]
 prod_list_se  = [sigma_gamma1,sigma_gamma2,sigma_gamma3,sigma_tfp]

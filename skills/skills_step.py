@@ -163,3 +163,32 @@ with open('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Skill
 	f.close()
 
 
+###Years 2 and 5 Table###
+tests_list_ssrs = ['Overall', 'Reading', 'Math', 'Reading grade expectations', 
+'Math grade expectations', 'Motivation', 'Parental encouragement',
+'Intellectual functioning', 'Classroom behavior', 'Communication skills']
+
+
+#associating names with pvalues
+list_dics = [{},{}]
+blocks = [1,2] #SSRS blocks of year 2 and 5 
+
+
+i = 0
+for year in [2,5]:
+	for m in range(len(tests_list_ssrs)):
+		list_dics[i][tests_list_ssrs[order_dic['Y'+str(year) +'_block' + str(blocks[i])][m]]] = pval_dic['Y'+str(year) +'_Block' + str(blocks[i]) + '_model2'][m]
+
+	i = i + 1
+
+with open('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Skills/table_y2_y5.tex','w') as f:
+	f.write(r'\begin{tabular}{lrccc}'+'\n')
+	f.write(r'\hline'+'\n')
+	f.write(r'SSRS measure && Year 2 && Year 5 \bigstrut\\'+'\n')
+	f.write(r'\cline{1-1}\cline{3-5}'+'\n')
+	for m in range(len(tests_list_ssrs)):
+		f.write(tests_list_ssrs[m]+ '&&' + '{:04.3f}'.format(list_dics[0][tests_list_ssrs[m]])   +'  && '+ '{:04.3f}'.format(list_dics[1][tests_list_ssrs[m]]) +r'\\'+'\n')
+	f.write(r'\hline'+'\n')
+	f.write(r'\end{tabular}'+'\n')
+
+

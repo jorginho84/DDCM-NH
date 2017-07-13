@@ -33,7 +33,7 @@ set more off
 1: show results by age
 */
 
-local het = 1
+local het = 0
 
 use "$databases/Youth_original2.dta", clear
 keep  sampleid child p_assign zboy agechild p_assign  /*
@@ -119,7 +119,7 @@ forvalues x=0/1{/*old,young*/
 		local n_`variable'=r(N)
 	
 
-		qui: oprobit `variable' i.d_RA if d_sample==`x'
+		qui: oprobit `variable' i.d_RA age_ra agechild i.marital i.ethnic d_HS higrade i.pastern2 if d_sample==`x'
 		local pval_model`x'_`variable'_aux = 2*(1-normal(abs(_b[1.d_RA]/_se[1.d_RA])))
 		local pval_model`x'_`variable' = string(round(`pval_model`x'_`variable'_aux',0.001),"%9.3f")
 		predict xbetas, xb

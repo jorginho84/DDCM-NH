@@ -24,8 +24,8 @@ subprocess.call(cmd)
 ate_cc_obs=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/fit/ate_cc.csv').values
 se_ate_cc_obs=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/fit/se_ate_cc.csv').values
 
-ate_cc_obs_long=np.empty((ate_cc.shape))
-se_ate_cc_obs_long=np.empty((ate_cc.shape))
+ate_cc_obs_long=np.zeros((ate_cc.shape))
+se_ate_cc_obs_long=np.zeros((ate_cc.shape))
 i = 0
 for x in [1,4]:
 	ate_cc_obs_long[x] = ate_cc_obs[i,0].copy()

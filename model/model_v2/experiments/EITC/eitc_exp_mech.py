@@ -422,14 +422,13 @@ plt.close()
 
 
 #Table: average effects
-outcome_list = [r'Consumption (US\$ 1,000)', 'Part-time', 'Full-time', 'Child care',
-r'$\ln \theta$ ($\sigma$s)']
+outcome_list = [r'Consumption (US\$ 1,000)', 'Part-time', 'Full-time', 'Child care']
 
 ate_theta = [np.zeros((9)),np.zeros((9)),np.zeros((9))]
 for j in range(3):
 	ate_theta[j] = np.mean(ate_theta_sd[j][1:],axis=1)
 
-output_list =  [ate_ct,ate_part,ate_full,ate_cc,ate_theta]
+output_list =  [ate_ct,ate_part,ate_full,ate_cc]
 
 #number of periods to consider averaging
 periods = [9,9,9,3,8]
@@ -446,7 +445,6 @@ with open('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model
 		f.write(r' \bigstrut[t]\\'+'\n')
 
 	f.write(r'\hline'+'\n')
-	f.write(r'\textit{Treatment} &       &       &       &       &       &  \bigstrut[t]\\'+'\n')
 	f.write(r'EITC (1995-2003) &       & $\checkmark$ &       &       &       & $\checkmark$ \\'+'\n')
 	f.write(r'Child care subsidy &       &       &       & $\checkmark$ &       & $\checkmark$ \bigstrut[b]\\'+'\n')
 	f.write(r'\hline'+'\n')

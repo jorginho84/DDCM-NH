@@ -353,7 +353,7 @@ for periodt in range(8):
 	
 ###The graphs##
 
-exp = ['young', 'old', 'overall']
+exp = ['extensive-margin', 'intensive-margin', 'overall']
 
 for j in range(3): #the experiment loop
 	x = np.array(range(1,9))
@@ -394,4 +394,9 @@ ate_theta_sim_sd[1]*ate_cont_ct_pc[0]
 
 (y2[0] + y3[0] + y4[0])*gamma1
 
+#additional income
+income = []
+income.append(choices_c['Choice_0']['income_matrix'])
+income.append(choices_c['Choice_1']['income_matrix'])
 
+np.mean(np.mean(income[1] - income[0],axis=2),axis=0)

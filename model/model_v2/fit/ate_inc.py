@@ -10,8 +10,8 @@ subprocess.call(cmd)
 ate_inc_obs=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/fit/ate_inc.csv').values
 se_ate_inc_obs=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/fit/se_ate_inc.csv').values
 
-ate_inc_obs_long=np.empty((ate_inc.shape))
-se_ate_inc_obs_long=np.empty((ate_inc.shape))
+ate_inc_obs_long=np.zeros((ate_inc.shape))
+se_ate_inc_obs_long=np.zeros((ate_inc.shape))
 i = 0
 for x in [1,4,7]:
 	ate_inc_obs_long[x] = ate_inc_obs[i,0].copy()

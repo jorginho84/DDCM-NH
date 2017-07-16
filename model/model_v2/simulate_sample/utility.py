@@ -26,12 +26,11 @@ class Parameters:
 	List of structural parameters and prices
 
 	"""
-	def __init__(self,alphap,alphaf,eta,alpha_cc,alpha_home_hf,gamma1,gamma2,gamma3,
+	def __init__(self,alphap,alphaf,eta,gamma1,gamma2,gamma3,
 		tfp,sigmatheta,betaw,betam,betak,eitc,afdc,snap,cpi,q,scalew,shapew,
 		lambdas,kappas,pafdc,psnap,):
 
 		self.alphap,self.alphaf,self.eta=alphap,alphaf,eta
-		self.alpha_cc,self.alpha_home_hf=alpha_cc,alpha_home_hf
 		self.gamma1,self.gamma2,self.gamma3=gamma1,gamma2,gamma3
 		self.tfp=tfp
 		self.sigmatheta,self.betaw,self.betam,self.betak=sigmatheta,betaw,betam,betak
@@ -468,11 +467,17 @@ class Utility(object):
 		agech=np.reshape(self.age_t0,(self.N)) + periodt
 
 		#log consumption pc
-		incomepc_aux=np.log(ct)
-		incomepc=incomepc_aux-np.mean(incomepc_aux)
+		incomepc=np.log(ct)
 		
-		#log leisure (T=148 hours a week)
-		leisure=np.log(148-h) - np.mean(np.log(148-h))
+		
+		#log time w child (T=148 hours a week)
+		tch = np.zeros(self.N)
+		boo_p = h == self.hours_p
+		boo_f = h == self.hours_f
+		boo_u = h == 0
+
+		tch = cc*(148 - 40) + (1-cc)*(boo_u*148 + boo_p*(148 - self.hours_p) + boo_f*(148 - self.hours_f)) 
+		tch=np.log(tch)
 
 		#random shock
 		omega=self.param.sigmatheta*np.random.randn(self.N)
@@ -489,17 +494,17 @@ class Utility(object):
 		#The production of HC: young, cc=0
 		boo=(agech<=6) & (cc==0)
 		theta1[boo] = gamma1*np.log(theta0[boo]) + gamma2*incomepc[boo] +\
-		gamma3*leisure[boo] + omega[boo]
+		gamma3*tch[boo] + omega[boo]
 
 		#The production of HC: young, cc=1
 		boo=(agech<=6) & (cc==1)
 		theta1[boo] = gamma1*np.log(theta0[boo]) + gamma2*incomepc[boo] +\
-		gamma3*leisure[boo] + tfp + omega[boo]
+		gamma3*tch[boo] + tfp + omega[boo]
 
 		#The production of HC: old
 		boo=(agech>6)
 		theta1[boo] = gamma1*np.log(theta0[boo]) + gamma2*incomepc[boo] +\
-		gamma3*leisure[boo] + omega[boo]
+		gamma3*tch[boo] + omega[boo]
 
 		return np.exp(theta1)
 
@@ -528,10 +533,8 @@ class Utility(object):
 		#parameters
 		ap=self.param.alphap
 		af=self.param.alphaf
-		af_home=self.param.alpha_home_hf
 		eta=self.param.eta
-		ac = self.param.alpha_cc
-		ut_h=d_workp*ap + d_workf*(af + (1-cc)*af_home*d_age) + cc*ac*d_age
+		ut_h=d_workp*ap + d_workf*af
 
 		#Current-period utility
 		ut=np.log(ct) + ut_h +  eta*ltheta

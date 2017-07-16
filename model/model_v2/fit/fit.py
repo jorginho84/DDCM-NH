@@ -48,11 +48,9 @@ np.random.seed(1)
 betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv9_v1_e3.npy')
 
 #Utility function
-eta=betas_nelder[0]
+eta=0.11
 alphap=betas_nelder[1]
 alphaf=betas_nelder[2]
-alpha_cc=betas_nelder[3]
-alpha_home_hf=betas_nelder[4]
 
 
 #wage process
@@ -68,8 +66,8 @@ tfp=betas_nelder[15]
 sigmatheta=0
 
 #Measurement system: three measures for t=2, one for t=5
-kappas=[[betas_nelder[16],betas_nelder[17],betas_nelder[18],betas_nelder[19]],
-[betas_nelder[20],betas_nelder[21],betas_nelder[22],betas_nelder[23]]]
+kappas=[[betas_nelder[16]+0.8,-0.2+0.5,0.8+0.8,2+0.8],
+[betas_nelder[20]+2.1,betas_nelder[21]+2.1,betas_nelder[22]+2.1,betas_nelder[23]+2.1]]
 
 #First measure is normalized. starting arbitrary values
 #All factor loadings are normalized
@@ -148,7 +146,7 @@ married0=x_df[ ['d_marital_2']   ].values
 agech0=x_df[['age_t0']].values
 
 #Defines the instance with parameters
-param0=util.Parameters(alphap, alphaf, eta, alpha_cc,alpha_home_hf,	gamma1, gamma2, 
+param0=util.Parameters(alphap, alphaf, eta, gamma1, gamma2, 
 	gamma3,tfp,sigmatheta,
 	wagep_betas, marriagep_betas, kidsp_betas, eitc_list,afdc_list,snap_list,
 	cpi,q,scalew,shapew,lambdas,kappas,pafdc,psnap)
@@ -207,8 +205,6 @@ dic_betas = output_ins.aux_model(choices)
 beta_childcare=np.mean(dic_betas['beta_childcare'],axis=0) #1x1
 beta_hours1=np.mean(dic_betas['beta_hours1'],axis=0) #1x1
 beta_hours2=np.mean(dic_betas['beta_hours2'],axis=0) #1x1
-beta_hours3=np.mean(dic_betas['beta_hours3'],axis=0) #1x1
-beta_cc_home=np.mean(dic_betas['beta_cc_home'],axis=0) #1x1
 beta_wagep=np.mean(dic_betas['beta_wagep'],axis=1) # 6 x 1
 beta_kappas_t2=np.mean(dic_betas['beta_kappas_t2'],axis=1) #4 x 3
 beta_kappas_t5=np.mean(dic_betas['beta_kappas_t5'],axis=1) #4 x 1

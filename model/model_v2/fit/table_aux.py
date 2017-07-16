@@ -5,10 +5,10 @@ wb=openpyxl.load_workbook('/mnt/Research/nealresearch/new-hope-secure/newhopemou
 ws = wb["new_moments_data"]
 
 #A. Labor supply and child care decisions
-list_aux = [beta_childcare,beta_hours1,beta_hours2,beta_hours3,beta_cc_home]
-list_obs = [moments_vector[0,0],moments_vector[1,0],moments_vector[2,0],moments_vector[3,0],moments_vector[4,0]]
-list_sig = [se_vector[0],se_vector[1],se_vector[2],se_vector[3],se_vector[4]]
-for c in range(5):
+list_aux = [beta_childcare,beta_hours1,beta_hours2,]
+list_obs = [moments_vector[0,0],moments_vector[1,0],moments_vector[2,0],]
+list_sig = [se_vector[0],se_vector[1],se_vector[2]]
+for c in range(3):
 	sim_moment = ws.cell('B' + str(c + 2))
 	obs_moment = ws.cell('D' + str(c + 2))
 	obs_sigma = ws.cell('F' + str(c + 2))
@@ -16,7 +16,7 @@ for c in range(5):
 	obs_moment.value = np.float(list_obs[c])
 	obs_sigma.value = np.float(list_sig[c])
 
-ind = 5
+ind = 3
 #B. Log wage equation
 for c in range(7):
 	sim_moment = ws.cell('B' + str(c + 7))

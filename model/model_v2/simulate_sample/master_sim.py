@@ -55,8 +55,8 @@ betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/re
 eta=betas_nelder[0]
 alphap=betas_nelder[1]
 alphaf=betas_nelder[2]
-alpha_cc=betas_nelder[3]
-alpha_home_hf=betas_nelder[4]
+#alpha_cc=betas_nelder[3]
+#alpha_home_hf=betas_nelder[4]
 
 
 
@@ -152,7 +152,7 @@ married0=x_df[ ['d_marital_2']   ].values
 agech0=x_df[['age_t0']].values
 
 #Defines the instance with parameters
-param=util.Parameters(alphap,alphaf,eta,alpha_cc,alpha_home_hf,gamma1,gamma2,gamma3,
+param=util.Parameters(alphap,alphaf,eta,gamma1,gamma2,gamma3,
 	tfp,sigmatheta,	wagep_betas, marriagep_betas, kidsp_betas, eitc_list,
 	afdc_list,snap_list,cpi,q,scalew,shapew,lambdas,kappas,pafdc,psnap)
 

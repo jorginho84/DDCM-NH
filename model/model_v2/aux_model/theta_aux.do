@@ -18,10 +18,14 @@ egen skills_t`x'=std(skills_t`x'_aux)
 }
 
 
-*Leisure: 148-hours
+*Time outside market
+
 foreach x of numlist 1 4 7{
 	gen l_t`x'=148-hours_t`x'
+
 }
+
+
 
 *Income
 
@@ -65,11 +69,23 @@ foreach j of numlist 2 3 4 5{
 preserve
 
 *To identify gammas (production function): 2 x 1 matrix
-mat inputs_moments=J(4,1,.)
+mat inputs_moments=J(7,1,.)
 
-*To identify gamma1
+
 corr skills_t2 skills_t5
 mat inputs_moments[1,1] = r(rho)
+
+gen lincomepc_t4=log(incomepc_t4)
+
+xi: reg skills_t5 c.skills_t2#c.lincomepc_t4
+mat inputs_moments[5,1] = _b[c.skills_t2#c.lincomepc_t4]
+
+xi: reg skills_t5 c.skills_t2#c.l_t4
+mat inputs_moments[6,1] = _b[c.skills_t2#c.l_t4]
+
+xi: reg skills_t5 c.lincomepc_t4#c.l_t4
+mat inputs_moments[7,1] = _b[c.lincomepc_t4#c.l_t4]
+
 
 egen id_child = seq()
 rename skills_t2 skills_t1

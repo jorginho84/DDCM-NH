@@ -27,12 +27,13 @@ class Parameters:
 
 	"""
 	def __init__(self,alphap,alphaf,eta,gamma1,gamma2,gamma3,
-		tfp,sigmatheta,betaw,betam,betak,eitc,afdc,snap,cpi,q,scalew,shapew,
+		tfp,rho,sigmatheta,betaw,betam,betak,eitc,afdc,snap,cpi,q,scalew,shapew,
 		lambdas,kappas,pafdc,psnap,):
 
 		self.alphap,self.alphaf,self.eta=alphap,alphaf,eta
 		self.gamma1,self.gamma2,self.gamma3=gamma1,gamma2,gamma3
 		self.tfp=tfp
+		self.rho=rho
 		self.sigmatheta,self.betaw,self.betam,self.betak=sigmatheta,betaw,betam,betak
 		self.eitc,self.afdc,self.snap,self.cpi,self.q=eitc,afdc,snap,cpi,q
 		self.scalew,self.shapew=scalew,shapew
@@ -467,7 +468,7 @@ class Utility(object):
 		agech=np.reshape(self.age_t0,(self.N)) + periodt
 
 		#log consumption pc
-		incomepc=np.log(ct)
+		incomepc=ct
 		
 		
 		#log time w child (T=148 hours a week)
@@ -477,7 +478,7 @@ class Utility(object):
 		boo_u = h == 0
 
 		tch = cc*(148 - 40) + (1-cc)*(boo_u*148 + boo_p*(148 - self.hours_p) + boo_f*(148 - self.hours_f)) 
-		tch=np.log(tch)
+		tch=tch
 
 		#random shock
 		omega=self.param.sigmatheta*np.random.randn(self.N)
@@ -488,23 +489,23 @@ class Utility(object):
 		gamma2=self.param.gamma2
 		gamma3=self.param.gamma3
 		tfp=self.param.tfp
+		rho=self.param.rho
 		
 		theta1=np.zeros(self.N)
 
-		#The production of HC: young, cc=0
-		boo=(agech<=6) & (cc==0)
-		theta1[boo] = gamma1*np.log(theta0[boo]) + gamma2*incomepc[boo] +\
-		gamma3*tch[boo] + omega[boo]
+		#The production of HC: (young, cc=0), (young,cc1), (old)
+		boo1=(agech<=6) & (cc==0)
+		boo2=(agech<=6) & (cc==1)
+		boo3=(agech>6)
+		boo_list=[boo1,boo2,boo3]
+		tfp_list=[0,tfp,0]
 
-		#The production of HC: young, cc=1
-		boo=(agech<=6) & (cc==1)
-		theta1[boo] = gamma1*np.log(theta0[boo]) + gamma2*incomepc[boo] +\
-		gamma3*tch[boo] + tfp + omega[boo]
+		for j in range(len(boo_list)):
+			theta1[boo_list[j]] = (1/rho)*np.log(gamma1*theta0[boo_list[j]]**rho  +\
+				gamma2*incomepc[boo_list[j]]**rho +\
+				gamma3*tch[boo_list[j]]**rho) + tfp_list[j] + omega[boo_list[j]]
+				
 
-		#The production of HC: old
-		boo=(agech>6)
-		theta1[boo] = gamma1*np.log(theta0[boo]) + gamma2*incomepc[boo] +\
-		gamma3*tch[boo] + omega[boo]
 
 		return np.exp(theta1)
 

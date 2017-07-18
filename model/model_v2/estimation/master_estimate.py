@@ -37,10 +37,11 @@ betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/re
 
 
 #Utility function
-#Utility function
-eta=0.11
-alphap=betas_nelder[1]
-alphaf=betas_nelder[2]
+eta=0.02
+alphap=-0.03
+alphaf=-0.35
+
+
 
 #wage process
 wagep_betas=np.array([betas_nelder[5],betas_nelder[6],betas_nelder[7],
@@ -48,15 +49,16 @@ wagep_betas=np.array([betas_nelder[5],betas_nelder[6],betas_nelder[7],
 
 
 #Production function [young,old]
-gamma1= betas_nelder[12]
-gamma2= betas_nelder[13]
-gamma3= betas_nelder[14]
+gamma1= 0.80
+gamma2= 0.06
+gamma3= 0.01
 tfp=betas_nelder[15]
 sigmatheta=0
+rho=-0.1
 
 #Measurement system: three measures for t=2, one for t=5
-kappas=[[betas_nelder[16]+0.8,-0.2+0.5,0.8+0.8,2+0.8],
-[betas_nelder[20]+2.1,betas_nelder[21]+2.1,betas_nelder[22]+2.1,betas_nelder[23]+2.1]]
+kappas=[[betas_nelder[16]+3.5,-0.2+3.2,0.8+3.5,2+3.3],
+[betas_nelder[20]+8,betas_nelder[21]+8,betas_nelder[22]+8,betas_nelder[23]+8]]
 #First measure is normalized. starting arbitrary values
 #All factor loadings are normalized
 lambdas=[1,1]
@@ -134,7 +136,7 @@ agech0=x_df[['age_t0']].values
 
 #Defines the instance with parameters
 param0=util.Parameters(alphap, alphaf, eta, gamma1,gamma2,
-	gamma3, tfp, sigmatheta,wagep_betas, marriagep_betas, kidsp_betas, 
+	gamma3, tfp,rho, sigmatheta,wagep_betas, marriagep_betas, kidsp_betas, 
 	eitc_list,afdc_list,snap_list,cpi,q,scalew,shapew,lambdas,kappas,pafdc,psnap)
 
 
@@ -192,31 +194,32 @@ def sym(a):
 eta_opt=output.x[0]
 alphap_opt=output.x[1]
 alphaf_opt=output.x[2]
-betaw0=output.x[5]
-betaw1=output.x[6]
-betaw2=output.x[7]
-betaw3=output.x[8]
-betaw4=output.x[9]
-betaw5=np.exp(output.x[10])
-betaw6=output.x[11]
-gamma1_opt=output.x[12]
-gamma2_opt=output.x[13]
-gamma3_opt=output.x[14]
-tfp_opt=output.x[15]
-kappas_00=output.x[16]
-kappas_01=output.x[17]
-kappas_02=output.x[18]
-kappas_03=output.x[19]
-kappas_10=output.x[20]
-kappas_11=output.x[21]
-kappas_12=output.x[22]
-kappas_13=output.x[23]
+betaw0=output.x[3]
+betaw1=output.x[4]
+betaw2=output.x[5]
+betaw3=output.x[6]
+betaw4=output.x[7]
+betaw5=np.exp(output.x[8])
+betaw6=output.x[9]
+gamma1_opt=output.x[10]
+gamma2_opt=output.x[11]
+gamma3_opt=output.x[12]
+rho_opt=output.x[13]
+tfp_opt=output.x[14]
+kappas_00=output.x[15]
+kappas_01=output.x[16]
+kappas_02=output.x[17]
+kappas_03=output.x[18]
+kappas_10=output.x[19]
+kappas_11=output.x[20]
+kappas_12=output.x[21]
+kappas_13=output.x[22]
 
 
-betas_opt=np.array([eta_opt, alphap_opt,alphaf_opt,alphacc_opt,alpha_home_hf_opt,
+betas_opt=np.array([eta_opt, alphap_opt,alphaf_opt,
 	betaw0,betaw1,betaw2,
 	betaw3,betaw4,betaw5,betaw6,gamma1_opt,gamma2_opt,
-	gamma3_opt,tfp_opt,kappas_00,kappas_01,kappas_02,kappas_03,
+	gamma3_opt,rho_opt,tfp_opt,kappas_00,kappas_01,kappas_02,kappas_03,
 	kappas_10,kappas_11,kappas_12,kappas_13])
 
 np.save('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv10_v1_e3.npy',betas_opt)

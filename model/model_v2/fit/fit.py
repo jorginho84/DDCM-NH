@@ -48,9 +48,10 @@ np.random.seed(1)
 betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv9_v1_e3.npy')
 
 #Utility function
-eta=0.11
-alphap=betas_nelder[1]
-alphaf=betas_nelder[2]
+eta=0.02
+alphap=-0.03
+alphaf=-0.35
+
 
 
 #wage process
@@ -59,15 +60,16 @@ wagep_betas=np.array([betas_nelder[5],betas_nelder[6],betas_nelder[7],
 
 
 #Production function [young,old]
-gamma1= betas_nelder[12]
-gamma2= betas_nelder[13]
-gamma3= betas_nelder[14]
+gamma1= 0.80
+gamma2= 0.06
+gamma3= 0.01
 tfp=betas_nelder[15]
 sigmatheta=0
+rho=-0.1
 
 #Measurement system: three measures for t=2, one for t=5
-kappas=[[betas_nelder[16]+0.8,-0.2+0.5,0.8+0.8,2+0.8],
-[betas_nelder[20]+2.1,betas_nelder[21]+2.1,betas_nelder[22]+2.1,betas_nelder[23]+2.1]]
+kappas=[[betas_nelder[16]+3.5,-0.2+3.2,0.8+3.5,2+3.3],
+[betas_nelder[20]+8,betas_nelder[21]+8,betas_nelder[22]+8,betas_nelder[23]+8]]
 
 #First measure is normalized. starting arbitrary values
 #All factor loadings are normalized
@@ -147,7 +149,7 @@ agech0=x_df[['age_t0']].values
 
 #Defines the instance with parameters
 param0=util.Parameters(alphap, alphaf, eta, gamma1, gamma2, 
-	gamma3,tfp,sigmatheta,
+	gamma3,tfp,rho,sigmatheta,
 	wagep_betas, marriagep_betas, kidsp_betas, eitc_list,afdc_list,snap_list,
 	cpi,q,scalew,shapew,lambdas,kappas,pafdc,psnap)
 
@@ -262,6 +264,7 @@ ate_cc_obs=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/
 se_ate_cc_obs=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/fit/se_ate_cc.csv').values
 
 #from oprobits: beta_t2, beta_t5, betas_t2_obs, betas_t5_obs
+
 
 #Simulated before/after
 ate_cc_2 = [np.mean(ate_cc[1]), np.mean(ate_cc[4])] #period vs and 4

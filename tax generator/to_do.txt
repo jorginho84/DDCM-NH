@@ -1,8 +1,0 @@
--Make sure the relevant parameters are considered. This means that I have to construct a grid of earnings
-and associated disposable income for every combination of:
--number of children,
--family and individual earnings
--marital status
-
--What about child care development fund???????
-Began 1997. Should I include that??? How?? 

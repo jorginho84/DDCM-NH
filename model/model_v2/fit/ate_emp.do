@@ -59,8 +59,8 @@ mat ate_part_2=J(2,1,.)
 mat se_ate_part_2=J(2,1,.)
 mat ate_full_2=J(2,1,.)
 mat se_ate_full_2=J(2,1,.)
-mat ate_hours_2=J(2,1,.)
-mat se_ate_hours_2=J(2,1,.)
+mat ate_hours_2=J(1,1,.)
+mat se_ate_hours_2=J(1,1,.)
 
 *Before
 preserve
@@ -82,27 +82,7 @@ mat se_ate_hours_2[1,1]  =e(se)
 
 restore
 
-*After
-preserve
 
-keep d_part_t4 d_part_t7 d_full_t4 d_full_t7 hours_t7 hours_t4  d_RA child_id
-reshape long d_full_t d_part_t hours_t, i(child_id) j(year)
-
-gen newid = child_id
-
-foreach var in part full{
-	bootstrap diff=r(ate), reps(`reps') cluster(child_id) idcluster(newid)/*
-	*/: prob_diff d_`var'_t
-	mat ate_`var'_2[2,1]  =e(b)
-	mat se_ate_`var'_2[2,1]  =e(se)
-}
-
-bootstrap diff=r(ate), reps(`reps') cluster(child_id) idcluster(newid): prob_diff hours_t
-mat ate_hours_2[2,1]  =e(b)
-mat se_ate_hours_2[2,1]  =e(se)
-
-
-restore
 
 foreach vars in part full hours{
 
@@ -124,14 +104,14 @@ foreach vars in part full hours{
 	*Before/after
 	preserve
 	clear
-	set obs 9
+	set obs 1
 	svmat ate_`vars'_2
 	outsheet using "/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/fit/ate_`vars'_2.csv", comma replace
 	restore
 
 	preserve
 	clear
-	set obs 9
+	set obs 1
 	svmat se_ate_`vars'_2
 	outsheet using "/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/fit/se_ate_`vars'_2.csv", comma replace
 	restore

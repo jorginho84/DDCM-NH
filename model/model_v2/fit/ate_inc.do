@@ -49,10 +49,10 @@ foreach x in 1 4 7{
 }
 
 
-*Computing ATEs before/after
+*Computing ATEs before
 egen child_id=group(sampleid child)
-mat ate_inc_2=J(2,1,.)
-mat se_ate_inc_2=J(2,1,.)
+mat ate_inc_2=J(1,1,.)
+mat se_ate_inc_2=J(1,1,.)
 
 *Before
 preserve
@@ -64,18 +64,6 @@ mat se_ate_inc_2[1,1]=e(se)
 
 restore
 
-*After
-preserve
-keep incomepc_t4 incomepc_t7 d_RA child_id
-reshape long incomepc_t, i(child_id) j(year)
-
-gen newid=child_id
-bootstrap diff=r(ate), reps(`reps') cluster(child_id) idcluster(newid):/*
-*/ inc_diff incomepc_t
-mat ate_inc_2[2,1]=e(b)
-mat se_ate_inc_2[2,1]=e(se)
-
-restore
 
 
 
@@ -94,17 +82,17 @@ svmat se_ate_inc
 outsheet using "/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/fit/se_ate_inc.csv", comma replace
 restore
 
-*Before after
+*Before
 preserve
 clear
-set obs 2
+set obs 1
 svmat ate_inc_2
 outsheet using "/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/fit/ate_inc_2.csv", comma replace
 restore
 
 preserve
 clear
-set obs 2
+set obs 1
 svmat se_ate_inc_2
 outsheet using "/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/fit/se_ate_inc_2.csv", comma replace
 restore

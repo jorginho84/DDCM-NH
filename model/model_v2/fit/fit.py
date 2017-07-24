@@ -45,31 +45,31 @@ import estimate as estimate
 
 np.random.seed(1)
 
-betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv9_v1_e3.npy')
+betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv10_v1_e3.npy')
 
 #Utility function
-eta=0.02
-alphap=-0.03
-alphaf=-0.35
+eta=betas_nelder[0]
+alphap=betas_nelder[1]
+alphaf=betas_nelder[2]
 
 
 
 #wage process
-wagep_betas=np.array([betas_nelder[5],betas_nelder[6],betas_nelder[7],
-	betas_nelder[8],betas_nelder[9],betas_nelder[10],betas_nelder[11]]).reshape((7,1))
+wagep_betas=np.array([betas_nelder[3],betas_nelder[4],betas_nelder[5],
+	betas_nelder[6],betas_nelder[7],betas_nelder[8],betas_nelder[9]]).reshape((7,1))
 
 
 #Production function [young,old]
-gamma1= 0.80
-gamma2= 0.06
-gamma3= 0.01
-tfp=betas_nelder[15]
+gamma1= betas_nelder[10]
+gamma2= betas_nelder[11]
+gamma3= betas_nelder[12]
+rho=betas_nelder[13]
+tfp=betas_nelder[14]
 sigmatheta=0
-rho=-0.1
 
 #Measurement system: three measures for t=2, one for t=5
-kappas=[[betas_nelder[16]+3.5,-0.2+3.2,0.8+3.5,2+3.3],
-[betas_nelder[20]+8,betas_nelder[21]+8,betas_nelder[22]+8,betas_nelder[23]+8]]
+kappas=[[betas_nelder[15],betas_nelder[16],betas_nelder[17],betas_nelder[18]],
+[betas_nelder[19],betas_nelder[20],betas_nelder[21],betas_nelder[22]]]
 
 #First measure is normalized. starting arbitrary values
 #All factor loadings are normalized
@@ -214,19 +214,19 @@ beta_inputs=np.mean(dic_betas['beta_inputs'],axis=1) #4 x 1
 
 #################################################################################
 #################################################################################
-#FIGURE: ATE ON CONSUMPTION PC#
-execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/fit/ate_inc.py')
+#FIGURE: ATE ON INCOME#
+#execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/fit/ate_inc.py')
 
 #################################################################################
 #################################################################################
 #FIGURE: ATE ON CHILD CARE#
-execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/fit/ate_cc.py')
+#execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/fit/ate_cc.py')
 
 
 #################################################################################
 #################################################################################
 #FIGURE: ATE ON EMPLOYMENT#
-execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/fit/ate_emp.py')
+#execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/fit/ate_emp.py')
 
 #################################################################################
 #################################################################################
@@ -237,24 +237,21 @@ execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2
 #################################################################################
 #################################################################################
 #TABLE: COMPARING OPROBITS#
-execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/fit/oprobit.py')
+#execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/fit/oprobit.py')
 
 #################################################################################
 #################################################################################
 #TABLE FIT: target moments#
-execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/fit/table_aux.py')
+#execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/fit/table_aux.py')
 
 
 #################################################################################
 #################################################################################
-
+"""
 #TABLE: model validation#
+ate_hours_obs_2=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/fit/ate_hours_2.csv').values
+se_ate_hours_obs_2=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/fit/se_ate_hours_2.csv').values
 
-
-ate_part_obs_2=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/fit/ate_part_2.csv').values
-se_ate_part_obs_2=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/fit/se_ate_part_2.csv').values
-ate_full_obs_2=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/fit/ate_full_2.csv').values
-se_ate_full_obs_2=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/fit/se_ate_full_2.csv').values
 
 ate_inc_obs_2=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/fit/ate_inc_2.csv').values
 se_ate_inc_obs_2=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/fit/se_ate_inc_2.csv').values
@@ -263,44 +260,34 @@ se_ate_inc_obs_2=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhope
 ate_cc_obs=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/fit/ate_cc.csv').values
 se_ate_cc_obs=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/fit/se_ate_cc.csv').values
 
-#from oprobits: beta_t2, beta_t5, betas_t2_obs, betas_t5_obs
-
-
-#Simulated before/after
-ate_cc_2 = [np.mean(ate_cc[1]), np.mean(ate_cc[4])] #period vs and 4
-ate_inc_2 = [np.mean(ate_inc[1])/1000, (ate_inc[4] +ate_inc[7])/(2*1000)]
-ate_part_2 = [np.mean(ate_part[0:2]), (ate_part[4] + ate_part[7])/2]
-ate_full_2 = [np.mean(ate_full[0:2]), (ate_full[4] + ate_full[7])/2]
-
-#The table
+#Simulated: only during NH
+ate_hours_2 = (np.mean(ate_hours[0])+np.mean(ate_hours[1]))/2
+ate_cc_2 = ate_cc[0] #period vs and 4
+ate_inc_2 = (np.mean(ate_inc[0])+np.mean(ate_inc[1])+np.mean(ate_inc[2]))/(3*1000)
 
 #The list of statistics
-sim_list = [ate_cc_2,ate_inc_2,ate_part_2,ate_full_2,[beta_t2[0],beta_t5[0]]]
-obs_list = [ate_cc_obs,ate_inc_obs_2/1000,ate_part_obs_2,ate_full_obs_2,np.array([[betas_t2_obs[0,0]], [betas_t5_obs[0,0]]])]
-obs_list_se = [se_ate_cc_obs,se_ate_inc_obs_2/1000,se_ate_part_obs_2,se_ate_full_obs_2,np.array([[ses_betas_t2_obs[0,0]],[ses_betas_t5_obs[0,0]]])]
-var_list = [r'Child care ($t=1,4$)', r'Consumption ($t=0,...,8$)', r'Part-time ($t=0,1,4,7$)', 
-r'Full-time ($t=0,1,4,7$)', r'SSRS ($t=2,5)$']
+sim_list = [ate_hours_2,ate_cc_2,ate_inc_2]
+obs_list = [ate_hours_obs_2[0,0],ate_cc_obs[0,0],ate_inc_obs_2[0,0]/1000]
+obs_list_se = [se_ate_hours_obs_2[0,0],se_ate_cc_obs[0,0],se_ate_inc_obs_2[0,0]/1000]
+var_list = [r'Hours worked ($t=0,1$)', r'Child care ($t=1$)',r'Consumption pc/1000 ($t=1$)']
 
+#writing the table
 with open('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/fit/table_validation.tex','w') as f:
-	f.write(r'\begin{tabular}{llccccc}'+'\n')
+	f.write(r'\begin{tabular}{llccc}'+'\n')
 	f.write(r'\hline' + '\n')
-	f.write(r' && \multicolumn{2}{c}{\textbf{During NH ($t\leq 2$)}} & & \multicolumn{2}{c}{\textbf{After NH ($t>3$)}} \bigstrut[t]\\' + '\n')
-	f.write(r'&& \textbf{Model} & \textbf{Data} &  & \textbf{Model} & \textbf{Data} \bigstrut[b]\\'+'\n')
-	f.write(r'\cline{1-1}\cline{3-4}\cline{6-7} & &  &  && &  \bigstrut[t]\\'+'\n')
-	
+	f.write(r'\textbf{Variable} && \textbf{Simulated} && \textbf{Observed} \bigstrut\\' + '\n')
+	f.write(r'\cline{1-1}\cline{3-3}\cline{5-5}&&&&  \bigstrut[t]\\' + '\n')
+	for j in range(len(sim_list)):
+		f.write(var_list[j]+' && ' + 
+			'{:04.3f}'.format(sim_list[j]) + 
+			r'  & &'+ '{:04.3f}'.format(obs_list[j])+r' \\'+'\n')
+		f.write(r' & & & & ( '+ '{:04.3f}'.format(obs_list_se[j])+ r' )\\'+'\n')
+		f.write(r'  &       &       &       &  \\'+'\n')
 
-	for j in range(5):
-		#ATE
-		f.write(r'\textbf{'+var_list[j]+r'} &       & ' + 
-			'{:04.3f}'.format(sim_list[j][0]) + 
-			r'  & '+ '{:04.3f}'.format(obs_list[j][0,0])+r'  &  & ' +  
-			'{:04.3f}'.format(sim_list[j][1]) + 
-			r'  & '+ '{:04.3f}'.format(obs_list[j][1,0])+r' \\'+'\n')
-		f.write(r' & & & ( '+ '{:04.3f}'.format(obs_list_se[j][0,0])+ 
-			r' ) &   &  & ('+ '{:04.3f}'.format(obs_list_se[j][1,0]) +r') \\'+'\n')
-		f.write(r'      &       &       &       &       &       &  \\'+'\n')
+	
 
 	f.write(r'\hline'+'\n')
 	f.write(r'\end{tabular}' + '\n')
 	f.close()
 
+"""

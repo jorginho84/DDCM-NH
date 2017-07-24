@@ -10,7 +10,7 @@ ltheta = np.log(choices['theta_matrix'])
 
 for j in range (M):
 	for t in range(9):
-		ltheta[:,t,j] = (ltheta[:,t,j] - np.mean(ltheta[:,t,j],axis=0))/np.std(ltheta[:,t,j],axis=0)
+		ltheta[:,t,j] = (ltheta[:,t,j])/np.std(ltheta[:,t,j],axis=0)
 
 
 ate_ltheta_y = np.mean(np.mean(ltheta[(passign[:,0]==1) & (boo_y),:,:],axis=0) - np.mean(ltheta[(passign[:,0]==0) & (boo_y),:,:],axis=0),axis=1)

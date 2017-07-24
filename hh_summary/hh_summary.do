@@ -109,6 +109,7 @@ local pval_emp = r(p)
 use "$databases/Youth_original2.dta", clear
 keep sampleid child p_assign zboy child agechild tcsbs tcsis tcsis tcstot tacad tq11b zboy curremp/* identifiers
 */ c68* c69* c70* c73* /*CC use and payments from year 2
+*/ piq114aa  piq114ba piq114ca piq114da piq114ea piq114fa piq114ga /* CC year 5
 */tacad tcsbs tcsis tcsts tcstot  /*SSRS and CBS*/
 
 *Recover control variables
@@ -159,6 +160,12 @@ gen d_CC2_t1=1 if max_months_t1==CC_HS_months | max_months_t1==CC_PS_months | ma
 replace d_CC2_t1=0 if  max_months_t1==CC_PR_months | max_months_t1==CC_HH_months | c68g==0
 replace d_CC2_t1=. if max_months_t1==.
 
+*Number of months in child care at t=4
+egen max_months_t4=rowmax(piq114aa  piq114ba piq114ca piq114da piq114ea piq114fa piq114ga)
+gen d_CC2_t4=1 if max_months_t4==piq114da
+replace d_CC2_t4=0 if  max_months_t4==piq114aa | max_months_t4==piq114ba | max_months_t4==piq114ca | max_months_t4==piq114ea | max_months_t4==piq114fa | max_months_t4==piq114ga
+replace d_CC2_t4=. if max_months_t4==.
+
 *Age category
 gen cat_age=1 if agechild<=6
 replace cat_age=2 if agechild>6
@@ -173,8 +180,6 @@ local beta_cc = string(round(_b[_Ip_assign_2]*100,0.1),"%9.1f")
 local se_cc = string(round(_se[_Ip_assign_2]*100,0.1),"%9.1f")
 qui: test _Ip_assign_2=0
 local pval_cc = r(p)
-
-
 
 
 *****************************************************************

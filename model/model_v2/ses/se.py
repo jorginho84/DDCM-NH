@@ -76,29 +76,27 @@ class SEs:
 		eta=bs[0]
 		alphap=bs[1]
 		alphaf=bs[2]
-		alpha_cc=bs[3]
-		alpha_home_hf=bs[4]
-
-
+		
 		#wage process
-		wagep_betas=np.array([bs[5],bs[6],bs[7],bs[8],
-			bs[9],bs[10],bs[11]]).reshape((7,1))
+		wagep_betas=np.array([bs[3],bs[4],bs[5],bs[6],
+			bs[7],bs[8],bs[9]]).reshape((7,1))
 
 		#Production function [young[cc0,cc1],old]
-		gamma1=bs[12]
-		gamma2=bs[13]
-		gamma3=bs[14]
-		tfp=bs[15]
+		gamma1=bs[10]
+		gamma2=bs[11]
+		gamma3=bs[12]
+		rho=bs[13]
+		tfp=bs[14]
 		sigmatheta=0
 
 		#Measurement system: three measures for t=2, one for t=5
-		kappas=[[bs[16],bs[17],bs[18],bs[19]],[bs[20],bs[21],bs[22],bs[23]]]
+		kappas=[[bs[15],bs[16],bs[17],bs[18]],[bs[19],bs[20],bs[21],bs[22]]]
 		lambdas=[1,1]
 
 
 		#Re-defines the instance with parameters 
-		param0=util.Parameters(alphap, alphaf, eta, alpha_cc, alpha_home_hf,
-			gamma1, gamma2,gamma3, tfp, sigmatheta,
+		param0=util.Parameters(alphap, alphaf, eta,
+			gamma1, gamma2,gamma3,tfp,rho,sigmatheta,
 			wagep_betas, marriagep_betas, kidsp_betas, eitc_list,
 			afdc_list,snap_list,cpi,q,scalew,shapew,
 			lambdas,kappas,pafdc,psnap)
@@ -127,16 +125,14 @@ class SEs:
 		beta_childcare=np.mean(dic_betas['beta_childcare'],axis=0) #1x1
 		beta_hours1=np.mean(dic_betas['beta_hours1'],axis=0) #1x1
 		beta_hours2=np.mean(dic_betas['beta_hours2'],axis=0) #1x1
-		beta_hours3=np.mean(dic_betas['beta_hours3'],axis=0) #1x1
-		beta_cc_home=np.mean(dic_betas['beta_cc_home'],axis=0) #1x1
-		beta_wagep=np.mean(dic_betas['beta_wagep'],axis=1) # 5 x 1
 		beta_kappas_t2=np.mean(dic_betas['beta_kappas_t2'],axis=1) #4 x 1
 		beta_kappas_t5=np.mean(dic_betas['beta_kappas_t5'],axis=1) #4 x 1
+		beta_wagep=np.mean(dic_betas['beta_wagep'],axis=1) # 7 x 1
 		beta_inputs=np.mean(dic_betas['beta_inputs'],axis=1) #4 x 1
 		
 
-		return [beta_childcare,beta_hours1,beta_hours2,beta_hours3,beta_cc_home,
-			beta_wagep,beta_kappas_t2,beta_kappas_t5, beta_inputs]
+		return [beta_childcare,beta_hours1,beta_hours2,beta_wagep,
+		beta_kappas_t2,beta_kappas_t5, beta_inputs]
 
 	def binding(self,psi):
 		"""

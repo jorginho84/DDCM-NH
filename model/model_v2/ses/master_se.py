@@ -34,31 +34,32 @@ import se
 
 np.random.seed(1)
 
-betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv9_v1_e3.npy')
+betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv10_v1_e3.npy')
 
 
 #Utility function
 eta=betas_nelder[0]
 alphap=betas_nelder[1]
 alphaf=betas_nelder[2]
-alpha_cc=betas_nelder[3]
-alpha_home_hf=betas_nelder[4]
+
+
 
 #wage process
-wagep_betas=np.array([betas_nelder[5],betas_nelder[6],betas_nelder[7],
-	betas_nelder[8],betas_nelder[9],betas_nelder[10],betas_nelder[11]]).reshape((7,1))
+wagep_betas=np.array([betas_nelder[3],betas_nelder[4],betas_nelder[5],
+	betas_nelder[6],betas_nelder[7],betas_nelder[8],betas_nelder[9]]).reshape((7,1))
 
 
-#Production function [young[cc0,cc1],old]
-gamma1= betas_nelder[12]
-gamma2= betas_nelder[13]
-gamma3= betas_nelder[14]
-tfp=betas_nelder[15]
+#Production function [young,old]
+gamma1= betas_nelder[10]
+gamma2= betas_nelder[11]
+gamma3= betas_nelder[12]
+rho=betas_nelder[13]
+tfp=betas_nelder[14]
 sigmatheta=0
 
 #Measurement system: three measures for t=2, one for t=5
-kappas=[[betas_nelder[16],betas_nelder[17],betas_nelder[18],betas_nelder[19]],
-[betas_nelder[20],betas_nelder[21],betas_nelder[22],betas_nelder[23]]]
+kappas=[[betas_nelder[15],betas_nelder[16],betas_nelder[17],betas_nelder[18]],
+[betas_nelder[19],betas_nelder[20],betas_nelder[21],betas_nelder[22]]]
 #First measure is normalized. starting arbitrary values
 #All factor loadings are normalized
 lambdas=[1,1]
@@ -128,8 +129,8 @@ married0=x_df[ ['d_marital_2']   ].values
 agech0=x_df[['age_t0']].values
 
 #Defines the instance with parameters
-param0=util.Parameters(alphap, alphaf, eta, alpha_cc,alpha_home_hf, 
-	gamma1, gamma2, gamma3,tfp, sigmatheta,
+param0=util.Parameters(alphap, alphaf, eta, gamma1, gamma2, 
+	gamma3,tfp,rho,sigmatheta,
 	wagep_betas, marriagep_betas, kidsp_betas, eitc_list,afdc_list,snap_list,
 	cpi,q,scalew,shapew,lambdas,kappas,pafdc,psnap)
 
@@ -173,12 +174,12 @@ output_ins=estimate.Estimate(param0,x_w,x_m,x_k,x_wmk,passign,agech0,nkids0,
 	wr,cs,ws)
 
 
-betas_opt=np.array([eta, alphap,alphaf,alpha_cc,alpha_home_hf,wagep_betas[0,0],
+betas_opt=np.array([eta, alphap,alphaf,wagep_betas[0,0],
 	wagep_betas[1,0],wagep_betas[2,0],
 	wagep_betas[3,0],wagep_betas[4,0],wagep_betas[5,0],wagep_betas[6,0],
-	gamma1,gamma2,gamma3,tfp,
+	gamma1,gamma2,gamma3,rho,tfp,
 	kappas[0][0],kappas[0][1],kappas[0][2],kappas[0][3],
-	kappas[1][0],kappas[0][1],kappas[0][2],kappas[0][3]])
+	kappas[1][0],kappas[1][1],kappas[1][2],kappas[1][3]])
 
 #The SE class
 se_ins=se.SEs(output_ins,var_cov,betas_opt)
@@ -190,4 +191,4 @@ nmom = moments_vector.shape[0]
 #The var-cov matrix of structural parameters
 ses = se_ins.big_sand(0.05,nmom,npar) 
 
-np.save('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/estimation/ses_modelv9_e3.npy',ses)
+np.save('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/estimation/ses_modelv10_e3.npy',ses)

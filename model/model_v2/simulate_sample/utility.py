@@ -27,13 +27,12 @@ class Parameters:
 
 	"""
 	def __init__(self,alphap,alphaf,eta,gamma1,gamma2,gamma3,
-		tfp,rho,sigmatheta,betaw,betam,betak,eitc,afdc,snap,cpi,q,scalew,shapew,
+		tfp,sigmatheta,betaw,betam,betak,eitc,afdc,snap,cpi,q,scalew,shapew,
 		lambdas,kappas,pafdc,psnap,):
 
 		self.alphap,self.alphaf,self.eta=alphap,alphaf,eta
 		self.gamma1,self.gamma2,self.gamma3=gamma1,gamma2,gamma3
 		self.tfp=tfp
-		self.rho=rho
 		self.sigmatheta,self.betaw,self.betam,self.betak=sigmatheta,betaw,betam,betak
 		self.eitc,self.afdc,self.snap,self.cpi,self.q=eitc,afdc,snap,cpi,q
 		self.scalew,self.shapew=scalew,shapew
@@ -449,6 +448,11 @@ class Utility(object):
 				else:
 					cc_cost[boo_ra &  boo_nfree & young] = copayment[boo_ra &  boo_nfree & young].copy()
 
+		else:
+			if self.cs==1:
+				cc_cost[boo_nfree & young] = copayment[boo_nfree & young].copy()
+
+
 		incomepc=(dincome - cc*cc_cost)/(ones+nkids+marr)
 		incomepc[incomepc<=0]=1
 		
@@ -468,7 +472,7 @@ class Utility(object):
 		agech=np.reshape(self.age_t0,(self.N)) + periodt
 
 		#log consumption pc
-		incomepc=ct
+		incomepc=np.log(ct)-np.mean(np.log(ct))
 		
 		
 		#log time w child (T=148 hours a week)
@@ -478,7 +482,7 @@ class Utility(object):
 		boo_u = h == 0
 
 		tch = cc*(148 - 40) + (1-cc)*(boo_u*148 + boo_p*(148 - self.hours_p) + boo_f*(148 - self.hours_f)) 
-		tch=tch
+		tch=np.log(tch)-np.mean(np.log(tch))
 
 		#random shock
 		omega=self.param.sigmatheta*np.random.randn(self.N)
@@ -489,8 +493,7 @@ class Utility(object):
 		gamma2=self.param.gamma2
 		gamma3=self.param.gamma3
 		tfp=self.param.tfp
-		rho=self.param.rho
-		
+				
 		theta1=np.zeros(self.N)
 
 		#The production of HC: (young, cc=0), (young,cc1), (old)
@@ -501,9 +504,9 @@ class Utility(object):
 		tfp_list=[0,tfp,0]
 
 		for j in range(len(boo_list)):
-			theta1[boo_list[j]] = (1/rho)*np.log(gamma1*theta0[boo_list[j]]**rho  +\
-				gamma2*incomepc[boo_list[j]]**rho +\
-				gamma3*tch[boo_list[j]]**rho) + tfp_list[j] + omega[boo_list[j]]
+			theta1[boo_list[j]] = gamma1*np.log(theta0[boo_list[j]])  +\
+				gamma2*incomepc[boo_list[j]] +\
+				gamma3*tch[boo_list[j]] + tfp_list[j] + omega[boo_list[j]]
 				
 
 

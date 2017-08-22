@@ -57,8 +57,15 @@ class Prod2(Utility):
 		incomepc=incomepc_aux - ecel[0][periodt]
 		
 		#log leisure (T=148 hours a week)
-		leisure=np.log(148-h) - ecel[1][periodt]
+		#log time w child (T=148 hours a week)
+		tch = np.zeros(self.N)
+		boo_p = h == self.hours_p
+		boo_f = h == self.hours_f
+		boo_u = h == 0
 
+		tch = cc*(148 - 40) + (1-cc)*(boo_u*148 + boo_p*(148 - self.hours_p) + boo_f*(148 - self.hours_f)) 
+		tch=np.log(tch)-ecel[1][periodt]
+		
 		#random shock
 		omega=self.param.sigmatheta*np.random.randn(self.N)
 		
@@ -75,16 +82,16 @@ class Prod2(Utility):
 		#The production of HC: young, cc=0
 		boo=(agech<=6) & (cc==0)
 		theta1[boo] = gamma1*np.log(theta0[boo]) + gamma2*incomepc[boo] +\
-		gamma3*leisure[boo] + omega[boo]
+		gamma3*tch[boo] + omega[boo]
 
 		#The production of HC: young, cc=1
 		boo=(agech<=6) & (cc==1)
 		theta1[boo] = gamma1*np.log(theta0[boo]) + gamma2*incomepc[boo] +\
-		gamma3*leisure[boo] + tfp + omega[boo]
+		gamma3*tch[boo] + tfp + omega[boo]
 
 		#The production of HC: old
 		boo=(agech>6)
 		theta1[boo] = gamma1*np.log(theta0[boo]) + gamma2*incomepc[boo] +\
-		gamma3*leisure[boo] + omega[boo]
+		gamma3*tch[boo] + omega[boo]
 
 		return np.exp(theta1)

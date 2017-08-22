@@ -265,7 +265,7 @@ class Estimate:
 			ssrs_t5_matrix_se),axis=0)
 
 		beta_kappas_t2=np.zeros((4,self.M)) #4 moments
-		beta_inputs=np.zeros((7,self.M)) #4 moments
+		beta_inputs=np.zeros((4,self.M)) #4 moments
 		beta_kappas_t5=np.zeros((4,self.M)) #4 moments
 				
 		for z in range(2,6): #4 rankings
@@ -283,21 +283,6 @@ class Estimate:
 			boo_young_cc0 = (age_aux<=6) & (b_cc0==True)
 			boo_young_cc1 = (age_aux<=6) & (b_cc1==True)
 			beta_inputs[3,j] = np.mean(ssrs_aux[boo_young_cc1,j]) - np.mean(ssrs_aux[boo_young_cc0,j])
-
-		
-		#interactions (3 regressions)
-		x_list = [np.multiply(ssrs_t2_matrix_se,np.log(consumption_matrix[:,4,:])),\
-		np.multiply(ssrs_t2_matrix_se,leisure_matrix[:,4,:]),\
-		np.multiply(np.log(consumption_matrix[:,4,:]),leisure_matrix[:,4,:])]
-
-		
-		for k in range(3):
-			for j in range(self.M):				
-				x = np.concatenate((np.ones((self.N,1)),x_list[k][:,j].reshape((self.N,1))),axis=1)
-				xx_inv = np.linalg.inv(np.dot(np.transpose(x),x))
-				xy = np.dot(np.transpose(x),ssrs_t5_matrix_se[:,j])
-				beta_inputs[k+4,j] = np.dot(xx_inv,xy)[1] #just the slope
-
 
 		for z in range(2,6): #4 rankings
 			boo=ssrs_t5_matrix==z
@@ -337,16 +322,15 @@ class Estimate:
 		self.param0.gamma1=beta[10]
 		self.param0.gamma2=beta[11]
 		self.param0.gamma3=beta[12]
-		self.param0.rho=beta[13]
-		self.param0.tfp=beta[14]
-		self.param0.kappas[0][0]=beta[15]
-		self.param0.kappas[0][1]=beta[16]
-		self.param0.kappas[0][2]=beta[17]
-		self.param0.kappas[0][3]=beta[18]
-		self.param0.kappas[1][0]=beta[19]
-		self.param0.kappas[1][1]=beta[20]
-		self.param0.kappas[1][2]=beta[21]
-		self.param0.kappas[1][3]=beta[22]
+		self.param0.tfp=beta[13]
+		self.param0.kappas[0][0]=beta[14]
+		self.param0.kappas[0][1]=beta[15]
+		self.param0.kappas[0][2]=beta[16]
+		self.param0.kappas[0][3]=beta[17]
+		self.param0.kappas[1][0]=beta[18]
+		self.param0.kappas[1][1]=beta[19]
+		self.param0.kappas[1][2]=beta[20]
+		self.param0.kappas[1][3]=beta[21]
 			
 
 		#The model (utility instance)
@@ -452,7 +436,7 @@ class Estimate:
 			self.param0.betaw[0],
 			self.param0.betaw[1],self.param0.betaw[2],self.param0.betaw[3],
 			self.param0.betaw[4],np.log(self.param0.betaw[5]),self.param0.betaw[6],
-			self.param0.gamma1,self.param0.gamma2,self.param0.gamma3,self.param0.rho,	
+			self.param0.gamma1,self.param0.gamma2,self.param0.gamma3,	
 			self.param0.tfp,
 			self.param0.kappas[0][0],self.param0.kappas[0][1],#kappa: t=2, m0
 			self.param0.kappas[0][2],self.param0.kappas[0][3], #kappa: t=2, m0

@@ -70,12 +70,11 @@ gamma1= betas_nelder[12]
 gamma2= betas_nelder[13]
 gamma3= betas_nelder[14]
 tfp=betas_nelder[15]
-rho = 0.1
 sigmatheta=0
 
 #Measurement system: three measures for t=2, one for t=5
-kappas=[[betas_nelder[16]+0.8,-0.2+0.5,0.8+0.8,2+0.8],
-[betas_nelder[20]+2.1,betas_nelder[21]+2.1,betas_nelder[22]+2.1,betas_nelder[23]+2.1]]
+kappas=[[betas_nelder[16],betas_nelder[17],betas_nelder[18],betas_nelder[19]],
+[betas_nelder[20],betas_nelder[21],betas_nelder[22],betas_nelder[23]]]
 #First measure is normalized. starting arbitrary values
 #All factor loadings are normalized
 lambdas=[1,1]
@@ -154,7 +153,7 @@ agech0=x_df[['age_t0']].values
 
 #Defines the instance with parameters
 param=util.Parameters(alphap,alphaf,eta,gamma1,gamma2,gamma3,
-	tfp,rho,sigmatheta,	wagep_betas, marriagep_betas, kidsp_betas, eitc_list,
+	tfp,sigmatheta,	wagep_betas, marriagep_betas, kidsp_betas, eitc_list,
 	afdc_list,snap_list,cpi,q,scalew,shapew,lambdas,kappas,pafdc,psnap)
 
 

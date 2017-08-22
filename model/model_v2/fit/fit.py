@@ -45,7 +45,7 @@ import estimate as estimate
 
 np.random.seed(1)
 
-betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv10_v1_e3.npy')
+betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv12_v1_e3.npy')
 
 #Utility function
 eta=betas_nelder[0]
@@ -63,13 +63,12 @@ wagep_betas=np.array([betas_nelder[3],betas_nelder[4],betas_nelder[5],
 gamma1= betas_nelder[10]
 gamma2= betas_nelder[11]
 gamma3= betas_nelder[12]
-rho=betas_nelder[13]
-tfp=betas_nelder[14]
+tfp=betas_nelder[13]
 sigmatheta=0
 
 #Measurement system: three measures for t=2, one for t=5
-kappas=[[betas_nelder[15],betas_nelder[16],betas_nelder[17],betas_nelder[18]],
-[betas_nelder[19],betas_nelder[20],betas_nelder[21],betas_nelder[22]]]
+kappas=[[betas_nelder[14],betas_nelder[15],betas_nelder[16],betas_nelder[17]],
+[betas_nelder[18],betas_nelder[19],betas_nelder[20],betas_nelder[21]]]
 
 #First measure is normalized. starting arbitrary values
 #All factor loadings are normalized
@@ -149,7 +148,7 @@ agech0=x_df[['age_t0']].values
 
 #Defines the instance with parameters
 param0=util.Parameters(alphap, alphaf, eta, gamma1, gamma2, 
-	gamma3,tfp,rho,sigmatheta,
+	gamma3,tfp,sigmatheta,
 	wagep_betas, marriagep_betas, kidsp_betas, eitc_list,afdc_list,snap_list,
 	cpi,q,scalew,shapew,lambdas,kappas,pafdc,psnap)
 
@@ -215,18 +214,18 @@ beta_inputs=np.mean(dic_betas['beta_inputs'],axis=1) #4 x 1
 #################################################################################
 #################################################################################
 #FIGURE: ATE ON INCOME#
-#execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/fit/ate_inc.py')
+execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/fit/ate_inc.py')
 
 #################################################################################
 #################################################################################
 #FIGURE: ATE ON CHILD CARE#
-#execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/fit/ate_cc.py')
+execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/fit/ate_cc.py')
 
 
 #################################################################################
 #################################################################################
 #FIGURE: ATE ON EMPLOYMENT#
-#execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/fit/ate_emp.py')
+execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/fit/ate_emp.py')
 
 #################################################################################
 #################################################################################
@@ -242,12 +241,12 @@ execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2
 #################################################################################
 #################################################################################
 #TABLE FIT: target moments#
-#execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/fit/table_aux.py')
+execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/fit/table_aux.py')
 
 
 #################################################################################
 #################################################################################
-"""
+
 #TABLE: model validation#
 ate_hours_obs_2=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/fit/ate_hours_2.csv').values
 se_ate_hours_obs_2=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/fit/se_ate_hours_2.csv').values
@@ -290,4 +289,3 @@ with open('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model
 	f.write(r'\end{tabular}' + '\n')
 	f.close()
 
-"""

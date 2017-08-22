@@ -34,7 +34,7 @@ import estimate as estimate
 
 np.random.seed(1)
 
-betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv10_v1_e3.npy')
+betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv11_v1_e3.npy')
 
 #Utility function
 eta=betas_nelder[0]
@@ -52,13 +52,12 @@ wagep_betas=np.array([betas_nelder[3],betas_nelder[4],betas_nelder[5],
 gamma1= betas_nelder[10]
 gamma2= betas_nelder[11]
 gamma3= betas_nelder[12]
-rho=betas_nelder[13]
-tfp=betas_nelder[14]
+tfp=betas_nelder[13]
 sigmatheta=0
 
 #Measurement system: three measures for t=2, one for t=5
-kappas=[[betas_nelder[15],betas_nelder[16],betas_nelder[17],betas_nelder[18]],
-[betas_nelder[19],betas_nelder[20],betas_nelder[21],betas_nelder[22]]]
+kappas=[[betas_nelder[14],betas_nelder[15],betas_nelder[16],betas_nelder[17]],
+[betas_nelder[18],betas_nelder[19],betas_nelder[20],betas_nelder[21]]]
 
 #First measure is normalized. starting arbitrary values
 #All factor loadings are normalized
@@ -138,7 +137,7 @@ agech0=x_df[['age_t0']].values
 
 #Defines the instance with parameters
 param0=util.Parameters(alphap, alphaf, eta, gamma1, gamma2, 
-	gamma3,tfp,rho,sigmatheta,
+	gamma3,tfp,sigmatheta,
 	wagep_betas, marriagep_betas, kidsp_betas, eitc_list,afdc_list,snap_list,
 	cpi,q,scalew,shapew,lambdas,kappas,pafdc,psnap)
 
@@ -220,25 +219,25 @@ shock_th = theta_0[:,0] + np.exp(np.zeros(N)+0.3)
 #theta with no shocks
 for k in range(8):
 	#no shocks
-	theta_0[:,k+1] = np.exp((1/rho)*np.log(gamma1*theta_0[:,k]**rho + gamma2*ec**rho +gamma3*lt**rho))
+	theta_0[:,k+1] = np.exp(gamma1*np.log(theta_0[:,k]) + gamma2*np.log(ec) +gamma3*np.log(lt))
 
 #Responses
 for k in range(8):
 	if k==0:
-		theta_th[:,k+1] = np.exp((1/rho)*np.log(gamma1*shock_th**rho + gamma2*ec**rho +gamma3*lt**rho))
+		theta_th[:,k+1] = np.exp(gamma1*np.log(shock_th) + gamma2*np.log(ec) +gamma3*np.log(lt))
 	else:
-		theta_th[:,k+1] = np.exp((1/rho)*np.log(gamma1*theta_th[:,k]**rho + gamma2*ec**rho +gamma3*lt**rho))
+		theta_th[:,k+1] = np.exp(gamma1*np.log(theta_th[:,k]) + gamma2*np.log(ec) +gamma3*np.log(lt))
 #ATE
 ate_theta = np.mean(np.log(theta_th) - np.log(theta_0),axis=0)/sds
 
 #mfx: a 1,000 income shock
-t0 = (1/rho)*np.log(gamma1*np.ones(N)**rho + gamma2*ec**rho +gamma3*lt**rho)
-t1 = (1/rho)*np.log(gamma1*np.ones(N)**rho + gamma2*(ec+1000/(nkids0[:,0] + married0[:,0]))**rho +gamma3*lt**rho)
+t0 = gamma1*np.log(np.ones(N)) + gamma2*np.log(ec) +gamma3*np.log(lt)
+t1 = gamma1*np.log(np.ones(N)) + gamma2*np.log(ec+1000/(nkids0[:,0] + married0[:,0])) +gamma3*np.log(lt)
 mfx_c = np.mean(t1-t0)/sds[1]
 
 #mfx: from full time to unemployment
-t0 = (1/rho)*np.log(gamma1*np.ones(N)**rho + gamma2*ec**rho +gamma3*lt**rho)
-t1 = (1/rho)*np.log(gamma1*np.ones(N)**rho + gamma2*ec**rho +gamma3*(lt+40)**rho)
+t0 = gamma1*np.log(np.ones(N)) + gamma2*np.log(ec) +gamma3*np.log(lt)
+t1 = gamma1*np.log(np.ones(N)) + gamma2*np.log(ec) +gamma3*np.log((lt+40))
 mfx_t = np.mean(t1-t0)/sds[1]
 
 print ''

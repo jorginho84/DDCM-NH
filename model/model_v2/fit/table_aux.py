@@ -57,10 +57,10 @@ ind = ind +4
 pos = 20
 #C. prod fn
 list_aux = [beta_inputs]
-list_obs = [moments_vector[ind:ind +7 ,0]]
-list_sig = [se_vector[ind:ind + 7]]
+list_obs = [moments_vector[ind:ind +4 ,0]]
+list_sig = [se_vector[ind:ind + 4]]
 
-for c in range(7): 
+for c in range(4): 
 	sim_moment = ws.cell('B' + str(c + pos))
 	obs_moment = ws.cell('D' + str(c + pos))
 	obs_sigma = ws.cell('F' + str(c + pos))

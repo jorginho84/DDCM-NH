@@ -34,7 +34,7 @@ import se
 
 np.random.seed(1)
 
-betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv10_v1_e3.npy')
+betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv12_v1_e3.npy')
 
 
 #Utility function
@@ -53,13 +53,12 @@ wagep_betas=np.array([betas_nelder[3],betas_nelder[4],betas_nelder[5],
 gamma1= betas_nelder[10]
 gamma2= betas_nelder[11]
 gamma3= betas_nelder[12]
-rho=betas_nelder[13]
-tfp=betas_nelder[14]
+tfp=betas_nelder[13]
 sigmatheta=0
 
 #Measurement system: three measures for t=2, one for t=5
-kappas=[[betas_nelder[15],betas_nelder[16],betas_nelder[17],betas_nelder[18]],
-[betas_nelder[19],betas_nelder[20],betas_nelder[21],betas_nelder[22]]]
+kappas=[[betas_nelder[14],betas_nelder[15],betas_nelder[16],betas_nelder[17]],
+[betas_nelder[18],betas_nelder[19],betas_nelder[20],betas_nelder[21]]]
 #First measure is normalized. starting arbitrary values
 #All factor loadings are normalized
 lambdas=[1,1]
@@ -130,7 +129,7 @@ agech0=x_df[['age_t0']].values
 
 #Defines the instance with parameters
 param0=util.Parameters(alphap, alphaf, eta, gamma1, gamma2, 
-	gamma3,tfp,rho,sigmatheta,
+	gamma3,tfp,sigmatheta,
 	wagep_betas, marriagep_betas, kidsp_betas, eitc_list,afdc_list,snap_list,
 	cpi,q,scalew,shapew,lambdas,kappas,pafdc,psnap)
 
@@ -177,7 +176,7 @@ output_ins=estimate.Estimate(param0,x_w,x_m,x_k,x_wmk,passign,agech0,nkids0,
 betas_opt=np.array([eta, alphap,alphaf,wagep_betas[0,0],
 	wagep_betas[1,0],wagep_betas[2,0],
 	wagep_betas[3,0],wagep_betas[4,0],wagep_betas[5,0],wagep_betas[6,0],
-	gamma1,gamma2,gamma3,rho,tfp,
+	gamma1,gamma2,gamma3,tfp,
 	kappas[0][0],kappas[0][1],kappas[0][2],kappas[0][3],
 	kappas[1][0],kappas[1][1],kappas[1][2],kappas[1][3]])
 
@@ -191,4 +190,4 @@ nmom = moments_vector.shape[0]
 #The var-cov matrix of structural parameters
 ses = se_ins.big_sand(0.05,nmom,npar) 
 
-np.save('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/estimation/ses_modelv10_e3.npy',ses)
+np.save('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/estimation/ses_modelv12_e3.npy',ses)

@@ -23,8 +23,8 @@ import time
 import openpyxl
 
 #Betas and var-cov matrix
-betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv10_v1_e3.npy')
-var_cov=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/estimation/ses_modelv10_e3.npy')
+betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv12_v1_e3.npy')
+var_cov=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/estimation/ses_modelv12_e3.npy')
 se_vector  = np.sqrt(np.diagonal(var_cov))
 
 #Utility function
@@ -48,21 +48,19 @@ sigma_wagep_betas=np.array([se_vector[3],se_vector[4],se_vector[5],se_vector[6],
 gamma1= betas_nelder[10]
 gamma2= betas_nelder[11]
 gamma3= betas_nelder[12]
-rho= betas_nelder[13]
-tfp=betas_nelder[14]
+tfp=betas_nelder[13]
 
 sigma_gamma1=se_vector[10]
 sigma_gamma2=se_vector[11]
 sigma_gamma3=se_vector[12]
-sigma_rho=se_vector[13]
-sigma_tfp=se_vector[14]
+sigma_tfp=se_vector[13]
 
 #Measurement system: three measures for t=2, one for t=5
-kappas=[[betas_nelder[15],betas_nelder[16],betas_nelder[17],betas_nelder[18]],
-[betas_nelder[19],betas_nelder[20],betas_nelder[21],betas_nelder[22]]]
+kappas=[[betas_nelder[14],betas_nelder[15],betas_nelder[16],betas_nelder[17]],
+[betas_nelder[18],betas_nelder[19],betas_nelder[20],betas_nelder[21]]]
 
-sigma_kappas=[[se_vector[15],se_vector[16],se_vector[17],se_vector[18]],
-[se_vector[19],se_vector[20],se_vector[21],se_vector[22]]]
+sigma_kappas=[[se_vector[14],se_vector[15],se_vector[16],se_vector[17]],
+[se_vector[18],se_vector[19],se_vector[20],se_vector[21]]]
 
 #First measure is normalized. starting arbitrary values
 lambdas=[1,1]
@@ -85,10 +83,10 @@ sigma_wagep_betas[2,0],sigma_wagep_betas[3,0],sigma_wagep_betas[4,0],
 sigma_wagep_betas[6,0],sigma_wagep_betas[5,0]]
 wage_names = ['Age', r'Age$^2$', 'High school', r'$\log(t)$','Constant', 'AR(1) error term' ,'Variance of error term']
 
-prod_list_beta = [gamma1,gamma2,gamma3,rho,tfp]
-prod_list_se  = [sigma_gamma1,sigma_gamma2,sigma_gamma3,sigma_rho,sigma_tfp]
+prod_list_beta = [gamma1,gamma2,gamma3,tfp]
+prod_list_se  = [sigma_gamma1,sigma_gamma2,sigma_gamma3,sigma_tfp]
 prod_names = [r'Lagged human capital ($\gamma_1$)', r'Consumption ($\gamma_2$)',
-r'Time at home ($\gamma_3$)', r'Substitution ($\rho$)', r'Child care TFP ($\mu$)']
+r'Time at home ($\gamma_3$)', r'Child care TFP ($\mu$)']
 
 ssrs2_list_beta = kappas[0]
 ssrs2_list_se = sigma_kappas[0]

@@ -35,7 +35,7 @@ from bset import Budget
 
 np.random.seed(1)
 
-betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv10_v1_e3.npy')
+betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv12_v1_e3.npy')
 
 
 #Utility function
@@ -54,13 +54,12 @@ wagep_betas=np.array([betas_nelder[3],betas_nelder[4],betas_nelder[5],
 gamma1= betas_nelder[10]
 gamma2= betas_nelder[11]
 gamma3= betas_nelder[12]
-rho=betas_nelder[13]
-tfp=betas_nelder[14]
+tfp=betas_nelder[13]
 sigmatheta=0
 
 #Measurement system: three measures for t=2, one for t=5
-kappas=[[betas_nelder[15],betas_nelder[16],betas_nelder[17],betas_nelder[18]],
-[betas_nelder[19],betas_nelder[20],betas_nelder[21],betas_nelder[22]]]
+kappas=[[betas_nelder[14],betas_nelder[15],betas_nelder[16],betas_nelder[17]],
+[betas_nelder[18],betas_nelder[19],betas_nelder[20],betas_nelder[21]]]
 
 #First measure is normalized. starting arbitrary values
 #All factor loadings are normalized
@@ -204,7 +203,7 @@ childcare  = np.zeros(N)
 
 cs=0
 param0=util.Parameters(alphap, alphaf, eta, gamma1, gamma2, 
-	gamma3,tfp,rho,sigmatheta,
+	gamma3,tfp,sigmatheta,
 	wagep_betas, marriagep_betas, kidsp_betas, eitc_list_4,afdc_list,snap_list,
 	cpi,q,scalew,shapew,lambdas,kappas,pafdc,psnap)
 
@@ -217,6 +216,18 @@ model = Budget(param0,N,x_w,x_m,x_k,passign,nkids0,married0,
 
 emax_instance = output_ins.emax(param0,model)
 choices_baseline = output_ins.samples(param0,emax_instance,model)
+
+#The E[Log] of consumption and leisure
+ec = np.mean(np.mean(np.log(choices_baseline['consumption_matrix']),axis=2),axis=0)
+hours_m = choices_baseline['hours_matrix']
+boo_p = hours_m == hours_p
+boo_f = hours_m == hours_f
+boo_u = hours_m == 0
+cc = choices_baseline['choice_matrix']>2
+tch = cc*(148 - 40) + (1-cc)*(boo_u*148 + boo_p*(148 - hours_p) + boo_f*(148 - hours_f)) 
+el = np.mean(np.mean(np.log(tch),axis=2),axis=0)
+np.save('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/experiments/NH/ec.npy',ec)
+np.save('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/experiments/NH/el.npy',el)
 
 #SD of no EITC (t=0...8)
 sd_matrix = np.zeros((9,M))
@@ -259,7 +270,7 @@ for j in range(len(experiments)): #the experiment loop
 
 	#Defines the instance with parameters
 	param0=util.Parameters(alphap, alphaf, eta, gamma1, gamma2,
-		gamma3, tfp,rho, sigmatheta,
+		gamma3, tfp,sigmatheta,
 		wagep_betas, marriagep_betas, kidsp_betas, experiments[j][0],afdc_list,snap_list,
 		cpi,q,scalew,shapew,lambdas,kappas,pafdc,psnap)
 

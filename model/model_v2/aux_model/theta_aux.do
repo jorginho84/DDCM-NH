@@ -72,8 +72,10 @@ preserve
 mat inputs_moments=J(4,1,.)
 
 
-corr skills_t2 skills_t5
-mat inputs_moments[1,1] = r(rho)
+gen d_same = (skills_t2_aux>skills_t5_aux)
+replace d_same=. if skills_t2_aux==.| skills_t5_aux==. | skills_t5_aux==5
+qui: sum d_same
+mat inputs_moments[1,1] = r(mean)
 
 egen id_child = seq()
 rename skills_t2 skills_t1

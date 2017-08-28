@@ -60,15 +60,15 @@ wagep_betas=np.array([betas_nelder[3],betas_nelder[4],betas_nelder[5],
 
 
 #Production function [young,old]
-gamma1= betas_nelder[10]
+gamma1= 0.8
 gamma2= betas_nelder[11]
 gamma3= betas_nelder[12]
 tfp=betas_nelder[13]
 sigmatheta=0
 
 #Measurement system: three measures for t=2, one for t=5
-kappas=[[betas_nelder[14],betas_nelder[15],betas_nelder[16],betas_nelder[17]],
-[betas_nelder[18],betas_nelder[19],betas_nelder[20],betas_nelder[21]]]
+kappas=[[betas_nelder[14]+0.3,betas_nelder[15]+0.1,betas_nelder[16]-0.1,betas_nelder[17]-0.3],
+[betas_nelder[18]+0.2,betas_nelder[19],betas_nelder[20]-0.2,betas_nelder[21]-0.3]]
 
 #First measure is normalized. starting arbitrary values
 #All factor loadings are normalized

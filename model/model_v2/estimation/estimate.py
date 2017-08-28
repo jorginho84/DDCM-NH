@@ -274,7 +274,9 @@ class Estimate:
 
 			
 		for j in range(self.M):
-			beta_inputs[0,j] = np.corrcoef(ssrs_t2_matrix_se[:,j],ssrs_t5_matrix_se[:,j])[1,0]
+			d_same = ssrs_t2_matrix[:,j] > ssrs_t2_matrix[:,j]
+			boo_not = ssrs_t5_matrix[:,j]!=5
+			beta_inputs[0,j] = np.mean(d_same[boo_not])
 			beta_inputs[1,j] = np.corrcoef(ssrs_aux[:,j],consumption_aux[:,j])[1,0]
 			beta_inputs[2,j] = np.corrcoef(ssrs_aux[:,j],leisure_aux[:,j])[1,0]
 			

@@ -47,6 +47,7 @@ foreach variable of varlist `Y2_B1' `Y2_B2' `Y5_B2' `Y5_B3' `Y5_B5' {
 foreach variable of varlist `Y2_B1'  `Y5_B2' `Y8_B2' {
 	gen `variable'_s=`variable'>=3
 	replace `variable'_s=0 if `variable'<3
+	replace `variable'_s=. if `variable'==.
 	drop `variable'
 	rename `variable'_s `variable'
 }

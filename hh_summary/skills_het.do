@@ -33,7 +33,7 @@ set more off
 1: show results by age
 */
 
-local het = 1
+local het = 0
 
 use "$databases/Youth_original2.dta", clear
 keep  sampleid child p_assign zboy agechild p_assign  /*
@@ -58,7 +58,7 @@ foreach variable of varlist `Y2_B1' `Y5_B2' `Y8_B2'{
 *The rank measures to dummy variables
 foreach variable of varlist `Y2_B1' `Y5_B2' `Y8_B2'{
 	gen `variable'_d = `variable'>=3
-	replace `variable'_d=0 if `variable'<3
+	replace `variable'_d=. if `variable'==.
 	drop `variable'
 	rename `variable'_d `variable'
 
@@ -129,7 +129,7 @@ forvalues x=0/1{/*old,young*/
 		local n_`variable'=r(N)
 	
 
-		qui: reg `variable' i.d_RA age_ra agechild i.marital i.ethnic d_HS higrade i.pastern2 if d_sample==`x'
+		qui: reg `variable' i.d_RA if d_sample==`x'
 		local pval_model`x'_`variable'_aux = 2*(1-normal(abs(_b[1.d_RA]/_se[1.d_RA])))
 		local pval_model`x'_`variable' = string(round(`pval_model`x'_`variable'_aux',0.001),"%9.3f")
 		local beta_model`x'_`variable' = string(round(_b[1.d_RA],0.001),"%9.3f")
@@ -222,10 +222,10 @@ else{
 
 }
 
-twoway (scatter model1 year, mlcolor(blue) mfcolor(none) msize(large)) /*
-*/ (scatter sig_model1 year, mlcolor(blue) mfcolor(blue) msize(large))/*
-*/ (scatter model0 year, mlcolor(red) mfcolor(none) msize(large)) /*
-*/ (scatter sig_model0 year, mlcolor(red) mfcolor(red) msize(large)),/*
+twoway (scatter model1 year, mlcolor(blue) mfcolor(none) msize(large) msymbol(circle)) /*
+*/ (scatter sig_model1 year, mlcolor(blue) mfcolor(blue) msize(large) msymbol(circle))/*
+*/ (scatter model0 year, mlcolor(red) mfcolor(none) msize(large) msymbol(triangle)) /*
+*/ (scatter sig_model0 year, mlcolor(red) mfcolor(red) msize(large) msymbol(triangle)),/*
 */ ytitle("Impact on prob of being in the top 30%")  /*
 */ xtitle("Years after random assignment") /*
 */ legend(order(1 "`sample_1'" 3 "`sample_0'")  )/*

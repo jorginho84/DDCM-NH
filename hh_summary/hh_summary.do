@@ -81,24 +81,146 @@ local pval_income = r(p)
 /*Labor supply effects*/
 *****************************************************************
 *****************************************************************
-use `data_income', clear
+*Effects on quarterly employment
 
-*positive earnings
-forvalues x=0/2{
-	gen emp_y`x' = gross_y`x'>0
+use "$databases/CFS_original.dta", clear
+qui: do "$codes/data_cfs.do"
+
+
+
+keep sampleid p_assign p_radatr cstartm curremp c1 piinvyy epiinvyy /*
+*/ern*q* sup*q* csjm9* /*UI earnings, NH supplement, CSJ's
+*/ kid*daty  c53d_1 piq93e epi74e /*kids at baseline and births
+*/ c53d_3 /*Year of birth*/
+
+
+
+**********************************
+*CSJ: quarters in calendar time
+**********************************
+
+*Renaming CSJ calendar-time variables
+forvalues y=94/97{
+
+	local m=1
+	foreach month in "01" "02" "03" "04" "05" "06" "07" "08" "09" "10" "11" "12"{
+		rename csjm`y'`month' csj19`y'm`m'
+		local m=`m'+1
+	}
+	
+} 
+
+
+*Quarters
+
+forvalues y=1994/1997{
+
+	local m1=1
+	forvalues q=1/4{
+		local m2=`m1'+1
+		local m3=`m2'+1
+		egen csj`y'q`q'=rowtotal(csj`y'm`m1' csj`y'm`m2' csj`y'm`m3')
+		local m1=`m3'+1
+	}
+
+}
+
+****************************************
+*UI Earnings: quarters in calendar time
+****************************************
+
+
+
+*Renaming 
+rename ern4q93 ern1993q4
+
+local nn=1
+forvalues y=94/99{
+	forvalues q=1/4{
+
+		rename ern`q'q`y' ern19`y'q`q'
+		
+	}
+}
+
+local yy=0
+forvalues y=2000/2003{
+	forvalues q=1/4{
+
+		rename ern`q'q0`yy' ern200`yy'q`q' 
+				
+	}
+
+local yy=`yy'+1
+}
+
+*I DON"T HAVE EARNINGS FOR 98Q1: leave them as missing.
+destring ern1998q1, replace force
+
+*****************************************
+*NH supplement: quarters in calendar time
+*****************************************
+destring sup*q*, replace force
+
+*Renaming 
+local nn=1
+forvalues y=94/99{
+	forvalues q=1/4{
+		
+		replace sup`y'q`q'=0 if sup`y'q`q'==.
+		rename sup`y'q`q' sup19`y'q`q'
+		
+	}
 }
 
 
-keep emp_y* sampleid p_assign emp_baseline age_ra marital ethnic d_HS2 higrade pastern2
-reshape long emp_y, i(sampleid) j(year)
+forvalues q=1/4{
+	replace sup00q`q'=0 if sup00q`q'==.
+	rename sup00q`q' sup2000q`q' 
+				
+}
 
-qui xi: reg emp_y i.p_assign, vce(`SE')
+****Employment (quarter) ****
+
+forvalues y=1994/2003{
+	forvalues q=1/4{
+	
+		if `y'<=1997{
+			gen emp`y'q`q'=(ern`y'q`q'!=. & ern`y'q`q'>0) | (csj`y'q`q'!=. & csj`y'q`q'>0) 
+		}
+		else{
+			gen emp`y'q`q'=(ern`y'q`q'!=. & ern`y'q`q'>0)
+		}
+	
+	}
+
+}
+
+
+*Quarter of RA
+replace p_radatr=p_radatr+19000000
+tostring p_radatr, force replace
+gen ra_quarter=qofd(date(p_radatr,"YMD"))
+format ra_quarter %tq
+
+
+*Reshaping to build a panel
+keep emp* sampleid ra_quarter p_assign
+reshape long emp, i(sampleid) j(quarter_aux) string
+gen quarter=quarterly(quarter_aux, "YQ")
+format quarter %tq
+
+
+*Quarters since RA
+gen quarters_ra=quarter-ra_quarter
+
+*Effects for t=0,1,2 years (12 quarters after RA)
+xi: reg emp i.p_assign if quarters_ra>=0 & quarters_ra<=11, vce(`SE')
 local base_emp = string(round(_b[_cons]*100,0.1),"%9.1f")
 local beta_emp = string(round(_b[_Ip_assign_2]*100,0.1),"%9.1f")
 local se_emp = string(round(_se[_Ip_assign_2]*100,0.1),"%9.1f")
 qui: test _Ip_assign_2=0
 local pval_emp = r(p)
-
 
 *****************************************************************
 *****************************************************************

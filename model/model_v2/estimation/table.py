@@ -133,3 +133,28 @@ with open('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model
 	f.write(r'\end{tabular}' + '\n')
 	f.close()
 
+
+with open('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/estimation/estimates_uti_prod_slides.tex','w') as f:
+	f.write(r'\begin{tabular}{lcccc}'+'\n')
+	f.write(r'\hline' + '\n')
+	f.write(r'\textbf{Parameter} &  & \textbf{Estimate} & & \textbf{S.E.} \bigstrut\\' + '\n')
+	f.write(r'\cline{1-1}\cline{3-5}' + '\n')
+	f.write(r' &       &       &       &  \\' + '\n')
+	f.write(r'\multicolumn{5}{l}{\textbf{Utility function}: $\ln c_{t}+\alpha^{p}\mathbf{1}\{h_{t}=15\}+\alpha^{f}\mathbb{\mathbf{1}}\{h_{t}=40\}+\eta\ln\theta_{t}$} \\' + '\n')
+	f.write(r' &       &       &       &  \\' + '\n')
+	for j in range(len(utility_list_beta)):
+		f.write(utility_names[j]+r' &  &  '+ '{:04.3f}'.format(utility_list_beta[j]) +
+			r' &  & '+ '{:04.3f}'.format(utility_list_se[j])+r' \\' + '\n')
+
+	f.write(r' &       &       &       &  \\' + '\n')
+	f.write(r'\multicolumn{5}{l}{\textbf{Production function}: $\ln\theta_{t+1}=\alpha+\mu cc_{t}\mathbb{\mathbf{1}}\{a_{t}\leq6\}+\gamma_{1}\ln\theta_{t}+\gamma_{2}\ln c_{t}+\gamma_{3}\ln\tau_{t}$} \\' + '\n')
+	f.write(r' &       &       &       &  \\' + '\n')
+	for j in range(len(prod_list_beta)):
+		f.write(prod_names[j]+r' &  &  '+ '{:04.3f}'.format(prod_list_beta[j]) +
+			r' &  & '+ '{:04.3f}'.format(prod_list_se[j])+r' \\' + '\n')
+
+	
+	f.write(r'\hline'+'\n')
+	f.write(r'\end{tabular}' + '\n')
+	f.close()
+

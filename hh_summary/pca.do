@@ -126,7 +126,7 @@ foreach year in 2 5 8{
 
 twoway (connected betas year,msymbol(circle) mlcolor(blue) mfcolor(white)) /*
 */ (rcap ub lb year), /* These are the mean effect and the 90% confidence interval
-*/ ytitle("Impact on PCA factor (in {&sigma})")  xtitle("Years after random assignment") legend(off) /*
+*/ ytitle("Impact on first PCA component ({&sigma}s)")  xtitle("Years after random assignment") legend(off) /*
 */ xlabel( 1 "2" 2 "5" 3 "8", noticks) /*
 */ graphregion(fcolor(white) ifcolor(white) lcolor(white) ilcolor(white)) plotregion(fcolor(white) lcolor(white)  ifcolor(white) ilcolor(white))  /*
 */ scheme(s2mono) ylabel(, nogrid) yline(0, lpattern(dash) lcolor(black))

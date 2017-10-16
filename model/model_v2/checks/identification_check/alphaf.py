@@ -2,8 +2,8 @@
 #build a grid around parameter value
 lenght = 0.5
 size_grid = 8
-max_p = alphaf + lenght
-min_p = alphaf - lenght
+max_p = -0.05
+min_p = -0.8
 p_list = np.linspace(min_p,max_p,size_grid)
 obs_moment = moments_vector[2,0].copy()
 
@@ -23,7 +23,7 @@ execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2
 
 #the graph
 fig, ax=plt.subplots()
-plot1=ax.plot(p_list,target_moment,'b-',label='Simulated',alpha=0.9)
+plot1=ax.plot(p_list,target_moment,'b-o',label='Simulated',alpha=0.9)
 plot2=ax.plot(p_list,np.full((size_grid,),obs_moment),'b-.',label='Observed',alpha=0.9)
 plt.setp(plot1,linewidth=3)
 plt.setp(plot2,linewidth=3)

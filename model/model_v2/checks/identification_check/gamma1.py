@@ -1,10 +1,10 @@
 
 #build a grid around parameter value
-lenght = 0.3
-size_grid = 4
-max_p = gamma1 + lenght
-min_p = gamma1 - lenght
-p_list = np.linspace(0.75,0.86,size_grid)
+lenght = 0.05
+size_grid = 8
+max_p = 0.99
+min_p = 0.7
+p_list = np.linspace(min_p,max_p,size_grid)
 obs_moment = moments_vector[18,0].copy()
 
 #draft: try updating a parameter
@@ -22,13 +22,13 @@ execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2
 
 #the graph
 fig, ax=plt.subplots()
-plot1=ax.plot(p_list,target_moment,'b-',label='Simulated',alpha=0.9)
+plot1=ax.plot(p_list,target_moment,'b-o',label='Simulated',alpha=0.9)
 plot2=ax.plot(p_list,np.full((size_grid,),obs_moment),'b-.',label='Observed',alpha=0.9)
 plt.setp(plot1,linewidth=3)
 plt.setp(plot2,linewidth=3)
-ax.legend(loc=4)
-ax.set_ylabel(r'$Corr(SSRS_5,SSRS_2)$')
-ax.set_xlabel(r'Productivity of $\theta_t$ ($\gamma_1$)')
+ax.legend()
+ax.set_ylabel(r'$Corr(SSRS_2, SSRS_5)$')
+ax.set_xlabel(r'Self-productivity ($\gamma_1$)')
 ax.spines['right'].set_visible(False)
 ax.spines['top'].set_visible(False)
 ax.yaxis.set_ticks_position('left')

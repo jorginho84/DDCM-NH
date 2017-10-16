@@ -413,7 +413,7 @@ plot2=ax.plot(x,y_2,'k:',label=r'EITC $\checkmark$ - CC subsidy $\checkmark$',al
 plt.setp(plot0,linewidth=3)
 plt.setp(plot1,linewidth=3)
 plt.setp(plot2,linewidth=3)
-ax.set_ylabel(r'Impact on academic achievement ($\ln \theta$)', fontsize=14)
+ax.set_ylabel(r'Effect on child human capital ($\sigma$s)', fontsize=14)
 ax.set_xlabel(r'Years after random assignment ($t$)', fontsize=14)
 ax.spines['right'].set_visible(False)
 ax.spines['top'].set_visible(False)
@@ -472,11 +472,12 @@ for j in range(3): #the experiment loop
 	total = y1 + y2 + y3 + y4
 
 	fig, ax=plt.subplots()
-	ax.plot(x,y2, color='k',zorder=1,linewidth=3)
-	ax.fill_between(x,y2,(y2+y1), color='k' ,alpha=.7,zorder=2)
-	ax.fill_between(x,(y2+y1),(y2+y1+y3), color='k' ,alpha=.4,zorder=3)
-	ax.fill_between(x,(y2+y1+y3),(total), color='k' ,alpha=.15,zorder=4)
-	ax.set_ylabel(r'Decomposition of $E[\ln \theta_{t+1}\mid D=1] - E[\ln \theta_{t+1}\mid D=0]$', fontsize=14)
+	ax.plot(x,y2, color='k',linewidth=3,marker='o')
+	ax.bar(x,y1, color='k' ,alpha=.8,bottom=y2,align='center')
+	ax.bar(x,y3, color='k' , alpha=.4, bottom=y1+y2,align='center')
+	ax.bar(x,y4,color='w',bottom=y3+y1+y2,align='center',edgecolor='k',
+		linewidth=1)
+	ax.set_ylabel(r'Effect on child human capital ($\sigma$s)', fontsize=14)
 	ax.set_xlabel(r'Years after random assignment ($t$)', fontsize=14)
 	ax.spines['right'].set_visible(False)
 	ax.spines['top'].set_visible(False)
@@ -488,5 +489,6 @@ for j in range(3): #the experiment loop
 	plt.show()
 	fig.savefig('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/experiments/EITC/mech_' + exp[j] + '.pdf', format='pdf')
 	plt.close()
+
 
 

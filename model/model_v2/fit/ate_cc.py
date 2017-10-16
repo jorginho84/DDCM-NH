@@ -53,3 +53,25 @@ ax.xaxis.set_ticks_position('bottom')
 plt.show()
 fig.savefig('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/fit/ate_cc.pdf', format='pdf')
 plt.close()
+
+
+nper = 1
+bar_width = 0.35
+fig, ax=plt.subplots()
+x = np.array(range(0,nper))
+plot1=ax.bar(x,ate_cc[1],bar_width,label='Simulated',color='k',alpha=0.8)
+plot2=ax.bar(x + bar_width,ate_cc_obs[0],bar_width,yerr=se_ate_cc_obs[0,0],label='Data',edgecolor='k',
+	color='k',alpha=0.4)
+ax.legend(loc=8,fontsize=20)
+ax.set_ylabel('%', fontsize=20)
+ax.set_xlabel(r'$t=1$', fontsize=20)
+ax.spines['right'].set_visible(False)
+ax.spines['top'].set_visible(False)
+ax.yaxis.set_ticks_position('left')
+ax.xaxis.set_ticks_position('bottom')
+ax.set_xticklabels([])
+ax.set_xticks([])
+plt.yticks(fontsize=15)
+plt.show()
+fig.savefig('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/fit/ate_bars_cc.pdf', format='pdf')
+plt.close()

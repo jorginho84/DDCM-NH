@@ -243,14 +243,14 @@ execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2
 #TABLE FIT: target moments#
 execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/fit/table_aux.py')
 
+#GRAPHS FIT: target moments#
 
 #################################################################################
 #################################################################################
 
 #TABLE: model validation#
-ate_hours_obs_2=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/fit/ate_hours_2.csv').values
-se_ate_hours_obs_2=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/fit/se_ate_hours_2.csv').values
-
+ate_hours_obs_2=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/fit/ate_hours.csv').values
+se_ate_hours_obs_2=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/fit/se_ate_hours.csv').values
 
 ate_inc_obs_2=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/fit/ate_inc_2.csv').values
 se_ate_inc_obs_2=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/fit/se_ate_inc_2.csv').values
@@ -260,21 +260,21 @@ ate_cc_obs=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/
 se_ate_cc_obs=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/fit/se_ate_cc.csv').values
 
 #Simulated: only during NH
-ate_hours_2 = (np.mean(ate_hours[0])+np.mean(ate_hours[1]))/2
+ate_hours_2 = [np.mean(ate_hours[0]),np.mean(ate_hours[1])]
 ate_cc_2 = ate_cc[0] #period vs and 4
 ate_inc_2 = (np.mean(ate_inc[0])+np.mean(ate_inc[1])+np.mean(ate_inc[2]))/(3*1000)
 
 #The list of statistics
-sim_list = [ate_hours_2,ate_cc_2,ate_inc_2]
-obs_list = [ate_hours_obs_2[0,0],ate_cc_obs[0,0],ate_inc_obs_2[0,0]/1000]
-obs_list_se = [se_ate_hours_obs_2[0,0],se_ate_cc_obs[0,0],se_ate_inc_obs_2[0,0]/1000]
-var_list = [r'Hours worked ($t=0,1$)', r'Child care ($t=1$)',r'Consumption pc/1000 ($t=1$)']
+sim_list = [ate_hours_2[0],ate_hours_2[1],ate_cc_2,ate_inc_2]
+obs_list = [ate_hours_obs_2[0,0],ate_hours_obs_2[1,0],ate_cc_obs[0,0],ate_inc_obs_2[0,0]/1000]
+obs_list_se = [se_ate_hours_obs_2[0,0],se_ate_hours_obs_2[1,0],se_ate_cc_obs[0,0],se_ate_inc_obs_2[0,0]/1000]
+var_list = [r'Hours worked ($t=0$)', r'Hours worked ($t=1$)', r'Child care ($t=1$)',r'Consumption pc/1000 ($t=1$)']
 
 #writing the table
 with open('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/fit/table_validation.tex','w') as f:
 	f.write(r'\begin{tabular}{llccc}'+'\n')
 	f.write(r'\hline' + '\n')
-	f.write(r'\textbf{Variable} && \textbf{Simulated} && \textbf{Observed} \bigstrut\\' + '\n')
+	f.write(r'\textbf{Treatment effect} && \textbf{Simulated} && \textbf{Observed} \bigstrut\\' + '\n')
 	f.write(r'\cline{1-1}\cline{3-3}\cline{5-5}&&&&  \bigstrut[t]\\' + '\n')
 	for j in range(len(sim_list)):
 		f.write(var_list[j]+' && ' + 
@@ -288,4 +288,6 @@ with open('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model
 	f.write(r'\hline'+'\n')
 	f.write(r'\end{tabular}' + '\n')
 	f.close()
+
+
 

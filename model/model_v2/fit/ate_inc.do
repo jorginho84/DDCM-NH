@@ -29,13 +29,17 @@ mat ate_inc=J(3,1,.)
 mat se_ate_inc=J(3,1,.)
 
 *Income pc
-gen incomepc_t1=(total_income_y1-cc_pay_t1*12)/(1 + nkids_year2 + married_year2)
-gen incomepc_t4=(total_income_y4-cc_pay_t4*12)/(1 + nkids_year5 + married_year5)
-gen incomepc_t7=(total_income_y7)/(1 + nkids_year8 + married_year8)
+gen incomepc_t1_aux=(total_income_y1-cc_pay_t1*12)/(1 + nkids_year2 + married_year2)
+gen incomepc_t4_aux=(total_income_y4-cc_pay_t4*12)/(1 + nkids_year5 + married_year5)
+gen incomepc_t7_aux=(total_income_y7)/(1 + nkids_year8 + married_year8)
 
-replace incomepc_t1=0 if incomepc_t1<0
-replace incomepc_t4=0 if incomepc_t4<0
-replace incomepc_t7=0 if incomepc_t7<0
+replace incomepc_t1_aux=1 if incomepc_t1<0
+replace incomepc_t4_aux=1 if incomepc_t4<0
+replace incomepc_t7_aux=1 if incomepc_t7<0
+
+gen incomepc_t1=log(incomepc_t1_aux)
+gen incomepc_t4=log(incomepc_t4_aux)
+gen incomepc_t7=log(incomepc_t7_aux)
 
 
 *Computing ATES for each year

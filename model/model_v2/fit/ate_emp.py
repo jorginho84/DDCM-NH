@@ -61,3 +61,27 @@ for j in range(3):
 	fig.savefig('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/fit/ate_' + graph_list[j] +'.pdf', format='pdf')
 	plt.close()
 
+	
+	#Bar graphs (only first two periods)
+	nper = 2
+	bar_width = 0.35
+	fig, ax=plt.subplots()
+	x = np.array(range(0,nper))
+	plot1=ax.bar(x,ate_sim_list[j][0:nper],bar_width,label='Simulated',color='k',alpha=0.8)
+	#plot2=ax.bar(x + bar_width,ate_list[j][0:nper],bar_width,yerr=se_list[j][0:nper],label='Data',alpha=0.9)
+	plot2=ax.bar(x + bar_width,ate_list[j][0:nper],bar_width,yerr=se_list[j][0:nper,0][0],label='Data',edgecolor='k',
+		color='k',alpha=0.4)
+	#plt.setp(plot1,linewidth=3)
+	#plt.setp(plot2,linewidth=3)
+	ax.legend(loc=8,fontsize=20)
+	ax.set_ylabel(r'Impact on ' + name_list[j],fontsize=20)
+	#ax.set_xlabel(r'Years after random assignment ($t$)',fontsize=18)
+	ax.spines['right'].set_visible(False)
+	ax.spines['top'].set_visible(False)
+	ax.yaxis.set_ticks_position('left')
+	ax.xaxis.set_ticks_position('bottom')
+	plt.xticks([0.4,1.4],[r'$t=0$',r'$t=1$'],fontsize=20)
+	plt.yticks(fontsize=15)
+	plt.show()
+	fig.savefig('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/fit/ate_bars_' + graph_list[j] +'.pdf', format='pdf')
+	plt.close()

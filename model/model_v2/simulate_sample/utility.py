@@ -27,17 +27,17 @@ class Parameters:
 
 	"""
 	def __init__(self,alphap,alphaf,eta,gamma1,gamma2,gamma3,
-		tfp,sigmatheta,betaw,betam,betak,eitc,afdc,snap,cpi,q,scalew,shapew,
-		lambdas,kappas,pafdc,psnap,):
+		tfp,sigmatheta,betaw,betam,betak,eitc,afdc,snap,cpi,
+		lambdas,kappas,pafdc,psnap,mup):
 
 		self.alphap,self.alphaf,self.eta=alphap,alphaf,eta
 		self.gamma1,self.gamma2,self.gamma3=gamma1,gamma2,gamma3
 		self.tfp=tfp
 		self.sigmatheta,self.betaw,self.betam,self.betak=sigmatheta,betaw,betam,betak
-		self.eitc,self.afdc,self.snap,self.cpi,self.q=eitc,afdc,snap,cpi,q
-		self.scalew,self.shapew=scalew,shapew
+		self.eitc,self.afdc,self.snap,self.cpi=eitc,afdc,snap,cpi
 		self.lambdas,self.kappas=lambdas,kappas
 		self.pafdc,self.psnap=pafdc,psnap
+		self.mup = mup
 
 
 class Utility(object):
@@ -137,16 +137,16 @@ class Utility(object):
 	def q_prob(self):
 		"""
 		Draws a free child care slot from a binomial distribution
+		#THIS IS SHUT DOWN
 		"""
-		return np.random.binomial(1,self.param.q,self.N)
+		#return np.random.binomial(1,self.param.q,self.N)
+		return np.zeros(self.N)
 
 	def price_cc(self):
 		"""
 		Draws a price offer for a child care slot
 		"""
-		#return (np.random.weibull(self.param.shapew,(self.N,1)))*self.param.scalew
-		monthly = np.exp(np.random.randn(self.N)*1.31 + np.log(750))
-		return monthly.reshape((self.N,1))*12
+		return self.param.mup*12*np.ones((self.N,1))
 
 	def prob_afdc(self):
 		"""

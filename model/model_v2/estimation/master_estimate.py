@@ -33,11 +33,11 @@ import estimate as estimate
 
 np.random.seed(1)
 
-betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv11_v1_e3.npy')
+betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv12_v1_e3.npy')
 
 
 #Utility function
-eta=betas_nelder[0]
+eta=0.2
 alphap=betas_nelder[1]
 alphaf=betas_nelder[2]
 
@@ -62,12 +62,8 @@ kappas=[[betas_nelder[14],betas_nelder[15],betas_nelder[16],betas_nelder[17]],
 #All factor loadings are normalized
 lambdas=[1,1]
 
-
-#Weibull distribution of cc prices
-scalew=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/aux_model/scale.csv').values
-shapew=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/aux_model/shape.csv').values
-q=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/aux_model/q_prob.csv').values
-
+#Child care price
+mup = 750
 
 #Probability of afdc takeup
 pafdc=.60
@@ -134,9 +130,10 @@ married0=x_df[ ['d_marital_2']   ].values
 agech0=x_df[['age_t0']].values
 
 #Defines the instance with parameters
-param0=util.Parameters(alphap, alphaf, eta, gamma1,gamma2,
-	gamma3, tfp,sigmatheta,wagep_betas, marriagep_betas, kidsp_betas, 
-	eitc_list,afdc_list,snap_list,cpi,q,scalew,shapew,lambdas,kappas,pafdc,psnap)
+param0=util.Parameters(alphap, alphaf, eta, gamma1, gamma2, 
+	gamma3,tfp,sigmatheta,
+	wagep_betas, marriagep_betas, kidsp_betas, eitc_list,afdc_list,snap_list,
+	cpi,lambdas,kappas,pafdc,psnap,mup)
 
 
 
@@ -220,6 +217,6 @@ betas_opt=np.array([eta_opt, alphap_opt,alphaf_opt,
 	gamma3_opt,tfp_opt,kappas_00,kappas_01,kappas_02,kappas_03,
 	kappas_10,kappas_11,kappas_12,kappas_13])
 
-np.save('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv12_v1_e3.npy',betas_opt)
+np.save('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv13_v1_e3.npy',betas_opt)
 
 

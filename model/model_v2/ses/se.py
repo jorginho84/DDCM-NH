@@ -66,11 +66,9 @@ class SEs:
 		afdc_list =  self.output_ins.__dict__['param0'].__dict__['afdc']
 		snap_list =  self.output_ins.__dict__['param0'].__dict__['snap']
 		cpi =  self.output_ins.__dict__['param0'].__dict__['cpi']
-		q =  self.output_ins.__dict__['param0'].__dict__['q']
-		scalew =  self.output_ins.__dict__['param0'].__dict__['scalew']
-		shapew =  self.output_ins.__dict__['param0'].__dict__['shapew']
 		pafdc =  self.output_ins.__dict__['param0'].__dict__['pafdc']
 		psnap =  self.output_ins.__dict__['param0'].__dict__['psnap']
+		mup =  self.output_ins.__dict__['param0'].__dict__['mup']
 		
 		#Utility function
 		eta=bs[0]
@@ -97,8 +95,7 @@ class SEs:
 		param0=util.Parameters(alphap, alphaf, eta,
 			gamma1, gamma2,gamma3,tfp,sigmatheta,
 			wagep_betas, marriagep_betas, kidsp_betas, eitc_list,
-			afdc_list,snap_list,cpi,q,scalew,shapew,
-			lambdas,kappas,pafdc,psnap)
+			afdc_list,snap_list,cpi,lambdas,kappas,pafdc,psnap,mup)
 		return param0 
 
 	def emax(self,param0,model):
@@ -190,7 +187,7 @@ class SEs:
 		for s in range(S):
 			psi_low = psi.copy()
 			psi_high = psi.copy()
-			psi_low[s] = psi[s] - eps*psi[s] 
+			psi_low[s] = psi[s].copy()
 			psi_high[s] = psi[s] + eps*psi[s]
 
 			#Computing betas

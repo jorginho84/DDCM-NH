@@ -15,16 +15,16 @@ from scipy import stats
 snap_list = []
 
 #max B: a 9x10 matrix (family size x calendar years)
-maxb = pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/Data/databases/maxb.csv',header=None).values
+maxb = pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/Data/databases/maxb_long.csv',header=None).values
 
 #Standard deductions: a 4x10 matrix (family size x calendar years)
-std = pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/Data/databases/std.csv',header=None).values
+std = pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/Data/databases/std_long.csv',header=None).values
 
 #Net income test: a 9x10 matrix (family size x calendar years)
-ni = pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/Data/databases/netincome.csv',header=None).values
+ni = pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/Data/databases/netincome_long.csv',header=None).values
 
 #gross income test: a 9x10 matrix (family size x calendar years)
-gi = pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/Data/databases/grossincome.csv',header=None).values
+gi = pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/Data/databases/grossincome_long.csv',header=None).values
 
 
 snap_dic = {'max_benefit': maxb*12, 'std_deduction': std*12, 'net_income_test': ni*12,

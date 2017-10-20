@@ -19,6 +19,7 @@ from numba import jit
 import sys, os
 from scipy import stats
 from scipy import interpolate
+from pathos.multiprocessing import ProcessPool
 #sys.path.append("C:\\Users\\Jorge\\Dropbox\\Chicago\\Research\\Human capital and the household\]codes\\model")
 sys.path.append("/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model/simulate_sample")
 import utility as util
@@ -63,12 +64,15 @@ class Emaxt:
 			hours,childcare,agech,hours_p,hours_f,wr,cs,ws)
 
 		
-	def emax_bigt(self):
+	def emax_bigt(self,bigT):
 		"""
 		Computes the emax function for the last period (takes T-1 states, and 
 			integrates period T unobservables)
 		In this period, there is no choice of child care. So the are
 		only five choices.
+
+
+		bigT: indicates the last period (in calendar time)
 		"""
 
 		#dictionary with the grid
@@ -107,7 +111,7 @@ class Emaxt:
 		self.change_util(self.param,ngrid,x_w,x_m,x_k,passign,
 			nkids0,married0,hours,childcare,agech,self.hours_p,self.hours_f,
 			self.wr,self.cs,self.ws)
-		wage0=self.model.waget(7,epsilon_1)
+		wage0=self.model.waget(bigT-1,epsilon_1)
 		free0=self.model.q_prob()
 		price0=self.model.price_cc()		
 		
@@ -154,7 +158,7 @@ class Emaxt:
 					passign,nkids0,married0,hours,childcare,agech,
 					self.hours_p,self.hours_f,self.wr,self.cs,self.ws)
 
-				periodt=8 
+				periodt=bigT 
 
 				married_t1=self.model.marriaget(periodt,married0)
 				married_t1=np.reshape(married_t1,(ngrid,1))
@@ -193,7 +197,7 @@ class Emaxt:
 					self.hours_p,self.hours_f,self.wr,self.cs,self.ws)
 				
 				#This is the terminal value!
-				u_vec[:,i,j]=self.model.simulate(8,wage_t1,free_t1,price_t1,theta_t1) #Last period is T=8. Terminal value=0
+				u_vec[:,i,j]=self.model.simulate(bigT,wage_t1,free_t1,price_t1,theta_t1) #Last period is T=8. Terminal value=0
 			
 
 			#obtaining max over choices by random schocks: young vs old
@@ -238,8 +242,8 @@ class Emaxt:
 		"""
 		Computes the emax function at period t<T, taking as input
 		an interpolating instance at t+1	
-		bigt: indicates the number of the final period (3 in geneal)
-		periodt indicate the period to compute emax (emax1,emax2,emax3,...emax7)
+		bigt: indicates the number of the final period 
+		periodt indicate the period to compute emax (emax1,emax2,emax3,...)
 		"""
 		#dictionary with the grid
 		#dict_aux=gridemax.grid()
@@ -431,7 +435,7 @@ class Emaxt:
 		return [emax_inst,emax_t1]
 
 
-	def recursive(self,nt):
+	def recursive(self):
 		"""
 		Recursively computes a series of interpolating instances
 		Generates a dictionary with the emax instances
@@ -441,28 +445,54 @@ class Emaxt:
 
 		"""	
 
+		
+		def emax_gen(j):
+			for t in range(j,0,-1):
+				if t==j:#last period
+					emax_bigt_ins=self.emax_bigt(j)
+					emax_dic={'emax'+str(t): emax_bigt_ins[0]}
+					emax_values={'emax'+str(t): emax_bigt_ins[1]}
+					
 
+				elif t==j-1: #at T-1
+					emax_t1_ins=self.emax_t(t,j,emax_bigt_ins[0])
+					emax_dic['emax'+str(t)]=emax_t1_ins[0]
+					emax_values['emax'+str(t)]=emax_t1_ins[1]
+					
+				else:
+					emax_t1_ins=self.emax_t(t,j,emax_t1_ins[0])
+					emax_dic['emax'+str(t)]=emax_t1_ins[0]
+					emax_values['emax'+str(t)]=emax_t1_ins[1]
 
+			return [emax_dic,emax_values]
+
+		pool = ProcessPool(nodes=10)
+		list_emax = pool.map(emax_gen,range(8,18))
+
+		"""
 		#Computing the emax instances
-		for t in range(nt,0,-1):
-			if t==nt:#last period
-				emax_bigt_ins=self.emax_bigt()
-				emax_dic={'emax'+str(t): emax_bigt_ins[0]}
-				emax_values={'emax'+str(t): emax_bigt_ins[1]}
-				
+		for nt in range(8,18): #for 10 different ages at baseline
+			for t in range(nt,0,-1):
+				if t==nt:#last period
+					emax_bigt_ins=self.emax_bigt(nt)
+					emax_dic={'emax'+str(t): emax_bigt_ins[0]}
+					emax_values={'emax'+str(t): emax_bigt_ins[1]}
+					
 
-			elif t==nt-1: #at T-1
-				emax_t1_ins=self.emax_t(t,nt,emax_bigt_ins[0])
-				emax_dic['emax'+str(t)]=emax_t1_ins[0]
-				emax_values['emax'+str(t)]=emax_t1_ins[1]
-				
-			else:
-				emax_t1_ins=self.emax_t(t,nt,emax_t1_ins[0])
-				emax_dic['emax'+str(t)]=emax_t1_ins[0]
-				emax_values['emax'+str(t)]=emax_t1_ins[1]
-				
+				elif t==nt-1: #at T-1
+					emax_t1_ins=self.emax_t(t,nt,emax_bigt_ins[0])
+					emax_dic['emax'+str(t)]=emax_t1_ins[0]
+					emax_values['emax'+str(t)]=emax_t1_ins[1]
+					
+				else:
+					emax_t1_ins=self.emax_t(t,nt,emax_t1_ins[0])
+					emax_dic['emax'+str(t)]=emax_t1_ins[0]
+					emax_values['emax'+str(t)]=emax_t1_ins[1]
+			
+			list_emax.append([emax_dic,emax_values])
+		"""	
 
-		return [emax_dic,emax_values]
+		return list_emax
 
 
 

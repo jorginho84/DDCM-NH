@@ -253,44 +253,36 @@ class Utility(object):
 		#family size
 		nfam = np.ones(self.N) + kid[:,0] + marr[:,0]
 
-		#1 children
-		r1_1=dic_eitc['r1_1']
-		r2_1=dic_eitc['r2_1']
-		b1_1=dic_eitc['b1_1']
-		b2_1=dic_eitc['b2_1']
-		state_eitc1=dic_eitc['state_eitc1']
+		#EITC parameters
+		r1 = []
+		r2 = []
+		b1 = []
+		b2 = []
+		state_eitc = []
+		for nn in range(1,4):
+			#1 children
+			r1.append(dic_eitc['r1_' + str(nn)])
+			r2.append(dic_eitc['r2_'+ str(nn)])
+			b1.append(dic_eitc['b1_'+ str(nn)])
+			b2.append(dic_eitc['b2_'+ str(nn)])
+			state_eitc.append(dic_eitc['state_eitc'+ str(nn)])
 
-		#2+ children
-		r1_2=dic_eitc['r1_2']
-		r2_2=dic_eitc['r2_2']
-		b1_2=dic_eitc['b1_2']
-		b2_2=dic_eitc['b2_2']
-		state_eitc2=dic_eitc['state_eitc2']
-
-		#3 children
-		state_eitc3=dic_eitc['state_eitc3']
-
+		
 		#Obtaining individual's disposable income from EITC
 		eitc_fed=np.zeros(self.N)
 		eitc_state=np.zeros(self.N)
 		
-		#one child
-		kid_boo=kid[:,0]==1
-		eitc_fed[(pwage<b1_1) & (kid_boo) ]=r1_1*pwage[(pwage<b1_1) & (kid_boo)]
-		eitc_fed[(pwage>=b1_1) & (pwage<b2_1) & (kid_boo)]=r1_1*b1_1
-		eitc_fed[(pwage>=b2_1) & (kid_boo)]=np.maximum(r1_1*b1_1-r2_1*(pwage[(pwage>=b2_1) & (kid_boo)]-b2_1),np.zeros(pwage[(pwage>=b2_1) & (kid_boo)].shape[0]))
-		eitc_state[kid_boo]=state_eitc1*eitc_fed[kid_boo]
+		for nn in range(0,3):
 
-		#+2 children
-		kid_boo=kid[:,0]>=2
-		eitc_fed[(pwage<b1_2) & (kid_boo) ]=r1_2*pwage[(pwage<b1_2) & (kid_boo)]
-		eitc_fed[(pwage>=b1_2) & (pwage<b2_2) & (kid_boo)]=r1_2*b1_2
-		eitc_fed[(pwage>=b2_2) & (kid_boo)]=np.maximum(r1_2*b1_2-r2_2*(pwage[(pwage>=b2_2) & (kid_boo)]-b2_2),np.zeros(pwage[(pwage>=b2_2) & (kid_boo)].shape[0]))
-		eitc_state[kid_boo]=state_eitc2*eitc_fed[kid_boo]
-		
-		#+3	children (only state EITC)
-		kid_boo=kid[:,0]>=3
-		eitc_state[kid_boo]=state_eitc3*eitc_fed[kid_boo]
+			if nn<=2:
+				kid_boo=kid[:,0]==nn+1
+			else:
+				kid_boo=kid[:,0]>=nn+1
+			
+			eitc_fed[(pwage<b1[nn]) & (kid_boo) ]=r1[nn]*pwage[(pwage<b1[nn]) & (kid_boo)]
+			eitc_fed[(pwage>=b1[nn]) & (pwage<b2[nn]) & (kid_boo)]=r1[nn]*b1[nn]
+			eitc_fed[(pwage>=b2[nn]) & (kid_boo)]=np.maximum(r1[nn]*b1[nn]-r2[nn]*(pwage[(pwage>=b2[nn]) & (kid_boo)]-b2[nn]),np.zeros(pwage[(pwage>=b2[nn]) & (kid_boo)].shape[0]))
+			eitc_state[kid_boo]=state_eitc[nn]*eitc_fed[kid_boo]
 
 		dincome_eitc=pwage+eitc_fed+eitc_state
 

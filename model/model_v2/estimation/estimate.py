@@ -45,7 +45,7 @@ class Estimate:
 		np.random.seed(1) #always the same emax, for a given set of beta
 		emax_ins_1=emax.Emaxt(param1,self.D,self.dict_grid,self.hours_p,
 			self.hours_f,self.wr,self.cs,self.ws,model)
-		return emax_ins_1.recursive(8) #t=1 to t=8
+		return emax_ins_1.recursive() #t=1 to t=8
 
 	def samples(self,param1,emaxins,model):
 		"""

@@ -36,6 +36,7 @@ from scipy import stats
 from scipy import interpolate
 import matplotlib.pyplot as plt
 import time
+from pathos.multiprocessing import ProcessPool
 #sys.path.append("C:\\Users\\Jorge\\Dropbox\\Chicago\\Research\\Human capital and the household\]codes\\model")
 sys.path.append("/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/simulate_sample")
 import utility as util
@@ -52,7 +53,7 @@ np.random.seed(1);
 betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv12_v1_e3.npy')
 
 #Utility function
-eta=betas_nelder[0]
+eta=0.2
 alphap=betas_nelder[1]
 alphaf=betas_nelder[2]
 
@@ -186,7 +187,7 @@ print ''
 D=50
 np.random.seed(2)
 emax_function_in=emax.Emaxt(param,D,dict_grid,hours_p,hours_f,wr,cs,ws,model)
-emax_dic=emax_function_in.recursive(8) #8 emax (t=1 to t=8)
+emax_dic=emax_function_in.recursive() #8 emax (t=1 to t=8)
 
 
 time_emax=time.time() - start_time
@@ -196,6 +197,7 @@ print 'Done with procedure in:'
 print("--- %s seconds ---" % (time_emax))
 print ''
 print ''
+
 
 
 
@@ -209,7 +211,7 @@ print ''
 
 
 sim_ins=simdata.SimData(N,param,emax_dic,x_w,x_m,x_k,x_wmk,passign,nkids0,married0,agech0,hours_p,hours_f,wr,cs,ws,model)
-data_dic=sim_ins.fake_data(9) #9 periods (t=0 to t=8)
+data_dic=sim_ins.fake_data(8)
 
 
 time_sim=time.time() - start_time
@@ -220,7 +222,8 @@ print("--- %s seconds ---" % (time_sim))
 print ''
 print ''
 
-
+#warning: for individuals with children over 18 yo, the problem is not well defined.
+#look only until t=8 years after RA
 ct=data_dic['Consumption']
 income=data_dic['Income']
 nh_sup=data_dic['nh_matrix']

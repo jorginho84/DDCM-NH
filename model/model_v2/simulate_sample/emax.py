@@ -453,6 +453,7 @@ class Emaxt:
 					emax_dic={'emax'+str(t): emax_bigt_ins[0]}
 					emax_values={'emax'+str(t): emax_bigt_ins[1]}
 					
+<<<<<<< HEAD
 
 				elif t==j-1: #at T-1
 					emax_t1_ins=self.emax_t(t,j,emax_bigt_ins[0])
@@ -464,12 +465,51 @@ class Emaxt:
 					emax_dic['emax'+str(t)]=emax_t1_ins[0]
 					emax_values['emax'+str(t)]=emax_t1_ins[1]
 
+=======
+
+				elif t==j-1: #at T-1
+					emax_t1_ins=self.emax_t(t,j,emax_bigt_ins[0])
+					emax_dic['emax'+str(t)]=emax_t1_ins[0]
+					emax_values['emax'+str(t)]=emax_t1_ins[1]
+					
+				else:
+					emax_t1_ins=self.emax_t(t,j,emax_t1_ins[0])
+					emax_dic['emax'+str(t)]=emax_t1_ins[0]
+					emax_values['emax'+str(t)]=emax_t1_ins[1]
+
+>>>>>>> origin/new-terminal-cond
 			return [emax_dic,emax_values]
 
 		pool = ProcessPool(nodes=10)
 		list_emax = pool.map(emax_gen,range(8,18))
+<<<<<<< HEAD
 
 		
+=======
+
+		"""
+		#Computing the emax instances
+		for nt in range(8,18): #for 10 different ages at baseline
+			for t in range(nt,0,-1):
+				if t==nt:#last period
+					emax_bigt_ins=self.emax_bigt(nt)
+					emax_dic={'emax'+str(t): emax_bigt_ins[0]}
+					emax_values={'emax'+str(t): emax_bigt_ins[1]}
+					
+
+				elif t==nt-1: #at T-1
+					emax_t1_ins=self.emax_t(t,nt,emax_bigt_ins[0])
+					emax_dic['emax'+str(t)]=emax_t1_ins[0]
+					emax_values['emax'+str(t)]=emax_t1_ins[1]
+					
+				else:
+					emax_t1_ins=self.emax_t(t,nt,emax_t1_ins[0])
+					emax_dic['emax'+str(t)]=emax_t1_ins[0]
+					emax_values['emax'+str(t)]=emax_t1_ins[1]
+			
+			list_emax.append([emax_dic,emax_values])
+		"""	
+>>>>>>> origin/new-terminal-cond
 
 		return list_emax
 

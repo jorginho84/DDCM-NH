@@ -48,7 +48,11 @@ np.random.seed(1)
 betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv12_v1_e3.npy')
 
 #Utility function
+<<<<<<< HEAD
 eta=3.3
+=======
+eta=0.35
+>>>>>>> origin/new-terminal-cond
 alphap=-0.025
 alphaf=betas_nelder[2]
 
@@ -60,11 +64,19 @@ wagep_betas=np.array([betas_nelder[3],betas_nelder[4],betas_nelder[5],
 
 
 #Production function [young,old]
+<<<<<<< HEAD
 gamma1= 0.7
 gamma2= 0.08
 gamma3= 0.05
 tfp=0.6
 sigmatheta=2
+=======
+gamma1= betas_nelder[10]
+gamma2= betas_nelder[11]
+gamma3= betas_nelder[12]
+tfp=0.25
+sigmatheta=0
+>>>>>>> origin/new-terminal-cond
 
 #Measurement system: three measures for t=2, one for t=5
 kappas=[[betas_nelder[14],betas_nelder[15],betas_nelder[16],betas_nelder[17]],

@@ -48,8 +48,8 @@ np.random.seed(1)
 betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv12_v1_e3.npy')
 
 #Utility function
-eta=0.2
-alphap=betas_nelder[1]
+eta=3.3
+alphap=-0.025
 alphaf=betas_nelder[2]
 
 
@@ -60,11 +60,11 @@ wagep_betas=np.array([betas_nelder[3],betas_nelder[4],betas_nelder[5],
 
 
 #Production function [young,old]
-gamma1= betas_nelder[10]
-gamma2= betas_nelder[11]
-gamma3= betas_nelder[12]
-tfp=betas_nelder[13]
-sigmatheta=0
+gamma1= 0.7
+gamma2= 0.08
+gamma3= 0.05
+tfp=0.6
+sigmatheta=2
 
 #Measurement system: three measures for t=2, one for t=5
 kappas=[[betas_nelder[14],betas_nelder[15],betas_nelder[16],betas_nelder[17]],
@@ -107,7 +107,7 @@ kidsp_betas=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount
 
 
 #Minimum set of x's (for interpolation)
-x_wmk=x_df[  ['age_ra', 'age_ra2', 'd_HS2', 'age_t0','age_t02','constant'] ].values
+x_wmk=x_df[  ['age_ra', 'age_ra2', 'd_HS2','constant'] ].values
 
 #Data for treatment status
 passign=x_df[ ['d_RA']   ].values
@@ -144,7 +144,7 @@ agech0=x_df[['age_t0']].values
 param0=util.Parameters(alphap, alphaf, eta, gamma1, gamma2, 
 	gamma3,tfp,sigmatheta,
 	wagep_betas, marriagep_betas, kidsp_betas, eitc_list,afdc_list,snap_list,
-	cpi,lambdas,kappas,pafdc,psnap,mup)
+	cpi,lambdas,pafdc,psnap,mup)
 
 
 
@@ -201,9 +201,7 @@ beta_childcare=np.mean(dic_betas['beta_childcare'],axis=0) #1x1
 beta_hours1=np.mean(dic_betas['beta_hours1'],axis=0) #1x1
 beta_hours2=np.mean(dic_betas['beta_hours2'],axis=0) #1x1
 beta_wagep=np.mean(dic_betas['beta_wagep'],axis=1) # 6 x 1
-beta_kappas_t2=np.mean(dic_betas['beta_kappas_t2'],axis=1) #4 x 3
-beta_kappas_t5=np.mean(dic_betas['beta_kappas_t5'],axis=1) #4 x 1
-beta_inputs=np.mean(dic_betas['beta_inputs'],axis=1) #4 x 1
+beta_inputs=np.mean(dic_betas['beta_inputs'],axis=1) #5 x 1
 
 #################################################################################
 #################################################################################

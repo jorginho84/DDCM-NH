@@ -140,12 +140,24 @@ class SimData:
 					self.x_wmk), axis=1)
 
 				#Getting dictionary to incorporate emax_t+1, choice j
-				emax_ins=self.emax_function[0]['emax'+str(periodt+1)][j]
-				emax_betas=emax_ins.betas()
-				emax_t1=emax_ins.int_values(data_int_t1,emax_betas)
-	
-				#Including option value (discount factor 0.95)
-				util_values[:,j]=util_values[:,j]+0.95*emax_t1
+				for age in range(1,11):
+
+					#from this age, individuals solve a shorter problem
+					if age>=2:
+						if periodt+1>=19-age:
+							emax_t1 = np.zeros(self.N)
+						else:
+							emax_ins=self.emax_function[10-age][0]['emax'+str(periodt+1)][j]
+							emax_betas=emax_ins.betas()
+							emax_t1=emax_ins.int_values(data_int_t1,emax_betas)
+
+					else:
+						emax_ins=self.emax_function[10-age][0]['emax'+str(periodt+1)][j]
+						emax_betas=emax_ins.betas()
+						emax_t1=emax_ins.int_values(data_int_t1,emax_betas)
+		
+					#Including option value (discount factor 0.86)
+					util_values[self.agech[:,0]==age,j]=util_values[self.agech[:,0]==age,j]+0.86*emax_t1[self.agech[:,0]==age]
 
 		return [util_values,util_values_c]
 
@@ -154,6 +166,8 @@ class SimData:
 		"""
 		This function computes the trajectory of choices and state variables
 		It also returns the emax for each period
+
+		n_period: max # of periods to run the model (youngest child)
 
 		"""
 		
@@ -170,8 +184,7 @@ class SimData:
 		kids_matrix=np.zeros((self.N,n_periods))
 		util_values_dic=[] #list of t=0,..,8 periods
 		util_values_c_dic=[] #current value utils
-		ssrs_t2=np.zeros(self.N)
-		ssrs_t5=np.zeros(self.N)
+		
 
 		#initialize state variables
 		married0=self.married0.copy()
@@ -192,7 +205,7 @@ class SimData:
 		theta0=self.model.theta_init()
 		
 	
-		for periodt in range(0,n_periods): #from t=0 to t=8
+		for periodt in range(0,n_periods):
 			
 			wage_matrix[:,periodt]=wage0.copy()
 			theta_matrix[:,periodt]=theta0.copy()
@@ -243,13 +256,7 @@ class SimData:
 				free0,price0)
 			consumption_matrix[:,periodt]=consumption0.copy()
 
-			#SSRS measures
-			if periodt==2: 
-				ssrs_t2=self.model.measures(periodt,theta0)
-			elif periodt==5:
-				ssrs_t5=self.model.measures(periodt,theta0)
-
-
+			
 			#Next period states (only if periodt<8): update
 
 			if periodt<n_periods-1:
@@ -279,7 +286,7 @@ class SimData:
 		 'Income': dincome_matrix, 'Hours':hours_matrix, 'Childcare': childcare_matrix,
 		 'Wage': wage_matrix, 'Uti_values_dic': util_values_dic,'Uti_values_c_dic': util_values_c_dic,
 		 'Marriage': marr_matrix, 'Kids': kids_matrix,'Consumption': consumption_matrix,
-		 'SSRS_t2':ssrs_t2,'SSRS_t5':ssrs_t5, 'nh_matrix':nh_matrix}
+		 'nh_matrix':nh_matrix}
 
 
 

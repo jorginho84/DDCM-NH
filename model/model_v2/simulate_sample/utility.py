@@ -28,14 +28,14 @@ class Parameters:
 	"""
 	def __init__(self,alphap,alphaf,eta,gamma1,gamma2,gamma3,
 		tfp,sigmatheta,betaw,betam,betak,eitc,afdc,snap,cpi,
-		lambdas,kappas,pafdc,psnap,mup):
+		lambdas,pafdc,psnap,mup):
 
 		self.alphap,self.alphaf,self.eta=alphap,alphaf,eta
 		self.gamma1,self.gamma2,self.gamma3=gamma1,gamma2,gamma3
 		self.tfp=tfp
 		self.sigmatheta,self.betaw,self.betam,self.betak=sigmatheta,betaw,betam,betak
 		self.eitc,self.afdc,self.snap,self.cpi=eitc,afdc,snap,cpi
-		self.lambdas,self.kappas=lambdas,kappas
+		self.lambdas=lambdas
 		self.pafdc,self.psnap=pafdc,psnap
 		self.mup = mup
 
@@ -253,44 +253,36 @@ class Utility(object):
 		#family size
 		nfam = np.ones(self.N) + kid[:,0] + marr[:,0]
 
-		#1 children
-		r1_1=dic_eitc['r1_1']
-		r2_1=dic_eitc['r2_1']
-		b1_1=dic_eitc['b1_1']
-		b2_1=dic_eitc['b2_1']
-		state_eitc1=dic_eitc['state_eitc1']
+		#EITC parameters
+		r1 = []
+		r2 = []
+		b1 = []
+		b2 = []
+		state_eitc = []
+		for nn in range(1,4):
+			#1 children
+			r1.append(dic_eitc['r1_' + str(nn)])
+			r2.append(dic_eitc['r2_'+ str(nn)])
+			b1.append(dic_eitc['b1_'+ str(nn)])
+			b2.append(dic_eitc['b2_'+ str(nn)])
+			state_eitc.append(dic_eitc['state_eitc'+ str(nn)])
 
-		#2+ children
-		r1_2=dic_eitc['r1_2']
-		r2_2=dic_eitc['r2_2']
-		b1_2=dic_eitc['b1_2']
-		b2_2=dic_eitc['b2_2']
-		state_eitc2=dic_eitc['state_eitc2']
-
-		#3 children
-		state_eitc3=dic_eitc['state_eitc3']
-
+		
 		#Obtaining individual's disposable income from EITC
 		eitc_fed=np.zeros(self.N)
 		eitc_state=np.zeros(self.N)
 		
-		#one child
-		kid_boo=kid[:,0]==1
-		eitc_fed[(pwage<b1_1) & (kid_boo) ]=r1_1*pwage[(pwage<b1_1) & (kid_boo)]
-		eitc_fed[(pwage>=b1_1) & (pwage<b2_1) & (kid_boo)]=r1_1*b1_1
-		eitc_fed[(pwage>=b2_1) & (kid_boo)]=np.maximum(r1_1*b1_1-r2_1*(pwage[(pwage>=b2_1) & (kid_boo)]-b2_1),np.zeros(pwage[(pwage>=b2_1) & (kid_boo)].shape[0]))
-		eitc_state[kid_boo]=state_eitc1*eitc_fed[kid_boo]
+		for nn in range(0,3):
 
-		#+2 children
-		kid_boo=kid[:,0]>=2
-		eitc_fed[(pwage<b1_2) & (kid_boo) ]=r1_2*pwage[(pwage<b1_2) & (kid_boo)]
-		eitc_fed[(pwage>=b1_2) & (pwage<b2_2) & (kid_boo)]=r1_2*b1_2
-		eitc_fed[(pwage>=b2_2) & (kid_boo)]=np.maximum(r1_2*b1_2-r2_2*(pwage[(pwage>=b2_2) & (kid_boo)]-b2_2),np.zeros(pwage[(pwage>=b2_2) & (kid_boo)].shape[0]))
-		eitc_state[kid_boo]=state_eitc2*eitc_fed[kid_boo]
-		
-		#+3	children (only state EITC)
-		kid_boo=kid[:,0]>=3
-		eitc_state[kid_boo]=state_eitc3*eitc_fed[kid_boo]
+			if nn<=2:
+				kid_boo=kid[:,0]==nn+1
+			else:
+				kid_boo=kid[:,0]>=nn+1
+			
+			eitc_fed[(pwage<b1[nn]) & (kid_boo) ]=r1[nn]*pwage[(pwage<b1[nn]) & (kid_boo)]
+			eitc_fed[(pwage>=b1[nn]) & (pwage<b2[nn]) & (kid_boo)]=r1[nn]*b1[nn]
+			eitc_fed[(pwage>=b2[nn]) & (kid_boo)]=np.maximum(r1[nn]*b1[nn]-r2[nn]*(pwage[(pwage>=b2[nn]) & (kid_boo)]-b2[nn]),np.zeros(pwage[(pwage>=b2[nn]) & (kid_boo)].shape[0]))
+			eitc_state[kid_boo]=state_eitc[nn]*eitc_fed[kid_boo]
 
 		dincome_eitc=pwage+eitc_fed+eitc_state
 
@@ -472,7 +464,7 @@ class Utility(object):
 		agech=np.reshape(self.age_t0,(self.N)) + periodt
 
 		#log consumption pc
-		incomepc=np.log(ct)-np.mean(np.log(ct))
+		incomepc=np.log(ct)
 		
 		
 		#log time w child (T=148 hours a week)
@@ -482,7 +474,7 @@ class Utility(object):
 		boo_u = h == 0
 
 		tch = cc*(148 - 40) + (1-cc)*(boo_u*148 + boo_p*(148 - self.hours_p) + boo_f*(148 - self.hours_f)) 
-		tch=np.log(tch)-np.mean(np.log(tch))
+		tch=np.log(tch)
 
 		#random shock
 		omega=self.param.sigmatheta*np.random.randn(self.N)
@@ -508,9 +500,9 @@ class Utility(object):
 				gamma2*incomepc[boo_list[j]] +\
 				gamma3*tch[boo_list[j]] + tfp_list[j] + omega[boo_list[j]]
 				
-
-
-		return np.exp(theta1)
+		#adjustment for E[theta = 0]
+		alpha = - np.mean(boo2)*tfp - np.mean(np.log(ct))*gamma2 - np.mean(np.log(tch))*gamma3  
+		return np.exp(theta1 + alpha)
 
 
 	def Ut(self,periodt,dincome,marr,cc,nkids,ht,thetat,wage,free,price):
@@ -579,32 +571,7 @@ class Utility(object):
 		return self.Ut(periodt,income,self.married0,self.cc,self.nkids0,self.hours,
 			theta0,wage0,free,price)
 
-	def measures(self,periodt,thetat):
-		"""
-		For a given periodt and measure, computes the SSRS, given a value for theta.
-		There is only one measure for period
-		"""
-		if periodt==2:
-			loc=0
-		elif periodt==5:
-			loc=1
-
-		lambdam=self.param.lambdas[loc]
-		cuts=[self.param.kappas[loc][0],self.param.kappas[loc][1],
-		self.param.kappas[loc][2],self.param.kappas[loc][3]]
-				
-		z_star=lambdam*np.log(thetat) + np.random.randn(self.N)
-
-		#the SSRS measure
-		z=np.zeros(self.N)
-		z[z_star<=cuts[0]]=1
-		z[(z_star>cuts[0]) & (z_star<=cuts[1])]=2
-		z[(z_star>cuts[1]) & (z_star<=cuts[2])]=3
-		z[(z_star>cuts[2]) & (z_star<=cuts[3])]=4
-		z[(z_star>cuts[3])]=5
-
-
-		return z
+	
 			
 
 

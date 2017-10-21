@@ -36,6 +36,7 @@ from scipy import stats
 from scipy import interpolate
 import matplotlib.pyplot as plt
 import time
+from pathos.multiprocessing import ProcessPool
 #sys.path.append("C:\\Users\\Jorge\\Dropbox\\Chicago\\Research\\Human capital and the household\]codes\\model")
 sys.path.append("/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/simulate_sample")
 import utility as util
@@ -52,7 +53,7 @@ np.random.seed(1);
 betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv12_v1_e3.npy')
 
 #Utility function
-eta=betas_nelder[0]
+eta=0.2
 alphap=betas_nelder[1]
 alphaf=betas_nelder[2]
 
@@ -68,11 +69,7 @@ gamma1= betas_nelder[10]
 gamma2= betas_nelder[11]
 gamma3= betas_nelder[12]
 tfp=betas_nelder[13]
-sigmatheta=0
-
-#Measurement system: three measures for t=2, one for t=5
-kappas=[[betas_nelder[14],betas_nelder[15],betas_nelder[16],betas_nelder[17]],
-[betas_nelder[18],betas_nelder[19],betas_nelder[20],betas_nelder[21]]]
+sigmatheta=2.2
 
 #First measure is normalized. starting arbitrary values
 #All factor loadings are normalized
@@ -111,7 +108,7 @@ x_k=x_df[ ['age_ra', 'constant']   ].values
 kidsp_betas=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/kids_process/betas_kids_v2.csv').values
 
 #Minimum set of x's (for interpolation)
-x_wmk=x_df[  ['age_ra', 'age_ra2', 'd_HS2', 'age_t0','age_t02','constant'] ].values
+x_wmk=x_df[  ['age_ra', 'age_ra2', 'd_HS2', 'constant'] ].values
 
 #Data for treatment status
 passign=x_df[ ['d_RA']   ].values
@@ -149,7 +146,7 @@ agech0=x_df[['age_t0']].values
 #Defines the instance with parameters
 param=util.Parameters(alphap,alphaf,eta,gamma1,gamma2,gamma3,
 	tfp,sigmatheta,	wagep_betas, marriagep_betas, kidsp_betas, eitc_list,
-	afdc_list,snap_list,cpi,lambdas,kappas,pafdc,psnap,mup)
+	afdc_list,snap_list,cpi,lambdas,pafdc,psnap,mup)
 
 
 #Creating a grid for the emax computation
@@ -186,7 +183,7 @@ print ''
 D=50
 np.random.seed(2)
 emax_function_in=emax.Emaxt(param,D,dict_grid,hours_p,hours_f,wr,cs,ws,model)
-emax_dic=emax_function_in.recursive(8) #8 emax (t=1 to t=8)
+emax_dic=emax_function_in.recursive() #8 emax (t=1 to t=8)
 
 
 time_emax=time.time() - start_time
@@ -196,6 +193,7 @@ print 'Done with procedure in:'
 print("--- %s seconds ---" % (time_emax))
 print ''
 print ''
+
 
 
 
@@ -209,7 +207,7 @@ print ''
 
 
 sim_ins=simdata.SimData(N,param,emax_dic,x_w,x_m,x_k,x_wmk,passign,nkids0,married0,agech0,hours_p,hours_f,wr,cs,ws,model)
-data_dic=sim_ins.fake_data(9) #9 periods (t=0 to t=8)
+data_dic=sim_ins.fake_data(8)
 
 
 time_sim=time.time() - start_time
@@ -220,7 +218,8 @@ print("--- %s seconds ---" % (time_sim))
 print ''
 print ''
 
-
+#warning: for individuals with children over 18 yo, the problem is not well defined.
+#look only until t=8 years after RA
 ct=data_dic['Consumption']
 income=data_dic['Income']
 nh_sup=data_dic['nh_matrix']
@@ -228,8 +227,6 @@ theta_t=data_dic['Theta']
 cc_t=data_dic['Childcare']
 hours_t=data_dic['Hours']
 wage_t=data_dic['Wage']
-ssrs_t2=data_dic['SSRS_t2']
-ssrs_t5=data_dic['SSRS_t5']
 kids=data_dic['Kids']
 marr=data_dic['Marriage']
 
@@ -254,20 +251,6 @@ ate_ct=np.mean(ct[passign[:,0]==1,:],axis=0) - np.mean(ct[passign[:,0]==0,:],axi
 
 np.mean(np.mean(ct[passign[:,0]==0,:],axis=0))
 
-#var of ssrs2
-d_1 = ssrs_t2>=3
-np.std(d_1)
-
-#Children's ranking
-ssrs_freq_t2=np.zeros((N,5))
-ssrs_freq_t5=np.zeros((N,5))
-for j in range(1,6):
-	ssrs_freq_t5[:,j-1]=ssrs_t5==j
-	ssrs_freq_t2[:,j-1]=ssrs_t2==j
-
-
-np.mean(ssrs_freq_t5,axis=0)
-np.mean(ssrs_freq_t2,axis=0)
 
 
 #Child care (t=0, all young)

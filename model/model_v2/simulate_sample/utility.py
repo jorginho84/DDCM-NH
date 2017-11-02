@@ -27,13 +27,14 @@ class Parameters:
 
 	"""
 	def __init__(self,alphap,alphaf,eta,gamma1,gamma2,gamma3,
-		tfp,sigmatheta,betaw,betam,betak,eitc,afdc,snap,cpi,
+		tfp,sigma2theta,rho_theta_epsilon,betaw,betam,betak,eitc,afdc,snap,cpi,
 		lambdas,pafdc,psnap,mup):
 
 		self.alphap,self.alphaf,self.eta=alphap,alphaf,eta
 		self.gamma1,self.gamma2,self.gamma3=gamma1,gamma2,gamma3
 		self.tfp=tfp
-		self.sigmatheta,self.betaw,self.betam,self.betak=sigmatheta,betaw,betam,betak
+		self.rho_theta_epsilon=rho_theta_epsilon
+		self.sigma2theta,self.betaw,self.betam,self.betak=sigma2theta,betaw,betam,betak
 		self.eitc,self.afdc,self.snap,self.cpi=eitc,afdc,snap,cpi
 		self.lambdas=lambdas
 		self.pafdc,self.psnap=pafdc,psnap
@@ -66,10 +67,21 @@ class Utility(object):
 		self.hours_p,self.hours_f=hours_p,hours_f
 		self.wr,self.cs,self.ws=wr,cs,ws
 
-	def theta_init(self):
-		return np.exp(np.random.randn(self.N))
+	def shocks_init(self):
+		"""
+		Initial shocks to human capital and individual productivity
+		
+		"""
+		var =  np.random.multivariate_normal(np.zeros(2),
+			np.array([[self.param.sigma2theta**2,
+				self.param.rho_theta_epsilon*self.param.sigma2theta*
+				np.sqrt(self.param.betaw[-2,0])],
+				[self.param.rho_theta_epsilon*self.param.sigma2theta*
+				np.sqrt(self.param.betaw[-2,0]),self.param.betaw[-2,0]]]),self.N)
 
-	def wage_init(self):
+		return {'epsilon_theta0': var[:,0], 'epsilon0': var[:,1]}
+
+	def wage_init(self,epsilon_t):
 		"""
 		Initial shock to wages
 		"""
@@ -79,6 +91,7 @@ class Utility(object):
 		age_ra=self.xwage[:,0].copy()
 		age=age_ra+periodt
 		age2=age**2
+		d_HS = self.xwage[:,1].copy()
 		lt = np.log(np.zeros((self.N,1)) + periodt + 1)
 
 		xw=np.concatenate((np.reshape(age,(self.N,1)),
@@ -88,10 +101,17 @@ class Utility(object):
 					np.reshape(self.xwage[:,2],(self.N,1)),),axis=1)
 
 		betas=self.param.betaw[0:-2,0] #everything but rho and variance
-		epsilon_t=np.sqrt(self.param.betaw[-2,0])*np.random.randn(self.N)
+		return {'wage':np.exp( np.dot(xw,betas)+ epsilon_t )}
 
-		return {'wage':np.exp( np.dot(xw,betas)+ epsilon_t ), 'epsilon': epsilon_t}
 
+	def theta_init(self,epsilon_theta0):
+		"""
+		The initial value of child human capital
+		"""
+		
+		return np.exp( epsilon_theta0)
+
+		
 	def epsilon(self,epsilon_1):
 		"""
 		the law of motion of wage shock
@@ -100,10 +120,12 @@ class Utility(object):
 		nu = np.sqrt(self.param.betaw[-2,0])*np.random.randn(self.N)
 		return rho_eps + nu 
 
+	
+
 
 	def waget(self,periodt,epsilon):
 		"""
-		Computes w (hourly wage) for periodt+1
+		Computes w (hourly wage) for periodt
 
 		
 		This method returns t=0,1...,8 
@@ -139,8 +161,8 @@ class Utility(object):
 		Draws a free child care slot from a binomial distribution
 		#THIS IS SHUT DOWN
 		"""
-		#return np.random.binomial(1,self.param.q,self.N)
-		return np.zeros(self.N)
+		return np.random.binomial(1,0.18,self.N)
+		#return np.zeros(self.N)
 
 	def price_cc(self):
 		"""
@@ -477,7 +499,7 @@ class Utility(object):
 		tch=np.log(tch)
 
 		#random shock
-		omega=self.param.sigmatheta*np.random.randn(self.N)
+		omega=np.sqrt(self.param.sigma2theta)*np.random.randn(self.N)
 		
 				
 		#Parameters
@@ -489,19 +511,12 @@ class Utility(object):
 		theta1=np.zeros(self.N)
 
 		#The production of HC: (young, cc=0), (young,cc1), (old)
-		boo1=(agech<=6) & (cc==0)
-		boo2=(agech<=6) & (cc==1)
-		boo3=(agech>6)
-		boo_list=[boo1,boo2,boo3]
-		tfp_list=[0,tfp,0]
-
-		for j in range(len(boo_list)):
-			theta1[boo_list[j]] = gamma1*np.log(theta0[boo_list[j]])  +\
-				gamma2*incomepc[boo_list[j]] +\
-				gamma3*tch[boo_list[j]] + tfp_list[j] + omega[boo_list[j]]
-				
+		boo_age=agech<=6
+		theta1 = tfp*cc*boo_age + gamma1*np.log(theta0) + gamma2*incomepc +	gamma3*tch + omega
+			
 		#adjustment for E[theta = 0]
-		alpha = - np.mean(boo2)*tfp - np.mean(np.log(ct))*gamma2 - np.mean(np.log(tch))*gamma3  
+		alpha = - np.mean(boo_age)*np.mean(cc)*tfp - np.mean(incomepc)*gamma2 - np.mean(tch)*gamma3  
+
 		return np.exp(theta1 + alpha)
 
 

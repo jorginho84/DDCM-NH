@@ -1,13 +1,4 @@
-/*
-This do-file computes the auxiliary model to identify the parameters of the 
-production function
-*/
 
-
-use "$results/data_aux.dta", clear
-
-
-*PCA measures
 
 foreach variable of varlist skills*{
 	gen `variable'_s=`variable'>=3
@@ -33,6 +24,7 @@ foreach x of numlist 2 5 8{
 }
 
 
+*Time outside market
 *Time outside market
 foreach x of numlist 1 4 {
 	gen l_t`x'=.
@@ -63,7 +55,7 @@ gen age_t7=age_t0+7
 
 
 /*Initial conditions*/
-mat betas_init=J(1,1,.)
+mat betas_init=J(6,1,.)
 
 foreach x of numlist 0 {
 	replace grossv2_y`x'=grossv2_y`x'/52
@@ -78,11 +70,23 @@ foreach x of numlist 0 {
 gen lhwage_t0=log(hwage_t0)
 
 
+reg yhat_t2 married_y0
+mat betas_init[3,1] = _b[married_y0]
+
+corr yhat_t2 nkids_baseline 
+mat betas_init[4,1] = r(rho)
+
+reg yhat_t2 d_HS2 
+mat betas_init[5,1] = _b[d_HS2]
+
+reg yhat_t2 age_ra age_ra2
+mat betas_init[1,1] = _b[age_ra]
+mat betas_init[2,1] = _b[age_ra2]
 
 corr yhat_t2 lhwage_t0 
-mat betas_init[1,1] = r(rho)
+mat betas_init[6,1] = r(rho)
 
-
+stop
 
 *******************************************************************
 /*Identifying  prod function*/
@@ -92,19 +96,7 @@ mat betas_prod=J(5,1,.)
 corr yhat_t2 yhat_t5
 mat betas_prod[1,1] = r(rho)
 
-corr yhat_t2 incomepc_t1
-mat betas_prod[2,1] = r(rho)
 
-corr yhat_t2 l_t1
-mat betas_prod[3,1] = r(rho)
-
-reg yhat_t2 d_CC2_t1 if age_t1<=6
-mat betas_prod[4,1] = _b[d_CC2_t1]
-
-sum yhat_t2
-mat betas_prod[5,1] = r(Var)
-
-/*
 egen id_child = seq()
 rename yhat_t2 yhat_t1
 rename yhat_t5 yhat_t4
@@ -124,6 +116,6 @@ mat betas_prod[4,1] = _b[d_CC2_t]
 
 sum yhat_t
 mat betas_prod[5,1] = r(Var)
-*/
+
 matrix betas_theta = betas_prod\betas_init
 

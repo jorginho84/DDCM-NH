@@ -1,6 +1,6 @@
 #Age of child
-age_ch = np.zeros((N,9))
-for t in range(9):
+age_ch = np.zeros((N,8))
+for t in range(8):
 	age_ch[:,t] = agech0[:,0] + t
 
 boo_y = age_ch[:,2]<=6
@@ -9,7 +9,7 @@ boo_o = age_ch[:,2]>6
 ltheta = np.log(choices['theta_matrix'])
 
 for j in range (M):
-	for t in range(9):
+	for t in range(8):
 		ltheta[:,t,j] = (ltheta[:,t,j])/np.std(ltheta[:,t,j],axis=0)
 
 

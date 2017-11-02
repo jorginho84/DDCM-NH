@@ -1,9 +1,9 @@
 
 #build a grid around parameter value
 lenght = 0.3
-size_grid = 8
-max_p = wagep_betas[5,0] + lenght
-min_p = wagep_betas[5,0] - lenght
+size_grid = 6
+max_p = 0.4
+min_p = 0.2
 p_list = np.linspace(min_p,max_p,size_grid)
 obs_moment = moments_vector[8,0].copy()
 

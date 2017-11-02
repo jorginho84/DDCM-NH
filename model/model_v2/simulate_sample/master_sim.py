@@ -52,24 +52,28 @@ np.random.seed(1);
 
 betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv12_v1_e3.npy')
 
+#Number of periods where all children are less than or equal to 18
+nperiods = 8
+
 #Utility function
-eta=0.2
-alphap=betas_nelder[1]
-alphaf=betas_nelder[2]
-
-
+eta=1.5
+alphap=-0.08
+alphaf=-0.1
 
 #wage process
 wagep_betas=np.array([betas_nelder[3],betas_nelder[4],betas_nelder[5],
 	betas_nelder[6],betas_nelder[7],betas_nelder[8],betas_nelder[9]]).reshape((7,1))
 
-
 #Production function [young,old]
-gamma1= betas_nelder[10]
-gamma2= betas_nelder[11]
-gamma3= betas_nelder[12]
-tfp=betas_nelder[13]
-sigmatheta=2.2
+gamma1= 0.6
+gamma2= 0.08
+gamma3= 0.05
+tfp=0.555
+sigmatheta=2.6**.5
+
+#initial theta
+rho_theta_epsilon = -0.03
+
 
 #First measure is normalized. starting arbitrary values
 #All factor loadings are normalized
@@ -145,7 +149,7 @@ agech0=x_df[['age_t0']].values
 
 #Defines the instance with parameters
 param=util.Parameters(alphap,alphaf,eta,gamma1,gamma2,gamma3,
-	tfp,sigmatheta,	wagep_betas, marriagep_betas, kidsp_betas, eitc_list,
+	tfp,sigmatheta, rho_theta_epsilon,wagep_betas, marriagep_betas, kidsp_betas, eitc_list,
 	afdc_list,snap_list,cpi,lambdas,pafdc,psnap,mup)
 
 
@@ -164,12 +168,6 @@ wr,cs,ws=1,1,1
 model = util.Utility(param,N,x_w,x_m,x_k,passign,nkids0,married0,hours,childcare,
 	agech0,hours_p,hours_f,wr,cs,ws)
 
-#This modifes model's budget set
-#model2 = cc0_wr0.Utility_cc0_wr0(param,N,x_w,x_m,x_k,passign,theta0,nkids0,married0,hours,childcare,agech0,hours_p,hours_f)
-
-#simulating cc prices
-#cc_price = model2.price_cc()
-#np.mean(cc_price)
 
 ##############Computing EmaxT#####################
 print ''
@@ -178,7 +176,6 @@ print 'Getting a dictionary of emax'
 start_time = time.time()
 print ''
 print ''
-
 
 D=50
 np.random.seed(2)
@@ -238,6 +235,8 @@ np.std(ltheta,axis=0)
 #Impact of NH on logtheta (SD units) in time
 ate_theta=np.mean(ltheta[passign[:,0]==1,:],axis=0) - np.mean(ltheta[passign[:,0]==0,:],axis=0)
 
+ate_theta/np.std(ltheta,axis=0)
+
 #NH supplement
 np.mean(nh_sup[passign[:,0]==1,:],axis=0)
 np.mean(nh_sup[passign[:,0]==1,:],axis=0)
@@ -268,7 +267,7 @@ unemp_t=hours_t==0
 part_t=hours_t==hours_p
 full_t=hours_t==hours_f
 
-np.mean(hours_t[passign[:,0]==0,:],axis=0)
+ate_hours = np.mean(hours_t[passign[:,0]==1,:],axis=0) - np.mean(hours_t[passign[:,0]==0,:],axis=0)
 
 np.mean(unemp_t[agech0[:,0]<=6,:],axis=0)
 

@@ -86,11 +86,11 @@ list_aux = []
 list_obs = []
 list_sig = []
 #C. prod fn
-list_aux = [beta_inputs]
-list_obs = [moments_vector[ind:ind +5 ,0]]
-list_sig = [se_vector[ind:ind + 5]]
+list_aux = [np.concatenate((beta_inputs,betas_init_prod),axis=0)]
+list_obs = [moments_vector[ind:ind +6 ,0]]
+list_sig = [se_vector[ind:ind + 6]]
 
-for c in range(5): 
+for c in range(6): 
 	sim_moment = ws.cell('B' + str(c + pos))
 	obs_moment = ws.cell('D' + str(c + pos))
 	obs_sigma = ws.cell('F' + str(c + pos))
@@ -118,6 +118,7 @@ ax.set_xticks([])
 plt.show()
 fig.savefig('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/fit/fit_ssrs.pdf', format='pdf')
 plt.close()
+
 
 	
 wb.save('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/fit/fit.xlsx')

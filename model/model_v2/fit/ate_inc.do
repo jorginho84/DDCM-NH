@@ -45,7 +45,7 @@ gen incomepc_t7=log(incomepc_t7_aux)
 *Computing ATES for each year
 local i =1
 foreach x in 1 4 7{
-	bootstrap diff=r(ate), reps(`reps'): inc_diff incomepc_t`x'
+	bootstrap diff=r(ate), reps(`reps'): inc_diff incomepc_t`x'_aux
 	mat ate_inc[`i',1] = e(b)
 	mat se_ate_inc[`i',1] = e(se)
 	local i = `i' + 1

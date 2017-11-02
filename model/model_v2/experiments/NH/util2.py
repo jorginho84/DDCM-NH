@@ -32,11 +32,13 @@ class Prod2(Utility):
 	
 	def elec(self):
 		"""
-		This function recovers ec and el
+		This function recovers expected values to normalize the constant in the prod function
 		"""
 		ec = np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/experiments/NH/ec.npy')
 		el = np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/experiments/NH/el.npy')
-		return [ec, el]
+		ecc = np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/experiments/NH/el.npy')
+		e_age = np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/experiments/NH/e_age.npy')
+		return [ec, el, ecc, e_age]
 
 	def thetat(self,periodt,theta0,h,cc,ct):
 		"""
@@ -53,8 +55,8 @@ class Prod2(Utility):
 		ecel = self.elec()
 
 		#log consumption pc
-		incomepc_aux=np.log(ct)
-		incomepc=incomepc_aux - ecel[0][periodt]
+		incomepc=np.log(ct)
+		
 		
 		#log leisure (T=148 hours a week)
 		#log time w child (T=148 hours a week)
@@ -64,10 +66,10 @@ class Prod2(Utility):
 		boo_u = h == 0
 
 		tch = cc*(148 - 40) + (1-cc)*(boo_u*148 + boo_p*(148 - self.hours_p) + boo_f*(148 - self.hours_f)) 
-		tch=np.log(tch)-ecel[1][periodt]
+		tch=np.log(tch)
 		
 		#random shock
-		omega=self.param.sigmatheta*np.random.randn(self.N)
+		omega=self.param.sigma2theta*np.random.randn(self.N)
 		
 				
 		#Parameters
@@ -80,18 +82,10 @@ class Prod2(Utility):
 
 		
 		#The production of HC: young, cc=0
-		boo=(agech<=6) & (cc==0)
-		theta1[boo] = gamma1*np.log(theta0[boo]) + gamma2*incomepc[boo] +\
-		gamma3*tch[boo] + omega[boo]
+		boo_age=agech<=6
+		theta1 = tfp*cc*boo_age + gamma1*np.log(theta0) + gamma2*incomepc +	gamma3*tch + omega
 
-		#The production of HC: young, cc=1
-		boo=(agech<=6) & (cc==1)
-		theta1[boo] = gamma1*np.log(theta0[boo]) + gamma2*incomepc[boo] +\
-		gamma3*tch[boo] + tfp + omega[boo]
-
-		#The production of HC: old
-		boo=(agech>6)
-		theta1[boo] = gamma1*np.log(theta0[boo]) + gamma2*incomepc[boo] +\
-		gamma3*tch[boo] + omega[boo]
+		#adjustment for E[theta = 0]
+		alpha = - ecel[3][periodt]*ecel[2][periodt]*tfp - ecel[0][periodt]*gamma2 - ecel[1][periodt]*gamma3
 
 		return np.exp(theta1)

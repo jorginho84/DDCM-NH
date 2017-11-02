@@ -46,10 +46,12 @@ class Budget(Utility):
 		""" 
 		
 		#from hourly wage to annual earnings
+		
 		pwage=np.reshape(hours,self.N)*np.reshape(wage,self.N)*52
-
+		
 		#To nominal prices (2003 prices)
 		pwage=pwage/(self.param.cpi[8]/self.param.cpi[periodt])
+
 
 		#the EITC parameters
 		dic_eitc=[self.param.eitc['No EITC'][periodt],self.param.eitc['Full EITC'][periodt]]
@@ -63,57 +65,43 @@ class Budget(Utility):
 		#family size
 		nfam = np.ones(self.N) + kid[:,0] + marr[:,0]
 
-		#1 children
-		r1_1=[dic_eitc[0]['r1_1'],dic_eitc[1]['r1_1']]
-		r2_1=[dic_eitc[0]['r2_1'],dic_eitc[1]['r2_1']]
-		b1_1=[dic_eitc[0]['b1_1'],dic_eitc[1]['b1_1']]
-		b2_1=[dic_eitc[0]['b2_1'],dic_eitc[1]['b2_1']]
-		state_eitc1=[dic_eitc[0]['state_eitc1'],dic_eitc[1]['state_eitc1']]
+		#EITC parameters [[control],[treatment]]
+		r1 = [[],[]]
+		r2 = [[],[]]
+		b1 = [[],[]]
+		b2 = [[],[]]
+		state_eitc = [[],[]]
 
-		#2+ children
-		r1_2=[dic_eitc[0]['r1_2'],dic_eitc[1]['r1_2']]
-		r2_2=[dic_eitc[0]['r2_2'],dic_eitc[1]['r2_2']]
-		b1_2=[dic_eitc[0]['b1_2'],dic_eitc[1]['b1_2']]
-		b2_2=[dic_eitc[0]['b2_2'],dic_eitc[1]['b2_2']]
-		state_eitc2=[dic_eitc[0]['state_eitc2'],dic_eitc[1]['state_eitc2']]
-
-		#3 children
-		state_eitc3=[dic_eitc[0]['state_eitc3'],dic_eitc[1]['state_eitc3']]
+		for j in range(2):
+			for nn in range(1,4):
+				r1[j].append(dic_eitc[j]['r1_' + str(nn)])
+				r2[j].append(dic_eitc[j]['r2_'+ str(nn)])
+				b1[j].append(dic_eitc[j]['b1_'+ str(nn)])
+				b2[j].append(dic_eitc[j]['b2_'+ str(nn)])
+				state_eitc[j].append(dic_eitc[j]['state_eitc'+ str(nn)])
 
 		#Obtaining individual's disposable income from EITC
 		eitc_fed=np.zeros(self.N)
 		eitc_state=np.zeros(self.N)
-		
-		for j in range(2): #the passign loop
-			#one child
-			kid_boo=(kid[:,0]==1) & (self.ra==j)
-			eitc_fed[(pwage<b1_1[j]) & (kid_boo) ]=r1_1[j]*pwage[(pwage<b1_1[j]) & (kid_boo)]
-			eitc_fed[(pwage>=b1_1[j]) & (pwage<b2_1[j]) & (kid_boo)]=r1_1[j]*b1_1[j]
-			eitc_fed[(pwage>=b2_1[j]) & (kid_boo)]=np.maximum(r1_1[j]*b1_1[j]-r2_1[j]*(pwage[(pwage>=b2_1[j]) & (kid_boo)]-b2_1[j]),np.zeros(pwage[(pwage>=b2_1[j]) & (kid_boo)].shape[0]))
-			if j==0:#the 1994 experiment consistent with the No eitc experiment (always 0)
-				eitc_state[kid_boo]=np.minimum(state_eitc1[j]*eitc_fed[kid_boo],92)
-			else:
-				eitc_state[kid_boo]=state_eitc1[j]*eitc_fed[kid_boo]
-			
-			#+2 children
-			kid_boo=(kid[:,0]>=2) & (self.ra==j)
-			eitc_fed[(pwage<b1_2[j]) & (kid_boo) ]=r1_2[j]*pwage[(pwage<b1_2[j]) & (kid_boo)]
-			eitc_fed[(pwage>=b1_2[j]) & (pwage<b2_2[j]) & (kid_boo)]=r1_2[j]*b1_2[j]
-			eitc_fed[(pwage>=b2_2[j]) & (kid_boo)]=np.maximum(r1_2[j]*b1_2[j]-r2_2[j]*(pwage[(pwage>=b2_2[j]) & (kid_boo)]-b2_2[j]),np.zeros(pwage[(pwage>=b2_2[j]) & (kid_boo)].shape[0]))
-			if j==0:
-				eitc_state[kid_boo]=np.minimum(state_eitc2[j]*eitc_fed[kid_boo],499)
-			else:
-				eitc_state[kid_boo]=state_eitc2[j]*eitc_fed[kid_boo]
-			
-			#+3	children (only state EITC)
-			kid_boo=(kid[:,0]>=3) & (self.ra==j)
-			if j==0:
-				eitc_state[kid_boo]=np.minimum(state_eitc3[j]*eitc_fed[kid_boo],1496)
-			else:
-				eitc_state[kid_boo]=state_eitc1[j]*eitc_fed[kid_boo]
+
+		for j in range(2):#the passign loop
+
+			for nn in range(0,3):
+
+				if nn<=2:
+					kid_boo=kid[:,0]==nn+1
+				else:
+					kid_boo=kid[:,0]>=nn+1
+				
+				eitc_fed[(pwage<b1[j][nn]) & (kid_boo) ]=r1[j][nn]*pwage[(pwage<b1[j][nn]) & (kid_boo)]
+				eitc_fed[(pwage>=b1[j][nn]) & (pwage<b2[j][nn]) & (kid_boo)]=r1[j][nn]*b1[j][nn]
+				eitc_fed[(pwage>=b2[j][nn]) & (kid_boo)]=np.maximum(r1[j][nn]*b1[j][nn]-r2[j][nn]*(pwage[(pwage>=b2[j][nn]) & (kid_boo)]-b2[j][nn]),np.zeros(pwage[(pwage>=b2[j][nn]) & (kid_boo)].shape[0]))
+				eitc_state[kid_boo]=state_eitc[j][nn]*eitc_fed[kid_boo]
 
 		
-		##Obtaining NH income supplement#
+		
+		
+		##Obtaining NH income supplement: shut down#
 
 		nh_supp = np.zeros(self.N) 
 
@@ -226,7 +214,9 @@ class Budget(Utility):
 		"""
 		ec = np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/experiments/EITC/ec.npy')
 		el = np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/experiments/EITC/el.npy')
-		return [ec, el]
+		ecc = np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/experiments/EITC/ecc.npy')
+		e_age = np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/experiments/EITC/e_age.npy')
+		return [ec, el, ecc,e_age]
 
 	def thetat(self,periodt,theta0,h,cc,ct):
 		"""
@@ -243,8 +233,8 @@ class Budget(Utility):
 		ecel = self.elec()
 
 		#log consumption pc
-		incomepc_aux=np.log(ct)
-		incomepc=incomepc_aux - ecel[0][periodt]
+		incomepc=np.log(ct)
+		
 		
 		#log time w child (T=148 hours a week)
 		tch = np.zeros(self.N)
@@ -253,7 +243,7 @@ class Budget(Utility):
 		boo_u = h == 0
 
 		tch = cc*(148 - 40) + (1-cc)*(boo_u*148 + boo_p*(148 - self.hours_p) + boo_f*(148 - self.hours_f)) 
-		tch=np.log(tch)-ecel[1][periodt]
+		tch=np.log(tch)
 		
 		#random shock
 		omega=self.param.sigmatheta*np.random.randn(self.N)
@@ -269,21 +259,12 @@ class Budget(Utility):
 
 		
 		#The production of HC: young, cc=0
-		boo=(agech<=6) & (cc==0)
-		theta1[boo] = gamma1*np.log(theta0[boo]) + gamma2*incomepc[boo] +\
-		gamma3*tch[boo] + omega[boo]
+		boo_age=agech<=6
+		theta1 = tfp*cc*boo_age + gamma1*np.log(theta0) + gamma2*incomepc +	gamma3*tch + omega
 
-		#The production of HC: young, cc=1
-		boo=(agech<=6) & (cc==1)
-		theta1[boo] = gamma1*np.log(theta0[boo]) + gamma2*incomepc[boo] +\
-		gamma3*tch[boo] + tfp + omega[boo]
+		#adjustment for E[theta = 0]
+		alpha = - ecel[3][periodt]*ecel[2][periodt]*tfp - ecel[0][periodt]*gamma2 - ecel[1][periodt]*gamma3
 
-		#The production of HC: old
-		boo=(agech>6)
-		theta1[boo] = gamma1*np.log(theta0[boo]) + gamma2*incomepc[boo] +\
-		gamma3*tch[boo] + omega[boo]
-
-		return np.exp(theta1)
-
+		return np.exp(theta1 + alpha)
 	
 	

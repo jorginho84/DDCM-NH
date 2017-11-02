@@ -34,6 +34,9 @@ import estimate as estimate
 
 np.random.seed(1)
 
+#Number of periods where all children are less than or equal to 18
+nperiods = 8
+
 execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/load_param.py')
 
 ###Auxiliary estimates### 
@@ -80,7 +83,7 @@ model  = util.Utility(param0,N,x_w,x_m,x_k,passign,
 	nkids0,married0,hours,childcare,agech0,hours_p,hours_f,wr,cs,ws)
 
 #The instance for computing samples
-output_ins=estimate.Estimate(param0,x_w,x_m,x_k,x_wmk,passign,agech0,nkids0,
+output_ins=estimate.Estimate(nperiods,param0,x_w,x_m,x_k,x_wmk,passign,agech0,nkids0,
 	married0,D,dict_grid,M,N,moments_vector,w_matrix,hours_p,hours_f,
 	wr,cs,ws)
 
@@ -95,72 +98,61 @@ def sym(a):
 ####ETA###
 execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/eta.py')
 
+####Full-time work###
+#execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/alphaf.py')
 
 ####Part-time work###
-execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/alphap.py')
-
-####Full-time work###
-execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/alphaf.py')
-
+#execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/alphap.py')
 
 #########################################################
 #Wage offer
 
 ####age###
-execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/age_wage.py')
+#execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/age_wage.py')
 
 ####age2###
-execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/age2_wage.py')
+#execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/age2_wage.py')
 
 ####high school###
-execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/highschool_wage.py')
+#execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/highschool_wage.py')
 
 ####log t###
-execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/logt_wage.py')
+#execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/logt_wage.py')
 
 ####constant_wage###
-execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/constant_wage.py')
+#execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/constant_wage.py')
 
 ####sigma2###
-execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/sigma_wage.py')
+#execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/sigma_wage.py')
 
 ####rho###
-execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/rho_wage.py')
+#execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/rho_wage.py')
 
 
 #########################################################
 #Production function
 
 ####TFP###
-execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/tfp.py')
+#execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/tfp.py')
 
-#########################################################
 ####\gamma_1###
-execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/gamma1.py')
+#execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/gamma1.py')
 
 
-#########################################################
 ####\gamma_2###
-execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/gamma2.py')
+#execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/gamma2.py')
 
-#########################################################
 ####\gamma_3###
-execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/gamma3.py')
+#execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/gamma3.py')
 
-
+####\sigma_theta###
+#execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/sigma_theta.py')
 
 
 #########################################################
-####kappas
-
-#SSRS, t=2, kappa1
-#execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/kappa_1_t2.py')
+#Initial theta
 
 
-#def sample_graph(j):
-#	execfile(j)
-#	return 1
+####corr_theta0###
+execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/corr_theta0.py')
 
-#sys.path.append("/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check")
-#pool = ProcessPool(nodes=3)	
-#dics = pool.map(sample_graph,['kappa_t2_m1_k2.py','kappa_t2_m2_k3.py', 'kappa_t2_m2_k3.py'])

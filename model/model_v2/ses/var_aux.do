@@ -27,25 +27,21 @@ global codes "/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/mode
 
 
 use "/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/sample_model_v2.dta", clear
-/*
-set seed 2828
-program betas_gen, rclass
-	save "$results/data_aux.dta", replace
-	do "$codes/utility_aux.do"
-	*do "$codes/wage_p.do"
-	*do "$codes/theta_aux.do"
-	return scalar beta_out=beta_utility[1,1]
-	*Going back to original data
-	use "/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/sample_model_v2.dta", clear
-end
-
-*betas_gen
-bootstrap beta=r(beta_out), reps(10): betas_gen
-*/
+qui: save "$results/data_aux.dta", replace
+qui: do "$codes/utility_aux.do"
+qui: do "$codes/wage_p.do"
+qui: do "$codes/theta_aux.do"
+mat betas_orig=beta_utility\beta_wage\betas_theta
+svmat betas_orig
+preserve
+keep betas_orig1
+drop if betas_orig1==.
+outsheet using "$results/aux_model/moments_vector.csv", comma  replace
+restore
 
 set seed 2828
 local draws = 500
-local n_moments = 15
+local n_moments = 16
 
 forvalues x = 1/`draws'{
 	use "/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/sample_model_v2.dta", clear
@@ -54,7 +50,7 @@ forvalues x = 1/`draws'{
 	qui: do "$codes/utility_aux.do"
 	qui: do "$codes/wage_p.do"
 	qui: do "$codes/theta_aux.do"
-	mat betas=beta_utility\beta_wage\betas_prod
+	mat betas=beta_utility\beta_wage\betas_theta
 	svmat betas
 	keep betas1
 	rename betas1 betas
@@ -84,12 +80,6 @@ forvalues x=2/`n_moments'{
 	
 
 }
-
-preserve
-drop draw betas*
-svmat beta_matrix
-outsheet using "$results/aux_model/moments_vector.csv", comma  replace
-restore
 
 *This is the cov matrix
 qui: corr betas*, cov

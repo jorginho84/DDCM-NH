@@ -179,6 +179,9 @@ foreach variable of varlist `Y2_B1' `Y5_B2' `Y8_B2'{
 
 *Age at baseline
 gen age_t0=agechild-2
+*due to rounding errors, ages 0 and 11 are 1 and 10
+replace age_t0=1 if age_t0==0
+replace age_t0=10 if age_t0==11
 gen age_t02=age_t0^2
 
 /*Local labels: use these in regressions*/

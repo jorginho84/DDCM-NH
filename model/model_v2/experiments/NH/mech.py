@@ -34,41 +34,35 @@ from util2 import Prod2
 
 np.random.seed(1)
 
-betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv12_v1_e3.npy')
+betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv14_v1_e3.npy')
+
+#Number of periods where all children are less than or equal to 18
+nperiods = 8
 
 #Utility function
 eta=betas_nelder[0]
 alphap=betas_nelder[1]
 alphaf=betas_nelder[2]
 
-
-
 #wage process
 wagep_betas=np.array([betas_nelder[3],betas_nelder[4],betas_nelder[5],
 	betas_nelder[6],betas_nelder[7],betas_nelder[8],betas_nelder[9]]).reshape((7,1))
-
 
 #Production function [young,old]
 gamma1= betas_nelder[10]
 gamma2= betas_nelder[11]
 gamma3= betas_nelder[12]
 tfp=betas_nelder[13]
-sigmatheta=0
+sigma2theta=betas_nelder[14]
 
-#Measurement system: three measures for t=2, one for t=5
-kappas=[[betas_nelder[14],betas_nelder[15],betas_nelder[16],betas_nelder[17]],
-[betas_nelder[18],betas_nelder[19],betas_nelder[20],betas_nelder[21]]]
+#initial theta
+rho_theta_epsilon = betas_nelder[15]
 
 #All factor loadings are normalized
 lambdas=[1,1]
 
-
-
-#Weibull distribution of cc prices
-scalew=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/aux_model/scale.csv').values
-shapew=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/aux_model/shape.csv').values
-q=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/aux_model/q_prob.csv').values
-
+#Child care price
+mup = 750
 
 #Probability of afdc takeup
 pafdc=.60
@@ -101,11 +95,11 @@ kidsp_betas=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount
 
 
 #Minimum set of x's (for interpolation)
-x_wmk=x_df[  ['age_ra', 'age_ra2', 'd_HS2', 'age_t0','age_t02','constant'] ].values
+x_wmk=x_df[  ['age_ra', 'age_ra2', 'd_HS2', 'constant'] ].values
 
 #Data for treatment status
-#passign=x_df[ ['d_RA']   ].values
-passign = np.random.binomial(1,0.5,(N,1))
+passign=x_df[ ['d_RA']   ].values
+#passign = np.random.binomial(1,0.5,(N,1))
 
 #The EITC parameters
 eitc_list = pickle.load( open( '/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/simulate_sample/eitc_list.p', 'rb' ) )
@@ -119,13 +113,6 @@ snap_list = pickle.load( open( '/mnt/Research/nealresearch/new-hope-secure/newho
 #CPI index
 cpi =  pickle.load( open( '/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/simulate_sample/cpi.p', 'rb' ) )
 
-#Here: the estimates from the auxiliary model
-###
-###
-
-#Assuming random start
-#theta0=np.exp(np.random.randn(N))
-
 
 #number of kids at baseline
 nkids0=x_df[ ['nkids_baseline']   ].values
@@ -135,12 +122,16 @@ married0=x_df[ ['d_marital_2']   ].values
 
 #age of child at baseline
 agech0=x_df[['age_t0']].values
+age_ch = np.zeros((N,nperiods))
+for t in range(nperiods):
+	age_ch[:,t] = agech0[:,0] + t
+
+
 
 #Defines the instance with parameters
-param0=util.Parameters(alphap, alphaf, eta, gamma1, gamma2, 
-	gamma3,tfp,sigmatheta,
-	wagep_betas, marriagep_betas, kidsp_betas, eitc_list,afdc_list,snap_list,
-	cpi,q,scalew,shapew,lambdas,kappas,pafdc,psnap)
+param0=util.Parameters(alphap,alphaf,eta,gamma1,gamma2,gamma3,
+	tfp,sigma2theta,rho_theta_epsilon,wagep_betas, marriagep_betas, kidsp_betas, eitc_list,
+	afdc_list,snap_list,cpi,lambdas,pafdc,psnap,mup)
 
 ###Auxiliary estimates###
 moments_vector=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/aux_model/moments_vector.csv').values
@@ -173,7 +164,7 @@ cs=1
 ws=1
 
 #The estimate class
-output_ins=estimate.Estimate(param0,x_w,x_m,x_k,x_wmk,passign,agech0,nkids0,
+output_ins=estimate.Estimate(nperiods,param0,x_w,x_m,x_k,x_wmk,passign,agech0,nkids0,
 	married0,D,dict_grid,M,N,moments_vector,var_cov,hours_p,hours_f,
 	wr,cs,ws)
 
@@ -191,17 +182,21 @@ emax_instance = output_ins.emax(param0,model)
 choices = output_ins.samples(param0,emax_instance,model)
 
 
-#The E[Log] of consumption and leisure
+#The E[Log] of consumption, leisure, and child care to normalize E[log theta]=0
 ec = np.mean(np.mean(np.log(choices['consumption_matrix']),axis=2),axis=0)
 hours_m = choices['hours_matrix']
 boo_p = hours_m == hours_p
 boo_f = hours_m == hours_f
 boo_u = hours_m == 0
 cc = choices['choice_matrix']>2
-tch = cc*(148 - 40) + (1-cc)*(boo_u*148 + boo_p*(148 - hours_p) + boo_f*(148 - hours_f)) 
+ecc = np.mean(np.mean(cc,axis=2),axis=0)
+tch = cc*(148 - 40) + (1-cc)*(148 - hours_m) 
 el = np.mean(np.mean(np.log(tch),axis=2),axis=0)
+e_age = np.mean(age_ch<=6,axis=0)
 np.save('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/experiments/NH/ec.npy',ec)
 np.save('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/experiments/NH/el.npy',el)
+np.save('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/experiments/NH/ecc.npy',ecc)
+np.save('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/experiments/NH/e_age.npy',e_age)
 
 #E[ln \theta] by period
 e_lnt = np.mean(np.mean(np.log(choices['theta_matrix']),axis=0),axis=1)
@@ -221,8 +216,8 @@ for j in range(2):
 
 
 #Age of child
-age_ch = np.zeros((N,9))
-for t in range(9):
+age_ch = np.zeros((N,nperiods))
+for t in range(nperiods):
 	age_ch[:,t] = agech0[:,0] + t
 
 ##################################################
@@ -230,10 +225,11 @@ for t in range(9):
 theta_matrix = np.log(choices['theta_matrix'])
 ate_theta = np.mean(np.mean(theta_matrix[passign[:,0]==1,:,:],axis=0) - np.mean(theta_matrix[passign[:,0]==0,:,:],axis=0),axis=1)
 
+
 ltheta = np.log(choices['theta_matrix'])
-sd_matrix = np.zeros((9,M))
+sd_matrix = np.zeros((nperiods,M))
 for j in range (M):
-	for t in range(9):
+	for t in range(nperiods):
 		sd_matrix[t,j] = np.std(ltheta[:,t,j],axis=0)
 		ltheta[:,t,j] = (ltheta[:,t,j] - np.mean(ltheta[:,t,j],axis=0))/np.std(ltheta[:,t,j],axis=0)
 
@@ -245,13 +241,20 @@ for j in range(2):
 	theta_sim_matrix.append(choices_c['Choice_' + str(j)]['theta_matrix'])
 
 #For measuring in SD units
-theta_sd = [np.zeros((N,9,M)),np.zeros((N,9,M))]
+theta_sd = [np.zeros((N,nperiods,M)),np.zeros((N,nperiods,M))]
+
 for j in range(M):
-	for t in range(9):
+	for t in range(nperiods):
 		for k in range(2):
 			theta_sd[k][:,t,j] = np.log(theta_sim_matrix[k][:,t,j])/sd_matrix[t,j]
 
 
+#Another measure of SDs
+long_theta = np.concatenate((theta_sim_matrix[0],theta_sim_matrix[1]),axis=0)
+sd_matrix_long = np.zeros((nperiods,M))
+for j in range (M):
+	for t in range(nperiods):
+		sd_matrix_long[t,j] = np.std(np.log(long_theta[:,t,j]),axis=0)
 
 
 
@@ -283,34 +286,35 @@ for j in range(2):
 sample1 = (h_sim_matrix[1][:,0,:]==40) & (h_sim_matrix[0][:,0,:]<40)
 sample2	=((h_sim_matrix[1][:,0,:]==40) & (h_sim_matrix[0][:,0,:]==40)) | (h_sim_matrix[1][:,0,:]<40)
 
-
-ate_theta_sim_sd = np.zeros((9,M))
+ate_theta_sim = np.zeros((nperiods,M))
+ate_theta_sim_sd = np.zeros((nperiods,M))
 for j  in range(M):
-	for t in range(9):
+	for t in range(nperiods):
 		ate_theta_sim_sd[t,j] = 	np.mean(theta_sd[1][:,t,j] - theta_sd[0][:,t,j],axis=0)
-
+		ate_theta_sim[t,j] = np.mean(theta_sim_matrix[1][:,t,j] - theta_sim_matrix[0][:,t,j],axis=0)
 
 np.mean(ate_theta_sim_sd,axis=1)
+np.mean(ate_theta_sim,axis=1)
 
 
 
 #Computing contribution to ATE theta by age [young,old,overall]
-ate_cont_theta  = [np.zeros((8,M)),np.zeros((8,M)),np.zeros((8,M))]
-ate_cont_lt  = [np.zeros((8,M)),np.zeros((8,M)),np.zeros((8,M))]
-ate_cont_cc  = [np.zeros((8,M)),np.zeros((8,M)),np.zeros((8,M))]
-ate_cont_ct  = [np.zeros((8,M)),np.zeros((8,M)),np.zeros((8,M))]
+ate_cont_theta  = [np.zeros((nperiods-1,M)),np.zeros((nperiods-1,M)),np.zeros((nperiods-1,M))]
+ate_cont_lt  = [np.zeros((nperiods-1,M)),np.zeros((nperiods-1,M)),np.zeros((nperiods-1,M))]
+ate_cont_cc  = [np.zeros((nperiods-1,M)),np.zeros((nperiods-1,M)),np.zeros((nperiods-1,M))]
+ate_cont_ct  = [np.zeros((nperiods-1,M)),np.zeros((nperiods-1,M)),np.zeros((nperiods-1,M))]
 
 
-for periodt in range(8):
+for periodt in range(nperiods-1):									
 
 	for j in range(M):
 	#the theta contribution
 	
 		
 		#the sample
-		boo_y = (h_sim_matrix[1][:,0,j]==40) & (h_sim_matrix[0][:,0,j]<40)
-		boo_o = ((h_sim_matrix[1][:,0,j]==40) & (h_sim_matrix[0][:,0,j]==40)) | (h_sim_matrix[1][:,0,j]<40)
-		
+		boo_y = (h_sim_matrix[1][:,0,j]==40) & (h_sim_matrix[0][:,0,j]<40) & (age_ch[:,2]<=6)
+		boo_o = (((h_sim_matrix[1][:,0,j]==40) & (h_sim_matrix[0][:,0,j]==40)) | (h_sim_matrix[1][:,0,j]<40)) & (age_ch[:,2]<=6)
+		boo_all = (age_ch[:,2]<=6)
 		
 		ltheta_th1 = models[1].thetat(periodt,theta_sim_matrix[1][:,periodt,j],
 			h_sim_matrix[0][:,periodt,j],cc_sim_matrix[0][:,periodt,j],
@@ -320,7 +324,7 @@ for periodt in range(8):
 			ct_sim_matrix[0][:,periodt,j])
 		ate_cont_theta[0][periodt,j] = np.mean(np.log(ltheta_th1[boo_y]) - np.log(ltheta_th0[boo_y]))/sd_matrix[periodt,j]
 		ate_cont_theta[1][periodt,j] = np.mean(np.log(ltheta_th1[boo_o]) - np.log(ltheta_th0[boo_o]))/sd_matrix[periodt,j]
-		ate_cont_theta[2][periodt,j] = np.mean(np.log(ltheta_th1) - np.log(ltheta_th0))/sd_matrix[periodt,j]
+		ate_cont_theta[2][periodt,j] = np.mean(np.log(ltheta_th1[boo_all]) - np.log(ltheta_th0[boo_all]))/sd_matrix[periodt,j]
 
 
 	#The leisure contribution
@@ -332,7 +336,7 @@ for periodt in range(8):
 			ct_sim_matrix[0][:,periodt,j])
 		ate_cont_lt[0][periodt,j] = np.mean(np.log(ltheta_th1[boo_y]) - np.log(ltheta_th0[boo_y]))/sd_matrix[periodt,j]
 		ate_cont_lt[1][periodt,j] = np.mean(np.log(ltheta_th1[boo_o]) - np.log(ltheta_th0[boo_o]))/sd_matrix[periodt,j]
-		ate_cont_lt[2][periodt,j] = np.mean(np.log(ltheta_th1) - np.log(ltheta_th0))/sd_matrix[periodt,j]
+		ate_cont_lt[2][periodt,j] = np.mean(np.log(ltheta_th1[boo_all]) - np.log(ltheta_th0[boo_all]))/sd_matrix[periodt,j]
 
 	#The CC contribution
 		ltheta_th1 = models[1].thetat(periodt,theta_sim_matrix[1][:,periodt,j],
@@ -343,7 +347,7 @@ for periodt in range(8):
 			ct_sim_matrix[0][:,periodt,j])
 		ate_cont_cc[0][periodt,j] = np.mean(np.log(ltheta_th1[boo_y]) - np.log(ltheta_th0[boo_y]))/sd_matrix[periodt,j]
 		ate_cont_cc[1][periodt,j] = np.mean(np.log(ltheta_th1[boo_o]) - np.log(ltheta_th0[boo_o]))/sd_matrix[periodt,j]
-		ate_cont_cc[2][periodt,j] = np.mean(np.log(ltheta_th1) - np.log(ltheta_th0))/sd_matrix[periodt,j]
+		ate_cont_cc[2][periodt,j] = np.mean(np.log(ltheta_th1[boo_all]) - np.log(ltheta_th0[boo_all]))/sd_matrix[periodt,j]
 
 	#The consumption contribution
 		ltheta_th1 = models[1].thetat(periodt,theta_sim_matrix[1][:,periodt,j],
@@ -354,7 +358,7 @@ for periodt in range(8):
 			ct_sim_matrix[0][:,periodt,j])
 		ate_cont_ct[0][periodt,j] = np.mean(np.log(ltheta_th1[boo_y]) - np.log(ltheta_th0[boo_y]))/sd_matrix[periodt,j]
 		ate_cont_ct[1][periodt,j] = np.mean(np.log(ltheta_th1[boo_o]) - np.log(ltheta_th0[boo_o]))/sd_matrix[periodt,j]
-		ate_cont_ct[2][periodt,j] = np.mean(np.log(ltheta_th1) - np.log(ltheta_th0))/sd_matrix[periodt,j]
+		ate_cont_ct[2][periodt,j] = np.mean(np.log(ltheta_th1[boo_all]) - np.log(ltheta_th0[boo_all]))/sd_matrix[periodt,j]
 
 	
 ###The graphs##
@@ -362,7 +366,7 @@ for periodt in range(8):
 exp = ['extensive-margin', 'intensive-margin', 'overall']
 
 for j in range(3): #the experiment loop
-	x = np.array(range(1,9))
+	x = np.array(range(1,nperiods))
 	y1 = np.mean(ate_cont_theta[j],axis=1)
 	y2 = np.mean(ate_cont_lt[j],axis=1)
 	y3 = np.mean(ate_cont_cc[j],axis=1)

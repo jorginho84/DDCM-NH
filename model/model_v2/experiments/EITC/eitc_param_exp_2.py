@@ -30,7 +30,7 @@ for j in ['Full EITC', 'No EITC']:
 	
 	if j =='Full EITC':
 		#The parameters
-		for year in range(1995,2004):
+		for year in range(1995,2014):
 
 			##Year 1995##
 			if year==1995:
@@ -49,6 +49,10 @@ for j in ['Full EITC', 'No EITC']:
 				state_eitc2=.16
 
 				#3 children
+				r1_3=.36
+				r2_3=.2022
+				b1_3=8640
+				b2_3=11290
 				state_eitc3=.50
 
 				
@@ -69,6 +73,10 @@ for j in ['Full EITC', 'No EITC']:
 				state_eitc2=.14
 
 				#3 children
+				r1_3=.40
+				r2_3=.2106
+				b1_3=8890
+				b2_3=11610
 				state_eitc3=.43
 				
 				
@@ -89,6 +97,10 @@ for j in ['Full EITC', 'No EITC']:
 				state_eitc2=.14
 
 				#3 children
+				r1_3=.40
+				r2_3=.2106
+				b1_3=9140
+				b2_3=11930
 				state_eitc3=.43
 
 			##Year 1998##
@@ -108,6 +120,10 @@ for j in ['Full EITC', 'No EITC']:
 				state_eitc2=.14
 
 				#3 children
+				r1_3=.40
+				r2_3=.2106
+				b1_3=9390
+				b2_3=12260
 				state_eitc3=.43
 
 
@@ -128,6 +144,10 @@ for j in ['Full EITC', 'No EITC']:
 				state_eitc2=.14
 
 				#3 children
+				r1_3=.40
+				r2_3=.2106
+				b1_3=9540
+				b2_3=12460
 				state_eitc3=.43
 
 
@@ -148,6 +168,10 @@ for j in ['Full EITC', 'No EITC']:
 				state_eitc2=.14
 
 				#3 children
+				r1_3=.40
+				r2_3=.2106
+				b1_3=9720
+				b2_3=12690
 				state_eitc3=.43
 
 			##Year 2001##
@@ -167,6 +191,10 @@ for j in ['Full EITC', 'No EITC']:
 				state_eitc2=.14
 
 				#3 children
+				r1_3=.40
+				r2_3=.2106
+				b1_3=10020
+				b2_3=13090
 				state_eitc3=.43
 
 			##Year 2002##
@@ -186,6 +214,10 @@ for j in ['Full EITC', 'No EITC']:
 				state_eitc2=.14
 
 				#3 children
+				r1_3=.40
+				r2_3=.2106
+				b1_3=10350
+				b2_3=13520
 				state_eitc3=.43
 
 
@@ -206,11 +238,246 @@ for j in ['Full EITC', 'No EITC']:
 				state_eitc2=.14
 
 				#3 children
+				r1_3=.40
+				r2_3=.2106
+				b1_3=10510
+				b2_3=13730
+				state_eitc3=.43
+
+			##Year 2004##
+			if year==2004:
+				#1 children
+				r1_1=.34
+				r2_1=.1598
+				b1_1=7660
+				b2_1=14040
+				state_eitc1=.04
+
+				#2+ children
+				r1_2=.40
+				r2_2=.2106
+				b1_2=10750
+				b2_2=14040
+				state_eitc2=.14
+
+				#3 children
+				r1_3=.40
+				r2_3=.2106
+				b1_3=10750
+				b2_3=14040
+				state_eitc3=.43
+
+			##Year 2005##
+			if year==2005:
+				#1 children
+				r1_1=.34
+				r2_1=.1598
+				b1_1=7830
+				b2_1=14370
+				state_eitc1=.04
+
+				#2+ children
+				r1_2=.40
+				r2_2=.2106
+				b1_2=11000
+				b2_2=14370
+				state_eitc2=.14
+
+				#3 children
+				r1_3=.40
+				r2_3=.2106
+				b1_3=11000
+				b2_3=14370
+				state_eitc3=.43
+
+			##Year 2006##
+			if year==2006:
+				#1 children
+				r1_1=.34
+				r2_1=.1598
+				b1_1=8080
+				b2_1=14810
+				state_eitc1=.04
+
+				#2+ children
+				r1_2=.40
+				r2_2=.2106
+				b1_2=11340
+				b2_2=14810
+				state_eitc2=.14
+
+				#3 children
+				r1_3=.40
+				r2_3=.2106
+				b1_3=11340
+				b2_3=14810
+				state_eitc3=.43
+
+			##Year 2007##
+			if year==2007:
+				#1 children
+				r1_1=.34
+				r2_1=.1598
+				b1_1=8390
+				b2_1=15390
+				state_eitc1=.04
+
+				#2+ children
+				r1_2=.40
+				r2_2=.2106
+				b1_2=11790
+				b2_2=15390
+				state_eitc2=.14
+
+				#3 children
+				r1_3=.40
+				r2_3=.2106
+				b1_3=11790
+				b2_3=15390
+				state_eitc3=.43
+
+			##Year 2008##
+			if year==2008:
+				#1 children
+				r1_1=.34
+				r2_1=.1598
+				b1_1=8580
+				b2_1=15740
+				state_eitc1=.04
+
+				#2+ children
+				r1_2=.40
+				r2_2=.2106
+				b1_2=12060
+				b2_2=15740
+				state_eitc2=.14
+
+				#3 children
+				r1_3=.40
+				r2_3=.2106
+				b1_3=12060
+				b2_3=15740
+				state_eitc3=.43
+
+			##Year 2009##
+			if year==2009:
+				#1 children
+				r1_1=.34
+				r2_1=.1598
+				b1_1=8950
+				b2_1=16420
+				state_eitc1=.04
+
+				#2+ children
+				r1_2=.40
+				r2_2=.2106
+				b1_2=12570
+				b2_2=16420
+				state_eitc2=.14
+
+				#3 children
+				r1_3=.45
+				r2_3=.2106
+				b1_3=12570
+				b2_3=16420
+				state_eitc3=.43
+
+			##Year 2010##
+			if year==2010:
+				#1 children
+				r1_1=.34
+				r2_1=.1598
+				b1_1=8970
+				b2_1=16450
+				state_eitc1=.04
+
+				#2+ children
+				r1_2=.40
+				r2_2=.2106
+				b1_2=12590
+				b2_2=16450
+				state_eitc2=.14
+
+				#3 children
+				r1_3=.45
+				r2_3=.2106
+				b1_3=12590
+				b2_3=16450
+				state_eitc3=.43
+
+			##Year 2011##
+			if year==2011:
+				#1 children
+				r1_1=.34
+				r2_1=.1598
+				b1_1=9100
+				b2_1=16690
+				state_eitc1=.04
+
+				#2+ children
+				r1_2=.40
+				r2_2=.2106
+				b1_2=12780
+				b2_2=16690
+				state_eitc2=.14
+
+				#3 children
+				r1_3=.45
+				r2_3=.2106
+				b1_3=12780
+				b2_3=16690
+				state_eitc3=.43
+
+			##Year 2012##
+			if year==2012:
+				#1 children
+				r1_1=.34
+				r2_1=.1598
+				b1_1=9320
+				b2_1=17090
+				state_eitc1=.04
+
+				#2+ children
+				r1_2=.40
+				r2_2=.2106
+				b1_2=13090
+				b2_2=17090
+				state_eitc2=.14
+
+				#3 children
+				r1_3=.45
+				r2_3=.2106
+				b1_3=13090
+				b2_3=17090
+				state_eitc3=.43
+
+			##Year 2013##
+			if year==2013:
+				#1 children
+				r1_1=.34
+				r2_1=.1598
+				b1_1=9560
+				b2_1=17530
+				state_eitc1=.04
+
+				#2+ children
+				r1_2=.40
+				r2_2=.2106
+				b1_2=13430
+				b2_2=17530
+				state_eitc2=.14
+
+				#3 children
+				r1_3=.45
+				r2_3=.2106
+				b1_3=13430
+				b2_3=17530
 				state_eitc3=.43
 
 			#Save dictionary in this list
 			eitc_aux.append({'r1_1': r1_1, 'r2_1': r2_1, 'b1_1':b1_1, 'b2_1': b2_1, 
 			'r1_2':r1_2, 'r2_2': r2_2, 'b1_2': b1_2, 'b2_2': b2_2,
+			'r1_3':r1_3, 'r2_3': r2_3, 'b1_3': b1_3, 'b2_3': b2_3,
 			   'state_eitc1': state_eitc1, 'state_eitc2': state_eitc2, 'state_eitc3': state_eitc3})
 		eitc_dic[j] = eitc_aux
 
@@ -218,7 +485,7 @@ for j in ['Full EITC', 'No EITC']:
 	elif j=='No EITC': #The 1994 schedule
 		eitc_aux_new = copy.deepcopy(eitc_aux)
 
-		for t in range(9): # A fixed EITC
+		for t in range(18): # A fixed EITC
 
 			if t==0:
 				eitc_aux_new[t]['r1_1'] = .263
@@ -247,6 +514,10 @@ for j in ['Full EITC', 'No EITC']:
 				eitc_aux_new[t]['b2_2'] = 11000*(eitc_aux[t]['b2_2']/eitc_aux[t-1]['b2_2'])
 				eitc_aux_new[t]['state_eitc2'] = .14
 
+				eitc_aux_new[t]['r1_3'] = eitc_aux_new[t]['r1_2']
+				eitc_aux_new[t]['r2_3'] = eitc_aux_new[t]['r2_2']
+				eitc_aux_new[t]['b1_3'] = eitc_aux_new[t]['b1_2']
+				eitc_aux_new[t]['b2_3'] = eitc_aux_new[t]['b2_2']
 				eitc_aux_new[t]['state_eitc3'] = .43
 			
 		eitc_dic[j] = eitc_aux_new

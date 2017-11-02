@@ -189,22 +189,24 @@ class SimData:
 		#initialize state variables
 		married0=self.married0.copy()
 		nkids0=self.nkids0.copy()
-		#wage0=np.zeros((self.N,1))
-
-		#Re-compute wages (don't observe w on those unemployed)
+		
 		hours=np.zeros(self.N)
 		childcare=np.zeros(self.N)
 		self.change_util(self.param,self.N,self.x_w,self.x_m,self.x_k,self.passign,
 			nkids0,married0,hours,childcare,self.agech,self.hours_p,
 			self.hours_f,self.wr,self.cs,self.ws)
-		wage_init_dic = self.model.wage_init()
-		epsilon0= wage_init_dic['epsilon']
+		
+		shocks_dic = self.model.shocks_init()
+		epsilon0= shocks_dic['epsilon0']
+		epsilon_theta0= shocks_dic['epsilon_theta0']
+
+		wage_init_dic = self.model.wage_init(epsilon0)
 		wage0= wage_init_dic['wage']
+		theta0 = self.model.theta_init(epsilon_theta0)
 		free0=self.model.q_prob()
 		price0=self.model.price_cc()
-		theta0=self.model.theta_init()
-		
-	
+				
+		#Generating data
 		for periodt in range(0,n_periods):
 			
 			wage_matrix[:,periodt]=wage0.copy()

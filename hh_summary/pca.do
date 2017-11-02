@@ -133,4 +133,6 @@ twoway (connected betas year,msymbol(circle) mlcolor(blue) mfcolor(white)) /*
 
 graph export "$results/pca.pdf", as(pdf) replace
 
+restore
+
 

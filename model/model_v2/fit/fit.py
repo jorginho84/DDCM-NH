@@ -45,30 +45,29 @@ import estimate as estimate
 
 np.random.seed(1)
 
-betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv12_v1_e3.npy')
+betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv14_v1_e3.npy')
+
+#Number of periods where all children are less than or equal to 18
+nperiods = 8
 
 #Utility function
-eta=0.35
-alphap=-0.025
+eta=betas_nelder[0]
+alphap=betas_nelder[1]
 alphaf=betas_nelder[2]
-
-
 
 #wage process
 wagep_betas=np.array([betas_nelder[3],betas_nelder[4],betas_nelder[5],
 	betas_nelder[6],betas_nelder[7],betas_nelder[8],betas_nelder[9]]).reshape((7,1))
 
-
 #Production function [young,old]
 gamma1= betas_nelder[10]
 gamma2= betas_nelder[11]
 gamma3= betas_nelder[12]
-tfp=0.25
-sigmatheta=0
+tfp=betas_nelder[13]
+sigma2theta=betas_nelder[14]
 
-#Measurement system: three measures for t=2, one for t=5
-kappas=[[betas_nelder[14],betas_nelder[15],betas_nelder[16],betas_nelder[17]],
-[betas_nelder[18],betas_nelder[19],betas_nelder[20],betas_nelder[21]]]
+#initial theta
+rho_theta_epsilon = betas_nelder[15]
 
 #First measure is normalized. starting arbitrary values
 #All factor loadings are normalized
@@ -107,7 +106,7 @@ kidsp_betas=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount
 
 
 #Minimum set of x's (for interpolation)
-x_wmk=x_df[  ['age_ra', 'age_ra2', 'd_HS2', 'age_t0','age_t02','constant'] ].values
+x_wmk=x_df[  ['age_ra', 'age_ra2', 'd_HS2','constant'] ].values
 
 #Data for treatment status
 passign=x_df[ ['d_RA']   ].values
@@ -141,10 +140,9 @@ married0=x_df[ ['d_marital_2']   ].values
 agech0=x_df[['age_t0']].values
 
 #Defines the instance with parameters
-param0=util.Parameters(alphap, alphaf, eta, gamma1, gamma2, 
-	gamma3,tfp,sigmatheta,
-	wagep_betas, marriagep_betas, kidsp_betas, eitc_list,afdc_list,snap_list,
-	cpi,lambdas,kappas,pafdc,psnap,mup)
+param0=util.Parameters(alphap,alphaf,eta,gamma1,gamma2,gamma3,
+	tfp,sigma2theta,rho_theta_epsilon,wagep_betas, marriagep_betas, kidsp_betas, eitc_list,
+	afdc_list,snap_list,cpi,lambdas,pafdc,psnap,mup)
 
 
 
@@ -178,7 +176,7 @@ wr=1
 cs=1
 ws=1
 
-output_ins=estimate.Estimate(param0,x_w,x_m,x_k,x_wmk,passign,agech0,nkids0,
+output_ins=estimate.Estimate(nperiods,param0,x_w,x_m,x_k,x_wmk,passign,agech0,nkids0,
 	married0,D,dict_grid,M,N,moments_vector,var_cov,hours_p,hours_f,
 	wr,cs,ws)
 
@@ -191,7 +189,23 @@ model  = util.Utility(param0,N,x_w,x_m,x_k,passign,
 
 #Obtaining emax instances, samples, and betas for M samples
 np.random.seed(1)
+
+print ''
+print ''
+print 'Getting a dictionary of emax'
+start_emax = time.time()
+print ''
+print ''
+
 emax_instance = output_ins.emax(param0,model)
+
+time_emax=time.time() - start_emax
+print ''
+print ''
+print 'Done with emax in:'
+print("--- %s seconds ---" % (time_emax))
+print ''
+print ''
 choices = output_ins.samples(param0,emax_instance,model)
 dic_betas = output_ins.aux_model(choices)
 
@@ -201,9 +215,8 @@ beta_childcare=np.mean(dic_betas['beta_childcare'],axis=0) #1x1
 beta_hours1=np.mean(dic_betas['beta_hours1'],axis=0) #1x1
 beta_hours2=np.mean(dic_betas['beta_hours2'],axis=0) #1x1
 beta_wagep=np.mean(dic_betas['beta_wagep'],axis=1) # 6 x 1
-beta_kappas_t2=np.mean(dic_betas['beta_kappas_t2'],axis=1) #4 x 3
-beta_kappas_t5=np.mean(dic_betas['beta_kappas_t5'],axis=1) #4 x 1
-beta_inputs=np.mean(dic_betas['beta_inputs'],axis=1) #4 x 1
+beta_inputs=np.mean(dic_betas['beta_inputs'],axis=1) #5 x 1
+betas_init_prod=np.mean(dic_betas['betas_init_prod'],axis=1) #1 x 1
 
 #################################################################################
 #################################################################################
@@ -255,14 +268,13 @@ se_ate_cc_obs=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemou
 
 #Simulated: only during NH
 ate_hours_2 = [np.mean(ate_hours[0]),np.mean(ate_hours[1])]
-ate_cc_2 = ate_cc[0] #period vs and 4
-ate_inc_2 = (np.mean(ate_inc[0])+np.mean(ate_inc[1])+np.mean(ate_inc[2]))/(3*1000)
+ate_cc_2 = ate_cc[1]
 
 #The list of statistics
-sim_list = [ate_hours_2[0],ate_hours_2[1],ate_cc_2,ate_inc_2]
-obs_list = [ate_hours_obs_2[0,0],ate_hours_obs_2[1,0],ate_cc_obs[0,0],ate_inc_obs_2[0,0]/1000]
-obs_list_se = [se_ate_hours_obs_2[0,0],se_ate_hours_obs_2[1,0],se_ate_cc_obs[0,0],se_ate_inc_obs_2[0,0]/1000]
-var_list = [r'Hours worked ($t=0$)', r'Hours worked ($t=1$)', r'Child care ($t=1$)',r'Consumption pc/1000 ($t=1$)']
+sim_list = [ate_hours_2[0],ate_hours_2[1],ate_cc_2,ate_inc[1]]
+obs_list = [ate_hours_obs_2[0,0],ate_hours_obs_2[1,0],ate_cc_obs[0,0],ate_inc_obs_2[0,0]]
+obs_list_se = [se_ate_hours_obs_2[0,0],se_ate_hours_obs_2[1,0],se_ate_cc_obs[0,0],se_ate_inc_obs_2[0,0]]
+var_list = [r'Hours worked ($t=0$)', r'Hours worked ($t=1$)', r'Child care ($t=1$)',r'Log consumption ($t=1$)']
 
 #writing the table
 with open('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/fit/table_validation.tex','w') as f:

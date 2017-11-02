@@ -88,7 +88,7 @@ kidsp_betas=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount
 
 
 #Minimum set of x's (for interpolation)
-x_wmk=x_df[  ['age_ra', 'age_ra2', 'd_HS2', 'age_t0','age_t02','constant'] ].values
+x_wmk=x_df[  ['age_ra', 'age_ra2', 'd_HS2', 'constant'] ].values
 
 #Data for treatment status
 passign=x_df[ ['d_RA']   ].values

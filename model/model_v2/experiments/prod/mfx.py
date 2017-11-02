@@ -34,42 +34,37 @@ import estimate as estimate
 
 np.random.seed(1)
 
-betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv12_v1_e3.npy')
+betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv14_v1_e3.npy')
+
+#Number of periods where all children are less than or equal to 18
+nperiods = 8
+
 
 #Utility function
 eta=betas_nelder[0]
 alphap=betas_nelder[1]
 alphaf=betas_nelder[2]
 
-
-
 #wage process
 wagep_betas=np.array([betas_nelder[3],betas_nelder[4],betas_nelder[5],
 	betas_nelder[6],betas_nelder[7],betas_nelder[8],betas_nelder[9]]).reshape((7,1))
-
 
 #Production function [young,old]
 gamma1= betas_nelder[10]
 gamma2= betas_nelder[11]
 gamma3= betas_nelder[12]
 tfp=betas_nelder[13]
-sigmatheta=0
+sigma2theta=betas_nelder[14]
 
-#Measurement system: three measures for t=2, one for t=5
-kappas=[[betas_nelder[14],betas_nelder[15],betas_nelder[16],betas_nelder[17]],
-[betas_nelder[18],betas_nelder[19],betas_nelder[20],betas_nelder[21]]]
+#initial theta
+rho_theta_epsilon = betas_nelder[15]
 
 #First measure is normalized. starting arbitrary values
 #All factor loadings are normalized
 lambdas=[1,1]
 
-
-
-#Weibull distribution of cc prices
-scalew=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/aux_model/scale.csv').values
-shapew=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/aux_model/shape.csv').values
-q=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/aux_model/q_prob.csv').values
-
+#Child care price
+mup = 750
 
 #Probability of afdc takeup
 pafdc=.60
@@ -102,7 +97,7 @@ kidsp_betas=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount
 
 
 #Minimum set of x's (for interpolation)
-x_wmk=x_df[  ['age_ra', 'age_ra2', 'd_HS2', 'age_t0','age_t02','constant'] ].values
+x_wmk=x_df[  ['age_ra', 'age_ra2', 'd_HS2', 'constant'] ].values
 
 #Data for treatment status
 passign=x_df[ ['d_RA']   ].values
@@ -136,10 +131,9 @@ married0=x_df[ ['d_marital_2']   ].values
 agech0=x_df[['age_t0']].values
 
 #Defines the instance with parameters
-param0=util.Parameters(alphap, alphaf, eta, gamma1, gamma2, 
-	gamma3,tfp,sigmatheta,
-	wagep_betas, marriagep_betas, kidsp_betas, eitc_list,afdc_list,snap_list,
-	cpi,q,scalew,shapew,lambdas,kappas,pafdc,psnap)
+param0=util.Parameters(alphap,alphaf,eta,gamma1,gamma2,gamma3,
+	tfp,sigma2theta,rho_theta_epsilon,wagep_betas, marriagep_betas, kidsp_betas, eitc_list,
+	afdc_list,snap_list,cpi,lambdas,pafdc,psnap,mup)
 
 
 
@@ -173,7 +167,7 @@ wr=1
 cs=1
 ws=1
 
-output_ins=estimate.Estimate(param0,x_w,x_m,x_k,x_wmk,passign,agech0,nkids0,
+output_ins=estimate.Estimate(nperiods,param0,x_w,x_m,x_k,x_wmk,passign,agech0,nkids0,
 	married0,D,dict_grid,M,N,moments_vector,var_cov,hours_p,hours_f,
 	wr,cs,ws)
 
@@ -201,14 +195,14 @@ lt=148-eh #nobody in cc
 d_cc = np.zeros(N) #nobody in ccc
 
 #Computing mfx
-theta_th = np.zeros((N,9)) #shocked
-theta_0 = np.zeros((N,9))
+theta_th = np.zeros((N,nperiods)) #shocked
+theta_0 = np.zeros((N,nperiods))
 theta_0[:,0] = np.mean(theta_matrix[:,0,:],axis=1) #initial value
 theta_th[:,0] = theta_0[:,0].copy()
 
 #SD units
-sd_matrix = np.zeros((9,M))
-for k in range(9):
+sd_matrix = np.zeros((nperiods,M))
+for k in range(nperiods):
 	for j in range(M):
 		sd_matrix[k,j] = np.std(np.log(theta_matrix[:,k,j]),axis=0)
 sds = np.mean(sd_matrix,axis=1)
@@ -217,12 +211,12 @@ sds = np.mean(sd_matrix,axis=1)
 shock_th = theta_0[:,0] + np.exp(np.zeros(N)+0.3)
 
 #theta with no shocks
-for k in range(8):
+for k in range(nperiods - 1):
 	#no shocks
 	theta_0[:,k+1] = np.exp(gamma1*np.log(theta_0[:,k]) + gamma2*np.log(ec) +gamma3*np.log(lt))
 
 #Responses
-for k in range(8):
+for k in range(nperiods - 1):
 	if k==0:
 		theta_th[:,k+1] = np.exp(gamma1*np.log(shock_th) + gamma2*np.log(ec) +gamma3*np.log(lt))
 	else:
@@ -247,7 +241,7 @@ print 'impact of unemployment shock', mfx_t
 
 
 ##The graph (shock on theta)
-x = np.array(range(0,9))
+x = np.array(range(0,nperiods))
 fig, ax=plt.subplots()
 ax.plot(x,ate_theta, color='k',zorder=1,linewidth=3)
 ax.set_ylabel(r'Impact on $\ln(\theta_{t+1})$ (in $\sigma$s)', fontsize=14)

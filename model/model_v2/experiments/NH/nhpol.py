@@ -35,41 +35,35 @@ np.random.seed(1)
 
 betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv12_v1_e3.npy')
 
+#Number of periods where all children are less than or equal to 18
+nperiods = 8
 
 #Utility function
-eta=betas_nelder[0]
-alphap=betas_nelder[1]
-alphaf=betas_nelder[2]
-
-
+eta=1.5
+alphap=-0.08
+alphaf=-0.1
 
 #wage process
 wagep_betas=np.array([betas_nelder[3],betas_nelder[4],betas_nelder[5],
 	betas_nelder[6],betas_nelder[7],betas_nelder[8],betas_nelder[9]]).reshape((7,1))
 
-
 #Production function [young,old]
-gamma1= betas_nelder[10]
-gamma2= betas_nelder[11]
-gamma3= betas_nelder[12]
-tfp=betas_nelder[13]
-sigmatheta=0
+gamma1= 0.6
+gamma2= 0.08
+gamma3= 0.05
+tfp=0.555
+sigmatheta=2.6**.5
 
-#Measurement system: three measures for t=2, one for t=5
-kappas=[[betas_nelder[14],betas_nelder[15],betas_nelder[16],betas_nelder[17]],
-[betas_nelder[18],betas_nelder[19],betas_nelder[20],betas_nelder[21]]]
-
+#initial theta
+deltas = np.array([0.9,0,1,-.8,.05])
+rho_theta_epsilon = -0.03
 
 #First measure is normalized. starting arbitrary values
 #All factor loadings are normalized
 lambdas=[1,1]
 
-
-#Weibull distribution of cc prices
-scalew=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/aux_model/scale.csv').values
-shapew=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/aux_model/shape.csv').values
-q=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/aux_model/q_prob.csv').values
-
+#Child care price
+mup = 750
 
 #Probability of afdc takeup
 pafdc=.60
@@ -102,7 +96,7 @@ kidsp_betas=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount
 
 
 #Minimum set of x's (for interpolation)
-x_wmk=x_df[  ['age_ra', 'age_ra2', 'd_HS2', 'age_t0','age_t02','constant'] ].values
+x_wmk=x_df[  ['age_ra', 'age_ra2', 'd_HS2', 'constant'] ].values
 
 #Data for treatment status
 passign=x_df[ ['d_RA']   ].values
@@ -136,10 +130,9 @@ married0=x_df[ ['d_marital_2']   ].values
 agech0=x_df[['age_t0']].values
 
 #Defines the instance with parameters
-param0=util.Parameters(alphap, alphaf, eta, gamma1, gamma2, 
-	gamma3,tfp,sigmatheta,
-	wagep_betas, marriagep_betas, kidsp_betas, eitc_list,afdc_list,snap_list,
-	cpi,q,scalew,shapew,lambdas,kappas,pafdc,psnap)
+param0=util.Parameters(alphap,alphaf,eta,gamma1,gamma2,gamma3,
+	tfp,sigmatheta, deltas,rho_theta_epsilon,wagep_betas, marriagep_betas, kidsp_betas, eitc_list,
+	afdc_list,snap_list,cpi,lambdas,pafdc,psnap,mup)
 
 
 ###Auxiliary estimates###
@@ -173,7 +166,7 @@ models_list = [[0,0,1], [0,1,1], [1,0,1],
 nperiods_cc = 3
 nperiods_ct = 3
 nperiods_emp = 3
-nperiods_theta = 9
+nperiods_theta = 8
 
 #Young until periodt=period_y
 period_y = 2
@@ -182,7 +175,7 @@ period_y = 2
 dics = []
 choices_list = []
 for j in range(len(models_list)):
-	output_ins=estimate.Estimate(param0,x_w,x_m,x_k,x_wmk,passign,agech0,nkids0,
+	output_ins=estimate.Estimate(nperiods,param0,x_w,x_m,x_k,x_wmk,passign,agech0,nkids0,
 		married0,D,dict_grid,M,N,moments_vector,var_cov,hours_p,hours_f,
 		models_list[j][0],models_list[j][1],models_list[j][2])
 
@@ -207,7 +200,7 @@ for j in range(len(models_list)):
 
 
 outcome_list = [r'Consumption (US\$)', 'Part-time', 'Full-time', 'Child care',
-r'$\ln \theta$ ($\sigma$s)']
+r'$\theta_t$ ($\sigma$s)']
 
 output_list = ['Consumption', 'Part-time', 'Full-time', 'CC', 'Theta']
 

@@ -23,14 +23,14 @@ import time
 import openpyxl
 
 #Betas and var-cov matrix
-betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv12_v1_e3.npy')
-var_cov=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/estimation/ses_modelv12_e3.npy')
+betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv14_v1_e3.npy')
+var_cov=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/estimation/ses_modelv14_e3.npy')
 se_vector  = np.sqrt(np.diagonal(var_cov))
 
 #Utility function
-eta_opt=betas_nelder[0]
-alphap_opt=betas_nelder[1]
-alphaf_opt=betas_nelder[2]
+eta=betas_nelder[0]
+alphap=betas_nelder[1]
+alphaf=betas_nelder[2]
 
 sigma_eta_opt=se_vector[0]
 sigma_alphap_opt=se_vector[1]
@@ -49,18 +49,17 @@ gamma1= betas_nelder[10]
 gamma2= betas_nelder[11]
 gamma3= betas_nelder[12]
 tfp=betas_nelder[13]
+sigma2theta=betas_nelder[14]
 
 sigma_gamma1=se_vector[10]
 sigma_gamma2=se_vector[11]
 sigma_gamma3=se_vector[12]
 sigma_tfp=se_vector[13]
+sigma_sigma2theta=se_vector[14]
 
-#Measurement system: three measures for t=2, one for t=5
-kappas=[[betas_nelder[14],betas_nelder[15],betas_nelder[16],betas_nelder[17]],
-[betas_nelder[18],betas_nelder[19],betas_nelder[20],betas_nelder[21]]]
+rho_theta_epsilon = betas_nelder[15]
+sigma_rho_theta_epsilon = se_vector[15]
 
-sigma_kappas=[[se_vector[14],se_vector[15],se_vector[16],se_vector[17]],
-[se_vector[18],se_vector[19],se_vector[20],se_vector[21]]]
 
 #First measure is normalized. starting arbitrary values
 lambdas=[1,1]
@@ -69,7 +68,7 @@ lambdas=[1,1]
 
 ###########.TEX table##################
 
-utility_list_beta = [alphap_opt,alphaf_opt,eta_opt]
+utility_list_beta = [alphap,alphaf,eta]
 utility_list_se = [sigma_alphap_opt,sigma_alphaf_opt,sigma_eta_opt]
 utility_names = [r'Preference for part-time work ($\alpha^p$)', 
 r'Preference for full-time work ($\alpha^f$)',
@@ -83,18 +82,13 @@ sigma_wagep_betas[2,0],sigma_wagep_betas[3,0],sigma_wagep_betas[4,0],
 sigma_wagep_betas[6,0],sigma_wagep_betas[5,0]]
 wage_names = ['Age', r'Age$^2$', 'High school', r'$\log(t)$','Constant', 'AR(1) error term' ,'Variance of error term']
 
-prod_list_beta = [gamma1,gamma2,gamma3,tfp]
-prod_list_se  = [sigma_gamma1,sigma_gamma2,sigma_gamma3,sigma_tfp]
+prod_list_beta = [gamma1,gamma2,gamma3,tfp,sigma2theta,rho_theta_epsilon]
+prod_list_se  = [sigma_gamma1,sigma_gamma2,sigma_gamma3,sigma_tfp,sigma_sigma2theta,sigma_rho_theta_epsilon]
 prod_names = [r'Lagged human capital ($\gamma_1$)', r'Consumption ($\gamma_2$)',
-r'Time at home ($\gamma_3$)', r'Child care TFP ($\mu$)']
+r'Time at home ($\gamma_3$)', r'Child care TFP ($\mu$)', r'Variance',r'$Corr(\varepsilon_0^{\theta},\varepsilon_0^w)$']
 
-ssrs2_list_beta = kappas[0]
-ssrs2_list_se = sigma_kappas[0]
-ssrs_names = [r'$\kappa_1$',r'$\kappa_2$',r'$\kappa_3$',r'$\kappa_4$']
 
-ssrs5_list_beta = kappas[1]
-ssrs5_list_se = sigma_kappas[1]
-
+#This is for the paper
 with open('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/estimation/estimates.tex','w') as f:
 	f.write(r'\begin{tabular}{lcccc}'+'\n')
 	f.write(r'\hline' + '\n')
@@ -117,23 +111,12 @@ with open('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model
 		f.write(prod_names[j]+r' &  &  '+ '{:04.3f}'.format(prod_list_beta[j]) +
 			r' &  & '+ '{:04.3f}'.format(prod_list_se[j])+r' \\' + '\n')
 
-	f.write(r' &       &       &       &  \\' + '\n')
-	f.write(r'\emph{D. SSRS ($t=2$)} &       &       &       &  \\' + '\n')
-	for j in range(len(ssrs2_list_beta)):
-		f.write(ssrs_names[j]+r' &  &  '+ '{:04.3f}'.format(ssrs2_list_beta[j]) +
-			r' &  & '+ '{:04.3f}'.format(ssrs2_list_se[j])+r' \\' + '\n')
-
-	f.write(r' &       &       &       &  \\' + '\n')
-	f.write(r'\emph{E. SSRS ($t=5$)} &       &       &       &  \\' + '\n')
-	for j in range(len(ssrs5_list_beta)):
-		f.write(ssrs_names[j]+r' &  &  '+ '{:04.3f}'.format(ssrs5_list_beta[j]) +
-			r' &  & '+ '{:04.3f}'.format(ssrs5_list_se[j])+r' \\' + '\n')
-
 	f.write(r'\hline'+'\n')
 	f.write(r'\end{tabular}' + '\n')
 	f.close()
 
 
+#This is for the slides
 with open('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/estimation/estimates_uti_prod_slides.tex','w') as f:
 	f.write(r'\begin{tabular}{lcccc}'+'\n')
 	f.write(r'\hline' + '\n')

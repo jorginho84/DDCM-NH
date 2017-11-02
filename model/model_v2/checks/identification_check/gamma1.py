@@ -1,11 +1,11 @@
 
 #build a grid around parameter value
 lenght = 0.05
-size_grid = 8
-max_p = 0.99
-min_p = 0.7
+size_grid = 6
+max_p = 0.75
+min_p = 0.6
 p_list = np.linspace(min_p,max_p,size_grid)
-obs_moment = moments_vector[18,0].copy()
+obs_moment = moments_vector[10,0].copy()
 
 #draft: try updating a parameter
 target_moment = np.zeros((size_grid,))
@@ -27,8 +27,8 @@ plot2=ax.plot(p_list,np.full((size_grid,),obs_moment),'b-.',label='Observed',alp
 plt.setp(plot1,linewidth=3)
 plt.setp(plot2,linewidth=3)
 ax.legend()
-ax.set_ylabel(r'$Corr(SSRS_2, SSRS_5)$')
-ax.set_xlabel(r'Self-productivity ($\gamma_1$)')
+ax.set_ylabel(r'$Corr(PCA_2, PCA_5)$')
+ax.set_xlabel(r'Self-productivity ($\gamma_2$)')
 ax.spines['right'].set_visible(False)
 ax.spines['top'].set_visible(False)
 ax.yaxis.set_ticks_position('left')

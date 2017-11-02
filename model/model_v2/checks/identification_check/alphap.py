@@ -1,9 +1,9 @@
 
 #build a grid around parameter value
 lenght = 0.05
-size_grid = 8
-max_p = -0.01
-min_p = -0.05
+size_grid = 6
+max_p = 0
+min_p = -0.15
 p_list = np.linspace(min_p,max_p,size_grid)
 obs_moment = moments_vector[1,0].copy()
 
@@ -16,6 +16,7 @@ for i in range(size_grid):
 	choices=output_ins.samples(param0,emax_instance,model)
 	dic_betas=output_ins.aux_model(choices)
 	target_moment[i] = np.mean(dic_betas['beta_hours1'],axis=0)
+	
 	
 #Back to original
 execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/load_param.py')

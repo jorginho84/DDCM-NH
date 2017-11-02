@@ -18,6 +18,7 @@ import itertools
 from numba import jit
 import sys, os
 from scipy import stats
+import gc
 from scipy import interpolate
 from pathos.multiprocessing import ProcessPool
 #sys.path.append("C:\\Users\\Jorge\\Dropbox\\Chicago\\Research\\Human capital and the household\]codes\\model")
@@ -116,7 +117,7 @@ class Emaxt:
 		price0=self.model.price_cc()		
 		
 		
-		
+		#Choice T-1 loop
 		for jt in range(0,J):
 			if jt<=2:
 				if jt==0:
@@ -142,8 +143,8 @@ class Emaxt:
 			u_vec=np.zeros((ngrid,self.D,J))
 
 			#Income and consumption at T-1
-			dincome0=self.model.dincomet(7,hours,wage0,married0,nkids0)['income']
-			consumption0=self.model.consumptiont(7,hours,childcare,dincome0,
+			dincome0=self.model.dincomet(bigT-1,hours,wage0,married0,nkids0)['income']
+			consumption0=self.model.consumptiont(bigT-1,hours,childcare,dincome0,
 					married0,nkids0,wage0,free0,price0)
 			
 
@@ -170,7 +171,7 @@ class Emaxt:
 				price_t1=self.model.price_cc()
 				#using t-1 income to get theta_T
 				
-				theta_t1=self.model.thetat(periodt,theta0,hours,childcare,consumption0) #theta at t+1 uses inputs at t
+				theta_t1=self.model.thetat(periodt-1,theta0,hours,childcare,consumption0) #theta at t+1 uses inputs at t
 
 				#future (at T) possible decision
 				if j<=2:
@@ -181,7 +182,7 @@ class Emaxt:
 					elif j==2:
 						hours_aux2==self.hours_f
 					hours_t1=np.full(ngrid,hours_aux2,dtype=float)
-					childcare_t1=np.zeros((ngrid,1))
+					childcare_t1=np.zeros(ngrid)
 				else:
 					if j==3:
 						hours_aux2=0
@@ -190,7 +191,7 @@ class Emaxt:
 					elif j==5:
 						hours_aux2==self.hours_f
 					hours_t1=np.full(ngrid,hours_aux2,dtype=float)
-					childcare_t1=np.ones((ngrid,1))				
+					childcare_t1=np.ones(ngrid)				
 
 				self.change_util(self.param,ngrid,x_w,x_m,x_k,
 					passign,nkids_t1,married_t1,hours_t1,childcare,agech,
@@ -198,12 +199,16 @@ class Emaxt:
 				
 				#This is the terminal value!
 				u_vec[:,i,j]=self.model.simulate(bigT,wage_t1,free_t1,price_t1,theta_t1) #Last period is T=8. Terminal value=0
-			
+
+				
+
 
 			#obtaining max over choices by random schocks: young vs old
 			max_ut=np.zeros((ngrid,self.D))
 			max_ut[agech<=6,:]=np.max(u_vec[agech<=6,:,:],axis=2) #young
 			max_ut[agech>6,:]=np.max(u_vec[agech>6,:,0:3],axis=2) #old
+
+			
 
 
 			#This is the emax for a given (for a given at choice T-1)
@@ -318,8 +323,8 @@ class Emaxt:
 				childcare=np.ones(ngrid)
 
 			#I get these to compute theta_t1
-			dincome0=self.model.dincomet(periodt,hours,wage0,married0,nkids0)['income']
-			consumption0=self.model.consumptiont(periodt,hours,childcare,dincome0,
+			dincome0=self.model.dincomet(periodt-1,hours,wage0,married0,nkids0)['income']
+			consumption0=self.model.consumptiont(periodt-1,hours,childcare,dincome0,
 					married0,nkids0,wage0,free0,price0)
 			
 
@@ -339,16 +344,16 @@ class Emaxt:
 					self.hours_p,self.hours_f,self.wr,self.cs,self.ws)
 				
 				
-				married_t1=self.model.marriaget(periodt+1,married0)
+				married_t1=self.model.marriaget(periodt,married0)
 				married_t1=np.reshape(married_t1,(ngrid,1))
-				nkids_t1=self.model.kidst(periodt+1,np.reshape(nkids0,(ngrid,1)),
+				nkids_t1=self.model.kidst(periodt,np.reshape(nkids0,(ngrid,1)),
 					married0)+nkids0 #previous kids + if they have a kid next period
 				epsilon_t1=self.model.epsilon(epsilon_1)
-				wage_t1=self.model.waget(periodt+1,epsilon_t1)
+				wage_t1=self.model.waget(periodt,epsilon_t1)
 				free_t1=self.model.q_prob()
 				price_t1=self.model.price_cc()
 				#income at t-1 to compute theta_t
-				theta_t1=self.model.thetat(periodt,theta0,hours,childcare,consumption0) #theta at t+1 uses inputs at t
+				theta_t1=self.model.thetat(periodt-1,theta0,hours,childcare,consumption0) #theta at t+1 uses inputs at t
 
 				# Possible decision at t
 				if j<=2:
@@ -377,7 +382,7 @@ class Emaxt:
 					self.hours_p,self.hours_f,self.wr,self.cs,self.ws)
 
 				#Current-period utility at t
-				u_vec[:,i,j]=self.model.simulate(periodt+1,wage_t1,free_t1,price_t1,theta_t1) 
+				u_vec[:,i,j]=self.model.simulate(periodt,wage_t1,free_t1,price_t1,theta_t1) 
 
 				#getting next-period already computed emaxt+1
 				data_int_ex=np.concatenate(( np.reshape(np.log(theta_t1),(ngrid,1)), 
@@ -396,12 +401,16 @@ class Emaxt:
 				emax_t1_choice=emax_inst_choice.int_values(data_int_ex,betas_t1_choice)
 
 				#Value function at t.
-				u_vec[:,i,j]=u_vec[:,i,j]+0.95*emax_t1_choice
+				u_vec[:,i,j]=u_vec[:,i,j]+0.86*emax_t1_choice
+
+				
 
 			#obtaining max over choices by random shock/choice at t-1. Young vs old
 			max_ut=np.zeros((ngrid,self.D))
 			max_ut[agech<=6,:]=np.max(u_vec[agech<=6,:,:],axis=2) #young
 			max_ut[agech>6,:]=np.max(u_vec[agech>6,:,0:3],axis=2) #old
+
+			
 
 			#This is the emax for a given choice at t-1
 			av_max_ut=np.average(max_ut,axis=1)
@@ -439,21 +448,63 @@ class Emaxt:
 		"""
 		Recursively computes a series of interpolating instances
 		Generates a dictionary with the emax instances
-		nt: number of periods to compute the emax (3 in general)
 
-		Also, yields the emax "true" values (one array)
+		There is a sequence of Emax for each child age (0-11)
+		
 
 		"""	
-
+		
 		
 		def emax_gen(j):
+			
 			for t in range(j,0,-1):
+				
+				if t==j:#last period
+					emax_bigt_ins=self.emax_bigt(j)
+					
+					
+					emax_dic={'emax'+str(t): emax_bigt_ins[0]}
+					emax_values={'emax'+str(t): emax_bigt_ins[1]}
+				elif t==j-1: #at T-1
+					emax_t1_ins=self.emax_t(t,j,emax_bigt_ins[0])
+					
+					
+					emax_dic['emax'+str(t)]=emax_t1_ins[0]
+					emax_values['emax'+str(t)]=emax_t1_ins[1]
+					
+				else:
+					emax_t1_ins=self.emax_t(t,j,emax_t1_ins[0])
+					
+					
+					emax_dic['emax'+str(t)]=emax_t1_ins[0]
+					emax_values['emax'+str(t)]=emax_t1_ins[1]
+
+			return [emax_dic,emax_values]
+
+		pool = ProcessPool(nodes=10)
+
+		#7: old child (11 years old) solves for 7 emax 
+		#19: young child (0 years old) solves for 18 emax
+		list_emax = pool.map(emax_gen,range(8,18))
+		pool.close()
+		pool.join()
+		pool.clear()
+		
+		
+		
+		
+		"""
+		list_emax = []
+		for j in range(7,19):
+			print 'Im in emax j ', j
+			
+			for t in range(j,0,-1):
+				print 'In period t ', t
+				
 				if t==j:#last period
 					emax_bigt_ins=self.emax_bigt(j)
 					emax_dic={'emax'+str(t): emax_bigt_ins[0]}
 					emax_values={'emax'+str(t): emax_bigt_ins[1]}
-					
-
 				elif t==j-1: #at T-1
 					emax_t1_ins=self.emax_t(t,j,emax_bigt_ins[0])
 					emax_dic['emax'+str(t)]=emax_t1_ins[0]
@@ -464,34 +515,13 @@ class Emaxt:
 					emax_dic['emax'+str(t)]=emax_t1_ins[0]
 					emax_values['emax'+str(t)]=emax_t1_ins[1]
 
-			return [emax_dic,emax_values]
-
-		pool = ProcessPool(nodes=10)
-		list_emax = pool.map(emax_gen,range(8,18))
+			list_emax.append([emax_dic,emax_values])
 
 		"""
-		#Computing the emax instances
-		for nt in range(8,18): #for 10 different ages at baseline
-			for t in range(nt,0,-1):
-				if t==nt:#last period
-					emax_bigt_ins=self.emax_bigt(nt)
-					emax_dic={'emax'+str(t): emax_bigt_ins[0]}
-					emax_values={'emax'+str(t): emax_bigt_ins[1]}
-					
+		
+		
 
-				elif t==nt-1: #at T-1
-					emax_t1_ins=self.emax_t(t,nt,emax_bigt_ins[0])
-					emax_dic['emax'+str(t)]=emax_t1_ins[0]
-					emax_values['emax'+str(t)]=emax_t1_ins[1]
-					
-				else:
-					emax_t1_ins=self.emax_t(t,nt,emax_t1_ins[0])
-					emax_dic['emax'+str(t)]=emax_t1_ins[0]
-					emax_values['emax'+str(t)]=emax_t1_ins[1]
-			
-			list_emax.append([emax_dic,emax_values])
-		"""	
-
+		
 		return list_emax
 
 

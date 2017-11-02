@@ -77,25 +77,28 @@ class SEs:
 		
 		#wage process
 		wagep_betas=np.array([bs[3],bs[4],bs[5],bs[6],
-			bs[7],bs[8],bs[9]]).reshape((7,1))
+			bs[7],np.exp(bs[8]),bs[9]]).reshape((7,1))
 
 		#Production function [young[cc0,cc1],old]
 		gamma1=bs[10]
 		gamma2=bs[11]
 		gamma3=bs[12]
 		tfp=bs[13]
-		sigmatheta=0
+		sigma2theta=np.exp(bs[14])
+		
+		def sym(a):
+			return ((1/(1+np.exp(-a))) - 0.5)*2
 
-		#Measurement system: three measures for t=2, one for t=5
-		kappas=[[bs[14],bs[15],bs[16],bs[17]],[bs[18],bs[19],bs[20],bs[21]]]
+		rho_theta_epsilon =  sym(bs[15])
+
 		lambdas=[1,1]
 
 
 		#Re-defines the instance with parameters 
-		param0=util.Parameters(alphap, alphaf, eta,
-			gamma1, gamma2,gamma3,tfp,sigmatheta,
-			wagep_betas, marriagep_betas, kidsp_betas, eitc_list,
-			afdc_list,snap_list,cpi,lambdas,kappas,pafdc,psnap,mup)
+		param0=util.Parameters(alphap,alphaf,eta,gamma1,gamma2,gamma3,
+			tfp,sigma2theta,rho_theta_epsilon,wagep_betas, marriagep_betas,
+			kidsp_betas, eitc_list,afdc_list,snap_list,cpi,lambdas,pafdc,psnap,mup)
+
 		return param0 
 
 	def emax(self,param0,model):
@@ -121,14 +124,13 @@ class SEs:
 		beta_childcare=np.mean(dic_betas['beta_childcare'],axis=0) #1x1
 		beta_hours1=np.mean(dic_betas['beta_hours1'],axis=0) #1x1
 		beta_hours2=np.mean(dic_betas['beta_hours2'],axis=0) #1x1
-		beta_kappas_t2=np.mean(dic_betas['beta_kappas_t2'],axis=1) #4 x 1
-		beta_kappas_t5=np.mean(dic_betas['beta_kappas_t5'],axis=1) #4 x 1
 		beta_wagep=np.mean(dic_betas['beta_wagep'],axis=1) # 7 x 1
-		beta_inputs=np.mean(dic_betas['beta_inputs'],axis=1) #4 x 1
+		beta_inputs=np.mean(dic_betas['beta_inputs'],axis=1) #5 x 1
+		betas_init_prod=np.mean(dic_betas['betas_init_prod'],axis=1) #1 x 1
 		
 
 		return [beta_childcare,beta_hours1,beta_hours2,beta_wagep,
-		beta_kappas_t2,beta_kappas_t5, beta_inputs]
+		beta_inputs, betas_init_prod]
 
 	def binding(self,psi):
 		"""
@@ -187,7 +189,7 @@ class SEs:
 		for s in range(S):
 			psi_low = psi.copy()
 			psi_high = psi.copy()
-			psi_low[s] = psi[s].copy()
+			psi_low[s] = psi[s]
 			psi_high[s] = psi[s] + eps*psi[s]
 
 			#Computing betas

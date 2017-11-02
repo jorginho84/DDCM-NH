@@ -6,6 +6,7 @@ the parameters of the structural model via General Indirect Inference.
 from __future__ import division #omit for python 3.x
 import numpy as np
 import pandas as pd
+import gc
 from numba import jit
 import sys, os
 from scipy import stats
@@ -22,11 +23,11 @@ import simdata as simdata
 
 
 class Estimate:
-	def __init__(self,param0,x_w,x_m,x_k,x_wmk,passign,agech0,
+	def __init__(self,nperiods,param0,x_w,x_m,x_k,x_wmk,passign,agech0,
 		nkids0,married0,D,dict_grid,M,N,moments_vector,w_matrix,hours_p,hours_f,
 		wr,cs,ws):
 
-		self.param0=param0
+		self.nperiods,self.param0=nperiods,param0
 		self.x_w,self.x_m,self.x_k,self.x_wmk=x_w,x_m,x_k,x_wmk
 		self.passign,self.nkids0,self.married0=passign,nkids0,married0
 		self.D,self.dict_grid =D,dict_grid
@@ -41,6 +42,8 @@ class Estimate:
 		Takes given betas and estimates the emax function (en emax_dic)
 
 		"""
+		#free up memory
+		gc.collect()
 		#updating with new betas
 		np.random.seed(1) #always the same emax, for a given set of beta
 		emax_ins_1=emax.Emaxt(param1,self.D,self.dict_grid,self.hours_p,
@@ -63,26 +66,31 @@ class Estimate:
 
 		#save here
 		util_list=[]
-		income_matrix=np.zeros((self.N,9,self.M))
-		consumption_matrix=np.zeros((self.N,9,self.M))
-		choice_matrix=np.zeros((self.N,9,self.M))
-		utils_periodt=np.zeros((self.N,J,9,self.M))
-		utils_c_periodt=np.zeros((self.N,J,9,self.M))
-		theta_matrix=np.zeros((self.N,9,self.M))
-		wage_matrix=np.zeros((self.N,9,self.M))
-		hours_matrix=np.zeros((self.N,9,self.M))
-		ssrs_t2_matrix=np.zeros((self.N,self.M))
-		ssrs_t5_matrix=np.zeros((self.N,self.M))
-
-		#Computing samples (in paralel)
+		income_matrix=np.zeros((self.N,self.nperiods,self.M))
+		consumption_matrix=np.zeros((self.N,self.nperiods,self.M))
+		choice_matrix=np.zeros((self.N,self.nperiods,self.M))
+		utils_periodt=np.zeros((self.N,J,self.nperiods,self.M))
+		utils_c_periodt=np.zeros((self.N,J,self.nperiods,self.M))
+		theta_matrix=np.zeros((self.N,self.nperiods,self.M))
+		wage_matrix=np.zeros((self.N,self.nperiods,self.M))
+		hours_matrix=np.zeros((self.N,self.nperiods,self.M))
+		
+		#Computing samples (in parallel)
 		def sample_gen(j):
 			np.random.seed(j+100)
-			return simdata_ins.fake_data(9)
+			return simdata_ins.fake_data(self.nperiods)
 
-		pool = ProcessPool(nodes=15)
+		pool = ProcessPool(nodes=20)
 		dics = pool.map(sample_gen,range(self.M))
-		
-		
+		pool.close()
+		pool.join()
+		pool.clear()
+		#dics = []
+		#for j in range(self.M):
+		#	np.random.seed(j+100)
+		#	dics.append(simdata_ins.fake_data(self.nperiods))
+
+
     	#Saving results		
 		for j in range(0,self.M):
 			income_matrix[:,:,j]=dics[j]['Income']
@@ -91,12 +99,10 @@ class Estimate:
 			theta_matrix[:,:,j]=dics[j]['Theta']
 			wage_matrix[:,:,j]=dics[j]['Wage']
 			hours_matrix[:,:,j]=dics[j]['Hours']
-			ssrs_t2_matrix[:,j]=dics[j]['SSRS_t2']
-			ssrs_t5_matrix[:,j]=dics[j]['SSRS_t5']
-			ssrs_t5_matrix[:,j]=dics[j]['SSRS_t5']
+			
 			
 
-			for periodt in range(0,9):
+			for periodt in range(0,self.nperiods):
 				utils_periodt[:,:,periodt,j]=dics[j]['Uti_values_dic'][periodt]
 				utils_c_periodt[:,:,periodt,j]=dics[j]['Uti_values_c_dic'][periodt]
 
@@ -104,8 +110,7 @@ class Estimate:
 				'income_matrix':income_matrix,
 				'choice_matrix': choice_matrix,'theta_matrix': theta_matrix,
 				'wage_matrix': wage_matrix,'consumption_matrix':consumption_matrix,
-				'hours_matrix': hours_matrix, 'ssrs_t2_matrix':ssrs_t2_matrix,
-				'ssrs_t5_matrix':ssrs_t5_matrix }
+				'hours_matrix': hours_matrix}
 
 	def aux_model(self,choices):
 		"""
@@ -115,7 +120,7 @@ class Estimate:
 		#number of choices
 		J=6
 		J_1=3 #3 hours categories
-		nperiods=9
+		nperiods=self.nperiods
 		age_child=np.zeros((self.N,nperiods)) #age of child every period
 		for x in range(0,nperiods):
 			age_child[:,x]=np.reshape(self.agech0,self.N)+x
@@ -158,8 +163,8 @@ class Estimate:
 		wage_matrix[:,4,:],wage_matrix[:,7,:]),axis=0)) #to panel and logs
 
 		age_t0=self.x_w[:,0]
-		age=np.zeros((self.N,9))
-		for t in range(9):
+		age=np.zeros((self.N,self.nperiods))
+		for t in range(self.nperiods):
 			age[:,t]=age_t0+t
 		
 		age_aux=np.reshape(np.concatenate((age[:,0],age[:,1],age[:,4],age[:,7]),axis=0),(self.N*4,1))
@@ -237,62 +242,48 @@ class Estimate:
 		###Aux estimate to identify prod function###################
 		############################################################
 
-		ssrs_t2_matrix=choices['ssrs_t2_matrix'].copy()
-		ssrs_t5_matrix=choices['ssrs_t5_matrix'].copy()
+		theta_t2_matrix=np.log(choices['theta_matrix'][:,2,:]).copy()
+		theta_t5_matrix=np.log(choices['theta_matrix'][:,5,:]).copy()
 
-		ssrs_t2_matrix_se=np.zeros((self.N,self.M))
-		ssrs_t5_matrix_se=np.zeros((self.N,self.M))
-
-		for j in range(self.M):
-			ssrs_t2_matrix_se[:,j]=(ssrs_t2_matrix[:,j] - np.mean(ssrs_t2_matrix[:,j]))/np.std(ssrs_t2_matrix[:,j])
-			ssrs_t5_matrix_se[:,j]=(ssrs_t5_matrix[:,j] - np.mean(ssrs_t5_matrix[:,j]))/np.std(ssrs_t5_matrix[:,j])
+		theta_t2_matrix_se=np.zeros((self.N,self.M))
+		theta_t5_matrix_se=np.zeros((self.N,self.M))
 
 		
 		consumption_matrix=choices['consumption_matrix'].copy()
+		cc_matrix = choice_matrix>=3
 		hours_matrix=choices['hours_matrix'].copy()
-		leisure_matrix=148-hours_matrix
+		leisure_matrix=cc_matrix*(148 - self.hours_f) + (148-hours_matrix)*(1-cc_matrix)
 		
 		#to panel
-		consumption_aux=np.concatenate((consumption_matrix[:,1,:],
-			consumption_matrix[:,4,:]),axis=0)
-		leisure_aux=np.concatenate((leisure_matrix[:,1,:],
-			leisure_matrix[:,4,:]),axis=0)
-		choice_aux=np.concatenate((choice_matrix[:,1,:],
-			choice_matrix[:,4,:]),axis=0)
-		age_aux=np.concatenate((age_child[:,1],
-			age_child[:,4]),axis=0)
-		ssrs_aux=np.concatenate((ssrs_t2_matrix_se,
-			ssrs_t5_matrix_se),axis=0)
+		consumption_aux=consumption_matrix[:,1,:].copy()
+		leisure_aux=leisure_matrix[:,1,:].copy()
+		choice_aux=choice_matrix[:,1,:].copy()
+		age_aux=age_child[:,1].copy()
+		theta_aux=theta_t2_matrix.copy()
+			
 
-		beta_kappas_t2=np.zeros((4,self.M)) #4 moments
-		beta_inputs=np.zeros((4,self.M)) #4 moments
-		beta_kappas_t5=np.zeros((4,self.M)) #4 moments
-				
-		for z in range(2,6): #4 rankings
-			boo=ssrs_t2_matrix==z
-			beta_kappas_t2[z-2,:]=np.mean(boo,axis=0)
-
+		beta_inputs=np.zeros((5,self.M)) #5 moments
+		betas_init_prod=np.zeros((1,self.M)) #5 moments
+		
 			
 		for j in range(self.M):
-			beta_inputs[0,j] = np.corrcoef(ssrs_t2_matrix_se[:,j],ssrs_t5_matrix_se[:,j])[1,0]
-			beta_inputs[1,j] = np.corrcoef(ssrs_aux[:,j],consumption_aux[:,j])[1,0]
-			beta_inputs[2,j] = np.corrcoef(ssrs_aux[:,j],leisure_aux[:,j])[1,0]
+			beta_inputs[0,j] = np.corrcoef(theta_t2_matrix[:,j],theta_t5_matrix[:,j])[1,0]
+			beta_inputs[1,j] = np.corrcoef(theta_aux[:,j],consumption_aux[:,j])[1,0]
+			beta_inputs[2,j] = np.corrcoef(theta_aux[:,j],leisure_aux[:,j])[1,0]
 			
 			b_cc0=choice_aux[:,j]<3 #child care choice=0 at t=1
 			b_cc1=choice_aux[:,j]>=3 #child care choice=1 at t=1
 			boo_young_cc0 = (age_aux<=6) & (b_cc0==True)
 			boo_young_cc1 = (age_aux<=6) & (b_cc1==True)
-			beta_inputs[3,j] = np.mean(ssrs_aux[boo_young_cc1,j]) - np.mean(ssrs_aux[boo_young_cc0,j])
-
-		for z in range(2,6): #4 rankings
-			boo=ssrs_t5_matrix==z
-			beta_kappas_t5[z-2,:]=np.mean(boo,axis=0)
+			beta_inputs[3,j] = np.mean(theta_aux[boo_young_cc1,j]) - np.mean(theta_aux[boo_young_cc0,j])
+			beta_inputs[4,j] = np.std(theta_aux[:,j])**2
+			
+			betas_init_prod[0,j] = np.corrcoef(theta_t2_matrix[:,j],np.log(wage_matrix[:,0,j]))[1,0]
 		
 		
 		return{'beta_childcare':beta_childcare,'beta_hours1': beta_hours1,
-		'beta_hours2':beta_hours2,
-		'beta_wagep': beta_wagep,'beta_kappas_t2': beta_kappas_t2,
-		'beta_inputs': beta_inputs,'beta_kappas_t5':beta_kappas_t5}
+		'beta_hours2':beta_hours2,'beta_wagep': beta_wagep,'beta_inputs': beta_inputs,
+		'betas_init_prod':betas_init_prod}
 	
 	
 	def ll(self,beta):
@@ -323,15 +314,9 @@ class Estimate:
 		self.param0.gamma2=beta[11]
 		self.param0.gamma3=beta[12]
 		self.param0.tfp=beta[13]
-		self.param0.kappas[0][0]=beta[14]
-		self.param0.kappas[0][1]=beta[15]
-		self.param0.kappas[0][2]=beta[16]
-		self.param0.kappas[0][3]=beta[17]
-		self.param0.kappas[1][0]=beta[18]
-		self.param0.kappas[1][1]=beta[19]
-		self.param0.kappas[1][2]=beta[20]
-		self.param0.kappas[1][3]=beta[21]
-			
+		self.param0.sigma2theta=np.exp(beta[14])
+		self.param0.rho_theta_epsilon=sym(beta[15])
+					
 
 		#The model (utility instance)
 		hours = np.zeros(self.N)
@@ -369,9 +354,8 @@ class Estimate:
 		beta_hours1=np.mean(dic_betas['beta_hours1'],axis=0) #1x1
 		beta_hours2=np.mean(dic_betas['beta_hours2'],axis=0) #1x1
 		beta_wagep=np.mean(dic_betas['beta_wagep'],axis=1) # 6 x 1
-		beta_kappas_t2=np.mean(dic_betas['beta_kappas_t2'],axis=1) #4 x 1
-		beta_kappas_t5=np.mean(dic_betas['beta_kappas_t5'],axis=1) #4 x 1
-		beta_inputs=np.mean(dic_betas['beta_inputs'],axis=1) #4 x 1
+		beta_inputs=np.mean(dic_betas['beta_inputs'],axis=1) #5 x 1
+		betas_init_prod=np.mean(dic_betas['betas_init_prod'],axis=1) #1 x 1
 		
 		
 
@@ -382,7 +366,7 @@ class Estimate:
 		###########################################################################
 
 		#Number of moments to match
-		num_par=beta_childcare.size + beta_hours1.size + beta_hours2.size + beta_wagep.size + beta_kappas_t2.size +  beta_kappas_t5.size + beta_inputs.size
+		num_par=beta_childcare.size + beta_hours1.size + beta_hours2.size + beta_wagep.size + beta_inputs.size + betas_init_prod.size
 		
 		#Outer matrix
 		x_vector=np.zeros((num_par,1))
@@ -400,13 +384,10 @@ class Estimate:
 		x_vector[ind: ind+ beta_wagep.size,0]=beta_wagep - self.moments_vector[ind:ind+ beta_wagep.size,0]
 		
 		ind = ind + beta_wagep.size
-		x_vector[ind:ind + beta_kappas_t2.size,0]=beta_kappas_t2 - self.moments_vector[ind:ind + beta_kappas_t2.size,0]
-
-		ind = ind + beta_kappas_t2.size
-		x_vector[ind: ind + beta_kappas_t5.size,0] = beta_kappas_t5 - self.moments_vector[ind: ind + beta_kappas_t5.size,0]
-		
-		ind = ind + beta_kappas_t5.size
 		x_vector[ind:ind + beta_inputs.size,0] = beta_inputs - self.moments_vector[ind:ind + beta_inputs.size,0]
+		
+		ind = ind + beta_inputs.size
+		x_vector[ind:ind + betas_init_prod.size,0] = betas_init_prod - self.moments_vector[ind:ind + betas_init_prod.size,0]
 		
 		
 		#The Q metric
@@ -437,12 +418,7 @@ class Estimate:
 			self.param0.betaw[1],self.param0.betaw[2],self.param0.betaw[3],
 			self.param0.betaw[4],np.log(self.param0.betaw[5]),self.param0.betaw[6],
 			self.param0.gamma1,self.param0.gamma2,self.param0.gamma3,	
-			self.param0.tfp,
-			self.param0.kappas[0][0],self.param0.kappas[0][1],#kappa: t=2, m0
-			self.param0.kappas[0][2],self.param0.kappas[0][3], #kappa: t=2, m0
-			self.param0.kappas[1][0],self.param0.kappas[1][1],#kappa: t=5, m0
-			self.param0.kappas[1][2],self.param0.kappas[1][3], #kappa: t=5, m0
-			]) 
+			self.param0.tfp,np.log(self.param0.sigma2theta),syminv(self.param0.rho_theta_epsilon)]) 
 
 		
 		#Here we go

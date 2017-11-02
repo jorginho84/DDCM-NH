@@ -184,28 +184,29 @@ class SimData:
 		kids_matrix=np.zeros((self.N,n_periods))
 		util_values_dic=[] #list of t=0,..,8 periods
 		util_values_c_dic=[] #current value utils
-		ssrs_t2=np.zeros(self.N)
-		ssrs_t5=np.zeros(self.N)
+		
 
 		#initialize state variables
 		married0=self.married0.copy()
 		nkids0=self.nkids0.copy()
-		#wage0=np.zeros((self.N,1))
-
-		#Re-compute wages (don't observe w on those unemployed)
+		
 		hours=np.zeros(self.N)
 		childcare=np.zeros(self.N)
 		self.change_util(self.param,self.N,self.x_w,self.x_m,self.x_k,self.passign,
 			nkids0,married0,hours,childcare,self.agech,self.hours_p,
 			self.hours_f,self.wr,self.cs,self.ws)
-		wage_init_dic = self.model.wage_init()
-		epsilon0= wage_init_dic['epsilon']
+		
+		shocks_dic = self.model.shocks_init()
+		epsilon0= shocks_dic['epsilon0']
+		epsilon_theta0= shocks_dic['epsilon_theta0']
+
+		wage_init_dic = self.model.wage_init(epsilon0)
 		wage0= wage_init_dic['wage']
+		theta0 = self.model.theta_init(epsilon_theta0)
 		free0=self.model.q_prob()
 		price0=self.model.price_cc()
-		theta0=self.model.theta_init()
-		
-	
+				
+		#Generating data
 		for periodt in range(0,n_periods):
 			
 			wage_matrix[:,periodt]=wage0.copy()
@@ -257,13 +258,7 @@ class SimData:
 				free0,price0)
 			consumption_matrix[:,periodt]=consumption0.copy()
 
-			#SSRS measures
-			if periodt==2: 
-				ssrs_t2=self.model.measures(periodt,theta0)
-			elif periodt==5:
-				ssrs_t5=self.model.measures(periodt,theta0)
-
-
+			
 			#Next period states (only if periodt<8): update
 
 			if periodt<n_periods-1:
@@ -293,7 +288,7 @@ class SimData:
 		 'Income': dincome_matrix, 'Hours':hours_matrix, 'Childcare': childcare_matrix,
 		 'Wage': wage_matrix, 'Uti_values_dic': util_values_dic,'Uti_values_c_dic': util_values_c_dic,
 		 'Marriage': marr_matrix, 'Kids': kids_matrix,'Consumption': consumption_matrix,
-		 'SSRS_t2':ssrs_t2,'SSRS_t5':ssrs_t5, 'nh_matrix':nh_matrix}
+		 'nh_matrix':nh_matrix}
 
 
 

@@ -1,9 +1,9 @@
 
 #build a grid around parameter value
 lenght = 0.5
-size_grid = 8
-max_p = -0.05
-min_p = -0.8
+size_grid = 6
+max_p = 0
+min_p = -0.15
 p_list = np.linspace(min_p,max_p,size_grid)
 obs_moment = moments_vector[2,0].copy()
 
@@ -11,10 +11,45 @@ obs_moment = moments_vector[2,0].copy()
 target_moment = np.zeros((size_grid,))
 for i in range(size_grid): 
 	param0.alphaf = p_list[i]
+	print ''
+	print ''
+	print 'Getting a dictionary of emax'
+	start_emax = time.time()
+	print ''
+	print ''
+
 	emax_instance=output_ins.emax(param0,model)
+
+	time_emax=time.time() - start_emax
+	print ''
+	print ''
+	print 'Done with emax in:'
+	print("--- %s seconds ---" % (time_emax))
+	print ''
+	print ''
+
+	print ''
+	print ''
+	print 'Simulating data'
+	start_simdata = time.time()
+	print ''
+	print ''
+
 	choices=output_ins.samples(param0,emax_instance,model)
 	dic_betas=output_ins.aux_model(choices)
 	target_moment[i] = np.mean(dic_betas['beta_hours2'],axis=0)
+
+	time_simdata=time.time() - start_simdata
+
+	print ''
+	print ''
+	print 'Done with simulation in:'
+	print("--- %s seconds ---" % (time_simdata))
+	print ''
+	print ''
+
+	print 'Done with one parameter in '
+	print("--- %s seconds ---" % (time_simdata + time_emax))
 	
 
 

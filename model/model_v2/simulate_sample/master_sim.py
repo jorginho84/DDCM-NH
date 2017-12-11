@@ -224,12 +224,18 @@ print ''
 ct=data_dic['Consumption']
 income=data_dic['Income']
 nh_sup=data_dic['nh_matrix']
+nh_cc=data_dic['cs_cost_matrix']
 theta_t=data_dic['Theta']
 cc_t=data_dic['Childcare']
 hours_t=data_dic['Hours']
 wage_t=data_dic['Wage']
 kids=data_dic['Kids']
 marr=data_dic['Marriage']
+income=data_dic['Income']
+
+#Expenditures
+np.mean(nh_sup[passign[:,0]==1,:],axis=0)
+np.mean(nh_cc[passign[:,0]==1,:],axis=0)
 
 #log theta in SD units
 ltheta=np.log(theta_t)

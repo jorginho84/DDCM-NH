@@ -182,6 +182,7 @@ class SimData:
 		childcare_matrix=np.zeros((self.N,n_periods))
 		marr_matrix=np.zeros((self.N,n_periods))
 		kids_matrix=np.zeros((self.N,n_periods))
+		cs_cost_matrix=np.zeros((self.N,n_periods))
 		util_values_dic=[] #list of t=0,..,8 periods
 		util_values_c_dic=[] #current value utils
 		ssrs_t2=np.zeros(self.N)
@@ -259,6 +260,8 @@ class SimData:
 			consumption0=self.model.consumptiont(periodt,hours_t,childcare_t,dincome0,married0,nkids0,wage0,
 				free0,price0)['income_pc']
 			consumption_matrix[:,periodt]=consumption0.copy()
+			cs_cost_matrix[:,periodt]=self.model.consumptiont(periodt,hours_t,childcare_t,dincome0,married0,nkids0,wage0,
+				free0,price0)['nh_cc_cost']
 
 			#SSRS measures
 			if periodt==2: 
@@ -297,7 +300,7 @@ class SimData:
 		 'Income': dincome_matrix, 'Hours':hours_matrix, 'Childcare': childcare_matrix,
 		 'Wage': wage_matrix, 'Uti_values_dic': util_values_dic,'Uti_values_c_dic': util_values_c_dic,
 		 'Marriage': marr_matrix, 'Kids': kids_matrix,'Consumption': consumption_matrix,
-		 'SSRS_t2':ssrs_t2,'SSRS_t5':ssrs_t5, 'nh_matrix':nh_matrix}
+		 'SSRS_t2':ssrs_t2,'SSRS_t5':ssrs_t5, 'nh_matrix':nh_matrix, 'cs_cost_matrix':cs_cost_matrix}
 
 
 

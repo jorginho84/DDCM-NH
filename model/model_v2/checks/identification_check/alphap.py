@@ -2,8 +2,8 @@
 #build a grid around parameter value
 lenght = 0.05
 size_grid = 6
-max_p = 0
-min_p = -0.15
+max_p = 0.08
+min_p = 0
 p_list = np.linspace(min_p,max_p,size_grid)
 obs_moment = moments_vector[1,0].copy()
 
@@ -28,12 +28,13 @@ plot2=ax.plot(p_list,np.full((size_grid,),obs_moment),'b-.',label='Observed',alp
 plt.setp(plot1,linewidth=3)
 plt.setp(plot2,linewidth=3)
 ax.legend()
-ax.set_ylabel(r'Proportion of part-time employment')
-ax.set_xlabel(r'Preference for part-time labor ($\alpha^p$)')
+ax.set_ylabel(r'Proportion of part-time employment',fontsize=font_size)
+ax.set_xlabel(r'Preference for part-time labor ($\alpha^p$)',fontsize=font_size)
 ax.spines['right'].set_visible(False)
 ax.spines['top'].set_visible(False)
 ax.yaxis.set_ticks_position('left')
 ax.xaxis.set_ticks_position('bottom')
+ax.legend(loc=0)
 plt.show()
 fig.savefig('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/checks/alphap_check.pdf', format='pdf')
 plt.close()

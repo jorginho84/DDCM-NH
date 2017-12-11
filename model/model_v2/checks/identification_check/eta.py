@@ -2,8 +2,8 @@
 #build a grid around parameter value
 lenght = 0.1
 size_grid = 6
-max_p = 2.8
-min_p = 2.4
+max_p = eta + 0.05
+min_p = eta - 0.05
 p_list = np.linspace(min_p,max_p,size_grid)
 obs_moment = moments_vector[0,0].copy()
 
@@ -29,12 +29,13 @@ plot2=ax.plot(p_list,np.full((size_grid,),obs_moment),'b-.',label='Observed',alp
 plt.setp(plot1,linewidth=3)
 plt.setp(plot2,linewidth=3)
 ax.legend(loc = 0)
-ax.set_ylabel(r'Child care')
-ax.set_xlabel(r'Preference for $\theta$ ($\eta$)')
+ax.set_ylabel(r'Child care',fontsize=font_size)
+ax.set_xlabel(r'Preference for $\theta$ ($\eta$)',fontsize=font_size)
 ax.spines['right'].set_visible(False)
 ax.spines['top'].set_visible(False)
 ax.yaxis.set_ticks_position('left')
 ax.xaxis.set_ticks_position('bottom')
+ax.legend(loc=0)
 plt.show()
 fig.savefig('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/checks/eta.pdf', format='pdf')
 plt.close()

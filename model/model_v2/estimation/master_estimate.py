@@ -33,37 +33,39 @@ import estimate as estimate
 
 np.random.seed(1)
 
-betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv12_v1_e3.npy')
+betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv16.npy')
 
 
 #Number of periods where all children are less than or equal to 18
 nperiods = 8
 
 #Utility function
-eta=4.1
-alphap=-0.06
-alphaf=-0.07
+eta=betas_nelder[0]
+alphap=betas_nelder[1]
+alphaf=betas_nelder[2]
 
 #wage process
 wagep_betas=np.array([betas_nelder[3],betas_nelder[4],betas_nelder[5],
 	betas_nelder[6],betas_nelder[7],betas_nelder[8],betas_nelder[9]]).reshape((7,1))
 
 #Production function [young,old]
-gamma1= 0.65
-gamma2= 0.08
-gamma3= 0.05
-tfp=0.81
-sigma2theta=2.5
+gamma1= betas_nelder[10]
+gamma2= betas_nelder[11]
+gamma3= betas_nelder[12]
+tfp=betas_nelder[13]
+sigma2theta=1
+
+kappas=[[betas_nelder[14],betas_nelder[15],betas_nelder[16],betas_nelder[17]],
+[betas_nelder[18],betas_nelder[19],betas_nelder[20],betas_nelder[21]]]
 
 #initial theta
-rho_theta_epsilon = -0.20
-
+rho_theta_epsilon = betas_nelder[22]
 
 #All factor loadings are normalized
 lambdas=[1,1]
 
 #Child care price
-mup = 750
+mup = 0.57*0 + (1-0.57)*750
 
 #Probability of afdc takeup
 pafdc=.60
@@ -132,7 +134,7 @@ agech0=x_df[['age_t0']].values
 #Defines the instance with parameters
 param0=util.Parameters(alphap,alphaf,eta,gamma1,gamma2,gamma3,
 	tfp,sigma2theta, rho_theta_epsilon,wagep_betas, marriagep_betas, kidsp_betas, eitc_list,
-	afdc_list,snap_list,cpi,lambdas,pafdc,psnap,mup)
+	afdc_list,snap_list,cpi,lambdas,kappas,pafdc,psnap,mup)
 
 
 
@@ -200,8 +202,15 @@ gamma1_opt=output.x[10]
 gamma2_opt=output.x[11]
 gamma3_opt=output.x[12]
 tfp_opt=output.x[13]
-sigma2theta_opt = np.exp(output.x[14])
-rho_theta_epsilon_opt = sym(output.x[15])
+kappas_00=output.x[14]
+kappas_01=output.x[15]
+kappas_02=output.x[16]
+kappas_03=output.x[17]
+kappas_10=output.x[18]
+kappas_11=output.x[19]
+kappas_12=output.x[20]
+kappas_13=output.x[21]
+rho_theta_epsilon_opt = sym(output.x[22])
 
 
 
@@ -209,8 +218,9 @@ rho_theta_epsilon_opt = sym(output.x[15])
 betas_opt=np.array([eta_opt, alphap_opt,alphaf_opt,
 	betaw0,betaw1,betaw2,
 	betaw3,betaw4,betaw5,betaw6,gamma1_opt,gamma2_opt,
-	gamma3_opt,tfp_opt,sigma2theta_opt,rho_theta_epsilon_opt])
+	gamma3_opt,tfp_opt,kappas_00,kappas_01,kappas_02,kappas_03,
+	kappas_10,kappas_11,kappas_12,kappas_13,rho_theta_epsilon_opt])
 
-np.save('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv14_v1_e3.npy',betas_opt)
+np.save('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv16_e5.npy',betas_opt)
 
 

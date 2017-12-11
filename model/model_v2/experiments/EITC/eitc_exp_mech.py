@@ -35,30 +35,32 @@ from bset import Budget
 
 np.random.seed(1)
 
-betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv12_v1_e3.npy')
+betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv16.npy')
 
 #Number of periods where all children are less than or equal to 18
 nperiods = 8
 
 #Utility function
-eta=1.5
-alphap=-0.08
-alphaf=-0.1
+eta=betas_nelder[0]
+alphap=betas_nelder[1]
+alphaf=betas_nelder[2]
 
 #wage process
 wagep_betas=np.array([betas_nelder[3],betas_nelder[4],betas_nelder[5],
 	betas_nelder[6],betas_nelder[7],betas_nelder[8],betas_nelder[9]]).reshape((7,1))
 
 #Production function [young,old]
-gamma1= 0.6
-gamma2= 0.08
-gamma3= 0.05
-tfp=0.555
-sigmatheta=2.6**.5
+gamma1= betas_nelder[10]
+gamma2= betas_nelder[11]
+gamma3= betas_nelder[12]
+tfp=betas_nelder[13]
+sigma2theta=1
+
+kappas=[[betas_nelder[14],betas_nelder[15],betas_nelder[16],betas_nelder[17]],
+[betas_nelder[18],betas_nelder[19],betas_nelder[20],betas_nelder[21]]]
 
 #initial theta
-deltas = np.array([0.9,0,1,-.8,.05])
-rho_theta_epsilon = -0.03
+rho_theta_epsilon = betas_nelder[22]
 
 #First measure is normalized. starting arbitrary values
 #All factor loadings are normalized
@@ -66,7 +68,7 @@ lambdas=[1,1]
 
 
 #Child care price
-mup = 750
+mup = 0.57*0 + (1-0.57)*750
 
 #Probability of afdc takeup
 pafdc=.60
@@ -204,8 +206,8 @@ childcare  = np.zeros(N)
 
 cs=0
 param0=util.Parameters(alphap,alphaf,eta,gamma1,gamma2,gamma3,
-	tfp,sigmatheta, deltas,rho_theta_epsilon,wagep_betas, marriagep_betas, kidsp_betas, eitc_list,
-	afdc_list,snap_list,cpi,lambdas,pafdc,psnap,mup)
+	tfp,sigma2theta, rho_theta_epsilon,wagep_betas, marriagep_betas, kidsp_betas, eitc_list,
+	afdc_list,snap_list,cpi,lambdas,kappas,pafdc,psnap,mup)
 
 output_ins=estimate.Estimate(nperiods,param0,x_w,x_m,x_k,x_wmk,passign,agech0,nkids0,
 	married0,D,dict_grid,M,N,moments_vector,var_cov,hours_p,hours_f,
@@ -277,8 +279,8 @@ for j in range(len(experiments)): #the experiment loop
 
 	#Defines the instance with parameters
 	param0=util.Parameters(alphap,alphaf,eta,gamma1,gamma2,gamma3,
-		tfp,sigmatheta, deltas,rho_theta_epsilon,wagep_betas, marriagep_betas, kidsp_betas,
-		experiments[j][0],afdc_list,snap_list,cpi,lambdas,pafdc,psnap,mup)
+		tfp,sigma2theta,rho_theta_epsilon,wagep_betas, marriagep_betas, kidsp_betas,
+		experiments[j][0],afdc_list,snap_list,cpi,lambdas,kappas,pafdc,psnap,mup)
 
 	output_ins=estimate.Estimate(nperiods,param0,x_w,x_m,x_k,x_wmk,passign,agech0,nkids0,
 		married0,D,dict_grid,M,N,moments_vector,var_cov,hours_p,hours_f,
@@ -298,13 +300,15 @@ cc_sim_matrix = []
 ct_sim_matrix = []
 h_sim_matrix = []
 theta_sim_matrix = []
+wage_sim_matrix = []
 theta_sd = [np.zeros((N,nperiods,M)),np.zeros((N,nperiods,M)),np.zeros((N,nperiods,M))]
 for j in range(len(experiments)): #the experiment loop
-	theta_sd.append(np.zeros((N,9,M)))
+	theta_sd.append(np.zeros((N,nperiods,M)))
 	cc_sim_matrix.append(choices[j]['choice_matrix']>=3)
 	ct_sim_matrix.append(choices[j]['consumption_matrix'])
 	h_sim_matrix.append(choices[j]['hours_matrix'])
 	theta_sim_matrix.append(choices[j]['theta_matrix'])
+	wage_sim_matrix.append(choices[j]['wage_matrix'])
 
 	for t in range(nperiods):
 		for k in range(M):
@@ -365,6 +369,9 @@ for t in range(nperiods - 1):
 
 		for k in range(1,4): #the counterfactual loop
 
+			#the sample
+			boo_all = (age_ch[:,2]<=6)
+
 			#the theta contribution
 			ltheta_th0 = models[0].thetat(t,theta_sim_matrix[0][:,t,j],
 				h_sim_matrix[0][:,t,j],cc_sim_matrix[0][:,t,j],
@@ -373,7 +380,7 @@ for t in range(nperiods - 1):
 				h_sim_matrix[0][:,t,j],cc_sim_matrix[0][:,t,j],
 				ct_sim_matrix[0][:,t,j])
 		
-			ate_cont_theta[k-1][t,j] = np.mean(np.log(ltheta_th1) - np.log(ltheta_th0))/sd_matrix[t,j]
+			ate_cont_theta[k-1][t,j] = np.mean(np.log(ltheta_th1[boo_all]) - np.log(ltheta_th0[boo_all]))/sd_matrix[t,j]
 		
 			#The leisure contribution
 			ltheta_th1 = models[k].thetat(t,theta_sim_matrix[k][:,t,j],
@@ -383,7 +390,7 @@ for t in range(nperiods - 1):
 			h_sim_matrix[0][:,t,j],cc_sim_matrix[0][:,t,j],
 			ct_sim_matrix[0][:,t,j])
 			
-			ate_cont_lt[k-1][t,j] = np.mean(np.log(ltheta_th1) - np.log(ltheta_th0))/sd_matrix[t,j]
+			ate_cont_lt[k-1][t,j] = np.mean(np.log(ltheta_th1[boo_all]) - np.log(ltheta_th0[boo_all]))/sd_matrix[t,j]
 
 			#The CC contribution
 			ltheta_th1 = models[k].thetat(t,theta_sim_matrix[k][:,t,j],
@@ -392,7 +399,7 @@ for t in range(nperiods - 1):
 			ltheta_th0 = models[k].thetat(t,theta_sim_matrix[k][:,t,j],
 				h_sim_matrix[k][:,t,j],cc_sim_matrix[0][:,t,j],
 				ct_sim_matrix[0][:,t,j])
-			ate_cont_cc[k-1][t,j] = np.mean(np.log(ltheta_th1) - np.log(ltheta_th0))/sd_matrix[t,j]
+			ate_cont_cc[k-1][t,j] = np.mean(np.log(ltheta_th1[boo_all]) - np.log(ltheta_th0[boo_all]))/sd_matrix[t,j]
 
 			#The consumption contribution
 			ltheta_th1 = models[k].thetat(t,theta_sim_matrix[k][:,t,j],
@@ -401,37 +408,10 @@ for t in range(nperiods - 1):
 			ltheta_th0 = models[k].thetat(t,theta_sim_matrix[k][:,t,j],
 				h_sim_matrix[k][:,t,j],cc_sim_matrix[k][:,t,j],
 				ct_sim_matrix[0][:,t,j])
-			ate_cont_ct[k-1][t,j] = np.mean(np.log(ltheta_th1) - np.log(ltheta_th0))/sd_matrix[t,j]
+			ate_cont_ct[k-1][t,j] = np.mean(np.log(ltheta_th1[boo_all]) - np.log(ltheta_th0[boo_all]))/sd_matrix[t,j]
 
 
 ###The graphs##
-
-#Effects on ln theta
-nper = av_impact[0].shape[0]
-fig, ax=plt.subplots()
-x = np.array(range(0,nper))
-y_0 = av_impact[0]
-y_1 = av_impact[1]
-y_2 = av_impact[2]
-plot0=ax.plot(x,y_0,'k-',label=r'EITC $\checkmark$ - CC subsidy $\times$',alpha=0.9)
-plot1=ax.plot(x,y_1,'k--',label=r'EITC $\times$ - CC subsidy $\checkmark$',alpha=0.9)
-plot2=ax.plot(x,y_2,'k:',label=r'EITC $\checkmark$ - CC subsidy $\checkmark$',alpha=0.9)
-plt.setp(plot0,linewidth=3)
-plt.setp(plot1,linewidth=3)
-plt.setp(plot2,linewidth=3)
-ax.set_ylabel(r'Effect on child human capital ($\sigma$s)', fontsize=14)
-ax.set_xlabel(r'Years after random assignment ($t$)', fontsize=14)
-ax.spines['right'].set_visible(False)
-ax.spines['top'].set_visible(False)
-ax.yaxis.set_ticks_position('left')
-ax.xaxis.set_ticks_position('bottom')
-ax.legend([r'EITC $\checkmark$ - CC subsidy $\times$',
-	r'EITC $\times$ - CC subsidy $\checkmark$',
-	r'EITC $\checkmark$ - CC subsidy $\checkmark$'])
-ax.set_ylim(-0.01,.25)
-plt.show()
-fig.savefig('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/experiments/EITC/ate_theta_eitc.pdf', format='pdf')
-plt.close()
 
 
 #Table: average effects
@@ -467,10 +447,11 @@ with open('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model
 
 
 #Mechanisms
+y = []
 exp = ['eitc1_cc0', 'eitc0_cc1', 'eitc1_cc1']
 
 for j in range(3): #the experiment loop
-	x = np.array(range(1,9))
+	x = np.array(range(1,nperiods))
 	y1 = np.mean(ate_cont_theta[j],axis=1)
 	y2 = np.mean(ate_cont_lt[j],axis=1)
 	y3 = np.mean(ate_cont_cc[j],axis=1)
@@ -490,11 +471,38 @@ for j in range(3): #the experiment loop
 	ax.yaxis.set_ticks_position('left')
 	ax.xaxis.set_ticks_position('bottom')
 	ax.margins(0, 0)
-	ax.set_ylim(-0.01,.25)
-	ax.legend(['Time', r'$\theta_t$','Child care','Consumption'])
+	ax.set_ylim(-0.01,.50)
+	ax.legend(['Time', r'$\theta_t$','Child care','Consumption'],loc=7)
 	plt.show()
 	fig.savefig('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/experiments/EITC/mech_' + exp[j] + '.pdf', format='pdf')
 	plt.close()
 
+	#this is for the next graph
+	y.append(np.concatenate((np.array([0]),total),axis=0))
 
 
+
+#Effects on ln theta
+nper = av_impact[0].shape[0]
+fig, ax=plt.subplots()
+x = np.array(range(0,nper))
+plot0=ax.plot(x,y[0],'k-',label=r'EITC $\checkmark$ - CC subsidy $\times$',alpha=0.9)
+plot1=ax.plot(x,y[1],'k--',label=r'EITC $\times$ - CC subsidy $\checkmark$',alpha=0.9)
+plot2=ax.plot(x,y[2],'k:',label=r'EITC $\checkmark$ - CC subsidy $\checkmark$',alpha=0.9)
+plt.setp(plot0,linewidth=3)
+plt.setp(plot1,linewidth=3)
+plt.setp(plot2,linewidth=3)
+ax.set_ylabel(r'Effect on child human capital ($\sigma$s)', fontsize=14)
+ax.set_xlabel(r'Years after random assignment ($t$)', fontsize=14)
+ax.spines['right'].set_visible(False)
+ax.spines['top'].set_visible(False)
+ax.yaxis.set_ticks_position('left')
+ax.xaxis.set_ticks_position('bottom')
+ax.legend([r'EITC $\checkmark$ - CC subsidy $\times$',
+	r'EITC $\times$ - CC subsidy $\checkmark$',
+	r'EITC $\checkmark$ - CC subsidy $\checkmark$'])
+ax.legend(loc=0)
+ax.set_ylim(-0.01,.50)
+plt.show()
+fig.savefig('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/experiments/EITC/ate_theta_eitc.pdf', format='pdf')
+plt.close()

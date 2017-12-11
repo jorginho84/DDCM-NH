@@ -1,4 +1,4 @@
-betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv14_v1_e3.npy')
+betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv16.npy')
 
 
 #Utility function
@@ -15,17 +15,20 @@ gamma1= betas_nelder[10]
 gamma2= betas_nelder[11]
 gamma3= betas_nelder[12]
 tfp=betas_nelder[13]
-sigma2theta=betas_nelder[14]
+sigma2theta=1
+
+kappas=[[betas_nelder[14],betas_nelder[15],betas_nelder[16],betas_nelder[17]],
+[betas_nelder[18],betas_nelder[19],betas_nelder[20],betas_nelder[21]]]
 
 #initial theta
-rho_theta_epsilon = betas_nelder[15]
+rho_theta_epsilon = betas_nelder[22]
 
 #First measure is normalized. starting arbitrary values
 #All factor loadings are normalized
 lambdas=[1,1]
 
 #Child care price
-mup = 750
+mup = 0.57*0 + (1-0.57)*750
 
 #Probability of afdc takeup
 pafdc=.60
@@ -87,4 +90,4 @@ agech0=x_df[['age_t0']].values
 #Defines the instance with parameters
 param0=util.Parameters(alphap,alphaf,eta,gamma1,gamma2,gamma3,
 	tfp,sigma2theta, rho_theta_epsilon,wagep_betas, marriagep_betas, kidsp_betas, eitc_list,
-	afdc_list,snap_list,cpi,lambdas,pafdc,psnap,mup)
+	afdc_list,snap_list,cpi,lambdas,kappas,pafdc,psnap,mup)

@@ -28,7 +28,7 @@ class Parameters:
 	"""
 	def __init__(self,alphap,alphaf,eta,gamma1,gamma2,gamma3,
 		tfp,sigma2theta,rho_theta_epsilon,betaw,betam,betak,eitc,afdc,snap,cpi,
-		lambdas,pafdc,psnap,mup):
+		lambdas,kappas,pafdc,psnap,mup):
 
 		self.alphap,self.alphaf,self.eta=alphap,alphaf,eta
 		self.gamma1,self.gamma2,self.gamma3=gamma1,gamma2,gamma3
@@ -36,7 +36,7 @@ class Parameters:
 		self.rho_theta_epsilon=rho_theta_epsilon
 		self.sigma2theta,self.betaw,self.betam,self.betak=sigma2theta,betaw,betam,betak
 		self.eitc,self.afdc,self.snap,self.cpi=eitc,afdc,snap,cpi
-		self.lambdas=lambdas
+		self.lambdas,self.kappas=lambdas,kappas
 		self.pafdc,self.psnap=pafdc,psnap
 		self.mup = mup
 
@@ -161,8 +161,8 @@ class Utility(object):
 		Draws a free child care slot from a binomial distribution
 		#THIS IS SHUT DOWN
 		"""
-		return np.random.binomial(1,0.18,self.N)
-		#return np.zeros(self.N)
+		#return np.random.binomial(1,0.57,self.N)
+		return np.zeros(self.N)
 
 	def price_cc(self):
 		"""
@@ -498,8 +498,6 @@ class Utility(object):
 		tch = cc*(148 - 40) + (1-cc)*(boo_u*148 + boo_p*(148 - self.hours_p) + boo_f*(148 - self.hours_f)) 
 		tch=np.log(tch)
 
-		#random shock
-		omega=np.sqrt(self.param.sigma2theta)*np.random.randn(self.N)
 		
 				
 		#Parameters
@@ -512,10 +510,10 @@ class Utility(object):
 
 		#The production of HC: (young, cc=0), (young,cc1), (old)
 		boo_age=agech<=6
-		theta1 = tfp*cc*boo_age + gamma1*np.log(theta0) + gamma2*incomepc +	gamma3*tch + omega
+		theta1 = tfp*cc*boo_age + gamma1*np.log(theta0) + gamma2*incomepc +	gamma3*tch
 			
 		#adjustment for E[theta = 0]
-		alpha = - np.mean(boo_age)*np.mean(cc)*tfp - np.mean(incomepc)*gamma2 - np.mean(tch)*gamma3  
+		alpha = - np.mean(incomepc)*gamma2 - np.mean(tch)*gamma3  
 
 		return np.exp(theta1 + alpha)
 
@@ -571,7 +569,34 @@ class Utility(object):
 	
 		return ut
 
+	def measures(self,periodt,thetat):
+		"""
+		For a given periodt and measure, computes the SSRS, given a value for theta.
+		There is only one measure for period
+		"""
+		if periodt==2:
+			loc=0
+		elif periodt==5:
+			loc=1
 
+		lambdam=self.param.lambdas[loc]
+		cuts=[self.param.kappas[loc][0],self.param.kappas[loc][1],
+		self.param.kappas[loc][2],self.param.kappas[loc][3]]
+				
+		z_star=lambdam*np.log(thetat) + np.random.randn(self.N)
+
+		#the SSRS measure
+		z=np.zeros(self.N)
+		z[z_star<=cuts[0]]=1
+		z[(z_star>cuts[0]) & (z_star<=cuts[1])]=2
+		z[(z_star>cuts[1]) & (z_star<=cuts[2])]=3
+		z[(z_star>cuts[2]) & (z_star<=cuts[3])]=4
+		z[(z_star>cuts[3])]=5
+
+
+		return z
+	
+	
 	def simulate(self,periodt,wage0,free,price,theta0):
 		"""
 		Takes states (theta0, nkids0, married0, wage0) and given choices

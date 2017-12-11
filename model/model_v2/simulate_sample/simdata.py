@@ -184,6 +184,8 @@ class SimData:
 		kids_matrix=np.zeros((self.N,n_periods))
 		util_values_dic=[] #list of t=0,..,8 periods
 		util_values_c_dic=[] #current value utils
+		ssrs_t2=np.zeros(self.N)
+		ssrs_t5=np.zeros(self.N)
 		
 
 		#initialize state variables
@@ -258,6 +260,13 @@ class SimData:
 				free0,price0)
 			consumption_matrix[:,periodt]=consumption0.copy()
 
+			#SSRS measures
+			if periodt==2: 
+				ssrs_t2=self.model.measures(periodt,theta0)
+			elif periodt==5:
+				ssrs_t5=self.model.measures(periodt,theta0)
+
+
 			
 			#Next period states (only if periodt<8): update
 
@@ -288,7 +297,7 @@ class SimData:
 		 'Income': dincome_matrix, 'Hours':hours_matrix, 'Childcare': childcare_matrix,
 		 'Wage': wage_matrix, 'Uti_values_dic': util_values_dic,'Uti_values_c_dic': util_values_c_dic,
 		 'Marriage': marr_matrix, 'Kids': kids_matrix,'Consumption': consumption_matrix,
-		 'nh_matrix':nh_matrix}
+		 'SSRS_t2':ssrs_t2,'SSRS_t5':ssrs_t5, 'nh_matrix':nh_matrix}
 
 
 

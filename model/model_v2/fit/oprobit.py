@@ -25,7 +25,7 @@ data_frame['young'] = boo_age[:,0] + 0
 data_frame.to_stata('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/fit/ssrs_sample.dta')
 #this do-file computes the array of oprobit estimates
 dofile = "/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/fit/ssrs_sim.do"
-cmd = ["stata-mp", "do", dofile]
+cmd = ["stata-mp", "qui: do", dofile]
 subprocess.call(cmd)
 betas=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/fit/betas1_vector.csv').values
 betas_young=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/fit/betas_young1_vector.csv').values
@@ -41,7 +41,7 @@ data_frame['young'] = boo_age[:,0] + 0
 data_frame.to_stata('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/fit/ssrs_sample.dta')
 #this do-file computes the array of oprobit estimates
 dofile = "/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/fit/ssrs_sim.do"
-cmd = ["stata-mp", "do", dofile]
+cmd = ["stata-mp", "qui: do", dofile]
 subprocess.call(cmd)
 betas=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/fit/betas1_vector.csv').values
 betas_young=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/fit/betas_young1_vector.csv').values
@@ -53,7 +53,7 @@ beta_t5.append(np.mean(betas_old))
 
 #data: use only stata to bootstrap o_probit and get SE
 dofile = "/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/fit/ssrs_obs.do"
-cmd = ["stata-mp", "do", dofile]
+cmd = ["stata-mp", "qui: do", dofile]
 subprocess.call(cmd)
 betas_t2_obs.append(pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/fit/beta_t2_obs.csv').values)
 betas_t2_obs.append(pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/fit/beta_t2_y_obs.csv').values)

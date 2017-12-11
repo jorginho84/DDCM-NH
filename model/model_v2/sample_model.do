@@ -159,23 +159,9 @@ qui: do "$codes/data_youth.do"
 keep sampleid child agechild/* identifiers
 */ c68* c69* c70* c73 /*CC use and payments (year 2)
 */ piq113da  piq114* piq119a piq128a piq128b/* CC use and payments (year 5)    
-*/ tq17a tq17b tq17c tq17d tq17e tq17f tq17g tq17h tq17i tq17j /*skills t2
-*/ t2q17a t2q17b t2q17c t2q17d t2q17e t2q17f t2q17g t2q17h t2q17i t2q17j /* skills t5
-*/  etsq13a etsq13b etsq13c etsq13d etsq13e etsq13f etsq13g etsq13h etsq13i etsq13j /*skillst8*/
+*/ tq17a tq17b tq17c tq17h /*skills t1
+*/ t2q17a etsq13a /*skills t5 and t8*/
 destring sampleid, force replace
-
-local Y2_B1 tq17a tq17b tq17c tq17d tq17e tq17f tq17g tq17h tq17i tq17j
-local Y5_B2 t2q17a t2q17b t2q17c t2q17d t2q17e t2q17f t2q17g t2q17h t2q17i t2q17j
-local Y8_B2 etsq13a etsq13b etsq13c etsq13d etsq13e etsq13f etsq13g etsq13h etsq13i etsq13j
-
-*Rounding up variables to the nearest integer
-foreach variable of varlist `Y2_B1' `Y5_B2' `Y8_B2'{
-	gen `variable'_s=round(`variable')
-	drop `variable'
-	rename `variable'_s `variable'
-}
-
-
 
 *Age at baseline
 gen age_t0=agechild-2
@@ -246,32 +232,19 @@ replace cc_pay_t4=175 if piq128b==5
 replace cc_pay_t4=200 if piq128b==6
 
 
-/*Child development measures*/
+rename tq17b skills_m1_t2
+rename tq17c skills_m2_t2
+rename tq17h skills_m3_t2
 
-local i = 1
-foreach variable of varlist `Y2_B1' {
-	rename `variable'  skills`i'_t2 
-	local i = `i' + 1
-}
+gen t2q17a_aux=round(t2q17a)
+drop t2q17a
+rename t2q17a_aux t2q17a
 
-local i = 1
-foreach variable of varlist `Y5_B2' {
-	rename `variable'  skills`i'_t5 
-	local i = `i' + 1
-}
+rename tq17a skills_t2
+rename t2q17a skills_t5
+rename etsq13a skills_t8
 
-
-local i = 1
-foreach variable of varlist `Y8_B2' {
-	rename `variable'  skills`i'_t8 
-	local i = `i' + 1
-}
-
-
-
-
-
-keep sampleid child d_CC* skills* age_t0 age_t02 cc_pay* d_free
+keep sampleid child d_CC* skills_* age_t0 age_t02 cc_pay* d_free
 sort sampleid child
 
 merge 1:1 sampleid child using `data_control'
@@ -579,7 +552,7 @@ gen delta_emp=d_emp_t1-d_emp_t0
 **Using d_HS based on highgrade: correlates more with wage
 gen d_HS2=higrade>=12
 
-keep sampleid child d_RA p_assign age_ra age_ra2 d_marital* d_HS d_HS2 c91 nkids* hours_t* d_CC* constant emp_baseline  delta_emp skills* c1 piinvyy /*
+keep sampleid child d_RA p_assign age_ra age_ra2 d_marital* d_HS d_HS2 c91 nkids* hours_t* d_CC* constant emp_baseline  delta_emp skills_* c1 piinvyy /*
 */ epiinvyy total_income_y* married* cc_pay* gross_y* gross_nominal_y* grossv2_y* age_t0 age_t02 d_free afdc_y* fs_y* sup_y*
 
 save "$results/sample_model_theta_v2.dta", replace

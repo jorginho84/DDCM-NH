@@ -30,13 +30,12 @@ plot2=ax.bar(x + bar_width,list_obs,bar_width,yerr=list_sig,label='Data',edgecol
 	color='k',alpha=alpha_plot2)
 ax.legend(loc=loc_legen,fontsize=fontsize_axis)
 ax.set_ylabel(r'%', fontsize=fontsize_axis)
-ax.set_xlabel(r'Moments', fontsize=fontsize_axis)
 ax.spines['right'].set_visible(False)
 ax.spines['top'].set_visible(False)
 ax.yaxis.set_ticks_position('left')
 ax.xaxis.set_ticks_position('bottom')
-ax.set_xticklabels([])
-ax.set_xticks([])
+ax.set_xticklabels([r'$Pr($child care$)$',r'$Pr($Part time$)$',r'$Pr($Full time$)$'],fontsize=fontsize_axis-3)
+ax.set_xticks(x + bar_width)
 plt.show()
 fig.savefig('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/fit/fit_utility.pdf', format='pdf')
 plt.close()
@@ -79,18 +78,74 @@ plt.show()
 fig.savefig('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/fit/fit_wage.pdf', format='pdf')
 plt.close()
 
-#C. Measures of academic achievement and family choices
-ind = ind +7
+#A. t=2, kappas
+ind = ind + 7
 pos = 12
+list_aux = []
+list_obs = []
+list_sig = []
+for c in range(4):
+	sim_moment = ws.cell('B' + str(c + pos))
+	obs_moment = ws.cell('D' + str(c + pos))
+	obs_sigma = ws.cell('F' + str(c + pos))
+	sim_moment.value = np.float(beta_kappas_t2[c])
+	obs_moment.value = np.float(moments_vector[ind + c,0])
+	obs_sigma.value = np.float(se_vector[ind + c])
+
+	list_aux.append(np.float(beta_kappas_t2[c]))
+	list_obs.append(moments_vector[ind + c,0])
+	list_sig.append(se_vector[ind + c])
+
+
+ind = ind + 4
+pos = 16
+#B. t=5, kappas
+for c in range(4):
+	sim_moment = ws.cell('B' + str(c + pos))
+	obs_moment = ws.cell('D' + str(c + pos))
+	obs_sigma = ws.cell('F' + str(c + pos))
+	sim_moment.value = np.float(beta_kappas_t5[c])
+	obs_moment.value = np.float(moments_vector[ind + c,0])
+	obs_sigma.value = np.float(se_vector[ind + c])
+
+
+	list_aux.append(np.float(beta_kappas_t5[c]))
+	list_obs.append(moments_vector[ind + c,0])
+	list_sig.append(se_vector[ind + c])
+
+#the graph
+fig, ax=plt.subplots()
+x = np.array(range(0,len(list_aux)))
+plot1=ax.bar(x,list_aux,bar_width,label='Simulated',color='k',alpha=alpha_plot1)
+plot2=ax.bar(x + bar_width,list_obs,bar_width,yerr=list_sig,label='Data',edgecolor='k',
+	color='k',alpha=alpha_plot2)
+ax.legend(loc=loc_legen,fontsize=fontsize_axis)
+ax.set_ylabel(r'%', fontsize=fontsize_axis)
+ax.set_xlabel(r'Moments', fontsize=fontsize_axis)
+ax.spines['right'].set_visible(False)
+ax.spines['top'].set_visible(False)
+ax.yaxis.set_ticks_position('left')
+ax.xaxis.set_ticks_position('bottom')
+ax.set_xticklabels([])
+ax.set_xticks([])
+plt.show()
+fig.savefig('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/fit/fit_kappas.pdf', format='pdf')
+plt.close()
+
+
+
+#C. Measures of academic achievement and family choices
+ind = ind +4
+pos = 20
 list_aux = []
 list_obs = []
 list_sig = []
 #C. prod fn
 list_aux = [np.concatenate((beta_inputs,betas_init_prod),axis=0)]
-list_obs = [moments_vector[ind:ind +6 ,0]]
-list_sig = [se_vector[ind:ind + 6]]
+list_obs = [moments_vector[ind:ind +5 ,0]]
+list_sig = [se_vector[ind:ind + 5]]
 
-for c in range(6): 
+for c in range(5): 
 	sim_moment = ws.cell('B' + str(c + pos))
 	obs_moment = ws.cell('D' + str(c + pos))
 	obs_sigma = ws.cell('F' + str(c + pos))

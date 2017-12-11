@@ -1,7 +1,8 @@
 """
-execfile('mfx.py')
+execfile('control_f.py')
 
-This code computes marginal effects of HH inputs on log(theta)
+This file computes propensiy scores estimations for all individuals
+using the structure of the model
 
 """
 from __future__ import division #omit for python 3.x
@@ -38,7 +39,6 @@ betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/re
 
 #Number of periods where all children are less than or equal to 18
 nperiods = 8
-
 
 #Utility function
 eta=betas_nelder[0]
@@ -77,7 +77,6 @@ pafdc=.60
 psnap=.70
 
 #Data
-#X_aux=pd.read_csv('C:\\Users\\Jorge\\Dropbox\\Chicago\\Research\\Human capital and the household\\results\\Model\\Xs.csv')
 X_aux=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/sample_model_v2.csv')
 x_df=X_aux
 
@@ -101,7 +100,7 @@ kidsp_betas=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount
 
 
 #Minimum set of x's (for interpolation)
-x_wmk=x_df[  ['age_ra', 'age_ra2', 'd_HS2', 'constant'] ].values
+x_wmk=x_df[  ['age_ra', 'age_ra2', 'd_HS2','constant'] ].values
 
 #Data for treatment status
 passign=x_df[ ['d_RA']   ].values
@@ -127,6 +126,7 @@ cpi =  pickle.load( open( '/mnt/Research/nealresearch/new-hope-secure/newhopemou
 
 #number of kids at baseline
 nkids0=x_df[ ['nkids_baseline']   ].values
+
 
 #marital status at baseline
 married0=x_df[ ['d_marital_2']   ].values
@@ -182,80 +182,19 @@ childcare  = np.zeros(N)
 model  = util.Utility(param0,N,x_w,x_m,x_k,passign,
 	nkids0,married0,hours,childcare,agech0,hours_p,hours_f,wr,cs,ws)
 
-#Obtaining emax instances, samples, and betas for M samples
-np.random.seed(1)
 emax_instance = output_ins.emax(param0,model)
+
 choices = output_ins.samples(param0,emax_instance,model)
 
-#Inputs at mean values
-theta_matrix = choices['theta_matrix']
-consumption_matrix = choices['consumption_matrix']
-hours_matrix = choices['hours_matrix']
+work = (choices['choice_matrix']==1) | (choices['choice_matrix']==2) | (choices['choice_matrix']==4) | (choices['choice_matrix']==5)
+pscore = np.mean(work,axis=2)
 
-#Mean across samples and periods
-ec = np.mean(np.mean(consumption_matrix,axis=2),axis=1)
-eh = np.zeros(N)+40 #everybody working full time
-lt=148-eh #nobody in cc
-d_cc = np.zeros(N) #nobody in ccc
-
-#Computing mfx
-theta_th = np.zeros((N,nperiods)) #shocked
-theta_0 = np.zeros((N,nperiods))
-theta_0[:,0] = np.mean(theta_matrix[:,0,:],axis=1) #initial value
-theta_th[:,0] = theta_0[:,0].copy()
-
-#SD units
-sd_matrix = np.zeros((nperiods,M))
-for k in range(nperiods):
-	for j in range(M):
-		sd_matrix[k,j] = np.std(np.log(theta_matrix[:,k,j]),axis=0)
-sds = np.mean(sd_matrix,axis=1)
-
-#the shocks
-shock_th = theta_0[:,0] + np.exp(np.zeros(N)+0.3)
-
-#theta with no shocks
-for k in range(nperiods - 1):
-	#no shocks
-	theta_0[:,k+1] = np.exp(gamma1*np.log(theta_0[:,k]) + gamma2*np.log(ec) +gamma3*np.log(lt))
-
-#Responses
-for k in range(nperiods - 1):
-	if k==0:
-		theta_th[:,k+1] = np.exp(gamma1*np.log(shock_th) + gamma2*np.log(ec) +gamma3*np.log(lt))
-	else:
-		theta_th[:,k+1] = np.exp(gamma1*np.log(theta_th[:,k]) + gamma2*np.log(ec) +gamma3*np.log(lt))
-#ATE
-ate_theta = np.mean(np.log(theta_th) - np.log(theta_0),axis=0)/sds
-
-#mfx: a 1,000 income shock
-t0 = gamma1*np.log(np.ones(N)) + gamma2*np.log(ec) +gamma3*np.log(lt)
-t1 = gamma1*np.log(np.ones(N)) + gamma2*np.log(ec+1000/(nkids0[:,0] + married0[:,0])) +gamma3*np.log(lt)
-mfx_c = np.mean(t1-t0)/sds[1]
-
-#mfx: from full time to unemployment
-t0 = gamma1*np.log(np.ones(N)) + gamma2*np.log(ec) +gamma3*np.log(lt)
-t1 = gamma1*np.log(np.ones(N)) + gamma2*np.log(ec) +gamma3*np.log((lt+40))
-mfx_t = np.mean(t1-t0)/sds[1]
-
-print ''
-print 'impact of 1,000 shock', mfx_c
-print ''
-print 'impact of unemployment shock', mfx_t
-
-
-##The graph (shock on theta)
-x = np.array(range(0,nperiods))
-fig, ax=plt.subplots()
-ax.plot(x,ate_theta, color='k',zorder=1,linewidth=3)
-ax.set_ylabel(r'Impact on $\ln(\theta_{t+1})$ (in $\sigma$s)', fontsize=14)
-ax.set_xlabel(r'Years after random assignment ($t$)', fontsize=14)
-ax.spines['right'].set_visible(False)
-ax.spines['top'].set_visible(False)
-ax.yaxis.set_ticks_position('left')
-ax.xaxis.set_ticks_position('bottom')
-plt.show()
-fig.savefig('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/experiments/prod/theta_shock.pdf', format='pdf')
-plt.close()
+#Calling stata
+data_frame = pd.DataFrame({'pscore0': pscore[:,0],'pscore1': pscore[:,1],
+'pscore4': pscore[:,4],'pscore7': pscore[:,7] })
+data_frame.to_stata('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/checks/pscores.dta')
+dofile = "/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/control_f/control_f.do"
+cmd = ["stata-mp", "do", dofile]
+subprocess.call(cmd)
 
 

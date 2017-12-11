@@ -69,6 +69,7 @@ class SEs:
 		pafdc =  self.output_ins.__dict__['param0'].__dict__['pafdc']
 		psnap =  self.output_ins.__dict__['param0'].__dict__['psnap']
 		mup =  self.output_ins.__dict__['param0'].__dict__['mup']
+		sigma2theta =  self.output_ins.__dict__['param0'].__dict__['sigma2theta']
 		
 		#Utility function
 		eta=bs[0]
@@ -84,12 +85,14 @@ class SEs:
 		gamma2=bs[11]
 		gamma3=bs[12]
 		tfp=bs[13]
-		sigma2theta=np.exp(bs[14])
 		
+				
 		def sym(a):
 			return ((1/(1+np.exp(-a))) - 0.5)*2
 
-		rho_theta_epsilon =  sym(bs[15])
+		kappas=[[bs[14],bs[15],bs[16],bs[17]],[bs[18],bs[19],bs[20],bs[21]]]
+
+		rho_theta_epsilon =  sym(bs[22])
 
 		lambdas=[1,1]
 
@@ -97,7 +100,8 @@ class SEs:
 		#Re-defines the instance with parameters 
 		param0=util.Parameters(alphap,alphaf,eta,gamma1,gamma2,gamma3,
 			tfp,sigma2theta,rho_theta_epsilon,wagep_betas, marriagep_betas,
-			kidsp_betas, eitc_list,afdc_list,snap_list,cpi,lambdas,pafdc,psnap,mup)
+			kidsp_betas, eitc_list,afdc_list,snap_list,cpi,lambdas,kappas,
+			pafdc,psnap,mup)
 
 		return param0 
 
@@ -124,17 +128,72 @@ class SEs:
 		beta_childcare=np.mean(dic_betas['beta_childcare'],axis=0) #1x1
 		beta_hours1=np.mean(dic_betas['beta_hours1'],axis=0) #1x1
 		beta_hours2=np.mean(dic_betas['beta_hours2'],axis=0) #1x1
+		beta_kappas_t2=np.mean(dic_betas['beta_kappas_t2'],axis=1) #4 x 1
+		beta_kappas_t5=np.mean(dic_betas['beta_kappas_t5'],axis=1) #4 x 1
 		beta_wagep=np.mean(dic_betas['beta_wagep'],axis=1) # 7 x 1
 		beta_inputs=np.mean(dic_betas['beta_inputs'],axis=1) #5 x 1
 		betas_init_prod=np.mean(dic_betas['betas_init_prod'],axis=1) #1 x 1
 		
 
 		return [beta_childcare,beta_hours1,beta_hours2,beta_wagep,
+		beta_kappas_t2,beta_kappas_t5,
 		beta_inputs, betas_init_prod]
+
+	
+
+	def obj_fn(self,betas):
+		"""
+		Computes objective function given s
+		"""
+
+		beta_childcare=betas[0]
+		beta_hours1=betas[1]
+		beta_hours2=betas[2]
+		beta_wagep=betas[3]
+		beta_kappas_t2=betas[4]
+		beta_kappas_t5=betas[5]
+		beta_inputs=betas[6]
+		betas_init_prod=betas[7]
+		#Number of moments to match
+		num_par=beta_childcare.size + beta_hours1.size + beta_hours2.size + beta_wagep.size + + beta_kappas_t2.size +  beta_kappas_t5.size + beta_inputs.size + betas_init_prod.size
+		
+		#Outer matrix
+		x_vector=np.zeros((num_par,1))
+
+		
+		x_vector[0:beta_childcare.size,0]=beta_childcare - self.output_ins.moments_vector[0,0]
+		
+		ind=beta_childcare.size
+		x_vector[ind:ind+beta_hours1.size,0]=beta_hours1 - self.output_ins.moments_vector[ind,0]
+
+		ind = ind + beta_hours1.size
+		x_vector[ind:ind+beta_hours2.size,0]=beta_hours2 - self.output_ins.moments_vector[ind,0]
+		
+		ind=ind + beta_hours2.size
+		x_vector[ind: ind+ beta_wagep.size,0]=beta_wagep - self.output_ins.moments_vector[ind:ind+ beta_wagep.size,0]
+		
+		ind = ind + beta_wagep.size
+		x_vector[ind:ind + beta_kappas_t2.size,0]=beta_kappas_t2 - self.output_ins.moments_vector[ind:ind + beta_kappas_t2.size,0]
+
+		ind = ind + beta_kappas_t2.size
+		x_vector[ind: ind + beta_kappas_t5.size,0] = beta_kappas_t5 - self.output_ins.moments_vector[ind: ind + beta_kappas_t5.size,0]
+		
+		ind = ind + beta_kappas_t5.size
+		x_vector[ind:ind + beta_inputs.size,0] = beta_inputs - self.output_ins.moments_vector[ind:ind + beta_inputs.size,0]
+		
+		ind = ind + beta_inputs.size
+		x_vector[ind:ind + betas_init_prod.size,0] = betas_init_prod - self.output_ins.moments_vector[ind:ind + betas_init_prod.size,0]
+		
+		
+		#The Q metric
+		q_w=np.dot(np.dot(np.transpose(x_vector),np.linalg.inv(self.output_ins.w_matrix)),x_vector)
+		
+		return {'x_vector': x_vector, 'obj_fn': q_w}
 
 	def binding(self,psi):
 		"""
-		Computes the binding function for a given psi (structural parameter)
+		1. Computes the binding function for a given psi (structural parameter)
+		2. Computes the X vector
 		"""
 
 		#Calling parameters instance based on betas
@@ -169,11 +228,18 @@ class SEs:
 
 		#Computing aux model (binding function)
 
-		return self.sim_moments(samples)
+		betas = self.sim_moments(samples)
+
+		x_vector = self.obj_fn(betas)['x_vector']
+
+		return {'betas': betas, 'x_vector': x_vector}
+
 
 	def db_dtheta(self,psi,eps,K,S):
 		"""
-		Computes d b/d theta using finite differences
+		Computes ingredients to compute sandwich matrix
+
+		1*db/dtheta:
 		It returns a K \times S matrix, where
 		K: number of aux moments
 		S: number of structural parameters
@@ -181,21 +247,27 @@ class SEs:
 
 		psi: structural parameters
 		eps: marginal difference
+
 		"""
 
 		#save results here
 		db_dt = np.zeros((K,S))
 		
+		
 		for s in range(S):
+
+			#evaluating at optimum
 			psi_low = psi.copy()
 			psi_high = psi.copy()
-			psi_low[s] = psi[s]
-			psi_high[s] = psi[s] + eps*psi[s]
+
+			#changing only relevant parameter, one at a time
+			psi_low[s] = psi[s] - eps
+			psi_high[s] = psi[s] + eps
 
 			#Computing betas
-			betas_low = self.binding(psi_low)
-			betas_high = self.binding(psi_high)
-
+			betas_low = self.binding(psi_low)['betas']
+			betas_high = self.binding(psi_high)['betas']
+			
 			#From list to numpy array
 			betas_low_array = np.array([[betas_low[0]]])
 			betas_high_array = np.array([[betas_high[0]]])
@@ -213,7 +285,7 @@ class SEs:
 
 			db_dt[:,s] = (betas_high_array[:,0] - betas_low_array[:,0]) / (psi_high[s]-psi_low[s])
 
-
+			
 
 		return db_dt
 
@@ -230,12 +302,19 @@ class SEs:
 		#The weighting matrix used in estimation
 		w_matrix = self.output_ins.__dict__['w_matrix'].copy()
 
+		for i in range(w_matrix.shape[0]):
+			w_matrix[i,i] = w_matrix[i,i]**(-1)
+
+		#The V matrix
+		x_vector = self.binding(self.psi)['x_vector']
+		v_matrix = np.dot(x_vector,np.transpose(x_vector))
+
 		#The big sandwhich matrix: a_matrix*a_inn*var_cov*a_inn'a_matrix
 		a_inn = np.dot(np.transpose(dbdt),w_matrix)
 		a_matrix = np.linalg.inv(np.dot(a_inn,dbdt))
 		a_left = np.dot(a_matrix,a_inn)
 
-		return np.dot(np.dot(a_left,self.var_cov),np.transpose(a_left))
+		return np.dot(np.dot(a_left,v_matrix),np.transpose(a_left))
 
 
 

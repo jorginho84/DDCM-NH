@@ -68,10 +68,7 @@ class Prod2(Utility):
 		tch = cc*(148 - 40) + (1-cc)*(boo_u*148 + boo_p*(148 - self.hours_p) + boo_f*(148 - self.hours_f)) 
 		tch=np.log(tch)
 		
-		#random shock
-		omega=self.param.sigma2theta*np.random.randn(self.N)
-		
-				
+						
 		#Parameters
 		gamma1=self.param.gamma1
 		gamma2=self.param.gamma2
@@ -83,7 +80,7 @@ class Prod2(Utility):
 		
 		#The production of HC: young, cc=0
 		boo_age=agech<=6
-		theta1 = tfp*cc*boo_age + gamma1*np.log(theta0) + gamma2*incomepc +	gamma3*tch + omega
+		theta1 = tfp*cc*boo_age + gamma1*np.log(theta0) + gamma2*incomepc +	gamma3*tch 
 
 		#adjustment for E[theta = 0]
 		alpha = - ecel[3][periodt]*ecel[2][periodt]*tfp - ecel[0][periodt]*gamma2 - ecel[1][periodt]*gamma3

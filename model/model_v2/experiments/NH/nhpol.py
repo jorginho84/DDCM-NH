@@ -33,37 +33,39 @@ from ate_gen import ATE
 
 np.random.seed(1)
 
-betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv12_v1_e3.npy')
+betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv16.npy')
 
 #Number of periods where all children are less than or equal to 18
 nperiods = 8
 
 #Utility function
-eta=1.5
-alphap=-0.08
-alphaf=-0.1
+eta=betas_nelder[0]
+alphap=betas_nelder[1]
+alphaf=betas_nelder[2]
 
 #wage process
 wagep_betas=np.array([betas_nelder[3],betas_nelder[4],betas_nelder[5],
 	betas_nelder[6],betas_nelder[7],betas_nelder[8],betas_nelder[9]]).reshape((7,1))
 
 #Production function [young,old]
-gamma1= 0.6
-gamma2= 0.08
-gamma3= 0.05
-tfp=0.555
-sigmatheta=2.6**.5
+gamma1= betas_nelder[10]
+gamma2= betas_nelder[11]
+gamma3= betas_nelder[12]
+tfp=betas_nelder[13]
+sigma2theta=1
+
+kappas=[[betas_nelder[14],betas_nelder[15],betas_nelder[16],betas_nelder[17]],
+[betas_nelder[18],betas_nelder[19],betas_nelder[20],betas_nelder[21]]]
 
 #initial theta
-deltas = np.array([0.9,0,1,-.8,.05])
-rho_theta_epsilon = -0.03
+rho_theta_epsilon = betas_nelder[22]
 
 #First measure is normalized. starting arbitrary values
 #All factor loadings are normalized
 lambdas=[1,1]
 
 #Child care price
-mup = 750
+mup = 0.57*0 + (1-0.57)*750
 
 #Probability of afdc takeup
 pafdc=.60
@@ -131,8 +133,8 @@ agech0=x_df[['age_t0']].values
 
 #Defines the instance with parameters
 param0=util.Parameters(alphap,alphaf,eta,gamma1,gamma2,gamma3,
-	tfp,sigmatheta, deltas,rho_theta_epsilon,wagep_betas, marriagep_betas, kidsp_betas, eitc_list,
-	afdc_list,snap_list,cpi,lambdas,pafdc,psnap,mup)
+	tfp,sigma2theta, rho_theta_epsilon,wagep_betas, marriagep_betas, kidsp_betas, eitc_list,
+	afdc_list,snap_list,cpi,lambdas,kappas,pafdc,psnap,mup)
 
 
 ###Auxiliary estimates###

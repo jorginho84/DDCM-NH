@@ -144,8 +144,8 @@ class Emaxt:
 
 			#Income and consumption at T-1
 			dincome0=self.model.dincomet(bigT-1,hours,wage0,married0,nkids0)['income']
-			consumption0=self.model.consumptiont(bigT-1,hours,childcare,dincome0,
-					married0,nkids0,wage0,free0,price0)
+			consumption0=self.model.consumptiont(bigT-1,hours,childcare,dincome0,married0,
+				nkids0,wage0,free0,price0)['income_pc']
 			
 
 			#At T, loop over possible shocks, for every future choice
@@ -324,8 +324,8 @@ class Emaxt:
 
 			#I get these to compute theta_t1
 			dincome0=self.model.dincomet(periodt-1,hours,wage0,married0,nkids0)['income']
-			consumption0=self.model.consumptiont(periodt-1,hours,childcare,dincome0,
-					married0,nkids0,wage0,free0,price0)
+			consumption0=self.model.consumptiont(periodt-1,hours,childcare,dincome0,married0,
+				nkids0,wage0,free0,price0)['income_pc']
 			
 
 			J=6 #number of choides in the inner loop
@@ -491,9 +491,9 @@ class Emaxt:
 		pool.clear()
 		
 		
-		
-		
 		"""
+		
+		
 		list_emax = []
 		for j in range(7,19):
 			print 'Im in emax j ', j
@@ -518,6 +518,7 @@ class Emaxt:
 			list_emax.append([emax_dic,emax_values])
 
 		"""
+		
 		
 		
 

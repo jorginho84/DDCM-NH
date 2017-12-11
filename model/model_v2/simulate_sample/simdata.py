@@ -112,7 +112,7 @@ class SimData:
 			#current consumption to get future theta
 			dincome0=self.model.dincomet(periodt,hours,wage0,married0,nkids0)['income']
 			consumption0=self.model.consumptiont(periodt,hours,childcare,dincome0,
-					married0,nkids0,wage0,free0,price0)
+					married0,nkids0,wage0,free0,price0)['income_pc']
 
 			util_values[:,j]=self.model.simulate(periodt,wage0,free0,price0,theta0)
 			util_values_c[:,j]=util_values[:,j].copy()
@@ -257,7 +257,7 @@ class SimData:
 			dincome_matrix[:,periodt]=dincome0.copy()
 			nh_matrix[:,periodt]=self.model.dincomet(periodt,hours_t,wage0,married0,nkids0)['NH'].copy()
 			consumption0=self.model.consumptiont(periodt,hours_t,childcare_t,dincome0,married0,nkids0,wage0,
-				free0,price0)
+				free0,price0)['income_pc']
 			consumption_matrix[:,periodt]=consumption0.copy()
 
 			#SSRS measures

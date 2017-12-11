@@ -418,7 +418,7 @@ class Utility(object):
 
 		#Back to real prices
 		return {'income': dincome*(self.param.cpi[8]/self.param.cpi[periodt]),
-		'NH': nh_supp }
+		'NH': nh_supp, 'EITC_NH': nh_supp + eitc_fed + eitc_state}
 
 	def consumptiont(self,periodt,h,cc,dincome,marr,nkids,wage, free,price):
 		"""
@@ -426,6 +426,8 @@ class Utility(object):
 		(income - cc_payment)/family size
 
 		where cc_payment is determined using NH formula and price offer
+
+		It also returns what New Hope pays (nh_cost) for cost/benefit calculations
 
 		"""
 		pwage=np.reshape(h,self.N)*np.reshape(wage,self.N)*52
@@ -459,18 +461,26 @@ class Utility(object):
 			if self.cs==1:
 				if self.wr==1:
 					cc_cost[boo_ra & d_full & boo_nfree & young] = copayment[boo_ra & d_full & boo_nfree & young].copy()
+					nh_cost = cc*(price - cc_cost)*boo_ra
 				else:
 					cc_cost[boo_ra &  boo_nfree & young] = copayment[boo_ra &  boo_nfree & young].copy()
+					nh_cost = np.zeros(self.N)
+
+
 
 		else:
 			if self.cs==1:
 				cc_cost[boo_nfree & young] = copayment[boo_nfree & young].copy()
 
+			nh_cost = np.zeros(self.N)
+
 
 		incomepc=(dincome - cc*cc_cost)/(ones+nkids+marr)
 		incomepc[incomepc<=0]=1
+
+
 		
-		return incomepc
+		return {'income_pc': incomepc, 'nh_cc_cost': nh_cost}
 
 
 
@@ -537,7 +547,7 @@ class Utility(object):
 		d_unemp=ht==0
 
 		#Consumption: depends on ra, cc, and period
-		ct=self.consumptiont(periodt,ht,cc,dincome,marr,nkids,wage,free,price)
+		ct=self.consumptiont(periodt,ht,cc,dincome,marr,nkids,wage,free,price)['income_pc']
 
 		#parameters
 		ap=self.param.alphap

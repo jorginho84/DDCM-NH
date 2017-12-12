@@ -68,6 +68,8 @@ class Estimate:
 		util_list=[]
 		income_matrix=np.zeros((self.N,self.nperiods,self.M))
 		consumption_matrix=np.zeros((self.N,self.nperiods,self.M))
+		iscost_matrix=np.zeros((self.N,self.nperiods,self.M))
+		cscost_matrix=np.zeros((self.N,self.nperiods,self.M))
 		choice_matrix=np.zeros((self.N,self.nperiods,self.M))
 		utils_periodt=np.zeros((self.N,J,self.nperiods,self.M))
 		utils_c_periodt=np.zeros((self.N,J,self.nperiods,self.M))

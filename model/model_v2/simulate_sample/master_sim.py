@@ -234,8 +234,14 @@ marr=data_dic['Marriage']
 income=data_dic['Income']
 
 #Expenditures
-np.mean(nh_sup[passign[:,0]==1,:],axis=0)
-np.mean(nh_cc[passign[:,0]==1,:],axis=0)
+np.count_nonzero(nh_sup[:,0])
+np.count_nonzero(nh_cc[:,0])
+np.sum(nh_sup,axis=0)
+np.sum(nh_cc,axis=0)
+
+
+np.count_nonzero(passign)
+np.mean(nh_cc[nh_cc>0],axis=0)
 
 #log theta in SD units
 ltheta=np.log(theta_t)

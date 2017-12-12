@@ -366,6 +366,7 @@ for periodt in range(nperiods-1):
 	
 ###The graphs##
 
+#For paper
 exp = ['extensive-margin', 'intensive-margin', 'overall']
 
 for j in range(3): #the experiment loop
@@ -375,13 +376,14 @@ for j in range(3): #the experiment loop
 	y3 = np.mean(ate_cont_cc[j],axis=1)
 	y4 = np.mean(ate_cont_ct[j],axis=1)
 	total = y1 + y2 + y3 + y4
+	horiz_line_data = np.array([0 for i in xrange(len(x))])
 
 	fig, ax=plt.subplots()
-	ax.plot(x,y2, color='k',linewidth=3,marker='o')
-	ax.bar(x,y1, color='k' ,alpha=.8,bottom=y2,align='center')
-	ax.bar(x,y3, color='k' , alpha=.4, bottom=y1+y2,align='center')
-	ax.bar(x,y4,color='w',bottom=y3+y1+y2,align='center',edgecolor='k',
-		linewidth=1)
+	ax.plot(x,y2, color='k',zorder=1,linewidth=4.5,label='Time')
+	ax.plot(x,horiz_line_data, 'k--',linewidth=2)
+	ax.fill_between(x,y2,(y2+y1), color='k' ,alpha=.7,zorder=2)
+	ax.fill_between(x,(y2+y1),(y2+y1+y3), color='k' ,alpha=.4,zorder=3)
+	ax.fill_between(x,(y2+y1+y3),(total), color='k' ,alpha=.15,zorder=4)
 	ax.set_ylabel(r'Effect on child human capital ($\sigma$s)', fontsize=14)
 	ax.set_xlabel(r'Years after random assignment ($t$)', fontsize=14)
 	ax.spines['right'].set_visible(False)
@@ -390,12 +392,47 @@ for j in range(3): #the experiment loop
 	ax.xaxis.set_ticks_position('bottom')
 	ax.margins(0, 0)
 	ax.set_ylim(-0.05,.35)
-	ax.legend(['Time', r'$\theta_t$','Child care','Consumption'],loc=4)
+	ax.legend(['Time', 'Lagged human capital','Child care','Consumption'],loc=4)
 	plt.show()
 	fig.savefig('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/experiments/NH/mech_' + exp[j] + '.pdf', format='pdf')
 	plt.close()
 
+#For slides
+exp = ['extensive-margin', 'intensive-margin', 'overall']
 
+
+for j in range(3): #the experiment loop
+	x = np.array(range(1,nperiods))
+	y1 = np.mean(ate_cont_theta[j],axis=1)
+	y2 = np.mean(ate_cont_lt[j],axis=1)
+	y3 = np.mean(ate_cont_cc[j],axis=1)
+	y4 = np.mean(ate_cont_ct[j],axis=1)
+	total = y1 + y2 + y3 + y4
+	horiz_line_data = np.array([0 for i in xrange(len(x))])
+
+	fig, ax=plt.subplots()
+	ax.plot(x,y2, color='k',zorder=1,linewidth=4.5,label='Time')
+	ax.plot(x,horiz_line_data, 'k--',linewidth=2)
+	ax.fill_between(x,y2,(y2+y1), color='k' ,alpha=.65,zorder=2,label='Lagged human capital')
+	ax.fill_between(x,(y2+y1),(y2+y1+y3), color='k' ,alpha=.35,zorder=3,label='Child care')
+	ax.fill_between(x,(y2+y1+y3),(total), color='k' ,alpha=.12,zorder=4,label='Consumption')
+	ax.set_ylabel(r'Effect on child human capital ($\sigma$s)', fontsize=14)
+	ax.set_xlabel(r'Years after random assignment ($t$)', fontsize=14)
+	ax.annotate('Explained by time', xy=(2, y2[2]), xytext=(2.5, y2[2]-0.02),
+		arrowprops=dict(facecolor='black', shrink=0.05,connectionstyle="arc3"))
+	ax.annotate('Total impact on human capital', xy=(3, total[2]), xytext=(2, total[2]+0.02),
+		arrowprops=dict(facecolor='black', shrink=0.05,connectionstyle="arc3"))
+	ax.spines['right'].set_visible(False)
+	ax.spines['top'].set_visible(False)
+	ax.yaxis.set_ticks_position('left')
+	ax.xaxis.set_ticks_position('bottom')
+	ax.margins(0, 0)
+	ax.set_ylim(y2[0]-0.035,total[2] + 0.02)
+	ax.legend(loc=5)
+	#ax.legend(['Time', 'Lagged human capital','Child care','Consumption'],loc=5)
+	plt.show()
+	fig.savefig('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/experiments/NH/mech_' + exp[j] + '_slides.pdf', format='pdf')
+	plt.close()
 
 #Contribution % pc
 j=0

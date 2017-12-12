@@ -97,6 +97,8 @@ class Estimate:
 		for j in range(0,self.M):
 			income_matrix[:,:,j]=dics[j]['Income']
 			consumption_matrix[:,:,j]=dics[j]['Consumption']
+			iscost_matrix[:,:,j]=dics[j]['nh_matrix']
+			cscost_matrix[:,:,j]=dics[j]['cs_cost_matrix']
 			choice_matrix[:,:,j]=dics[j]['Choices']
 			theta_matrix[:,:,j]=dics[j]['Theta']
 			wage_matrix[:,:,j]=dics[j]['Wage']
@@ -115,7 +117,8 @@ class Estimate:
 				'choice_matrix': choice_matrix,'theta_matrix': theta_matrix,
 				'wage_matrix': wage_matrix,'consumption_matrix':consumption_matrix,
 				'hours_matrix': hours_matrix,'ssrs_t2_matrix':ssrs_t2_matrix,
-				'ssrs_t5_matrix':ssrs_t5_matrix}
+				'ssrs_t5_matrix':ssrs_t5_matrix,
+				'cscost_matrix':cscost_matrix, 'iscost_matrix': iscost_matrix }
 
 	def aux_model(self,choices):
 		"""

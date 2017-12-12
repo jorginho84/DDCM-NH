@@ -207,7 +207,10 @@ class Budget(Utility):
 		incomepc=(dincome - cc*cc_cost)/(ones+nkids+marr)
 		incomepc[incomepc<=0]=1
 		
-		return incomepc
+
+		#New hope cost is zero:
+		nh_cost = np.zeros(self.N)
+		return {'income_pc': incomepc, 'nh_cc_cost': nh_cost}
 
 	def elec(self):
 		"""

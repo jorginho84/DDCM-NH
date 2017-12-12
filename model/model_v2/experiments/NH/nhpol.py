@@ -176,6 +176,7 @@ period_y = 2
 ###Computing counterfactuals
 dics = []
 choices_list = []
+cost_list = []
 for j in range(len(models_list)):
 	output_ins=estimate.Estimate(nperiods,param0,x_w,x_m,x_k,x_wmk,passign,agech0,nkids0,
 		married0,D,dict_grid,M,N,moments_vector,var_cov,hours_p,hours_f,
@@ -193,6 +194,9 @@ for j in range(len(models_list)):
 	ate_ins = ATE(M,choices,agech0,passign,hours_p,hours_f,
 		nperiods_cc,nperiods_ct,nperiods_emp,nperiods_theta,period_y)
 	dics.append(ate_ins.sim_ate())
+
+	#aca voy: compute costs of each.
+	cost_list.append(choices['cscost_matrix'] + choices['iscost_matrix'] )
 
 
 
@@ -233,3 +237,6 @@ with open('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model
 	f.write(r'\end{tabular}'+'\n')
 
 
+###Costs of each alternative
+for j in range(len(models_list)):
+	print 'average cost of policies' np.mean(np.sum(cost_list[j],axis=0)[0:3,:])

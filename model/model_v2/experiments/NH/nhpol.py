@@ -239,4 +239,11 @@ with open('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model
 
 ###Costs of each alternative
 for j in range(len(models_list)):
-	print 'average cost of policies' np.mean(np.sum(cost_list[j],axis=0)[0:3,:])
+	print 'average cost of policies', np.mean(np.sum(cost_list[j],axis=0)[0:3,:])
+
+age_child = np.zeros((N,9)) #all periods
+for x in range(9):#all periods
+	age_child[:,x]=agech0[:,0] + x
+
+
+print '# of individuals for cost calculation', np.sum((age_child[:,2]<=6) & (passign[:,0]==1))

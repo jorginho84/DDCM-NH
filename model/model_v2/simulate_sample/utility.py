@@ -466,7 +466,7 @@ class Utility(object):
 					cc_cost[boo_ra &  boo_nfree & young] = copayment[boo_ra &  boo_nfree & young].copy()
 					
 
-				nh_cost = cc*(price[:,0] - cc_cost)*boo_ra
+				nh_cost = cc*(price[:,0] - cc_cost)
 			else:
 				nh_cost = np.zeros(self.N)
 

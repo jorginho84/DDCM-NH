@@ -182,7 +182,7 @@ emax_instance = output_ins.emax(param0,model_orig)
 
 
 #Two models: one with shock = 0 and other where shock>0
-shocks = [0,0.1]
+shocks = [0,0.01]
 choices_c = {}
 models = []
 for j in range(2):
@@ -191,3 +191,51 @@ for j in range(2):
 		nkids0,married0,hours,childcare,agech0,hours_p,hours_f,wr,cs,ws))
 	choices_c['Choice_' + str(j)] = output_ins.samples(param0,emax_instance,models[j])
 
+
+#Computing changes in % employment for control group
+h_sim_matrix = []
+employment = []
+wages = []
+full = []
+for j in range(2):
+	h_sim_matrix.append(choices_c['Choice_' + str(j)]['hours_matrix'])
+	employment.append(choices_c['Choice_' + str(j)]['hours_matrix']>0)
+	full.append(choices_c['Choice_' + str(j)]['hours_matrix']==hours_f)
+	wages.append(choices_c['Choice_' + str(j)]['wage_matrix'])
+
+
+
+
+
+###################################################
+
+#Extensive margin
+elast_extensive = np.zeros(M)
+for j in range(M):
+	elast_periods = np.zeros(nperiods)
+
+	for t in range(nperiods):
+		sample = (passign[:,0]==0)
+		elast_periods[t] = np.mean((employment[1][sample,t,j] - employment[0][sample,t,j]),axis=0)/(shocks[1]*np.mean((employment[0][sample,t,j]),axis=0))
+	
+	elast_extensive[j] = np.mean(elast_periods)
+
+
+#Intensive margin
+elast_intensive = np.zeros(M)
+for j in range(M):
+	elast_periods = np.zeros(nperiods)
+
+	for t in range(nperiods):
+		sample = (passign[:,0]==0) 
+		elast_periods[t] = np.mean((full[1][sample,t,j] - full[0][sample,t,j]),axis=0)/(shocks[1]*np.mean((employment[0][sample,t,j]),axis=0))
+	
+	elast_intensive[j] = np.mean(elast_periods)
+
+np.mean(elast_extensive)
+np.mean(elast_intensive)
+np.std(elast_intensive)
+np.std(elast_extensive)
+
+
+###################################################

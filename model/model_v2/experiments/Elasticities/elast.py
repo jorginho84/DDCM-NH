@@ -306,7 +306,7 @@ def partial(psi,eps,S,shocks):
 		db_dt_extensive[s] = (extensive_high - extensive_low) / (psi_high[s]-psi_low[s])
 		db_dt_intensive[s] = (intensive_high - intensive_low) / (psi_high[s]-psi_low[s])
 
-	return {'der_extensive': db_dt_extensive, 'der_extensive': db_dt_intensive}
+	return {'der_extensive': db_dt_extensive, 'der_intensive': db_dt_intensive}
 
 
 #Point estimates
@@ -316,7 +316,8 @@ elas = elast_gen(betas_nelder,shocks)
 #SEs
 npar = betas_nelder.shape[0]
 derivatives = partial(betas_nelder,0.01,npar,shocks)
-der_extensive = derivatives['derivatives']
+der_extensive = derivatives['der_extensive']
+der_intensive = derivatives['der_intensive']
 se_extensive = np.sqrt(np.dot(np.transpose(der_extensive),np.dot(var_cov,der_extensive)))
 se_intensive = np.sqrt(np.dot(np.transpose(der_intensive),np.dot(var_cov,der_intensive)))
 
@@ -326,6 +327,9 @@ print 'Extensive-margin elasticity'
 print ''
 print 'Point estimate: ', elas['Extensive']
 print 'SE: ', se_extensive
+print ''
+print ''
+print 'Intensive-margin elasticity'
 print ''
 print 'Point estimate: ', elas['Intensive']
 print 'SE: ', se_intensive

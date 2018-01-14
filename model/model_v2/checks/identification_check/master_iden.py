@@ -90,12 +90,12 @@ output_ins=estimate.Estimate(nperiods,param0,x_w,x_m,x_k,x_wmk,passign,agech0,nk
 def sym(a):
 	return ((1/(1+np.exp(-a))) - 0.5)*2
 
-font_size = 15
+font_size = 20
 
 
 #########################################################
 #Utility function
-
+"""
 ####ETA###
 execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/eta.py')
 
@@ -128,7 +128,7 @@ execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2
 
 ####rho###
 execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/rho_wage.py')
-
+"""
 
 #########################################################
 #Production function

@@ -28,7 +28,7 @@ plot2=ax.plot(p_list,np.full((size_grid,),obs_moment),'b-.',label='Observed',alp
 plt.setp(plot1,linewidth=3)
 plt.setp(plot2,linewidth=3)
 ax.legend()
-ax.set_ylabel(r'Proportion of full-time employment',fontsize=font_size)
+ax.set_ylabel(r'$Pr($full-time employment$)$',fontsize=font_size)
 ax.set_xlabel(r'Preference for full-time labor ($\alpha^f$)',fontsize=font_size)
 ax.spines['right'].set_visible(False)
 ax.spines['top'].set_visible(False)

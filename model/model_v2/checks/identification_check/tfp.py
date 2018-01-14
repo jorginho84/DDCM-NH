@@ -27,7 +27,7 @@ plot2=ax.plot(p_list,np.full((size_grid,),obs_moment),'b-.',label='Observed',alp
 plt.setp(plot1,linewidth=3)
 plt.setp(plot2,linewidth=3)
 ax.legend(loc=4)
-ax.set_ylabel(r'$E(PCA\mid cc=1)-E(PCA\mid cc=0)$',fontsize=font_size)
+ax.set_ylabel(r'$E(SSRS_t\mid cc_t=1)-E(SSRS_t\mid cc_t=0)$',fontsize=font_size)
 ax.set_xlabel(r'Child care TFP ($\gamma_1$)',fontsize=font_size)
 ax.spines['right'].set_visible(False)
 ax.spines['top'].set_visible(False)

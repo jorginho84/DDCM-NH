@@ -247,8 +247,8 @@ def elast_gen(bs,shocks):
 		elast_periods = np.zeros(nperiods)
 
 		for t in range(nperiods):
-			sample = (passign[:,0]==0)
-			elast_periods[t] = np.mean((employment[1][sample,t,j] - employment[0][sample,t,j]),axis=0)/(shocks[1]*np.mean((employment[0][sample,t,j]),axis=0))
+			
+			elast_periods[t] = np.mean((employment[1][:,t,j] - employment[0][:,t,j]),axis=0)/(shocks[1]*np.mean((employment[0][:,t,j]),axis=0))
 		
 		elast_extensive[j] = np.mean(elast_periods)
 
@@ -259,8 +259,8 @@ def elast_gen(bs,shocks):
 		elast_periods = np.zeros(nperiods)
 
 		for t in range(nperiods):
-			sample = (passign[:,0]==0) 
-			elast_periods[t] = np.mean((full[1][sample,t,j] - full[0][sample,t,j]),axis=0)/(shocks[1]*np.mean((employment[0][sample,t,j]),axis=0))
+			sample = (employment[0][:,t,j]==1)
+			elast_periods[t] = np.mean((full[1][sample,t,j] - full[0][sample,t,j]),axis=0)/(shocks[1]*np.mean((full[0][sample,t,j]),axis=0))
 		
 		elast_intensive[j] = np.mean(elast_periods)
 

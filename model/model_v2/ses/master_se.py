@@ -179,14 +179,29 @@ betas_opt=np.array([eta, alphap,alphaf,wagep_betas[0,0],
 	kappas[1][0],kappas[1][1],kappas[1][2],kappas[1][3],
 	syminv(rho_theta_epsilon)])
 
+
+#Weighting matrix (same as estimation)
+w_matrix  = np.zeros((var_cov.shape[0],var_cov.shape[0]))
+for i in range(var_cov.shape[0]):
+	w_matrix[i,i] = var_cov[i,i]**(-1)
+
 #The SE class
-se_ins=se.SEs(output_ins,var_cov,betas_opt)
+se_ins=se.SEs(output_ins,w_matrix,betas_opt)
 
 #Number of parameters and moments
 npar = betas_opt.shape[0]
 nmom = moments_vector.shape[0]
 
 #The var-cov matrix of structural parameters
-ses = se_ins.big_sand(0.01,nmom,npar) 
+ses = se_ins.big_sand(0.025,nmom,npar)
 
-np.save('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/estimation/sesv2_modelv16_1pc.npy',ses)
+np.save('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/estimation/sesv3_modelv16_2pc_correctW.npy',ses['Var_Cov']*(1+1/M))
+
+np.sqrt(np.diagonal(ses['Var_Cov']*(1+1/M)))
+
+np.argmax(np.abs(ses['Gradient'][1,:]))
+
+for s in range(npar):
+	print 'This is argmax of gradient' + str(s), np.argmax(np.abs(ses['Gradient'][s,:]))
+
+

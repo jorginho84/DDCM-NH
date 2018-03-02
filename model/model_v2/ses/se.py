@@ -261,8 +261,8 @@ class SEs:
 			psi_high = psi.copy()
 
 			#changing only relevant parameter, one at a time
-			psi_low[s] = psi[s] - eps
-			psi_high[s] = psi[s] + eps
+			psi_low[s] = psi[s]*(1-eps)
+			psi_high[s] = psi[s]*(1+eps)
 
 			#Computing betas
 			betas_low = self.binding(psi_low)['betas']
@@ -301,20 +301,11 @@ class SEs:
 
 		#The weighting matrix used in estimation
 		w_matrix = self.output_ins.__dict__['w_matrix'].copy()
-
-		for i in range(w_matrix.shape[0]):
-			w_matrix[i,i] = w_matrix[i,i]**(-1)
-
-		#The V matrix
-		x_vector = self.binding(self.psi)['x_vector']
-		v_matrix = np.dot(x_vector,np.transpose(x_vector))
-
-		#The big sandwhich matrix: a_matrix*a_inn*var_cov*a_inn'a_matrix
+		
+		#Var-Cov following Low, Meghir, Pistaferri, and Voena
 		a_inn = np.dot(np.transpose(dbdt),w_matrix)
-		a_matrix = np.linalg.inv(np.dot(a_inn,dbdt))
-		a_left = np.dot(a_matrix,a_inn)
-
-		return np.dot(np.dot(a_left,v_matrix),np.transpose(a_left))
+		
+		return {'Var_Cov': np.linalg.inv(np.dot(a_inn,dbdt)), 'Gradient': dbdt}
 
 
 

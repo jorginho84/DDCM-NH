@@ -21,7 +21,6 @@ See Angrist and Pischke for more information
 */
 local SE="hc2"
 
-
 /*
 set diff=1 if you want to produce a graph with the impact of New Hope (\Delta employment)
 set level=1 if you want to compare the level of employment between treatment and control groups
@@ -43,8 +42,7 @@ local quarters_ra=1
 
 
 /*
-controls: choose if regression should include controls for parents: age, ethnicity, marital status, and education.
-This works only for estimates based on quarters since RA
+controls: Don't modify this. All regressions are computed with no control variables.
 */
 
 local controls=1
@@ -492,11 +490,12 @@ if `quarters_ra'==1{
 	********************************************************************************
 	/*
 	*To compute baseline av
-	collapse (mean) emp*, by(p_assign)
-	reshape long emp, i(p_assign) j(quarter)
-	replace quarter=quarter-8
+	
+	egen baseline = rowmean(emp8-emp19)	
 
-	sum emp if quarter>=0 & quarter<=12 & p_assign=="C"
+	sum baseline if p_assign=="C"
+	sum baseline if p_assign=="C" & d_young==0
+	sum baseline if p_assign=="C" & d_young==1
 	
 	*/
 	
@@ -505,12 +504,42 @@ if `quarters_ra'==1{
 	*Saving data for analysis of hours.do
 	save "$results/Time/data_emp.dta", replace
 	
+
+	*Getting child age info
+	tempfile data_aux
+	save `data_aux', replace
+	use "$databases/Youth_original2.dta", clear
+	keep sampleid kid1dats
+	destring sampleid, force replace
+	destring kid1dats, force replace
+	format kid1dats %td
+	gen year_birth=yofd(kid1dats)
+	drop kid1dats
+
+	bysort sampleid: egen seq_aux=seq()
+	reshape wide year_birth,i(sampleid) j(seq_aux	)
+	merge 1:1 sampleid using `data_aux'
+	keep if _merge==3
+	drop _merge
+
+	*child age at baseline
+	gen year_ra = substr(string(p_radaym),1,2)
+	destring year_ra, force replace
+	replace year_ra = 1900 + year_ra
+
+	gen agechild1_ra =  year_ra - year_birth1
+	gen agechild2_ra =  year_ra - year_birth2
+
+	*Dummy: at least 1 child less than 6 years of age by two years after baseline
+	gen d_young = (agechild1_ra + 2 <=6) | (agechild2_ra + 2 <=6)
 	
+	stop!!
+
 	**Overall**
 	
 	forvalues y=0/45{
 		replace emp`y'=emp`y'*100
-		qui xi: reg emp`y' i.p_assign `control_var', vce(`SE')
+		qui xi: reg emp`y' i.p_assign , vce(`SE')
 		if `y'==0{
 			mat betasx=_b[_Ip_assign_2]
 			mat betas=(_b[_Ip_assign_2],_b[_Ip_assign_2] - invttail(e(df_r),0.025)*_se[_Ip_assign_2],/*
@@ -530,12 +559,12 @@ if `quarters_ra'==1{
 		
 	}
 
-	**By employment status **
+	**By participant with young/old children **
 	
-	foreach status in "No" "Yes"{
+	forvalues status=0/1{/*the sample loop*/
 		forvalues y=0/45{
 
-			qui xi: reg emp`y' i.p_assign `control_var' if curremp=="`status'", vce(`SE')
+			qui xi: reg emp`y' i.p_assign  if d_young==`status', vce(`SE')
 			
 			if `y'==0{
 				mat betasx_`status'=_b[_Ip_assign_2]
@@ -601,11 +630,11 @@ if `quarters_ra'==1{
 		*/lwidth(thin) mlabgap(vsmall) mlabcolor(blue) mlabposition(12) mlabsize(medium))
 		*/
 		
-		 twoway (line emp quarter if p_assign=="E" & quarter>=-3 & quarter<=32, lpattern(solid) lwidth(thin) ) /*
+		 twoway (line emp quarter if p_assign=="E" & quarter>=-3 & quarter<=32, lpattern(solid) lwidth(medthick) ) /*
 		 */ (scatter mean_aux1 quarter if p_assign=="E" & quarter>=-3 & quarter<=32,  msymbol(circle) mcolor(blue) mfcolor(blue)) /*
 		*/ (scatter mean_aux2 quarter if p_assign=="E" & quarter>=-3 & quarter<=32,  msymbol(circle) mcolor(blue) mfcolor(ltblue)) /*
 		*/ (scatter mean_aux3 quarter if p_assign=="E" & quarter>=-3 & quarter<=32,  msymbol(circle) mcolor(blue) mfcolor(none)) /*
-		*/ (line emp quarter if p_assign=="C" &  quarter>=-3 & quarter<=32, lpattern(dash) lwidth(thin)),/*
+		*/ (line emp quarter if p_assign=="C" &  quarter>=-3 & quarter<=32, lpattern(dash) lwidth(medthick)),/*
 		*/scheme(s2mono) legend(order(1 "Treatment" 5 "Control")  )/*
 		*/ytitle(Employment (in %)) xtitle(Quarters since RA)/*
 		*/graphregion(fcolor(white) ifcolor(white) lcolor(white) ilcolor(white)) plotregion(fcolor(white) lcolor(white)  ifcolor(white) ilcolor(white)) /*
@@ -638,53 +667,53 @@ if `quarters_ra'==1{
 		***By employment groups***
 		restore
 		*There are 53 missing values
-		drop if curremp==" "
+				
 		
-		
-		collapse (mean) emp*, by(p_assign curremp)
-		reshape long emp, i(p_assign curremp) j(quarter)
+		collapse (mean) emp*, by(p_assign d_young)
+		reshape long emp, i(p_assign d_young) j(quarter)
 		replace quarter=quarter-8 /*back to the original number*/
 		
-		*Recovering unemployed
+		*Recovering old children
 		gen p_assign_aux=1 if p_assign=="E"
 		replace p_assign_aux=2 if p_assign=="C"
-		sort p_assign_aux curremp quarter 
-		svmat pvalues_No
+		sort p_assign_aux d_young quarter 
+		svmat pvalues_0
+		
 
-		*Recovering employed
-		gen emp_aux=1 if curremp=="Yes"
-		replace emp_aux=2 if curremp=="No"
+		gen emp_aux=1 if d_young==1
+		replace emp_aux=2 if d_young==0
 		sort p_assign_aux emp_aux quarter 
-		svmat pvalues_Yes
+		svmat pvalues_1
+		
 		
 		
 		gen label_aux=""
-		replace label_aux="*" if pvalues_Yes1<=0.1 & curremp=="Yes"
-		replace label_aux="**" if pvalues_Yes1<=0.05 & curremp=="Yes"
-		replace label_aux="***" if pvalues_Yes1<=0.01 & curremp=="Yes"
+		replace label_aux="*" if pvalues_01<=0.1 & d_young==0
+		replace label_aux="**" if pvalues_01<=0.05 & d_young==0
+		replace label_aux="***" if pvalues_01<=0.01 & d_young==0
 
-		replace label_aux="*" if pvalues_No1<=0.1 & curremp=="No"
-		replace label_aux="**" if pvalues_No1<=0.05 & curremp=="No"
-		replace label_aux="***" if pvalues_No1<=0.01 & curremp=="No"
+		replace label_aux="*" if pvalues_11<=0.1 & d_young==1
+		replace label_aux="**" if pvalues_11<=0.05 & d_young==1
+		replace label_aux="***" if pvalues_11<=0.01 & d_young==1
 		
-		gen mean_aux1_e=emp if p_assign=="E" & pvalues_Yes1<=0.01 & curremp=="Yes"
-		gen mean_aux2_e=emp if p_assign=="E" & pvalues_Yes1<=0.05 &  pvalues_Yes1>0.01 & curremp=="Yes"
-		gen mean_aux3_e=emp if p_assign=="E" & pvalues_Yes1<=0.1 &  pvalues_Yes1>0.05 & curremp=="Yes"
+		gen mean_aux1_0=emp if p_assign=="E" & pvalues_01<=0.01 & d_young==0
+		gen mean_aux2_0=emp if p_assign=="E" & pvalues_01<=0.05 &  pvalues_01>0.01 & d_young==0
+		gen mean_aux3_0=emp if p_assign=="E" & pvalues_01<=0.1 &  pvalues_01>0.05 & d_young==0
 
-		gen mean_aux1_u=emp if p_assign=="E" & pvalues_No1<=0.01 & curremp=="No"
-		gen mean_aux2_u=emp if p_assign=="E" & pvalues_No1<=0.05 &  pvalues_No1>0.01 & curremp=="No"
-		gen mean_aux3_u=emp if p_assign=="E" & pvalues_No1<=0.1 &  pvalues_No1>0.05 & curremp=="No"
+		gen mean_aux1_1=emp if p_assign=="E" & pvalues_11<=0.01 & d_young==1
+		gen mean_aux2_1=emp if p_assign=="E" & pvalues_11<=0.05 &  pvalues_11>0.01 & d_young==1
+		gen mean_aux3_1=emp if p_assign=="E" & pvalues_11<=0.1 &  pvalues_11>0.05 & d_young==1
 		
-		twoway (line emp quarter if p_assign=="E" & quarter>=-3 & quarter<=32 & curremp=="No", lwidth(thin)) /*
-		*/ (scatter mean_aux1_u quarter if p_assign=="E" & quarter>=-3 & quarter<=32 & curremp=="No",  msymbol(circle) mcolor(blue) mfcolor(blue)) /*
-		*/ (scatter mean_aux2_u quarter if p_assign=="E" & quarter>=-3 & quarter<=32 & curremp=="No",  msymbol(circle) mcolor(blue) mfcolor(ltblue)) /*
-		*/ (scatter mean_aux3_u quarter if p_assign=="E" & quarter>=-3 & quarter<=32 & curremp=="No",  msymbol(circle) mcolor(blue) mfcolor(none)) /*
-		*/(line emp quarter if p_assign=="C" & quarter>=-3 & quarter<=32 & curremp=="No",  lpattern(dash) lwidth(thin)),/*
+		twoway (line emp quarter if p_assign=="E" & quarter>=-3 & quarter<=32 & d_young==0, lwidth(medthick)) /*
+		*/ (scatter mean_aux1_0 quarter if p_assign=="E" & quarter>=-3 & quarter<=32 & d_young==0,  msymbol(circle) mcolor(blue) mfcolor(blue)) /*
+		*/ (scatter mean_aux2_0 quarter if p_assign=="E" & quarter>=-3 & quarter<=32 & d_young==0,  msymbol(circle) mcolor(blue) mfcolor(ltblue)) /*
+		*/ (scatter mean_aux3_0 quarter if p_assign=="E" & quarter>=-3 & quarter<=32 & d_young==0,  msymbol(circle) mcolor(blue) mfcolor(none)) /*
+		*/(line emp quarter if p_assign=="C" & quarter>=-3 & quarter<=32 & d_young==0,  lpattern(dash) lwidth(medthick)),/*
 		*/scheme(s2mono) legend(order(1 "Treatment" 5 "Control")  )/*
 		*/ytitle(Employment (in%)) xtitle(Quarters since RA)/*
 		*/graphregion(fcolor(white) ifcolor(white) lcolor(white) ilcolor(white)) plotregion(fcolor(white) lcolor(white)  ifcolor(white) ilcolor(white)) /*
 		*/ ylabel(, nogrid) ylabel(30(10)100) /*
-		*/  xline(12, lcolor(red)) xline(0, lcolor(red))
+		*/  xline(12, lcolor(red)) xline(0, lcolor(red)) scale(`scale')
 		*
 		
 		if `csj'==0{
@@ -692,14 +721,13 @@ if `quarters_ra'==1{
 			graph export "$results/Time/LS_admin_qra_level_unemployed_NoCSJ.pdf", as(pdf) replace
 		}
 		else{
-			graph save "$results/Time/LS_admin_qra_level_unemployed.gph", replace
-			graph export "$results/Time/LS_admin_qra_level_unemployed.pdf", as(pdf) replace
+			graph export "$results/Time/LS_admin_qra_level_old.pdf", as(pdf) replace
 		}
-		twoway (line emp quarter if p_assign=="E" & quarter>=-3 & quarter<=32 & curremp=="Yes", lpattern(solid) lwidth(thin) ) /*
-		*/ (scatter mean_aux1_u quarter if p_assign=="E" & quarter>=-3 & quarter<=32 & curremp=="Yes",  msymbol(circle) mcolor(blue) mfcolor(blue)) /*
-		*/ (scatter mean_aux2_u quarter if p_assign=="E" & quarter>=-3 & quarter<=32 & curremp=="Yes",  msymbol(circle) mcolor(blue) mfcolor(ltblue)) /*
-		*/ (scatter mean_aux3_u quarter if p_assign=="E" & quarter>=-3 & quarter<=32 & curremp=="Yes",  msymbol(circle) mcolor(blue) mfcolor(none)) /*
-		*/(line emp quarter if p_assign=="C" & quarter>=-3 & quarter<=32 & curremp=="Yes",  lpattern(dash) lwidth(thin)),/*
+		twoway (line emp quarter if p_assign=="E" & quarter>=-3 & quarter<=32 & d_young==1, lpattern(solid) lwidth(medthick) ) /*
+		*/ (scatter mean_aux1_1 quarter if p_assign=="E" & quarter>=-3 & quarter<=32 & d_young==1,  msymbol(circle) mcolor(blue) mfcolor(blue)) /*
+		*/ (scatter mean_aux2_1 quarter if p_assign=="E" & quarter>=-3 & quarter<=32 & d_young==1,  msymbol(circle) mcolor(blue) mfcolor(ltblue)) /*
+		*/ (scatter mean_aux3_1 quarter if p_assign=="E" & quarter>=-3 & quarter<=32 & d_young==1,  msymbol(circle) mcolor(blue) mfcolor(none)) /*
+		*/(line emp quarter if p_assign=="C" & quarter>=-3 & quarter<=32 & d_young==1,  lpattern(dash) lwidth(medthick)),/*
 		*/scheme(s2mono) legend(order(1 "Treatment" 5 "Control")  )/*
 		*/ytitle(Employment (in%)) xtitle(Quarters since RA)/*
 		*/graphregion(fcolor(white) ifcolor(white) lcolor(white) ilcolor(white)) plotregion(fcolor(white) lcolor(white)  ifcolor(white) ilcolor(white)) /*
@@ -712,8 +740,7 @@ if `quarters_ra'==1{
 		}
 		
 		else{
-			graph save "$results/Time/LS_admin_qra_level_employed.gph", replace
-			graph export "$results/Time/LS_admin_qra_level_employed.pdf", as(pdf) replace
+			graph export "$results/Time/LS_admin_qra_level_young.pdf", as(pdf) replace
 		}
 		
 	}
@@ -726,11 +753,11 @@ if `quarters_ra'==1{
 
 
 		svmat betas
-		svmat betas_Yes
-		svmat betas_No
+		svmat betas_0
+		svmat betas_1
 		svmat pvalues
-		svmat pvalues_Yes
-		svmat pvalues_No
+		svmat pvalues_0
+		svmat pvalues_1
 		drop if betas1==.
 
 		*Back to quarters since RA
@@ -739,8 +766,15 @@ if `quarters_ra'==1{
 
 		*Labels for significance
 		gen mean_aux=betas1 if pvalues1<=0.05
-		gen mean_aux_Yes=betas_Yes1 if pvalues_Yes1<=0.05
-		gen mean_aux_No=betas_No1 if pvalues_No1<=0.05
+		gen mean_aux_0=betas_01 if pvalues_01<=0.05
+		gen mean_aux_1=betas_11 if pvalues_11<=0.05
+
+		/*
+		To get av estimates
+		sum betas1 if quarter>=0 & quarter<=11
+		sum betas_01 if quarter>=0 & quarter<=11
+		sum betas_11 if quarter>=0 & quarter<=11
+		*/
 
 		*The figure
 		twoway (connected betas1 quarter if quarter>=-3 & quarter<=32, msymbol(circle) mlcolor(blue) mfcolor(white) ) /*
@@ -748,36 +782,36 @@ if `quarters_ra'==1{
 		*/(line betas2 quarter if quarter>=-3 & quarter<=32,lpattern(dash)) /*
 		*/(line betas3 quarter if quarter>=-3 & quarter<=32,lpattern(dash)),/*
 		*/xline(12, lcolor(red)) yline(0, lcolor(black))/*
-		*/ytitle("{&Delta}employment (in %)") xtitle("Quarters since RA") legend(off)/*
+		*/ytitle("Effect on employment (in %)") xtitle("Quarters since RA") legend(off)/*
 		*/ graphregion(fcolor(white) ifcolor(white) lcolor(white) ilcolor(white)) /*
 		*/plotregion(fcolor(white) lcolor(white)  ifcolor(white) ilcolor(white))  /*
 		*/ ylabel(-20(10)35, nogrid) scale(1.2) scheme(s2mono) 
 		
 		graph export "$results/Time/LS_admin_qra_diff.pdf", as(pdf) replace
 
-		twoway (connected betas_Yes1 quarter if quarter>=-3 & quarter<=32,mlcolor(blue) mfcolor(white) ) /*
-		*/ (scatter mean_aux_Yes quarter if quarter>=-3 & quarter<=32, msymbol(circle) mlcolor(blue) mfcolor(blue)) /* 
-		*/(line betas_Yes2 quarter if quarter>=-3 & quarter<=32,lpattern(dash)) /*
-		*/(line betas_Yes3 quarter if quarter>=-3 & quarter<=32,lpattern(dash)),/*
+		twoway (connected betas_01 quarter if quarter>=-3 & quarter<=32,mlcolor(blue) mfcolor(white) ) /*
+		*/ (scatter mean_aux_0 quarter if quarter>=-3 & quarter<=32, msymbol(circle) mlcolor(blue) mfcolor(blue)) /* 
+		*/(line betas_02 quarter if quarter>=-3 & quarter<=32,lpattern(dash)) /*
+		*/(line betas_03 quarter if quarter>=-3 & quarter<=32,lpattern(dash)),/*
 		*/xline(12, lcolor(red)) yline(0, lcolor(black))/*
-		*/ytitle("{&Delta}employment (in %)") xtitle("Quarters since RA") legend(off)/*
+		*/ytitle("Effect on employment (in %)") xtitle("Quarters since RA") legend(off)/*
 		*/ graphregion(fcolor(white) ifcolor(white) lcolor(white) ilcolor(white)) /*
 		*/plotregion(fcolor(white) lcolor(white)  ifcolor(white) ilcolor(white))  /*
 		*/ ylabel(-20(10)35, nogrid) scale(1.2) scheme(s2mono) 
 		
-		graph export "$results/Time/LS_admin_qra_diff_employed.pdf", as(pdf) replace
+		graph export "$results/Time/LS_admin_qra_diff_old.pdf", as(pdf) replace
 
-		twoway (connected betas_No1 quarter if quarter>=-3 & quarter<=32,mlcolor(blue) mfcolor(white) ) /*
-		*/ (scatter mean_aux_No quarter if quarter>=-3 & quarter<=32, msymbol(circle) mlcolor(blue) mfcolor(blue)) /* 
-		*/(line betas_No2 quarter if quarter>=-3 & quarter<=32,lpattern(dash)) /*
-		*/(line betas_No3 quarter if quarter>=-3 & quarter<=32,lpattern(dash)),/*
+		twoway (connected betas_11 quarter if quarter>=-3 & quarter<=32,mlcolor(blue) mfcolor(white) ) /*
+		*/ (scatter mean_aux_1 quarter if quarter>=-3 & quarter<=32, msymbol(circle) mlcolor(blue) mfcolor(blue)) /* 
+		*/(line betas_12 quarter if quarter>=-3 & quarter<=32,lpattern(dash)) /*
+		*/(line betas_13 quarter if quarter>=-3 & quarter<=32,lpattern(dash)),/*
 		*/xline(12, lcolor(red)) yline(0, lcolor(black))/*
-		*/ytitle("{&Delta}employment (in %)") xtitle("Quarters since RA") legend(off)/*
+		*/ytitle("Effect on employment (in %)") xtitle("Quarters since RA") legend(off)/*
 		*/ graphregion(fcolor(white) ifcolor(white) lcolor(white) ilcolor(white)) /*
 		*/plotregion(fcolor(white) lcolor(white)  ifcolor(white) ilcolor(white))  /*
 		*/ ylabel(-20(10)35, nogrid) scale(1.2) scheme(s2mono) 
 		
-		graph export "$results/Time/LS_admin_qra_diff_unemployed.pdf", as(pdf) replace
+		graph export "$results/Time/LS_admin_qra_diff_young.pdf", as(pdf) replace
 
 	}
 

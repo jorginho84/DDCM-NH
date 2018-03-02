@@ -22,7 +22,7 @@ do "$codes/data_cfs.do"
 
 
 keep p_assign sampleid p_radatr p_bdatey p_bdatem p_bdated b_bdater bifage p_bdatey p_bdatem gender ethnic marital higrade degree /*
-*/pastern2 work_ft curremp currwage c1 piinvyy epiinvyy p_radaym
+*/pastern2 work_ft curremp currwage c1 piinvyy epiinvyy 
 
 *Constructing age at RA (bifage has 24 odd values)
 
@@ -31,6 +31,10 @@ tostring p_radatr, gen(date_ra_aux)
 gen date_ra_aux2="19"+date_ra_aux
 gen date_ra = date(date_ra_aux2, "YMD")
 format date_ra %td
+
+*Employment at baseline
+gen emp_baseline=1 if curremp=="Yes"
+replace emp_baseline=0 if curremp=="No"
 
 *Birthdate
 tostring p_bdatey p_bdatem p_bdated, gen(p_bdatey_aux p_bdatem_aux p_bdated_aux)
@@ -50,10 +54,10 @@ generate age_ra = floor(([ym(year(date_ra), month(date_ra)) - ym(year(bday), mon
 gen d_HS=degree==1 | degree==2
 label define educ_lbl 1 "High school diploma or GED" 0 "Less..."
 
-keep sampleid age_ra gender ethnic marital d_HS higrade pastern2 p_radaym
+keep sampleid age_ra gender ethnic marital d_HS higrade pastern2 emp_baseline
 sort sampleid
 
-merge 1:1 sampleid using `data_aux3'
+merge 1:m sampleid using `data_aux3'
 keep if _merge==3
 drop _merge
 

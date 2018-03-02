@@ -31,7 +31,7 @@ set maxvar 15000
 controls: choose if regression should include controls for parents: age, ethnicity, marital status, and education.
 */
 
-local controls=1
+local controls=0
 
 *Choose: 1 if produce income graph for employed at baseline
 *Choose: 0 if produce income graph for unemployed at baseline
@@ -96,6 +96,35 @@ gen d_ra = .
 replace d_ra = 1 if p_assign=="E"
 replace d_ra = 0 if p_assign=="C"
 
+*Getting child age info
+tempfile data_aux
+save `data_aux', replace
+use "$databases/Youth_original2.dta", clear
+keep sampleid kid1dats
+destring sampleid, force replace
+destring kid1dats, force replace
+format kid1dats %td
+gen year_birth=yofd(kid1dats)
+drop kid1dats
+
+bysort sampleid: egen seq_aux=seq()
+reshape wide year_birth,i(sampleid) j(seq_aux	)
+merge 1:1 sampleid using `data_aux'
+keep if _merge==3
+drop _merge
+
+*child age at baseline
+gen year_ra = substr(string(p_radaym),1,2)
+destring year_ra, force replace
+replace year_ra = 1900 + year_ra
+
+gen agechild1_ra =  year_ra - year_birth1
+gen agechild2_ra =  year_ra - year_birth2
+
+*Dummy: at least 1 child less than 6 years of age by two years after baseline
+gen d_young = (agechild1_ra + 2 <=6) | (agechild2_ra + 2 <=6)
+
+
 *Save temporal data (before panel)
 tempfile data_aux
 save `data_aux', replace
@@ -103,7 +132,7 @@ save `data_aux', replace
 
 *To panel
 keep total_income_y* gross_y* employment_y* afdc_y* fs_y* sup_y* eitc_fed_y* /*
-*/ eitc_state_y* sampleid d_ra p_assign emp_baseline age_ra marital ethnic d_HS2 higrade pastern2
+*/ eitc_state_y* d_young sampleid d_ra p_assign emp_baseline age_ra marital ethnic d_HS2 higrade pastern2
 
 reshape long total_income_y gross_y employment_y afdc_y fs_y eitc_fed_y sup_y  /*
 */ eitc_state_y, i(sampleid) j(year)
@@ -117,8 +146,15 @@ save `data_panel', replace
 
 *Welfare
 egen welfare=rowtotal(afdc_y fs_y)
-
 egen eitc=rowtotal(eitc_fed_y eitc_state_y)
+
+*log income
+gen ltotal_income_y1 = log(total_income_y)
+
+*log income w/ zeros
+gen ltotal_income_y2 = ltotal_income_y1
+replace ltotal_income_y2 = 0 if ltotal_income_y2==.
+
 
 
 **********************************************************************************
@@ -126,87 +162,117 @@ egen eitc=rowtotal(eitc_fed_y eitc_state_y)
 /*TOTAL INCOME ESTIMATES*/
 
 
-*The regressions
-forvalues t=0/1{/*the periods loop*/
+forvalues x=0/2{/*the sample loop*/
 	preserve
-
-	if `t'==1{
-		keep if year<=2	
-
+	if `x'<2{
+		keep if d_young==`x'
 	}
-	forvalues j=0/1{/*the control var loop*/
 
-		if `j'==0{
-			local controls ""
-		}
-		else{
-			local controls `control_var'
-		}
-		forvalues x=0/2{/*the sample loop*/
-			if `x'<=1{
-				qui xi: reg total_income_y i.p_assign `controls' if emp_baseline==`x', vce(`SE')	
-			}
-			else{
-				qui xi: reg total_income_y i.p_assign `controls', vce(`SE')		
-			}
-			
-			local total_emp`x'_control`j'_period`t' = string(round(_b[_Ip_assign_2]/1000,0.001),"%9.3f")
-			local se_total_emp`x'_control`j'_period`t'  =string(round(_se[_Ip_assign_2]/1000,0.001),"%9.3f")
-			qui: test _Ip_assign_2=0
-			local pv_total_emp`x'_control`j'_period`t'=r(p)
+	*Regression 1: OLS on total income
+	qui xi: reg total_income_y i.p_assign `control_var' if year<=2, vce(`SE')
 
-			if `pv_total_emp`x'_control`j'_period`t''<=.01{
-				local ast_total_emp`x'_control`j'_period`t' ="***"	
-			}
-			else if `pv_total_emp`x'_control`j'_period`t''<=.05 {
-				local ast_total_emp`x'_control`j'_period`t' ="**"		
-			}
-			else if `pv_total_emp`x'_control`j'_period`t''<=.1 {
-				local ast_total_emp`x'_control`j'_period`t' ="*"		
-			}
-			else{
-				local ast_total_emp`x'_control`j'_period`t'=""
-			}
-			
+	local total_emp`x'_reg1 = string(round(_b[_Ip_assign_2]/1000,0.001),"%9.3f")
+	local se_total_emp`x'_reg1 =string(round(_se[_Ip_assign_2]/1000,0.001),"%9.3f")
+	qui: test _Ip_assign_2=0
+	local pv_total_emp`x'_reg1=r(p)
 
+	if `pv_total_emp`x'_reg1'<=.01{
+		local ast_total_emp`x'_reg1 ="***"	
+	}
+	else if `pv_total_emp`x'_reg1'<=.05 {
+		local ast_total_emp`x'_reg1 ="**"		
+	}
+	else if `pv_total_emp`x'_reg1'<=.1 {
+		local ast_total_emp`x'_reg1 ="*"		
+	}
+	else{
+		local ast_total_emp`x'_reg1=""
+	}
 
+	*Regression 2: OLS on log income
+	qui xi: reg ltotal_income_y1 i.p_assign `control_var' if year<=2, vce(`SE')
 
+	local total_emp`x'_reg2 = string(round(_b[_Ip_assign_2],0.001),"%9.3f")
+	local se_total_emp`x'_reg2 =string(round(_se[_Ip_assign_2],0.001),"%9.3f")
+	qui: test _Ip_assign_2=0
+	local pv_total_emp`x'_reg2=r(p)
 
-		}
+	if `pv_total_emp`x'_reg2'<=.01{
+		local ast_total_emp`x'_reg2 ="***"	
+	}
+	else if `pv_total_emp`x'_reg2'<=.05 {
+		local ast_total_emp`x'_reg2 ="**"		
+	}
+	else if `pv_total_emp`x'_reg2'<=.1 {
+		local ast_total_emp`x'_reg2 ="*"		
+	}
+	else{
+		local ast_total_emp`x'_reg2=""
+	}
 
+	*Regression 3: OLS on log income w/ income==1
+	qui xi: reg ltotal_income_y2 i.p_assign `control_var' if year<=2, vce(`SE')
+
+	local total_emp`x'_reg3 = string(round(_b[_Ip_assign_2],0.001),"%9.3f")
+	local se_total_emp`x'_reg3 =string(round(_se[_Ip_assign_2],0.001),"%9.3f")
+	qui: test _Ip_assign_2=0
+	local pv_total_emp`x'_reg3=r(p)
+
+	if `pv_total_emp`x'_reg3'<=.01{
+		local ast_total_emp`x'_reg3 ="***"	
+	}
+	else if `pv_total_emp`x'_reg3'<=.05 {
+		local ast_total_emp`x'_reg3 ="**"		
+	}
+	else if `pv_total_emp`x'_reg3'<=.1 {
+		local ast_total_emp`x'_reg3 ="*"		
+	}
+	else{
+		local ast_total_emp`x'_reg3=""
+	}
+
+	*Regression 4: Median reg on income
+	qui xi: qreg total_income_y i.p_assign `control_var' if year<=2, vce(robust)
+
+	local total_emp`x'_reg4 = string(round(_b[_Ip_assign_2]/1000,0.001),"%9.3f")
+	local se_total_emp`x'_reg4 =string(round(_se[_Ip_assign_2]/1000,0.001),"%9.3f")
+	qui: test _Ip_assign_2=0
+	local pv_total_emp`x'_reg4=r(p)
+
+	if `pv_total_emp`x'_reg4'<=.01{
+		local ast_total_emp`x'_reg4 ="***"	
+	}
+	else if `pv_total_emp`x'_reg4'<=.05 {
+		local ast_total_emp`x'_reg4 ="**"		
+	}
+	else if `pv_total_emp`x'_reg4'<=.1 {
+		local ast_total_emp`x'_reg4 ="*"		
+	}
+	else{
+		local ast_total_emp`x'_reg4=""
 	}
 	restore
+
+
 
 }
 
 
-
 *The Table
-file open tab_income using "$results/Income/table_total_income.tex", write replace
-file write tab_income
-file write tab_income "\begin{tabular}{llccccccc}" _n
+file open tab_income using "$results/Income/table_income.tex", write replace
+file write tab_income "\begin{tabular}{llccccc}" _n
 file write tab_income "\hline" _n
-file write tab_income "Sample & & (1)   && (2) & & (3)   & & (4) \bigstrut\\" _n
-file write tab_income "\cline{1-1}\cline{3-3}\cline{5-5}\cline{7-7}\cline{9-9}"_n
-
-file write tab_income "Overall &   & `total_emp2_control0_period0'`ast_total_emp2_control0_period0'   &  & `total_emp2_control0_period1'`ast_total_emp2_control0_period1'  &  & `total_emp2_control1_period0'`ast_total_emp2_control1_period0'   &  & `total_emp2_control1_period1'`ast_total_emp2_control1_period1' \bigstrut[t]\\" _n
-file write tab_income " &   & (`se_total_emp2_control0_period0')   &  & (`se_total_emp2_control0_period1')  &  & (`se_total_emp2_control1_period0')   &  & (`se_total_emp2_control0_period1') \bigstrut[t]\\" _n
-
-file write tab_income "Unemployed at baseline &   & `total_emp0_control0_period0'`ast_total_emp0_control0_period0'   &  & `total_emp0_control0_period1'`ast_total_emp0_control0_period1'  &  & `total_emp0_control1_period0'`ast_total_emp0_control1_period0'   &  & `total_emp0_control1_period1'`ast_total_emp0_control1_period1' \bigstrut[t]\\" _n
-file write tab_income " &   & (`se_total_emp0_control0_period0')   &  & (`se_total_emp0_control0_period1')  &  & (`se_total_emp0_control1_period0')   &  & (`se_total_emp0_control0_period1') \bigstrut[t]\\" _n
-
-file write tab_income "Employed at baseline &   & `total_emp1_control0_period0'`ast_total_emp1_control0_period0'   &  & `total_emp1_control0_period1'`ast_total_emp1_control0_period1'  &  & `total_emp1_control1_period0'`ast_total_emp1_control1_period0'   &  & `total_emp1_control1_period1'`ast_total_emp1_control1_period1' \bigstrut[t]\\" _n
-file write tab_income " &   & (`se_total_emp1_control0_period0')   &  & (`se_total_emp1_control0_period1')  &  & (`se_total_emp1_control1_period0')   &  & (`se_total_emp1_control0_period1') \bigstrut[t]\\" _n
-
-
-file write tab_income "\hline" _n
-file write tab_income "All years &       & $\checkmark$ &       &       &       & $\checkmark$ &       &  \bigstrut[t]\\" _n
-file write tab_income "Years 0-2 &       &       &       & $\checkmark$ &       &       &       & $\checkmark$ \\" _n
-file write tab_income "No controls &       & $\checkmark$ &       & $\checkmark$ &       &       &       &  \\" _n
-file write tab_income "W/ controls &       &       &       &       &       & $\checkmark$ &       & $\checkmark$ \bigstrut[b]\\" _n
+file write tab_income "\multicolumn{1}{l}{Estimate} && Young  && Old   && Overall \bigstrut\\" _n
+file write tab_income "\cline{1-1}\cline{3-7}&&&&&&\bigstrut[t]\\" _n
+file write tab_income "\multicolumn{1}{l}{OLS} && `total_emp1_reg1'`ast_total_emp1_reg1'   && `total_emp0_reg1'`ast_total_emp0_reg1'   && `total_emp2_reg1'`ast_total_emp2_reg1' \\" _n
+file write tab_income "      &       & (`se_total_emp1_reg1') &       & (`se_total_emp0_reg1') &       & (`se_total_emp2_reg1') \\" _n
+file write tab_income "      &       &       &       &       &       &  \\" _n
+file write tab_income "\multicolumn{1}{l}{Median regression} && `total_emp1_reg4'`ast_total_emp1_reg4'   && `total_emp0_reg4'`ast_total_emp0_reg4'   && `total_emp2_reg4'`ast_total_emp2_reg4' \\" _n
+file write tab_income "      &       & (`se_total_emp1_reg4') &       & (`se_total_emp0_reg4') &       & (`se_total_emp2_reg4') \\" _n
 file write tab_income "\hline" _n
 file write tab_income "\end{tabular}" _n
 file close tab_income
+
 
 *************************************************************************************
 *************************************************************************************
@@ -219,23 +285,23 @@ file close tab_income
 *
 
 *For t<=2
-forvalues x=0/2{
+forvalues x=0/2{/*the sample loop*/
 
 	if `x'<=1{
-		qui xi: reg gross_y i.p_assign if emp_baseline==`x' & year<=2, vce(`SE')
+		qui xi: reg gross_y i.p_assign if d_young==`x' & year<=2, vce(`SE')
 		local dec1_emp`x' = _b[_Ip_assign_2]
 
-		qui xi: reg welfare i.p_assign if emp_baseline==`x' & year<=2, vce(`SE')
+		qui xi: reg welfare i.p_assign if d_young==`x' & year<=2, vce(`SE')
 		local dec2_emp`x' = _b[_Ip_assign_2]
 
-		qui xi: reg eitc i.p_assign if emp_baseline==`x' & year<=2, vce(`SE')
+		qui xi: reg eitc i.p_assign if d_young==`x' & year<=2, vce(`SE')
 		local dec3_emp`x' = _b[_Ip_assign_2]
 
-		qui xi: reg sup_y i.p_assign if emp_baseline==`x' & year<=2, vce(`SE')
+		qui xi: reg sup_y i.p_assign if d_young==`x' & year<=2, vce(`SE')
 		local dec4_emp`x' = _b[_Ip_assign_2]
 
 		*shares
-		qui xi: reg total_income_y i.p_assign if emp_baseline==`x' & year<=2, vce(`SE')
+		qui xi: reg total_income_y i.p_assign if d_young==`x' & year<=2, vce(`SE')
 		local tot = _b[_Ip_assign_2]
 
 		forvalues j=1/4{
@@ -288,19 +354,19 @@ foreach name in "Earnings" "Welfare" "EITC" "New Hope"{
 	local x=`x'+1
 }
 
-file write tab_dec " Total &&  `total_emp2_control0_period1' && `total_emp0_control0_period1'  && `total_emp1_control0_period1' \bigstrut[t]\\"_n
+file write tab_dec " Total &&  `total_emp2_reg1' && `total_emp0_reg1'  && `total_emp1_reg1' \bigstrut[t]\\"_n
 file write tab_dec "  &&  [100\%] && [100\%]  && [100\%] \bigstrut[t]\\"_n
 
 file write tab_dec "\hline"_n
 file write tab_dec "Overall & & $\checkmark$      &&        &&   \bigstrut[t]\\"_n
-file write tab_dec "Unemployed at baseline &&       && $\checkmark$      &&  \bigstrut[t]\\"_n
-file write tab_dec "Employed at baseline &&       &&       && $\checkmark$  \bigstrut[t]\\"_n
+file write tab_dec "Old &&       && $\checkmark$      &&  \bigstrut[t]\\"_n
+file write tab_dec "Young &&       &&       && $\checkmark$  \bigstrut[t]\\"_n
 file write tab_dec "\hline"_n
 file write tab_dec "\end{tabular}"_n
 file close tab_dec
 
 
-
+stop!!
 ***************************************************************************************************
 ***************************************************************************************************
 /*QTE*/

@@ -213,12 +213,48 @@ gen d_ra = .
 replace d_ra = 1 if p_assign=="E"
 replace d_ra = 0 if p_assign=="C"
 
+***********************************
+/**Getting child age info*/
+tempfile data_aux
+save `data_aux', replace
+use "$databases/Youth_original2.dta", clear
+keep sampleid kid1dats
+destring sampleid, force replace
+destring kid1dats, force replace
+format kid1dats %td
+gen year_birth=yofd(kid1dats)
+drop kid1dats
 
+bysort sampleid: egen seq_aux=seq()
+reshape wide year_birth,i(sampleid) j(seq_aux	)
+merge 1:1 sampleid using `data_aux'
+keep if _merge==3
+drop _merge
+
+*child age at baseline
+gen year_ra = substr(string(p_radaym),1,2)
+destring year_ra, force replace
+replace year_ra = 1900 + year_ra
+
+gen agechild1_ra =  year_ra - year_birth1
+gen agechild2_ra =  year_ra - year_birth2
+
+*Dummy: at least 1 child less than 6 years of age by two years after baseline
+gen d_young = (agechild1_ra + 2 <=6) | (agechild2_ra + 2 <=6)
+***********************************
+
+
+
+**********************************************************************
+**********************************************************************
 *Estimates
+**********************************************************************
+**********************************************************************
+
 local start = 7
 forvalues x=`start'/15{
 	
-	****Exercise 1: hours for those who h0
+	****Exercise 1: hours for those who h0***
 	qui xi: reg hours`x' i.p_assign `control_var' if hours`x'>0, vce(`SE')
 			
 	if `x'==`start'{
@@ -298,11 +334,12 @@ forvalues x=`start'/15{
 
 }
 
-****Exercise 5: quantile regressions with ht=0 (0-2 years)
+****Exercise 5: quantile regressions with ht=0 (0-2 years)***
 preserve
-keep hours* d_ra sampleid
+keep hours* d_ra sampleid d_young
 reshape long hours, i(sampleid) j(quarter)
 
+*for all
 qui: ivqte hours (d_ra), quantiles(.05 .1 .15 .2 .25 .3 .35 .4 .45 .5 .55 .60 .65 .7 .75 .8 .85 .90 .95) variance
 		
 forvalues q = 1/19{
@@ -321,6 +358,37 @@ forvalues q = 1/19{
 	}
 	
 }
+
+
+*by sample
+forvalues x=0/1{
+
+	qui: ivqte hours (d_ra) if d_young==`x', quantiles(.05 .1 .15 .2 .25 .3 .35 .4 .45 .5 .55 .60 /*
+	*/.65 .7 .75 .8 .85 .90 .95) variance
+
+	forvalues q = 1/19{
+
+		if `q'==1{
+			mat betas_5_`x' = (_b[Quantile_`q'],_b[Quantile_`q'] - invnorm(0.975)*_se[Quantile_`q'],/*
+		*/ _b[Quantile_`q'] + invnorm(0.975)*_se[Quantile_`q'])
+			qui: test Quantile_`q'=0
+			mat pvalues_5_`x'=r(p)
+		}
+	else{
+		mat betas_5_`x' = betas_5_`x'\(_b[Quantile_`q'],_b[Quantile_`q'] - invnorm(0.975)*_se[Quantile_`q'],/*
+		*/ _b[Quantile_`q'] + invnorm(0.975)*_se[Quantile_`q'])
+			qui: test Quantile_`q'=0
+			mat pvalues_5_`x'=pvalues_5_`x'\r(p)
+
+		}
+
+
+	}
+
+}
+
+
+
 restore
 
 
@@ -371,6 +439,8 @@ forvalues x=1/4{
 
 *Experiment #5 (QTE)
 restore
+
+preserve
 svmat betas_5
 svmat pvalues_5
 drop if betas_51==.
@@ -387,13 +457,47 @@ twoway (connected betas_51 quant , msymbol(circle) mlcolor(blue) mfcolor(white) 
 */(line betas_52 quant ,lpattern(dash)) /*
 */(line betas_53 quant ,lpattern(dash)),/*
 */ yline(0, lcolor(black))/*
-*/ytitle("{&Delta}hours") xtitle("Quantile") legend(off)/*
+*/ytitle("Impact on hours") xtitle("Quantile") legend(off)/*
 */ xlabel( 2 "10" 4 "20" 6 "30" 8 "40" 10 "50" 12 "60" 14 "70" 16 "80" 18 "90", noticks) /*
 */ graphregion(fcolor(white) ifcolor(white) lcolor(white) ilcolor(white)) /*
 */plotregion(fcolor(white) lcolor(white)  ifcolor(white) ilcolor(white))  /*
-*/ ylabel(, nogrid)scale(1.2) scheme(s2mono) 
+*/ ylabel(0(5)25,nogrid) scale(1.2) scheme(s2mono) 
 
 graph export "$results/Time/hours_diff_experiment5.pdf", as(pdf) replace
+
+
+restore
+
+forvalues x=0/1{ /*the sample loop*/
+	preserve
+	svmat betas_5_`x'
+	svmat pvalues_5_`x'
+	drop if betas_5_`x'1==.
+	egen quant = seq()
+
+
+
+	gen mean_aux_5=betas_5_`x'1 if pvalues_5_`x'1<=0.05
+
+
+
+	twoway (connected betas_5_`x'1 quant , msymbol(circle) mlcolor(blue) mfcolor(white) ) /*
+	*/ (scatter mean_aux_5 quant , msymbol(circle) mlcolor(blue) mfcolor(blue)) /* 
+	*/(line betas_5_`x'2 quant ,lpattern(dash)) /*
+	*/(line betas_5_`x'3 quant ,lpattern(dash)),/*
+	*/ yline(0, lcolor(black))/*
+	*/ytitle("Impact on hours") xtitle("Quantile") legend(off)/*
+	*/ xlabel( 2 "10" 4 "20" 6 "30" 8 "40" 10 "50" 12 "60" 14 "70" 16 "80" 18 "90", noticks) /*
+	*/ graphregion(fcolor(white) ifcolor(white) lcolor(white) ilcolor(white)) /*
+	*/plotregion(fcolor(white) lcolor(white)  ifcolor(white) ilcolor(white))  /*
+	*/ ylabel(0(5)25,nogrid) scale(1.2) scheme(s2mono) 
+
+	graph export "$results/Time/hours_diff_experiment5_`x'.pdf", as(pdf) replace
+
+	restore
+
+
+}
 
 	
 }

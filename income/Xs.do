@@ -22,7 +22,7 @@ do "$codes/data_cfs.do"
 
 
 keep p_assign sampleid p_radatr p_bdatey p_bdatem p_bdated b_bdater bifage p_bdatey p_bdatem gender ethnic marital higrade degree /*
-*/pastern2 work_ft curremp currwage c1 piinvyy epiinvyy 
+*/pastern2 work_ft curremp currwage c1 piinvyy epiinvyy p_radaym
 
 *Constructing age at RA (bifage has 24 odd values)
 
@@ -56,7 +56,8 @@ gen d_HS2=higrade>=12
 gen emp_baseline=curremp=="Yes"
 replace emp_baseline=. if  curremp==" "
 
-keep sampleid age_ra gender ethnic marital d_HS2 higrade pastern2 p_assign emp_baseline
+keep sampleid age_ra gender ethnic marital d_HS2 higrade /*
+*/ pastern2 p_assign emp_baseline p_radaym
 sort sampleid
 
 

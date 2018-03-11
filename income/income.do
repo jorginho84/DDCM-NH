@@ -149,11 +149,10 @@ egen welfare=rowtotal(afdc_y fs_y)
 egen eitc=rowtotal(eitc_fed_y eitc_state_y)
 
 *log income
-gen ltotal_income_y1 = log(total_income_y)
+gen ltotal_income_y1 = log(total_income_y + 1)
 
-*log income w/ zeros
-gen ltotal_income_y2 = ltotal_income_y1
-replace ltotal_income_y2 = 0 if ltotal_income_y2==.
+*inverse hypebilic sine
+gen ltotal_income_y2 =  ln(total_income_y + ((total_income_y^2 +1)^0.5)) 
 
 
 
@@ -188,6 +187,10 @@ forvalues x=0/2{/*the sample loop*/
 	else{
 		local ast_total_emp`x'_reg1=""
 	}
+
+	*Baselines
+	sum total_income_y if p_assign == "C"
+	local baseline_reg`x' = string(round(r(mean)/1000,0.001),"%9.3f")
 
 	*Regression 2: OLS on log income
 	qui xi: reg ltotal_income_y1 i.p_assign `control_var' if year<=2, vce(`SE')
@@ -264,11 +267,16 @@ file write tab_income "\begin{tabular}{llccccc}" _n
 file write tab_income "\hline" _n
 file write tab_income "\multicolumn{1}{l}{Estimate} && Young  && Old   && Overall \bigstrut\\" _n
 file write tab_income "\cline{1-1}\cline{3-7}&&&&&&\bigstrut[t]\\" _n
-file write tab_income "\multicolumn{1}{l}{OLS} && `total_emp1_reg1'`ast_total_emp1_reg1'   && `total_emp0_reg1'`ast_total_emp0_reg1'   && `total_emp2_reg1'`ast_total_emp2_reg1' \\" _n
+file write tab_income "\multicolumn{1}{l}{OLS (income/1000)} && `total_emp1_reg1'`ast_total_emp1_reg1'   && `total_emp0_reg1'`ast_total_emp0_reg1'   && `total_emp2_reg1'`ast_total_emp2_reg1' \\" _n
 file write tab_income "      &       & (`se_total_emp1_reg1') &       & (`se_total_emp0_reg1') &       & (`se_total_emp2_reg1') \\" _n
 file write tab_income "      &       &       &       &       &       &  \\" _n
-file write tab_income "\multicolumn{1}{l}{Median regression} && `total_emp1_reg4'`ast_total_emp1_reg4'   && `total_emp0_reg4'`ast_total_emp0_reg4'   && `total_emp2_reg4'`ast_total_emp2_reg4' \\" _n
+file write tab_income "\multicolumn{1}{l}{OLS (log of (income + 1))} && `total_emp1_reg2'`ast_total_emp1_reg2'   && `total_emp0_reg2'`ast_total_emp0_reg2'   && `total_emp2_reg2'`ast_total_emp2_reg2' \\" _n
+file write tab_income "      &       & (`se_total_emp1_reg2') &       & (`se_total_emp0_reg2') &       & (`se_total_emp2_reg2') \\" _n
+file write tab_income "      &       &       &       &       &       &  \\" _n
+file write tab_income "\multicolumn{1}{l}{Median regression (income/1000)} && `total_emp1_reg4'`ast_total_emp1_reg4'   && `total_emp0_reg4'`ast_total_emp0_reg4'   && `total_emp2_reg4'`ast_total_emp2_reg4' \\" _n
 file write tab_income "      &       & (`se_total_emp1_reg4') &       & (`se_total_emp0_reg4') &       & (`se_total_emp2_reg4') \\" _n
+file write tab_income "      &       &       &       &       &       &  \\" _n
+file write tab_income "\multicolumn{1}{l}{Baseline (income/1000)} && `baseline_reg0'   && `baseline_reg1'  && `baseline_reg2' \\" _n
 file write tab_income "\hline" _n
 file write tab_income "\end{tabular}" _n
 file close tab_income
@@ -343,24 +351,20 @@ file open tab_dec using "$results/Income/table_income_decomposition.tex", write 
 file write tab_dec
 file write tab_dec "\begin{tabular}{llccccc}"_n
 file write tab_dec "\hline"_n
-file write tab_dec "      &       & (1)   &       & (2)   &       & (3) \bigstrut\\"_n
+file write tab_dec "      &       & Young   &       & Old   &       & Overall \bigstrut\\"_n
 file write tab_dec "   \cline{1-1}\cline{3-3}\cline{5-5}\cline{7-7}"_n
 *the estimates here
 
 local x=1
 foreach name in "Earnings" "Welfare" "EITC" "New Hope"{
-	file write tab_dec " `name' && `dec`x'_emp2'  && `dec`x'_emp0'  && `dec`x'_emp1' \bigstrut[t]\\"_n	
-	file write tab_dec "  && [`share_dec`x'_emp2'\%]  && [`share_dec`x'_emp0'\%]  && [`share_dec`x'_emp1'\%] \bigstrut[t]\\"_n
+	file write tab_dec " `name' && `dec`x'_emp1'  && `dec`x'_emp0'  && `dec`x'_emp2' \bigstrut[t]\\"_n	
+	file write tab_dec "  && [`share_dec`x'_emp1'\%]  && [`share_dec`x'_emp0'\%]  && [`share_dec`x'_emp2'\%] \bigstrut[t]\\"_n
 	local x=`x'+1
 }
 
-file write tab_dec " Total &&  `total_emp2_reg1' && `total_emp0_reg1'  && `total_emp1_reg1' \bigstrut[t]\\"_n
+file write tab_dec " Total &&  `total_emp1_reg1' && `total_emp0_reg1'  && `total_emp2_reg1' \bigstrut[t]\\"_n
 file write tab_dec "  &&  [100\%] && [100\%]  && [100\%] \bigstrut[t]\\"_n
 
-file write tab_dec "\hline"_n
-file write tab_dec "Overall & & $\checkmark$      &&        &&   \bigstrut[t]\\"_n
-file write tab_dec "Old &&       && $\checkmark$      &&  \bigstrut[t]\\"_n
-file write tab_dec "Young &&       &&       && $\checkmark$  \bigstrut[t]\\"_n
 file write tab_dec "\hline"_n
 file write tab_dec "\end{tabular}"_n
 file close tab_dec

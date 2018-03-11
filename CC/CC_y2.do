@@ -183,3 +183,25 @@ file write cc_table "\end{tabular}"_n
 file close cc_table
 
 
+/*The Table v2*/
+file open cc_table using "$results/cc_table_v2.tex", write replace
+file write cc_table "\begin{tabular}{llccccc}"_n
+file write cc_table "\hline"_n
+file write cc_table "Sample && Control && Treatment && Impact \bigstrut\\"_n
+file write cc_table "\cline{1-1}\cline{3-7}"_n
+
+file write cc_table "Young (0-6 years old) && `mean_c_cat1' && `mean_t_cat1'  && `effect_model1_cat1'`pval_model1_cat1'  \\"_n
+file write cc_table "&&&&       &       & (`se_model1_cat1')  \\"_n
+file write cc_table "&&&&&& \\"_n
+
+file write cc_table "Old ($>$6 years old) && `mean_c_cat2' && `mean_t_cat2'  && `effect_model1_cat2'`pval_model1_cat2' \\"_n
+file write cc_table "&&&&       &       & (`se_model1_cat2')  \\"_n
+file write cc_table "&&&&&&  \\"_n
+
+file write cc_table "Overall && `mean_c_cat3' && `mean_t_cat3'  && `effect_model1_cat3'`pval_model1_cat3' \\"_n
+file write cc_table "&&&&       &       & (`se_model1_cat3')  \\"_n
+file write cc_table "\hline"_n
+file write cc_table "\end{tabular}"_n
+file close cc_table
+
+

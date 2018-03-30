@@ -175,15 +175,16 @@ class Estimate:
 		age_t0=self.x_w[:,0]
 		age=np.zeros((self.N,self.nperiods))
 		for t in range(self.nperiods):
-			age[:,t]=age_t0+t
+			age[:,t]=age_t0.copy()
 		
 		age_aux=np.reshape(np.concatenate((age[:,0],age[:,1],age[:,4],age[:,7]),axis=0),(self.N*4,1))
 		age2_aux=np.square(age_aux)
+		
 
-		logt_dic={'period0':np.log(np.zeros((self.N,1)) + 1),
-		'period1': np.log(np.zeros((self.N,1)) + 2),
-		'period4': np.log(np.zeros((self.N,1)) + 5),
-		'period7':np.log(np.zeros((self.N,1)) + 8)}
+		logt_dic={'period0':np.zeros((self.N,1)),
+		'period1': np.zeros((self.N,1)) + 1,
+		'period4': np.zeros((self.N,1)) + 4,
+		'period7':np.zeros((self.N,1)) + 7}
 		
 		lt = np.reshape(np.concatenate((logt_dic['period0'][:,0],
 			logt_dic['period1'][:,0],logt_dic['period4'][:,0],
@@ -433,7 +434,7 @@ class Estimate:
 		
 		
 		#The Q metric
-		q_w=np.dot(np.dot(np.transpose(x_vector),np.linalg.inv(self.w_matrix)),x_vector)
+		q_w=np.dot(np.dot(np.transpose(x_vector),self.w_matrix),x_vector)
 		print ''
 		print 'The objetive function value equals ', q_w
 		print ''
@@ -469,7 +470,7 @@ class Estimate:
 
 		
 		#Here we go
-		opt = minimize(self.ll, beta0,  method='Nelder-Mead', options={'maxiter':2000, 'maxfev': 90000, 'ftol': 1e-5, 'disp': True});
+		opt = minimize(self.ll, beta0,  method='Nelder-Mead', options={'maxiter':5000, 'maxfev': 90000, 'ftol': 1e-3, 'disp': True});
 		
 		return opt
 

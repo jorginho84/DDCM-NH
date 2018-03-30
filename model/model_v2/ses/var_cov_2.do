@@ -26,7 +26,7 @@ global results "/mnt/Research/nealresearch/new-hope-secure/newhopemount/results"
 global codes "/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/aux_model" /*this is where I compute aux moments*/
 
 set seed 2828
-local draws = 500
+local draws = 1000
 
 
 program betas, rclass
@@ -73,8 +73,7 @@ bootstrap /*
 */ mom20=r(mom20) /*
 */ mom21=r(mom21) /*
 */ mom22=r(mom22) /*
-*/ mom23=r(mom23) /*
-*/, cluster(sampleid) idcluster(newid) reps(`draws'): betas 23
+*/, cluster(sampleid) idcluster(newid) reps(`draws'): betas 22
 
 
 

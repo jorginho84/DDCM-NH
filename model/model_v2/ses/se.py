@@ -261,8 +261,17 @@ class SEs:
 			psi_high = psi.copy()
 
 			#changing only relevant parameter, one at a time
-			psi_low[s] = psi[s]*(1-eps)
-			psi_high[s] = psi[s]*(1+eps)
+			
+			if s==4:
+				h = 0.03
+				psi_low[s] = psi[s] - h
+				psi_high[s] = psi[s] + h
+
+			else:
+				h = max([eps*abs(psi[s]),abs(psi[s])])
+				psi_low[s] = psi[s] - h
+				psi_high[s] = psi[s] + h
+
 
 			#Computing betas
 			betas_low = self.binding(psi_low)['betas']
@@ -303,9 +312,17 @@ class SEs:
 		w_matrix = self.output_ins.__dict__['w_matrix'].copy()
 		
 		#Var-Cov following Low, Meghir, Pistaferri, and Voena
-		a_inn = np.dot(np.transpose(dbdt),w_matrix)
+		#a_inn = np.dot(np.transpose(dbdt),w_matrix)
 		
-		return {'Var_Cov': np.linalg.inv(np.dot(a_inn,dbdt)), 'Gradient': dbdt}
+		#return {'Var_Cov': np.linalg.inv(np.dot(a_inn,dbdt)), 'Gradient': dbdt}
 
+		x_vector = self.binding(self.psi)['x_vector']
+		v_matrix = np.dot(x_vector,np.transpose(x_vector))
+		a_inn = np.dot(np.transpose(dbdt),w_matrix)
+		a_matrix = np.linalg.inv(np.dot(a_inn,dbdt))
+		a_left = np.dot(a_matrix,a_inn)
+
+		return {'Var_Cov': np.dot(np.dot(a_left,v_matrix),np.transpose(a_left)),
+		'Gradient': dbdt}
 
 

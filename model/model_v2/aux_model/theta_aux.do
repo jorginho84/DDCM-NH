@@ -6,6 +6,10 @@ production function
 
 use "$results/data_aux.dta", clear
 
+*Age of child
+gen age_t1=age_t0+1
+gen age_t4=age_t0+4
+gen age_t7=age_t0+7
 
 *Standardized measures
 foreach x of numlist 2 5 8{
@@ -16,15 +20,9 @@ foreach x of numlist 2 5 8{
 *Time outside market
 foreach x of numlist 1 4 {
 	gen l_t`x'=.
-	if d_CC2_t`x'==0{
-		replace l_t`x'=(148-hours_t`x') 	
-	}
-	else{
-		replace l_t`x'=(148-40)
-
-	}
-	
-
+	replace l_t`x'=(168-hours_t`x') if d_CC2_t`x'==0 & age_t`x'<=6
+	replace l_t`x'=(168-40) if d_CC2_t`x'==1 & age_t`x'<=6
+	replace l_t`x'=(133-hours_t`x') if age_t`x'>6
 }
 
 *Income
@@ -36,10 +34,7 @@ replace incomepc_t1=1 if incomepc_t1<=0
 replace incomepc_t4=1 if incomepc_t4<=0
 replace incomepc_t7=1 if incomepc_t7<=0
 
-*Age of child
-gen age_t1=age_t0+1
-gen age_t4=age_t0+4
-gen age_t7=age_t0+7
+
 
 
 /*Initial conditions*/

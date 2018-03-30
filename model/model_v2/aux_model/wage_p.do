@@ -61,11 +61,9 @@ gen d_work_all = lhwage_t0!=.  & lhwage_t1!=. & lhwage_t4!=.  & lhwage_t7!=.
 
 *Panel
 egen id=seq()
-keep lhwage* age_t* d_HS2 id d_work_all
-reshape long lhwage_t age_t, i(id) j(t_ra)
+keep lhwage* age_ra d_HS2 id d_work_all
+reshape long lhwage_t, i(id) j(t_ra)
 xtset id t_ra
-
-gen age_t2=age_t^2
 
 gen lt = log(t_ra + 1)
 
@@ -80,8 +78,8 @@ REGRESSION
 **************************************************************************
 **************************************************************************
 **************************************************************************
-	
-xi: reg lhwage_t age_t age_t2 d_HS2 lt
+gen age_ra2 = age_ra^2
+xi: reg lhwage_t age_ra age_ra2 d_HS2 t_ra
 matrix beta_aux=e(b)
 
 predict u_hat , resid

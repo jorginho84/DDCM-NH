@@ -34,7 +34,7 @@ import se
 
 np.random.seed(1)
 
-betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv16.npy')
+betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv18.npy')
 
 #Number of periods where all children are less than or equal to 18
 nperiods = 8
@@ -193,13 +193,13 @@ npar = betas_opt.shape[0]
 nmom = moments_vector.shape[0]
 
 #The var-cov matrix of structural parameters
-ses = se_ins.big_sand(0.025,nmom,npar)
+ses = se_ins.big_sand(0.01,nmom,npar)
 
-np.save('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/estimation/sesv3_modelv16_2pc_correctW.npy',ses['Var_Cov']*(1+1/M))
+np.save('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/estimation/sesv3_modelv18_judd_eps_age_grid59.npy',ses['Var_Cov']*(1+1/M))
 
 np.sqrt(np.diagonal(ses['Var_Cov']*(1+1/M)))
 
-np.argmax(np.abs(ses['Gradient'][1,:]))
+np.argmax(np.abs(ses['Gradient'][0,:]))
 
 for s in range(npar):
 	print 'This is argmax of gradient' + str(s), np.argmax(np.abs(ses['Gradient'][s,:]))

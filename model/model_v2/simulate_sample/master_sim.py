@@ -50,7 +50,7 @@ np.random.seed(1);
 #Sample size
 #N=315
 
-betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv14_v1_e3.npy')
+betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv16.npy')
 
 #Number of periods where all children are less than or equal to 18
 nperiods = 8
@@ -61,24 +61,21 @@ alphap=betas_nelder[1]
 alphaf=betas_nelder[2]
 
 #wage process
-wagep_betas=np.array([betas_nelder[3],betas_nelder[4],betas_nelder[5],
-	betas_nelder[6],betas_nelder[7],betas_nelder[8],betas_nelder[9]]).reshape((7,1))
+wagep_betas=np.array([betas_nelder[3],betas_nelder[5],
+	betas_nelder[6],betas_nelder[7],betas_nelder[8],betas_nelder[9]]).reshape((6,1))
 
 #Production function [young,old]
 gamma1= betas_nelder[10]
 gamma2= betas_nelder[11]
 gamma3= betas_nelder[12]
 tfp=betas_nelder[13]
-sigma2theta=0
+sigma2theta=1
 
-#initial theta
-rho_theta_epsilon = betas_nelder[15]
-
-betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv12_v1_e3.npy')
-#Measurement system: three measures for t=2, one for t=5
 kappas=[[betas_nelder[14],betas_nelder[15],betas_nelder[16],betas_nelder[17]],
 [betas_nelder[18],betas_nelder[19],betas_nelder[20],betas_nelder[21]]]
 
+#initial theta
+rho_theta_epsilon = betas_nelder[22]
 #First measure is normalized. starting arbitrary values
 #All factor loadings are normalized
 lambdas=[1,1]

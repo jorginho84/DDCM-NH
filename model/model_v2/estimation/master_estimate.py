@@ -40,19 +40,19 @@ betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/re
 nperiods = 8
 
 #Utility function
-eta=betas_nelder[0]
+eta=0.16
 alphap=betas_nelder[1]
-alphaf=betas_nelder[2]
+alphaf=-0.30
 
 #wage process
-wagep_betas=np.array([betas_nelder[3],betas_nelder[4],betas_nelder[5],
-	betas_nelder[6],betas_nelder[7],betas_nelder[8],betas_nelder[9]]).reshape((7,1))
+wagep_betas=np.array([0.05,-0.001,betas_nelder[5],
+	0.095,0.54,betas_nelder[8],betas_nelder[9]]).reshape((7,1))
 
 #Production function [young,old]
 gamma1= betas_nelder[10]
 gamma2= betas_nelder[11]
-gamma3= betas_nelder[12]
-tfp=betas_nelder[13]
+gamma3= 0.3
+tfp=0.3
 sigma2theta=1
 
 kappas=[[betas_nelder[14],betas_nelder[15],betas_nelder[16],betas_nelder[17]],
@@ -147,10 +147,10 @@ moments_vector=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemo
 var_cov=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/aux_model/var_cov.csv').values
 
 #The W matrix in Wald metric
-#Using diagonal of Var-Cov matrix of simulated moments
+#Using inverse of diagonal of Var-Cov matrix of simulated moments
 w_matrix  = np.zeros((var_cov.shape[0],var_cov.shape[0]))
 for i in range(var_cov.shape[0]):
-	w_matrix[i,i] = var_cov[i,i]
+	w_matrix[i,i] = var_cov[i,i]**(-1)
 
 
 #Creating a grid for the emax computation
@@ -216,11 +216,11 @@ rho_theta_epsilon_opt = sym(output.x[22])
 
 
 betas_opt=np.array([eta_opt, alphap_opt,alphaf_opt,
-	betaw0,betaw1,betaw2,
-	betaw3,betaw4,betaw5,betaw6,gamma1_opt,gamma2_opt,
-	gamma3_opt,tfp_opt,kappas_00,kappas_01,kappas_02,kappas_03,
+	betaw0,betaw1,betaw2,betaw3,betaw4,betaw5,betaw6,
+	gamma1_opt,gamma2_opt,gamma3_opt,tfp_opt,
+	kappas_00,kappas_01,kappas_02,kappas_03,
 	kappas_10,kappas_11,kappas_12,kappas_13,rho_theta_epsilon_opt])
 
-np.save('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv16_e5.npy',betas_opt)
+np.save('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv18.npy',betas_opt)
 
 

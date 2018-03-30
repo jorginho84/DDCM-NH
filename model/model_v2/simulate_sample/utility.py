@@ -88,11 +88,10 @@ class Utility(object):
 		
 
 		periodt = 0
-		age_ra=self.xwage[:,0].copy()
-		age=age_ra+periodt
+		age=self.xwage[:,0].copy()
 		age2=age**2
 		d_HS = self.xwage[:,1].copy()
-		lt = np.log(np.zeros((self.N,1)) + periodt + 1)
+		lt = np.zeros((self.N,1)) + periodt 
 
 		xw=np.concatenate((np.reshape(age,(self.N,1)),
 					np.reshape(age2,(self.N,1)),
@@ -141,10 +140,9 @@ class Utility(object):
 
 		"""
 
-		age_ra=self.xwage[:,0].copy()
-		age=age_ra+periodt
+		age=self.xwage[:,0].copy()
 		age2=age**2
-		lt = np.log(np.zeros((self.N,1)) + periodt + 1)
+		lt =  np.zeros((self.N,1)) + periodt
 
 		xw=np.concatenate((np.reshape(age,(self.N,1)),
 					np.reshape(age2,(self.N,1)),
@@ -503,13 +501,14 @@ class Utility(object):
 		incomepc=np.log(ct)
 		
 		
-		#log time w child (T=148 hours a week)
+		#log time w child (T=168 hours a week, -35 for older kids)
 		tch = np.zeros(self.N)
 		boo_p = h == self.hours_p
 		boo_f = h == self.hours_f
 		boo_u = h == 0
 
-		tch = cc*(148 - 40) + (1-cc)*(boo_u*148 + boo_p*(148 - self.hours_p) + boo_f*(148 - self.hours_f)) 
+		tch[agech<=6] = cc[agech<=6]*(168 - 40) + (1-cc[agech<=6])*(boo_u[agech<=6]*168 + boo_p[agech<=6]*(168 - self.hours_p) + boo_f[agech<=6]*(168 - self.hours_f)) 
+		tch[agech>6] = boo_u[agech>6]*133 + boo_p[agech>6]*(133 - self.hours_p) + boo_f[agech>6]*(133 - self.hours_f)
 		tch=np.log(tch)
 
 		

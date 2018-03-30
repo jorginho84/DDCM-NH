@@ -450,10 +450,13 @@ egen quant = seq()
 
 gen mean_aux_5=betas_51 if pvalues_51<=0.05
 
+log using "$results/Time/mean_effects_hours.txt", text replace
+list betas_51 quant
+log close
 
 
-twoway (connected betas_51 quant , msymbol(circle) mlcolor(blue) mfcolor(white) ) /*
-*/ (scatter mean_aux_5 quant , msymbol(circle) mlcolor(blue) mfcolor(blue)) /* 
+twoway (connected betas_51 quant , lwidth(thick) msymbol(circle) mlcolor(blue) mfcolor(white) msize(medlarge) mlwidth(medthick) ) /*
+*/ (scatter mean_aux_5 quant , msymbol(circle) mlcolor(blue) mfcolor(blue) msize(medlarge) mlwidth(medthick)) /* 
 */(line betas_52 quant ,lpattern(dash)) /*
 */(line betas_53 quant ,lpattern(dash)),/*
 */ yline(0, lcolor(black))/*
@@ -479,10 +482,15 @@ forvalues x=0/1{ /*the sample loop*/
 
 	gen mean_aux_5=betas_5_`x'1 if pvalues_5_`x'1<=0.05
 
+	log using "$results/Time/mean_effects_hours.txt", text append
+	list betas_5_`x'1 quant
+	log close
 
 
-	twoway (connected betas_5_`x'1 quant , msymbol(circle) mlcolor(blue) mfcolor(white) ) /*
-	*/ (scatter mean_aux_5 quant , msymbol(circle) mlcolor(blue) mfcolor(blue)) /* 
+
+
+	twoway (connected betas_5_`x'1 quant , lwidth(thick) msymbol(circle) mlcolor(blue) mfcolor(white) msize(medlarge) mlwidth(medthick)) /*
+	*/ (scatter mean_aux_5 quant , msymbol(circle) mlcolor(blue) mfcolor(blue) msize(medlarge) mlwidth(medthick)) /* 
 	*/(line betas_5_`x'2 quant ,lpattern(dash)) /*
 	*/(line betas_5_`x'3 quant ,lpattern(dash)),/*
 	*/ yline(0, lcolor(black))/*

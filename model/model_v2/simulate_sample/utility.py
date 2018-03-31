@@ -89,12 +89,10 @@ class Utility(object):
 
 		periodt = 0
 		age=self.xwage[:,0].copy()
-		age2=age**2
 		d_HS = self.xwage[:,1].copy()
 		lt = np.zeros((self.N,1)) + periodt 
 
 		xw=np.concatenate((np.reshape(age,(self.N,1)),
-					np.reshape(age2,(self.N,1)),
 					np.reshape(self.xwage[:,1],(self.N,1)),
 					lt,
 					np.reshape(self.xwage[:,2],(self.N,1)),),axis=1)
@@ -141,11 +139,9 @@ class Utility(object):
 		"""
 
 		age=self.xwage[:,0].copy()
-		age2=age**2
 		lt =  np.zeros((self.N,1)) + periodt
 
 		xw=np.concatenate((np.reshape(age,(self.N,1)),
-					np.reshape(age2,(self.N,1)),
 					np.reshape(self.xwage[:,1],(self.N,1)),
 					lt,
 					np.reshape(self.xwage[:,2],(self.N,1)),),axis=1)

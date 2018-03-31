@@ -41,7 +41,7 @@ restore
 
 set seed 2828
 local draws = 500
-local n_moments = 23
+local n_moments = 22
 
 forvalues x = 1/`draws'{
 	use "/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/sample_model_v2.dta", clear

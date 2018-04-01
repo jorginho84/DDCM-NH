@@ -198,14 +198,13 @@ class Estimate:
 		#sample who work all years
 		boo_sample = ((choice_matrix[:,0,:]==1) | (choice_matrix[:,0,:]==2) | (choice_matrix[:,0,:]==4) | (choice_matrix[:,0,:]==5)) & ((choice_matrix[:,1,:]==1) | (choice_matrix[:,1,:]==2) | (choice_matrix[:,1,:]==4) | (choice_matrix[:,1,:]==5)) 	& ((choice_matrix[:,4,:]==1) | (choice_matrix[:,4,:]==2) | (choice_matrix[:,4,:]==4) | (choice_matrix[:,4,:]==5)) 	& ((choice_matrix[:,7,:]==1) | (choice_matrix[:,7,:]==2) | (choice_matrix[:,7,:]==4) | (choice_matrix[:,7,:]==5))
 
-		beta_w=np.zeros((5,self.M)) #5 parameters
+		beta_w=np.zeros((4,self.M)) #5 parameters
 		sigma_w=np.zeros((1,self.M))
 		rho_eps=np.zeros((1,self.M))
 		const=np.ones((self.N*4,1)) #4 periods:0,1,4,7
 
 		for j in range(self.M): #the sample loop
 			xw_aux=np.concatenate((age_aux[boo_work[:,j]==1,:],
-				age2_aux[boo_work[:,j]==1,:],
 				dhs_aux[boo_work[:,j]==1,:],
 				lt[boo_work[:,j]==1,:],
 				const[boo_work[:,j]==1,:]),axis=1)
@@ -227,7 +226,6 @@ class Estimate:
 
 					#Xs for those working all periods
 					xw_aux_2=np.concatenate((np.reshape(age[boo_sample[:,j]==1,k],(n_work,1)),
-						np.reshape(age[boo_sample[:,j]==1,k]**2,(n_work,1)),
 						np.reshape(self.x_w[boo_sample[:,j]==1,1],(n_work,1)),
 						np.reshape(logt_dic['period' + str(k)][boo_sample[:,j]==1],(n_work,1)),
 						cons_2[boo_sample[:,j]==1,:]),axis=1)
@@ -335,22 +333,21 @@ class Estimate:
 		self.param0.betaw[1]=beta[4]
 		self.param0.betaw[2]=beta[5]
 		self.param0.betaw[3]=beta[6]
-		self.param0.betaw[4]=beta[7]
-		self.param0.betaw[5]=np.exp(beta[8])
-		self.param0.betaw[6]=beta[9]
-		self.param0.gamma1=beta[10]
-		self.param0.gamma2=beta[11]
-		self.param0.gamma3=beta[12]
-		self.param0.tfp=beta[13]
-		self.param0.kappas[0][0]=beta[14]
-		self.param0.kappas[0][1]=beta[15]
-		self.param0.kappas[0][2]=beta[16]
-		self.param0.kappas[0][3]=beta[17]
-		self.param0.kappas[1][0]=beta[18]
-		self.param0.kappas[1][1]=beta[19]
-		self.param0.kappas[1][2]=beta[20]
-		self.param0.kappas[1][3]=beta[21]
-		self.param0.rho_theta_epsilon=sym(beta[22])
+		self.param0.betaw[4]=np.exp(beta[7])
+		self.param0.betaw[5]=beta[8]
+		self.param0.gamma1=beta[9]
+		self.param0.gamma2=beta[10]
+		self.param0.gamma3=beta[11]
+		self.param0.tfp=beta[12]
+		self.param0.kappas[0][0]=beta[13]
+		self.param0.kappas[0][1]=beta[14]
+		self.param0.kappas[0][2]=beta[15]
+		self.param0.kappas[0][3]=beta[16]
+		self.param0.kappas[1][0]=beta[17]
+		self.param0.kappas[1][1]=beta[18]
+		self.param0.kappas[1][2]=beta[19]
+		self.param0.kappas[1][3]=beta[20]
+		self.param0.rho_theta_epsilon=sym(beta[21])
 					
 
 		#The model (utility instance)
@@ -458,8 +455,8 @@ class Estimate:
 				
 		beta0=np.array([self.param0.eta,self.param0.alphap,self.param0.alphaf,
 			self.param0.betaw[0],
-			self.param0.betaw[1],self.param0.betaw[2],self.param0.betaw[3],
-			self.param0.betaw[4],np.log(self.param0.betaw[5]),self.param0.betaw[6],
+			self.param0.betaw[1],self.param0.betaw[2],
+			self.param0.betaw[3],np.log(self.param0.betaw[4]),self.param0.betaw[5],
 			self.param0.gamma1,self.param0.gamma2,self.param0.gamma3,	
 			self.param0.tfp,
 			self.param0.kappas[0][0],self.param0.kappas[0][1],#kappa: t=2, m0

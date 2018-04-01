@@ -45,8 +45,8 @@ alphap=betas_nelder[1]
 alphaf=-0.30
 
 #wage process
-wagep_betas=np.array([0.05,-0.001,betas_nelder[5],
-	0.095,0.54,betas_nelder[8],betas_nelder[9]]).reshape((7,1))
+wagep_betas=np.array([0.05,betas_nelder[5],
+	0.095,0.54,betas_nelder[8],betas_nelder[9]]).reshape((6,1))
 
 #Production function [young,old]
 gamma1= betas_nelder[10]

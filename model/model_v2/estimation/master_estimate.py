@@ -195,32 +195,31 @@ betaw0=output.x[3]
 betaw1=output.x[4]
 betaw2=output.x[5]
 betaw3=output.x[6]
-betaw4=output.x[7]
-betaw5=np.exp(output.x[8])
-betaw6=output.x[9]
-gamma1_opt=output.x[10]
-gamma2_opt=output.x[11]
-gamma3_opt=output.x[12]
-tfp_opt=output.x[13]
-kappas_00=output.x[14]
-kappas_01=output.x[15]
-kappas_02=output.x[16]
-kappas_03=output.x[17]
-kappas_10=output.x[18]
-kappas_11=output.x[19]
-kappas_12=output.x[20]
-kappas_13=output.x[21]
-rho_theta_epsilon_opt = sym(output.x[22])
+betaw4=np.exp(output.x[7])
+betaw5=output.x[8]
+gamma1_opt=output.x[9]
+gamma2_opt=output.x[10]
+gamma3_opt=output.x[11]
+tfp_opt=output.x[12]
+kappas_00=output.x[13]
+kappas_01=output.x[14]
+kappas_02=output.x[15]
+kappas_03=output.x[16]
+kappas_10=output.x[17]
+kappas_11=output.x[18]
+kappas_12=output.x[19]
+kappas_13=output.x[20]
+rho_theta_epsilon_opt = sym(output.x[21])
 
 
 
 
 betas_opt=np.array([eta_opt, alphap_opt,alphaf_opt,
-	betaw0,betaw1,betaw2,betaw3,betaw4,betaw5,betaw6,
+	betaw0,betaw1,betaw2,betaw3,betaw4,betaw5,
 	gamma1_opt,gamma2_opt,gamma3_opt,tfp_opt,
 	kappas_00,kappas_01,kappas_02,kappas_03,
 	kappas_10,kappas_11,kappas_12,kappas_13,rho_theta_epsilon_opt])
 
-np.save('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv18.npy',betas_opt)
+np.save('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv19.npy',betas_opt)
 
 

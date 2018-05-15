@@ -25,37 +25,35 @@ import simdata as simdata
 
 np.random.seed(1)
 
-betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv12_v1_e3.npy')
+betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv19.npy')
 
 #Utility function
-eta=0.2
+eta=betas_nelder[0]
 alphap=betas_nelder[1]
 alphaf=betas_nelder[2]
 
-
-
 #wage process
-wagep_betas=np.array([betas_nelder[3],betas_nelder[4],betas_nelder[5],
-	betas_nelder[6],betas_nelder[7],betas_nelder[8],betas_nelder[9]]).reshape((7,1))
-
+wagep_betas=np.array([0.035,0.15,-0.07,0.08,1.11,0.45,0.36]).reshape((7,1))
 
 #Production function [young,old]
-gamma1= betas_nelder[10]
-gamma2= betas_nelder[11]
-gamma3= betas_nelder[12]
-tfp=betas_nelder[13]
-sigmatheta=0
+gamma1= betas_nelder[9]
+gamma2= betas_nelder[10]
+gamma3= betas_nelder[11]
+tfp=betas_nelder[12]
+sigma2theta=1
 
-#Measurement system: three measures for t=2, one for t=5
-kappas=[[betas_nelder[14],betas_nelder[15],betas_nelder[16],betas_nelder[17]],
-[betas_nelder[18],betas_nelder[19],betas_nelder[20],betas_nelder[21]]]
+kappas=[[betas_nelder[13],betas_nelder[14],betas_nelder[15],betas_nelder[16]],
+[betas_nelder[17],betas_nelder[18],betas_nelder[19],betas_nelder[20]]]
+
+#initial theta
+rho_theta_epsilon = betas_nelder[21]
 
 #First measure is normalized. starting arbitrary values
 #All factor loadings are normalized
 lambdas=[1,1]
 
 #Child care price
-mup = 750
+mup = 0.57*0 + (1-0.57)*750
 
 #Probability of afdc takeup
 pafdc=.60
@@ -73,7 +71,7 @@ N=X_aux.shape[0]
 
 #Data for wage process
 #see wage_process.do to see the order of the variables.
-x_w=x_df[ ['age_ra', 'd_HS2', 'constant' ] ].values
+x_w=x_df[ ['higrade', 'd_HS2', 'd_black', 'constant' ] ].values
 
 
 #Data for marriage process
@@ -88,7 +86,7 @@ kidsp_betas=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount
 
 
 #Minimum set of x's (for interpolation)
-x_wmk=x_df[  ['age_ra', 'age_ra2', 'd_HS2', 'constant'] ].values
+x_wmk=x_df[  ['age_ra', 'higrade', 'd_HS2', 'd_black', 'constant'] ].values
 
 #Data for treatment status
 passign=x_df[ ['d_RA']   ].values
@@ -124,9 +122,8 @@ agech0=x_df[['age_t0']].values
 
 #Defines the instance with parameters
 param0=util.Parameters(alphap,alphaf,eta,gamma1,gamma2,gamma3,
-	tfp,sigmatheta,	wagep_betas, marriagep_betas, kidsp_betas, eitc_list,
+	tfp,sigma2theta, rho_theta_epsilon,wagep_betas, marriagep_betas, kidsp_betas, eitc_list,
 	afdc_list,snap_list,cpi,lambdas,kappas,pafdc,psnap,mup)
-
 #For montercarlo integration
 D=50
 

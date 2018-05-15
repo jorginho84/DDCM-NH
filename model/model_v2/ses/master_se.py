@@ -34,32 +34,34 @@ import se
 
 np.random.seed(1)
 
-betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv18.npy')
+betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv22.npy')
+
 
 #Number of periods where all children are less than or equal to 18
 nperiods = 8
 
 #Utility function
-eta=betas_nelder[0]
-alphap=betas_nelder[1]
-alphaf=betas_nelder[2]
+eta = betas_nelder[0]
+alphap = betas_nelder[1]
+alphaf = betas_nelder[2]
 
 #wage process
 wagep_betas=np.array([betas_nelder[3],betas_nelder[4],betas_nelder[5],
-	betas_nelder[6],betas_nelder[7],betas_nelder[8],betas_nelder[9]]).reshape((7,1))
+	betas_nelder[6],betas_nelder[7]]).reshape((5,1))
 
 #Production function [young,old]
-gamma1= betas_nelder[10]
-gamma2= betas_nelder[11]
-gamma3= betas_nelder[12]
-tfp=betas_nelder[13]
+gamma1= betas_nelder[8]
+gamma2= betas_nelder[9]
+gamma3= betas_nelder[10]
+tfp=betas_nelder[11]
 sigma2theta=1
 
-kappas=[[betas_nelder[14],betas_nelder[15],betas_nelder[16],betas_nelder[17]],
-[betas_nelder[18],betas_nelder[19],betas_nelder[20],betas_nelder[21]]]
+kappas=[[betas_nelder[12],betas_nelder[13],betas_nelder[14],betas_nelder[15]],
+[betas_nelder[16],betas_nelder[17],betas_nelder[18],betas_nelder[19]]]
 
 #initial theta
-rho_theta_epsilon = betas_nelder[22]
+rho_theta_epsilon = betas_nelder[20]
+
 
 lambdas=[1,1]
 
@@ -82,7 +84,7 @@ N=X_aux.shape[0]
 
 #Data for wage process
 #see wage_process.do to see the order of the variables.
-x_w=x_df[ ['age_ra', 'd_HS2', 'constant' ] ].values
+x_w=x_df[ ['d_HS2', 'constant' ] ].values
 
 
 #Data for marriage process
@@ -97,7 +99,7 @@ kidsp_betas=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount
 
 
 #Minimum set of x's (for interpolation)
-x_wmk=x_df[  ['age_ra', 'age_ra2', 'd_HS2', 'constant'] ].values
+x_wmk=x_df[  ['age_ra','age_ra2', 'd_HS2', 'constant'] ].values
 
 #Data for treatment status
 passign=x_df[ ['d_RA']   ].values
@@ -153,7 +155,7 @@ D=50
 M=1000
 
 #How many hours is part- and full-time work
-hours_p=15
+hours_p=20
 hours_f=40
 
 #Indicate if model includes a work requirement (wr), 
@@ -173,7 +175,7 @@ def syminv(g):
 
 betas_opt=np.array([eta, alphap,alphaf,wagep_betas[0,0],
 	wagep_betas[1,0],wagep_betas[2,0],
-	wagep_betas[3,0],wagep_betas[4,0],np.log(wagep_betas[5,0]),wagep_betas[6,0],
+	np.log(wagep_betas[3,0]),wagep_betas[4,0],
 	gamma1,gamma2,gamma3,tfp,
 	kappas[0][0],kappas[0][1],kappas[0][2],kappas[0][3],
 	kappas[1][0],kappas[1][1],kappas[1][2],kappas[1][3],
@@ -195,7 +197,7 @@ nmom = moments_vector.shape[0]
 #The var-cov matrix of structural parameters
 ses = se_ins.big_sand(0.01,nmom,npar)
 
-np.save('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/estimation/sesv3_modelv18_judd_eps_age_grid59.npy',ses['Var_Cov']*(1+1/M))
+np.save('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/estimation/sesv3_modelv22.npy',ses['Var_Cov']*(1+1/M))
 
 np.sqrt(np.diagonal(ses['Var_Cov']*(1+1/M)))
 

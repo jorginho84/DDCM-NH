@@ -17,6 +17,14 @@ foreach x of numlist 2 5 8{
 	egen skills_t`x'=std(skills_t`x'_aux)
 }
 
+*Dummies
+foreach x of numlist 2 5 8{
+	gen d_skills_t`x' = .
+	replace d_skills_t`x' = 1 if skills_t`x'_aux>2
+	replace d_skills_t`x' = 0 if skills_t`x'_aux<=2
+}
+
+
 *Time outside market
 foreach x of numlist 1 4 {
 	gen l_t`x'=.
@@ -102,20 +110,28 @@ corr skills_t2 skills_t5
 mat inputs_moments[1,1] = r(rho)
 
 egen id_child = seq()
-rename skills_t2 skills_t1
-rename skills_t5 skills_t4
-keep incomepc_t1 incomepc_t4 skills_t1 skills_t4 l_t1 l_t4 d_CC2_t1 d_CC2_t4 id_child age_t1 age_t4 
 
-reshape long incomepc_t skills_t l_t d_CC2_t age_t, i(id_child) j(year)
+*Adjust them for panel data
+foreach x of numlist 2 5 {
+	local z = `x' - 1
+	rename skills_t`x' skills_t`z'
+	rename d_skills_t`x' d_skills_t`z'
+
+}
+
+keep incomepc_t1 incomepc_t4 skills_t1 skills_t4 l_t1 l_t4 d_CC2_t1 d_CC2_t4 /*
+*/ id_child age_t1 age_t4 d_skills_t1 d_skills_t4
+
+reshape long incomepc_t skills_t d_skills_t l_t d_CC2_t age_t, i(id_child) j(year)
 
 
-corr skills_t incomepc_t
+corr d_skills_t incomepc_t
 mat inputs_moments[2,1] = r(rho)
 
-corr skills_t l_t
+corr d_skills_t l_t
 mat inputs_moments[3,1] = r(rho)
 
-reg skills_t d_CC2_t if age_t<=6
+reg d_skills_t d_CC2_t if age_t<=5
 mat inputs_moments[4,1] = _b[d_CC2_t]
 
 **********************************************

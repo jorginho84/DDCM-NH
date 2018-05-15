@@ -77,22 +77,22 @@ class SEs:
 		alphaf=bs[2]
 		
 		#wage process
-		wagep_betas=np.array([bs[3],bs[4],bs[5],bs[6],
-			bs[7],np.exp(bs[8]),bs[9]]).reshape((7,1))
+		wagep_betas=np.array([bs[3],bs[4],bs[5],
+			np.exp(bs[6]),bs[7]]).reshape((5,1))
 
 		#Production function [young[cc0,cc1],old]
-		gamma1=bs[10]
-		gamma2=bs[11]
-		gamma3=bs[12]
-		tfp=bs[13]
+		gamma1=bs[8]
+		gamma2=bs[9]
+		gamma3=bs[10]
+		tfp=bs[11]
 		
 				
 		def sym(a):
 			return ((1/(1+np.exp(-a))) - 0.5)*2
 
-		kappas=[[bs[14],bs[15],bs[16],bs[17]],[bs[18],bs[19],bs[20],bs[21]]]
+		kappas=[[bs[12],bs[13],bs[14],bs[15]],[bs[16],bs[17],bs[18],bs[19]]]
 
-		rho_theta_epsilon =  sym(bs[22])
+		rho_theta_epsilon =  sym(bs[20])
 
 		lambdas=[1,1]
 
@@ -253,7 +253,6 @@ class SEs:
 		#save results here
 		db_dt = np.zeros((K,S))
 		
-		
 		for s in range(S):
 
 			#evaluating at optimum
@@ -262,15 +261,9 @@ class SEs:
 
 			#changing only relevant parameter, one at a time
 			
-			if s==4:
-				h = 0.03
-				psi_low[s] = psi[s] - h
-				psi_high[s] = psi[s] + h
-
-			else:
-				h = max([eps*abs(psi[s]),abs(psi[s])])
-				psi_low[s] = psi[s] - h
-				psi_high[s] = psi[s] + h
+			h = eps*abs(psi[s])
+			psi_low[s] = psi[s] - h
+			psi_high[s] = psi[s] + h
 
 
 			#Computing betas

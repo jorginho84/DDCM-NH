@@ -40,15 +40,17 @@ qui: do "$codes/model_v2/aux_model/Xs.do"
 
 
 
-/*
+
 *ethnic dummies (baseline: black)
 forvalues x=2/5{
 	gen d_ethnic_`x'=ethnic==`x'
 }
 
+gen d_black = ethnic==1
+
 *do not consider d_ethnic_3: no observations
 drop d_ethnic_3
-*/
+
 
 *marital status dummies at baseline
 forvalues x=2/4{
@@ -129,7 +131,7 @@ replace d_born_year8=. if epiinvyy==.
 
 
 keep sampleid d_RA age_ra age_ra2 d_marital* d_HS  nkids_baseline /*
-*/ constant curremp higrade nkids* married* c91
+*/ constant curremp higrade nkids* married* c91 d_ethnic* d_black
 
 *Expanding to children
 tempfile data_temp
@@ -552,8 +554,10 @@ gen delta_emp=d_emp_t1-d_emp_t0
 **Using d_HS based on highgrade: correlates more with wage
 gen d_HS2=higrade>=12
 
-keep sampleid child d_RA p_assign age_ra age_ra2 d_marital* d_HS d_HS2 c91 nkids* hours_t* d_CC* constant emp_baseline  delta_emp skills_* c1 piinvyy /*
-*/ epiinvyy total_income_y* married* cc_pay* gross_y* gross_nominal_y* grossv2_y* age_t0 age_t02 d_free afdc_y* fs_y* sup_y*
+keep sampleid child d_RA p_assign age_ra age_ra2 d_marital* d_HS d_HS2 c91 /*
+*/ nkids* hours_t* d_CC* constant emp_baseline  delta_emp skills_* c1 piinvyy /*
+*/ epiinvyy total_income_y* married* cc_pay* gross_y* gross_nominal_y* grossv2_y* /*
+*/ age_t0 age_t02 d_free afdc_y* fs_y* sup_y* higrade d_ethnic* d_black
 
 save "$results/sample_model_theta_v2.dta", replace
 
@@ -561,7 +565,7 @@ save "$results/sample_model_theta_v2.dta", replace
 *This is the sample to start the simulations
 keep if c1!=. & piinvyy!=. & epiinvyy!=.
 
-foreach x of varlist d_RA age_ra d_marital_2 d_HS2 nkids_baseline age_t0 {
+foreach x of varlist d_RA age_ra d_marital_2 d_HS2 nkids_baseline age_t0 d_black {
 	drop if `x'==.
 }
 

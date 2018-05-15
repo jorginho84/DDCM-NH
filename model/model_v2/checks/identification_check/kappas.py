@@ -7,10 +7,10 @@ def kappas_iden(k,t,min_p,max_p,size_grid,fon):
 #build a grid around parameter value
 	p_list = np.linspace(min_p,max_p,size_grid)
 	if t==2:
-		obs_moment = moments_vector[9 + k,0].copy()
+		obs_moment = moments_vector[7 + k,0].copy()
 	
 	else:
-		obs_moment = moments_vector[13 + k,0].copy()
+		obs_moment = moments_vector[11 + k,0].copy()
 	
 	target_moment = np.zeros((size_grid,))
 	for i in range(size_grid):
@@ -48,8 +48,12 @@ def kappas_iden(k,t,min_p,max_p,size_grid,fon):
 	plt.close()
 
 
-list_kappas_l = [[[-2,-1],[-0.8,-0.5],[0.4,0.7],[1.4,1.7]],[[-1.3,-0.9],
-	[-0.3,-0.1],[0.6,0.8],[1.3,1.6]]]
+list_kappas_l = [[[kappas[0][0]+0.25,kappas[0][0]-0.25],
+[kappas[0][1]+0.25,kappas[0][1]-0.25],[kappas[0][2]+0.25,kappas[0][2]-0.25],
+[kappas[0][3]+0.25,kappas[0][3]-0.25]],
+[[kappas[1][0]+0.25,kappas[1][0]-0.25],
+[kappas[1][1]+0.25,kappas[1][1]-0.25],[kappas[1][2]+0.25,kappas[1][2]-0.25],
+[kappas[1][3]+0.25,kappas[1][3]-0.25]]]
 
 size_grid = 4
 

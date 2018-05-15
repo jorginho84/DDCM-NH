@@ -2,7 +2,7 @@
 #build a grid around parameter value
 lenght = 0.05
 size_grid = 6
-max_p = 0.08
+max_p = -0.05
 min_p = 0
 p_list = np.linspace(min_p,max_p,size_grid)
 obs_moment = moments_vector[1,0].copy()

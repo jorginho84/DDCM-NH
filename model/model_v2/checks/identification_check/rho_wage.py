@@ -2,19 +2,19 @@
 #build a grid around parameter value
 lenght = 1
 size_grid = 6
-max_p = 0.8
-min_p = 0.5
+max_p = wagep_betas[4] + 0.15
+min_p = wagep_betas[4] - 0.15
 p_list = np.linspace(min_p,max_p,size_grid)
-obs_moment = moments_vector[9,0].copy()
+obs_moment = moments_vector[7,0].copy()
 
 #draft: try updating a parameter
 target_moment = np.zeros((size_grid,))
 for i in range(size_grid): 
-	param0.betaw[6,0] = p_list[i]
+	param0.betaw[4,0] = p_list[i]
 	emax_instance=output_ins.emax(param0,model)
 	choices=output_ins.samples(param0,emax_instance,model)
 	dic_betas=output_ins.aux_model(choices)
-	target_moment[i] = np.mean(dic_betas['beta_wagep'][6,:],axis=0)
+	target_moment[i] = np.mean(dic_betas['beta_wagep'][4,:],axis=0)
 	
 
 #Back to original

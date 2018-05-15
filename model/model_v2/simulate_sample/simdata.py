@@ -232,8 +232,8 @@ class SimData:
 			#Young vs OLD: maximization
 			age_child=np.reshape(self.agech,(self.N)) + periodt
 			choices_index=np.zeros(self.N)
-			choices_index[age_child<=6]=np.argmax(utiliy_values[age_child<=6,:],axis=1) #young
-			choices_index[age_child>6]=np.argmax(utiliy_values[age_child>6,0:3],axis=1) #old
+			choices_index[age_child<=5]=np.argmax(utiliy_values[age_child<=5,:],axis=1) #young
+			choices_index[age_child>5]=np.argmax(utiliy_values[age_child>5,0:3],axis=1) #old
 			choice_matrix[:,periodt]=choices_index.copy()
 			
 			#at periodt=0, if choice>4, individual chooses childcare=1	

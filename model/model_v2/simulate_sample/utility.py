@@ -88,14 +88,11 @@ class Utility(object):
 		
 
 		periodt = 0
-		age=self.xwage[:,0].copy()
-		d_HS = self.xwage[:,1].copy()
 		lt = np.zeros((self.N,1)) + periodt 
 
-		xw=np.concatenate((np.reshape(age,(self.N,1)),
-					np.reshape(self.xwage[:,1],(self.N,1)),
+		xw=np.concatenate((np.reshape(self.xwage[:,0],(self.N,1)), #higrade
 					lt,
-					np.reshape(self.xwage[:,2],(self.N,1)),),axis=1)
+					np.reshape(self.xwage[:,1],(self.N,1)),),axis=1) #constant
 
 		betas=self.param.betaw[0:-2,0] #everything but rho and variance
 		return {'wage':np.exp( np.dot(xw,betas)+ epsilon_t )}
@@ -138,13 +135,11 @@ class Utility(object):
 
 		"""
 
-		age=self.xwage[:,0].copy()
 		lt =  np.zeros((self.N,1)) + periodt
 
-		xw=np.concatenate((np.reshape(age,(self.N,1)),
-					np.reshape(self.xwage[:,1],(self.N,1)),
+		xw=np.concatenate((np.reshape(self.xwage[:,0],(self.N,1)), #HS
 					lt,
-					np.reshape(self.xwage[:,2],(self.N,1)),),axis=1)
+					np.reshape(self.xwage[:,1],(self.N,1)),),axis=1) #constant
 
 		betas=self.param.betaw[0:-2,0] #everything but rho and variance
 
@@ -428,7 +423,7 @@ class Utility(object):
 
 		d_full=h>=self.hours_f
 		agech=np.reshape(self.age_t0,(self.N)) + periodt
-		young=agech<=6
+		young=agech<=5
 		boo_nfree = free==0
 		boo_ra = self.ra==1
 
@@ -503,8 +498,8 @@ class Utility(object):
 		boo_f = h == self.hours_f
 		boo_u = h == 0
 
-		tch[agech<=6] = cc[agech<=6]*(168 - 40) + (1-cc[agech<=6])*(boo_u[agech<=6]*168 + boo_p[agech<=6]*(168 - self.hours_p) + boo_f[agech<=6]*(168 - self.hours_f)) 
-		tch[agech>6] = boo_u[agech>6]*133 + boo_p[agech>6]*(133 - self.hours_p) + boo_f[agech>6]*(133 - self.hours_f)
+		tch[agech<=5] = cc[agech<=5]*(168 - self.hours_f) + (1-cc[agech<=5])*(168 - h[agech<=5] ) 
+		tch[agech>5] = 133 - h[agech>5] 
 		tch=np.log(tch)
 
 		
@@ -518,7 +513,7 @@ class Utility(object):
 		theta1=np.zeros(self.N)
 
 		#The production of HC: (young, cc=0), (young,cc1), (old)
-		boo_age=agech<=6
+		boo_age=agech<=5
 		theta1 = tfp*cc*boo_age + gamma1*np.log(theta0) + gamma2*incomepc +	gamma3*tch
 			
 		#adjustment for E[theta = 0]
@@ -535,7 +530,7 @@ class Utility(object):
 
 		#age of child
 		agech=np.reshape(self.age_t0,(self.N)) + periodt
-		d_age = agech<=6
+		d_age = agech<=5
 
 		#log-theta
 		ltheta=np.log(thetat)

@@ -4,8 +4,8 @@ nperiods = 8
 #simulated
 income_aux = income.copy()
 income_aux[income_aux==0]=1
-ate_inc = np.mean( np.mean(np.log(income_aux[passign[:,0]==1,:,:]),axis=0) - np.mean(np.log(income_aux[passign[:,0]==0,:,:]),axis=0),axis=1)
-se_ate_inc = np.std( np.mean(np.log(income_aux[passign[:,0]==1,:,:]),axis=0) - np.mean(np.log(income_aux[passign[:,0]==0,:,:]),axis=0),axis=1)
+ate_inc = np.mean( np.mean(np.log(income_aux[passign[:,0]==1 & boo_sample[:,0]==1,:,:]),axis=0) - np.mean(np.log(income_aux[passign[:,0]==0 & boo_sample[:,0]==1,:,:]),axis=0),axis=1)
+se_ate_inc = np.std( np.mean(np.log(income_aux[passign[:,0]==1 & boo_sample[:,0]==1,:,:]),axis=0) - np.mean(np.log(income_aux[passign[:,0]==0 & boo_sample[:,0]==1,:,:]),axis=0),axis=1)
 
 #data
 dofile = "/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/fit/ate_inc.do"

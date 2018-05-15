@@ -6,8 +6,8 @@ age_child = np.zeros((N,nperiods))
 for x in range(nperiods):
 	age_child[:,x]=agech0[:,0] + x
 
-
-boo_young = age_child<=6
+#sample: young by t=2 (to be consistent with data)
+boo_young = age_t2<=6
 boo_t = passign[:,0]==1
 boo_c = passign[:,0]==0
 

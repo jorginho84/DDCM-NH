@@ -18,13 +18,14 @@ program prob_diff, rclass
 	version 13
 	tempname mean_1 mean_2
 	args emp
-	qui: sum `emp' if d_RA==1
+	qui: sum `emp' if d_RA==1 & age_t2<=6
 	scalar `mean_1'=r(mean)
-	qui: sum `emp' if d_RA==0
+	qui: sum `emp' if d_RA==0 & age_t2<=6
 	scalar `mean_2'=r(mean)
 	return scalar ate=`mean_1' - `mean_2'
 end
 
+gen age_t2 = age_t0 + 2
 
 *Computing ATEs for each year
 mat ate_part=J(9,1,.)

@@ -27,6 +27,7 @@ end
 
 *Identifying young children
 gen age_t1=age_t0+1
+gen age_t2=age_t0+2
 gen age_t4=age_t0+4
 gen age_t7=age_t0+7
 
@@ -37,7 +38,7 @@ mat se_ate_cc=J(2,1,.)
 
 local i =1
 foreach x in 1 4 {/*No young children in t=7*/
-	bootstrap diff=r(ate), reps(`reps'): prob_diff d_CC2_t`x' if age_t`x'<=6
+	bootstrap diff=r(ate), reps(`reps'): prob_diff d_CC2_t`x' if age_t2<=6
 	mat ate_cc[`i',1]=e(b)
 	mat se_ate_cc[`i',1]=e(se)
 	local i = `i' + 1

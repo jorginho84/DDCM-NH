@@ -17,9 +17,9 @@ program inc_diff, rclass
 	version 13
 	tempname mean_1 mean_2
 	args inc_year
-	qui: sum `inc_year' if d_RA==1
+	qui: sum `inc_year' if d_RA==1 & agech_t2<=6
 	scalar `mean_1'=r(mean)
-	qui: sum `inc_year' if d_RA==0
+	qui: sum `inc_year' if d_RA==0 & agech_t2<=6
 	scalar `mean_2'=r(mean)
 	return scalar ate=`mean_1' - `mean_2'
 end
@@ -41,6 +41,9 @@ gen incomepc_t1=log(incomepc_t1_aux)
 gen incomepc_t4=log(incomepc_t4_aux)
 gen incomepc_t7=log(incomepc_t7_aux)
 
+
+*Child age at t=2
+gen agech_t2 = age_t0 + 2
 
 *Computing ATES for each year
 local i =1

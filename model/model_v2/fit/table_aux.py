@@ -48,7 +48,7 @@ pos = 5
 list_aux = []
 list_obs = []
 list_sig = []
-for c in range(6):
+for c in range(5):
 	sim_moment = ws.cell('B' + str(c + pos))
 	obs_moment = ws.cell('D' + str(c + pos))
 	obs_sigma = ws.cell('F' + str(c + pos))
@@ -80,8 +80,8 @@ fig.savefig('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Mod
 plt.close()
 
 #A. t=2, kappas
-ind = ind + 6
-pos = 11
+ind = ind + 5
+pos = 10
 list_aux = []
 list_obs = []
 list_sig = []
@@ -99,7 +99,7 @@ for c in range(4):
 
 
 ind = ind + 4
-pos = 15
+pos = 14
 #B. t=5, kappas
 for c in range(4):
 	sim_moment = ws.cell('B' + str(c + pos))
@@ -137,7 +137,7 @@ plt.close()
 
 #C. Measures of academic achievement and family choices
 ind = ind +4
-pos = 19
+pos = 18
 list_aux = []
 list_obs = []
 list_sig = []

@@ -3,13 +3,13 @@ full = choices['hours_matrix']==hours_f
 hours = choices['hours_matrix'].copy()
 
 #simulated
-ate_part = np.mean(np.mean(part[passign[:,0]==1,:,:],axis=0) - np.mean(part[passign[:,0]==0,:,:],axis=0),axis=1 )
-ate_full = np.mean(np.mean(full[passign[:,0]==1,:,:],axis=0) - np.mean(full[passign[:,0]==0,:,:],axis=0),axis=1 )
-ate_hours = np.mean(np.mean(hours[passign[:,0]==1,:,:],axis=0) - np.mean(hours[passign[:,0]==0,:,:],axis=0),axis=1 )
+ate_part = np.mean(np.mean(part[passign[:,0]==1 & boo_sample[:,0]==1,:,:],axis=0) - np.mean(part[passign[:,0]==0 & boo_sample[:,0]==1,:,:],axis=0),axis=1 )
+ate_full = np.mean(np.mean(full[passign[:,0]==1 & boo_sample[:,0]==1,:,:],axis=0) - np.mean(full[passign[:,0]==0 & boo_sample[:,0]==1,:,:],axis=0),axis=1 )
+ate_hours = np.mean(np.mean(hours[passign[:,0]==1 & boo_sample[:,0]==1,:,:],axis=0) - np.mean(hours[passign[:,0]==0 & boo_sample[:,0]==1,:,:],axis=0),axis=1 )
 
-se_ate_part = np.std(np.mean(part[passign[:,0]==1,:,:],axis=0) - np.mean(part[passign[:,0]==0,:,:],axis=0),axis=1 )
-se_ate_full = np.mean(np.mean(full[passign[:,0]==1,:,:],axis=0) - np.mean(full[passign[:,0]==0,:,:],axis=0),axis=1 )
-se_ate_hours = np.std(np.mean(hours[passign[:,0]==1,:,:],axis=0) - np.mean(hours[passign[:,0]==0,:,:],axis=0),axis=1 )
+se_ate_part = np.std(np.mean(part[passign[:,0]==1 & boo_sample[:,0]==1,:,:],axis=0) - np.mean(part[passign[:,0]==0 & boo_sample[:,0]==1,:,:],axis=0),axis=1 )
+se_ate_full = np.mean(np.mean(full[passign[:,0]==1 & boo_sample[:,0]==1,:,:],axis=0) - np.mean(full[passign[:,0]==0 & boo_sample[:,0]==1,:,:],axis=0),axis=1 )
+se_ate_hours = np.std(np.mean(hours[passign[:,0]==1 & boo_sample[:,0]==1,:,:],axis=0) - np.mean(hours[passign[:,0]==0 & boo_sample[:,0]==1,:,:],axis=0),axis=1 )
 
 #data
 dofile = "/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/fit/ate_emp.do"

@@ -23,14 +23,15 @@ import time
 import openpyxl
 
 #Betas and var-cov matrix
-betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv18.npy')
-var_cov=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/estimation/sesv3_modelv18_judd_eps_age_grid59.npy')
+betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv22.npy')
+var_cov=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/estimation/sesv3_modelv22.npy')
 se_vector  = np.sqrt(np.diagonal(var_cov))
 
 #Utility function
-eta=betas_nelder[0]
-alphap=betas_nelder[1]
-alphaf=betas_nelder[2]
+eta = betas_nelder[0]
+alphap = betas_nelder[1]
+alphaf = betas_nelder[2]
+
 
 sigma_eta_opt=se_vector[0]
 sigma_alphap_opt=se_vector[1]
@@ -38,33 +39,33 @@ sigma_alphaf_opt=se_vector[2]
 
 #wage process
 wagep_betas=np.array([betas_nelder[3],betas_nelder[4],betas_nelder[5],
-	betas_nelder[6],betas_nelder[7],betas_nelder[8],betas_nelder[9]]).reshape((7,1))
+	betas_nelder[6],betas_nelder[7]]).reshape((5,1))
 
-sigma_wagep_betas=np.array([se_vector[3],se_vector[4],se_vector[5],se_vector[6],
-	se_vector[7],se_vector[8],se_vector[9]]).reshape((7,1))
+sigma_wagep_betas=np.array([se_vector[3],se_vector[4],se_vector[5],
+	se_vector[6],se_vector[7]]).reshape((5,1))
 
 
 #Production function [young[cc0,cc1],old]
-gamma1= betas_nelder[10]
-gamma2= betas_nelder[11]
-gamma3= betas_nelder[12]
-tfp=betas_nelder[13]
+gamma1= betas_nelder[8]
+gamma2= betas_nelder[9]
+gamma3= betas_nelder[10]
+tfp=betas_nelder[11]
 sigma2theta=1
 
-sigma_gamma1=se_vector[10]
-sigma_gamma2=se_vector[11]
-sigma_gamma3=se_vector[12]
-sigma_tfp=se_vector[13]
+sigma_gamma1=se_vector[8]
+sigma_gamma2=se_vector[9]
+sigma_gamma3=se_vector[10]
+sigma_tfp=se_vector[11]
 
 
-kappas=[[betas_nelder[14],betas_nelder[15],betas_nelder[16],betas_nelder[17]],
-[betas_nelder[18],betas_nelder[19],betas_nelder[20],betas_nelder[21]]]
+kappas=[[betas_nelder[12],betas_nelder[13],betas_nelder[14],betas_nelder[15]],
+[betas_nelder[16],betas_nelder[17],betas_nelder[18],betas_nelder[19]]]
 
-sigma_kappas=[[se_vector[14],se_vector[15],se_vector[16],se_vector[17]],
-[se_vector[18],se_vector[19],se_vector[20],se_vector[21]]]
+sigma_kappas=[[se_vector[12],se_vector[13],se_vector[14],se_vector[15]],
+[se_vector[16],se_vector[17],se_vector[18],se_vector[19]]]
 
-rho_theta_epsilon = betas_nelder[22]
-sigma_rho_theta_epsilon = se_vector[22]
+rho_theta_epsilon = betas_nelder[20]
+sigma_rho_theta_epsilon = se_vector[20]
 
 
 #First measure is normalized. starting arbitrary values
@@ -81,12 +82,11 @@ r'Preference for full-time work ($\alpha^f$)',
 r'Preference for human capital ($\eta$)']
 
 #beware of change of coefficients here (5-6)
-wage_list_beta = [wagep_betas[0,0],wagep_betas[1,0],wagep_betas[2,0],wagep_betas[3,0],
-wagep_betas[4,0],wagep_betas[6,0],wagep_betas[5,0]]
+wage_list_beta = [wagep_betas[0,0],wagep_betas[1,0],wagep_betas[2,0],
+wagep_betas[3,0],wagep_betas[4,0]]
 wage_list_se = [sigma_wagep_betas[0,0],sigma_wagep_betas[1,0],
-sigma_wagep_betas[2,0],sigma_wagep_betas[3,0],sigma_wagep_betas[4,0],
-sigma_wagep_betas[6,0],sigma_wagep_betas[5,0]]
-wage_names = ['Age', r'Age$^2$', 'High school', r'$\log(t)$','Constant', 'AR(1) error term' ,'Variance of error term']
+sigma_wagep_betas[2,0],sigma_wagep_betas[3,0],sigma_wagep_betas[4,0]]
+wage_names = ['High school dummy', 'Trend','Constant', 'Variance of error term','AR(1) error term']
 
 prod_list_beta = [tfp,gamma1,gamma2,gamma3,rho_theta_epsilon]
 prod_list_se  = [sigma_tfp,sigma_gamma1,sigma_gamma2,sigma_gamma3,sigma_rho_theta_epsilon]

@@ -33,33 +33,33 @@ import estimate as estimate
 
 np.random.seed(1)
 
-betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv16.npy')
+betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv21.npy')
 
 
 #Number of periods where all children are less than or equal to 18
 nperiods = 8
 
 #Utility function
-eta=0.16
-alphap=betas_nelder[1]
-alphaf=-0.30
+eta = betas_nelder[0]
+alphap = betas_nelder[1]
+alphaf = betas_nelder[2]
 
 #wage process
-wagep_betas=np.array([0.05,betas_nelder[5],
-	0.095,0.54,betas_nelder[8],betas_nelder[9]]).reshape((6,1))
+wagep_betas=np.array([betas_nelder[3],betas_nelder[4],betas_nelder[5],
+	betas_nelder[6],betas_nelder[7]]).reshape((5,1))
 
 #Production function [young,old]
-gamma1= betas_nelder[10]
-gamma2= betas_nelder[11]
-gamma3= 0.3
-tfp=0.3
+gamma1= betas_nelder[8]
+gamma2= -betas_nelder[9]
+gamma3= betas_nelder[10]
+tfp=betas_nelder[11]
 sigma2theta=1
 
-kappas=[[betas_nelder[14],betas_nelder[15],betas_nelder[16],betas_nelder[17]],
-[betas_nelder[18],betas_nelder[19],betas_nelder[20],betas_nelder[21]]]
+kappas=[[betas_nelder[12],betas_nelder[13],betas_nelder[14],betas_nelder[15]],
+[betas_nelder[16],betas_nelder[17],betas_nelder[18],betas_nelder[19]]]
 
 #initial theta
-rho_theta_epsilon = betas_nelder[22]
+rho_theta_epsilon = betas_nelder[20]
 
 #All factor loadings are normalized
 lambdas=[1,1]
@@ -83,7 +83,7 @@ N=X_aux.shape[0]
 
 #Data for wage process
 #see wage_process.do to see the order of the variables.
-x_w=x_df[ ['age_ra', 'd_HS2', 'constant' ] ].values
+x_w=x_df[ ['d_HS2', 'constant' ] ].values
 
 
 #Data for marriage process
@@ -98,7 +98,7 @@ kidsp_betas=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount
 
 
 #Minimum set of x's (for interpolation)
-x_wmk=x_df[  ['age_ra', 'age_ra2', 'd_HS2', 'constant'] ].values
+x_wmk=x_df[  ['age_ra','age_ra2', 'd_HS2', 'constant'] ].values
 
 #Data for treatment status
 passign=x_df[ ['d_RA']   ].values
@@ -163,7 +163,7 @@ D=50
 M=1000
 
 #How many hours is part- and full-time work
-hours_p=15
+hours_p=20
 hours_f=40
 
 #Indicate if model includes a work requirement (wr), 
@@ -194,32 +194,31 @@ alphaf_opt=output.x[2]
 betaw0=output.x[3]
 betaw1=output.x[4]
 betaw2=output.x[5]
-betaw3=output.x[6]
-betaw4=np.exp(output.x[7])
-betaw5=output.x[8]
-gamma1_opt=output.x[9]
-gamma2_opt=output.x[10]
-gamma3_opt=output.x[11]
-tfp_opt=output.x[12]
-kappas_00=output.x[13]
-kappas_01=output.x[14]
-kappas_02=output.x[15]
-kappas_03=output.x[16]
-kappas_10=output.x[17]
-kappas_11=output.x[18]
-kappas_12=output.x[19]
-kappas_13=output.x[20]
-rho_theta_epsilon_opt = sym(output.x[21])
+betaw3=np.exp(output.x[6])
+betaw4=output.x[7]
+gamma1_opt=output.x[8]
+gamma2_opt=output.x[9]
+gamma3_opt=output.x[10]
+tfp_opt=output.x[11]
+kappas_00=output.x[12]
+kappas_01=output.x[13]
+kappas_02=output.x[14]
+kappas_03=output.x[15]
+kappas_10=output.x[16]
+kappas_11=output.x[17]
+kappas_12=output.x[18]
+kappas_13=output.x[19]
+rho_theta_epsilon_opt = sym(output.x[20])
 
 
 
 
 betas_opt=np.array([eta_opt, alphap_opt,alphaf_opt,
-	betaw0,betaw1,betaw2,betaw3,betaw4,betaw5,
+	betaw0,betaw1,betaw2,betaw3,betaw4,
 	gamma1_opt,gamma2_opt,gamma3_opt,tfp_opt,
 	kappas_00,kappas_01,kappas_02,kappas_03,
 	kappas_10,kappas_11,kappas_12,kappas_13,rho_theta_epsilon_opt])
 
-np.save('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv19.npy',betas_opt)
+np.save('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv22.npy',betas_opt)
 
 

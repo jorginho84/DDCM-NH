@@ -137,6 +137,11 @@ class Estimate:
 
 		##Obtaining Auxiliary estimate for every m##
 		choice_matrix=choices['choice_matrix'].copy()
+		hours_matrix=choices['hours_matrix'].copy()
+		wage_matrix=choices['wage_matrix'].copy()
+		ssrs_t2_matrix=choices['ssrs_t2_matrix'].copy()
+		ssrs_t5_matrix=choices['ssrs_t5_matrix'].copy()
+		consumption_matrix=choices['consumption_matrix'].copy()
 
 		############################################################
 		####Aux to identify utility function########################
@@ -147,19 +152,17 @@ class Estimate:
 		age_aux=age_child[:,1].copy()
 		passign_aux=self.passign[:,0].copy()
 		cc_logit=choices_aux>=3
-		boo=(age_aux<=6) & (passign_aux==0)
+		boo=(age_aux<=5) & (passign_aux==0)
 		beta_childcare=np.mean(cc_logit[boo,:],axis=0) #beta for every m
 
 
-		#mean hours at t=0,1,4,7
-		choices_aux=np.concatenate((choice_matrix[:,0,:],choice_matrix[:,1,:],
-			choice_matrix[:,4,:],choice_matrix[:,7,:]),axis=0)
-		passign_aux=np.concatenate((self.passign[:,0],self.passign[:,0],
-			self.passign[:,0],self.passign[:,0]),axis=0)
+		#mean hours at t=0,1
+		hours_aux=np.concatenate((hours_matrix[:,0,:],hours_matrix[:,1,:]),axis=0)
+		passign_aux=np.concatenate((self.passign[:,0],self.passign[:,0]),axis=0)
 		
-		hours_aux_1=(choices_aux==1) | (choices_aux==4)
-		hours_aux_2=(choices_aux==2) | (choices_aux==5)
-		boo_h=(passign_aux==0)
+		hours_aux_1 = hours_aux == self.hours_p
+		hours_aux_2 = hours_aux == self.hours_f
+		boo_h = passign_aux == 0
 		beta_hours1=np.mean(hours_aux_1[boo_h,:],axis=0)
 		beta_hours2=np.mean(hours_aux_2[boo_h,:],axis=0)
 
@@ -168,7 +171,8 @@ class Estimate:
 		####Aux to identify wage process############################
 		############################################################
 
-		wage_matrix=choices['wage_matrix'].copy()
+
+		
 		wage_aux=np.log(np.concatenate((wage_matrix[:,0,:],wage_matrix[:,1,:],
 		wage_matrix[:,4,:],wage_matrix[:,7,:]),axis=0)) #to panel and logs
 
@@ -177,10 +181,6 @@ class Estimate:
 		for t in range(self.nperiods):
 			age[:,t]=age_t0.copy()
 		
-		age_aux=np.reshape(np.concatenate((age[:,0],age[:,1],age[:,4],age[:,7]),axis=0),(self.N*4,1))
-		age2_aux=np.square(age_aux)
-		
-
 		logt_dic={'period0':np.zeros((self.N,1)),
 		'period1': np.zeros((self.N,1)) + 1,
 		'period4': np.zeros((self.N,1)) + 4,
@@ -190,24 +190,25 @@ class Estimate:
 			logt_dic['period1'][:,0],logt_dic['period4'][:,0],
 			logt_dic['period7'][:,0]),axis=0),(self.N*4,1))
 
-		dhs_aux=np.reshape(np.concatenate((self.x_w[:,1],self.x_w[:,1],self.x_w[:,1],self.x_w[:,1]),axis=0),(self.N*4,1))
-		choices_aux=np.concatenate((choice_matrix[:,0,:],choice_matrix[:,1,:],
-			choice_matrix[:,4,:],choice_matrix[:,7,:]),axis=0)
-		boo_work=(choices_aux==1) | (choices_aux==2) | (choices_aux==4) | (choices_aux==5)
-		
+		x_list = [] #the X matrix
+		x_list.append(np.reshape(np.concatenate((self.x_w[:,0],self.x_w[:,0],self.x_w[:,0],self.x_w[:,0]),axis=0),(self.N*4,1)))
+		x_list.append(lt)
+		x_list.append(np.reshape(np.concatenate((self.x_w[:,1],self.x_w[:,1],self.x_w[:,1],self.x_w[:,1]),axis=0),(self.N*4,1)))
+
 		#sample who work all years
 		boo_sample = ((choice_matrix[:,0,:]==1) | (choice_matrix[:,0,:]==2) | (choice_matrix[:,0,:]==4) | (choice_matrix[:,0,:]==5)) & ((choice_matrix[:,1,:]==1) | (choice_matrix[:,1,:]==2) | (choice_matrix[:,1,:]==4) | (choice_matrix[:,1,:]==5)) 	& ((choice_matrix[:,4,:]==1) | (choice_matrix[:,4,:]==2) | (choice_matrix[:,4,:]==4) | (choice_matrix[:,4,:]==5)) 	& ((choice_matrix[:,7,:]==1) | (choice_matrix[:,7,:]==2) | (choice_matrix[:,7,:]==4) | (choice_matrix[:,7,:]==5))
+		boo_work = np.concatenate((boo_sample,boo_sample,
+			boo_sample,boo_sample),axis=0)
 
-		beta_w=np.zeros((4,self.M)) #5 parameters
+		beta_w=np.zeros((len(x_list),self.M))
 		sigma_w=np.zeros((1,self.M))
 		rho_eps=np.zeros((1,self.M))
-		const=np.ones((self.N*4,1)) #4 periods:0,1,4,7
+		
 
 		for j in range(self.M): #the sample loop
-			xw_aux=np.concatenate((age_aux[boo_work[:,j]==1,:],
-				dhs_aux[boo_work[:,j]==1,:],
-				lt[boo_work[:,j]==1,:],
-				const[boo_work[:,j]==1,:]),axis=1)
+			xw_aux=np.concatenate((x_list[0][boo_work[:,j]==1,:],
+				x_list[1][boo_work[:,j]==1,:],
+				x_list[2][boo_work[:,j]==1,:]),axis=1)
 
 			
 			if np.linalg.cond(np.dot(np.transpose(xw_aux),
@@ -219,16 +220,14 @@ class Estimate:
 
 				#obtaining residuals by period for those who work all periods
 				e_list = []
-				cons_2 = np.ones((self.N,1))
-				n_work = cons_2[boo_sample[:,j]==1,0].shape[0]
+				n_work = self.x_w[boo_sample[:,j]==1,1].shape[0]
 
 				for k in [0,1,4,7]:
 
 					#Xs for those working all periods
-					xw_aux_2=np.concatenate((np.reshape(age[boo_sample[:,j]==1,k],(n_work,1)),
-						np.reshape(self.x_w[boo_sample[:,j]==1,1],(n_work,1)),
+					xw_aux_2=np.concatenate((np.reshape(self.x_w[boo_sample[:,j]==1,0],(n_work,1)),
 						np.reshape(logt_dic['period' + str(k)][boo_sample[:,j]==1],(n_work,1)),
-						cons_2[boo_sample[:,j]==1,:]),axis=1)
+						np.reshape(self.x_w[boo_sample[:,j]==1,1],(n_work,1)),),axis=1)
 					
 					e = np.log(wage_matrix[boo_sample[:,j]==1,k,j]) - np.dot(xw_aux_2,beta_w[:,j])
 					e_list.append(e)
@@ -251,21 +250,19 @@ class Estimate:
 		###Aux estimate to identify prod function###################
 		############################################################
 
-		ssrs_t2_matrix=choices['ssrs_t2_matrix'].copy()
-		ssrs_t5_matrix=choices['ssrs_t5_matrix'].copy()
-
-		ssrs_t2_matrix_se=np.zeros((self.N,self.M))
-		ssrs_t5_matrix_se=np.zeros((self.N,self.M))
-
-		for j in range(self.M):
-			ssrs_t2_matrix_se[:,j]=(ssrs_t2_matrix[:,j] - np.mean(ssrs_t2_matrix[:,j]))/np.std(ssrs_t2_matrix[:,j])
-			ssrs_t5_matrix_se[:,j]=(ssrs_t5_matrix[:,j] - np.mean(ssrs_t5_matrix[:,j]))/np.std(ssrs_t5_matrix[:,j])
-
 		
-		consumption_matrix=choices['consumption_matrix'].copy()
+
+		ssrs_t2_matrix_se=ssrs_t2_matrix>2
+		ssrs_t5_matrix_se=ssrs_t5_matrix>2
+
+				
 		cc_matrix = choice_matrix>=3
-		hours_matrix=choices['hours_matrix'].copy()
-		leisure_matrix=cc_matrix*(148 - self.hours_f) + (148-hours_matrix)*(1-cc_matrix)
+		
+
+		leisure_matrix = np.zeros((self.N,hours_matrix.shape[1],self.M))
+		for t in range(hours_matrix.shape[1]):
+			leisure_matrix[age_child[:,t]<=5,t,:] = cc_matrix[age_child[:,t]<=5,t,:]*(148 - self.hours_f) + (148-hours_matrix[age_child[:,t]<=5,t,:])*(1-cc_matrix[age_child[:,t]<=5,t,:])
+			leisure_matrix[age_child[:,t]>5,t,:] = 133 - hours_matrix[age_child[:,t]>5,t,:]
 		
 		#to panel
 		consumption_aux=np.concatenate((consumption_matrix[:,1,:],
@@ -298,8 +295,8 @@ class Estimate:
 
 			b_cc0=choice_aux[:,j]<3 #child care choice=0 at t=1
 			b_cc1=choice_aux[:,j]>=3 #child care choice=1 at t=1
-			boo_young_cc0 = (age_aux<=6) & (b_cc0==True)
-			boo_young_cc1 = (age_aux<=6) & (b_cc1==True)
+			boo_young_cc0 = (age_aux<=5) & (b_cc0==True)
+			boo_young_cc1 = (age_aux<=5) & (b_cc1==True)
 			beta_inputs[3,j] = np.mean(ssrs_aux[boo_young_cc1,j]) - np.mean(ssrs_aux[boo_young_cc0,j])
 			
 			
@@ -332,22 +329,21 @@ class Estimate:
 		self.param0.betaw[0]=beta[3]
 		self.param0.betaw[1]=beta[4]
 		self.param0.betaw[2]=beta[5]
-		self.param0.betaw[3]=beta[6]
-		self.param0.betaw[4]=np.exp(beta[7])
-		self.param0.betaw[5]=beta[8]
-		self.param0.gamma1=beta[9]
-		self.param0.gamma2=beta[10]
-		self.param0.gamma3=beta[11]
-		self.param0.tfp=beta[12]
-		self.param0.kappas[0][0]=beta[13]
-		self.param0.kappas[0][1]=beta[14]
-		self.param0.kappas[0][2]=beta[15]
-		self.param0.kappas[0][3]=beta[16]
-		self.param0.kappas[1][0]=beta[17]
-		self.param0.kappas[1][1]=beta[18]
-		self.param0.kappas[1][2]=beta[19]
-		self.param0.kappas[1][3]=beta[20]
-		self.param0.rho_theta_epsilon=sym(beta[21])
+		self.param0.betaw[3]=np.exp(beta[6])
+		self.param0.betaw[4]=beta[7]
+		self.param0.gamma1=beta[8]
+		self.param0.gamma2=beta[9]
+		self.param0.gamma3=beta[10]
+		self.param0.tfp=beta[11]
+		self.param0.kappas[0][0]=beta[12]
+		self.param0.kappas[0][1]=beta[13]
+		self.param0.kappas[0][2]=beta[14]
+		self.param0.kappas[0][3]=beta[15]
+		self.param0.kappas[1][0]=beta[16]
+		self.param0.kappas[1][1]=beta[17]
+		self.param0.kappas[1][2]=beta[18]
+		self.param0.kappas[1][3]=beta[19]
+		self.param0.rho_theta_epsilon=sym(beta[20])
 					
 
 		#The model (utility instance)
@@ -456,7 +452,7 @@ class Estimate:
 		beta0=np.array([self.param0.eta,self.param0.alphap,self.param0.alphaf,
 			self.param0.betaw[0],
 			self.param0.betaw[1],self.param0.betaw[2],
-			self.param0.betaw[3],np.log(self.param0.betaw[4]),self.param0.betaw[5],
+			np.log(self.param0.betaw[3]),self.param0.betaw[4],
 			self.param0.gamma1,self.param0.gamma2,self.param0.gamma3,	
 			self.param0.tfp,
 			self.param0.kappas[0][0],self.param0.kappas[0][1],#kappa: t=2, m0

@@ -61,7 +61,7 @@ gen d_work_all = lhwage_t0!=.  & lhwage_t1!=. & lhwage_t4!=.  & lhwage_t7!=.
 
 *Panel
 egen id=seq()
-keep lhwage* age_ra d_HS2 id d_work_all higrade d_black
+keep lhwage* age_ra d_HS2 id d_work_all higrade d_black p_assign
 reshape long lhwage_t, i(id) j(t_ra)
 xtset id t_ra
 
@@ -78,7 +78,7 @@ REGRESSION
 **************************************************************************
 **************************************************************************
 **************************************************************************
-xi: reg lhwage_t d_HS2 t_ra if d_work_all==1
+xi: reg lhwage_t d_HS2 t_ra if d_work_all==1 & p_assign == "C"
 matrix beta_aux=e(b)
 
 predict u_hat , resid

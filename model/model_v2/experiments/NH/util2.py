@@ -65,7 +65,8 @@ class Prod2(Utility):
 		boo_f = h == self.hours_f
 		boo_u = h == 0
 
-		tch = cc*(148 - 40) + (1-cc)*(boo_u*148 + boo_p*(148 - self.hours_p) + boo_f*(148 - self.hours_f)) 
+		tch[agech<=5] = cc[agech<=5]*(168 - self.hours_f) + (1-cc[agech<=5])*(168 - h[agech<=5] )
+		tch[agech>5] = 133 - h[agech>5]
 		tch=np.log(tch)
 		
 						
@@ -79,7 +80,7 @@ class Prod2(Utility):
 
 		
 		#The production of HC: young, cc=0
-		boo_age=agech<=6
+		boo_age=agech<=5
 		theta1 = tfp*cc*boo_age + gamma1*np.log(theta0) + gamma2*incomepc +	gamma3*tch 
 
 		#adjustment for E[theta = 0]

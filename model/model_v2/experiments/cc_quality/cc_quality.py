@@ -1,7 +1,18 @@
 """
-execfile('mfx.py')
+execfile('cc_quality.py')
 
-This code computes marginal effects of HH inputs on log(theta)
+This file computes stats to validate model
+
+It uses:
+ate_theta.py
+oprobit.py
+table_aux.py
+ate_emp.py
+ate_cc.py
+ssrs_obs.do
+ssrs_sim.do
+ate_cc.do
+ate_emp.do
 
 """
 from __future__ import division #omit for python 3.x
@@ -36,9 +47,9 @@ np.random.seed(1)
 
 betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv24.npy')
 
+
 #Number of periods where all children are less than or equal to 18
 nperiods = 8
-
 
 #Utility function
 eta = betas_nelder[0]
@@ -78,7 +89,6 @@ pafdc=.60
 psnap=.70
 
 #Data
-#X_aux=pd.read_csv('C:\\Users\\Jorge\\Dropbox\\Chicago\\Research\\Human capital and the household\\results\\Model\\Xs.csv')
 X_aux=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/sample_model_v2.csv')
 x_df=X_aux
 
@@ -134,10 +144,13 @@ married0=x_df[ ['d_marital_2']   ].values
 
 #age of child at baseline
 agech0=x_df[['age_t0']].values
-
-age_child = np.zeros((N,nperiods))
+age_ch = np.zeros((N,nperiods))
 for t in range(nperiods):
-	age_child = agech0 + t
+	age_ch[:,t] = agech0[:,0] + t
+boo_y = age_ch[:,2]<=6
+
+#age of child two years after baseline
+agech_t2 = agech0 + 2
 
 #Defines the instance with parameters
 param0=util.Parameters(alphap,alphaf,eta,gamma1,gamma2,gamma3,
@@ -189,100 +202,49 @@ model  = util.Utility(param0,N,x_w,x_m,x_k,passign,
 
 #Obtaining emax instances, samples, and betas for M samples
 np.random.seed(1)
-emax_instance = output_ins.emax(param0,model)
-choices = output_ins.samples(param0,emax_instance,model)
 
-#Inputs at mean values
-theta_matrix = choices['theta_matrix']
-consumption_matrix = choices['consumption_matrix']
-hours_matrix = choices['hours_matrix']
+#list of tfp
+tfp_list = [tfp,tfp*.75,tfp*.5,tfp*.25, 0]
 
-#Mean across samples and periods
-ec = np.mean(np.mean(consumption_matrix,axis=2),axis=1)
-eh = np.zeros(N)+40 #everybody working full time
+#Producing impact on child human capital
+choices_list = []
+ate_theta_list = []
+for k in range(len(tfp_list)):
+	param0.tfp = tfp_list[k]
+	emax_instance = output_ins.emax(param0,model)
+	choices = output_ins.samples(param0,emax_instance,model)
+	choices_list.append(choices)
 
-#assuming baseline period
-lt = np.zeros(N)
-lt[agech0[:,0]<=5]= 168 - eh[agech0[:,0]<=5] 
-lt[agech0[:,0]>5] = 133 - eh[agech0[:,0]>5]
-d_cc = np.zeros(N) #nobody in ccc
-
-#Computing mfx
-theta_th = np.zeros((N,nperiods)) #shocked
-theta_0 = np.zeros((N,nperiods))
-theta_0[:,0] = np.mean(theta_matrix[:,0,:],axis=1) #initial value
-theta_th[:,0] = theta_0[:,0].copy()
-
-#SD units
-sd_matrix = np.zeros((nperiods,M))
-for k in range(nperiods):
-	for j in range(M):
-		sd_matrix[k,j] = np.std(np.log(theta_matrix[:,k,j]),axis=0)
-sds = np.mean(sd_matrix,axis=1)
-
-#the shocks
-shock_th = theta_0[:,0] + np.exp(np.zeros(N)+0.3)
-
-#theta with no shocks
-for k in range(nperiods - 1):
-	#no shocks
-	theta_0[:,k+1] = np.exp(gamma1*np.log(theta_0[:,k]) + gamma2*np.log(ec) +gamma3*np.log(lt))
-
-#Responses
-for k in range(nperiods - 1):
-	if k==0:
-		theta_th[:,k+1] = np.exp(gamma1*np.log(shock_th) + gamma2*np.log(ec) +gamma3*np.log(lt))
-	else:
-		theta_th[:,k+1] = np.exp(gamma1*np.log(theta_th[:,k]) + gamma2*np.log(ec) +gamma3*np.log(lt))
-#ATE
-ate_theta = np.mean(np.log(theta_th) - np.log(theta_0),axis=0)/sds
-
-#mfx: a 1,000 income shock
-t0 = gamma1*np.log(np.ones(N)) + gamma2*np.log(ec) +gamma3*np.log(lt)
-t1 = gamma1*np.log(np.ones(N)) + gamma2*np.log(ec+1000/(nkids0[:,0] + married0[:,0])) +gamma3*np.log(lt)
-mfx_c = np.mean(t1-t0)/sds[1]
-
-#mfx: a mup*12 shock income shock
-t0 = gamma1*np.log(np.ones(N)) + gamma2*np.log(ec) +gamma3*np.log(lt)
-t1 = gamma1*np.log(np.ones(N)) + gamma2*np.log(ec+mup*12/(nkids0[:,0] + married0[:,0])) +gamma3*np.log(lt)
-mfx_c_mu = np.mean(t1-t0)/sds[1]
+	#AtE theta
+	ltheta = np.log(choices['theta_matrix'])
+	for j in range (M):
+		for t in range(8):
+			ltheta[:,t,j] = (ltheta[:,t,j])/np.std(ltheta[:,t,j],axis=0)
+	ate_theta = np.mean(np.mean(ltheta[(passign[:,0]==1) & (boo_y) ,:,:],axis=0) - np.mean(ltheta[(passign[:,0]==0) & (boo_y),:,:],axis=0),axis=1)
+	ate_theta_list.append(ate_theta)
 
 
-#mfx: from full time to unemployment
-t0 = gamma1*np.log(np.ones(N)) + gamma2*np.log(ec) +gamma3*np.log(lt)
-t1 = gamma1*np.log(np.ones(N)) + gamma2*np.log(ec) +gamma3*np.log((lt+40))
-mfx_t = np.mean(t1-t0)/sds[1]
-
-#mfx: impact of child care (everybody young)
-tau = 168 - eh
-t0 = gamma1*np.log(np.ones(N)) + gamma2*np.log(ec) +gamma3*np.log(tau)
-t1 = gamma1*np.log(np.ones(N)) + gamma2*np.log(ec) +gamma3*np.log(tau) + tfp*np.ones(N)
-mfx_cc = np.mean(t1-t0)/sds[1]
-
-
-print ''
-print 'impact of 1,000 shock', mfx_c
-print ''
-print ''
-print 'impact of mup*12 shock', mfx_c_mu
-print ''
-print 'impact of unemployment shock', mfx_t
-print ''
-print 'impact of cc shock', mfx_cc
-
-
-##The graph (shock on theta)
-x = np.array(range(0,nperiods))
+#Effects on ln theta figure
+markers_list = ['k-','k--','k-o', 'k--o','k-^']
+names_list_v2 = [r'$\gamma_1$', r'$\gamma1\times.75$',r'$\gamma1\times.5$',
+r'$\gamma1\times.25$', r'$0$']
+x = np.array(range(1,nperiods))
 fig, ax=plt.subplots()
-ax.plot(x,ate_theta, color='k',zorder=1,linewidth=3)
-ax.set_ylabel(r'Impact on $\ln(\theta_{t+1})$ (in $\sigma$s)', fontsize=14)
-ax.set_xlabel(r'Years after random assignment ($t$)', fontsize=14)
+for k in range(len(tfp_list)):
+	ax.plot(x,ate_theta_list[k][1:],markers_list[k],label=names_list_v2[k],linewidth=3,markersize=9,alpha=0.9)
+ax.set_ylabel(r'Impact on child human capital ($\sigma$s)', fontsize=15)
+ax.set_xlabel(r'Years after random assignment ($t$)', fontsize=15)
 ax.spines['right'].set_visible(False)
 ax.spines['top'].set_visible(False)
 ax.yaxis.set_ticks_position('left')
 ax.xaxis.set_ticks_position('bottom')
+plt.yticks(fontsize=15)
+plt.xticks(fontsize=15)
+ax.legend(fontsize = 15)
 plt.show()
-fig.savefig('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/experiments/prod/theta_shock.pdf', format='pdf')
+fig.savefig('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/experiments/cc_quality/ate_theta_CC_quality.pdf', format='pdf')
 plt.close()
+
+
 
 

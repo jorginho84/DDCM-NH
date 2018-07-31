@@ -34,32 +34,34 @@ from util2 import Prod2
 
 np.random.seed(1)
 
-betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv16.npy')
+betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv23.npy')
 
 #Number of periods where all children are less than or equal to 18
 nperiods = 8
 
 #Utility function
-eta=betas_nelder[0]
-alphap=betas_nelder[1]
-alphaf=betas_nelder[2]
+eta = betas_nelder[0]
+alphap = betas_nelder[1]
+alphaf = betas_nelder[2]
 
 #wage process
 wagep_betas=np.array([betas_nelder[3],betas_nelder[4],betas_nelder[5],
-	betas_nelder[6],betas_nelder[7],betas_nelder[8],betas_nelder[9]]).reshape((7,1))
+	betas_nelder[6],betas_nelder[7]]).reshape((5,1))
+
 
 #Production function [young,old]
-gamma1= betas_nelder[10]
-gamma2= betas_nelder[11]
-gamma3= betas_nelder[12]
-tfp=betas_nelder[13]
+gamma1= betas_nelder[8]
+gamma2= betas_nelder[9]
+gamma3= betas_nelder[10]
+tfp=betas_nelder[11]
 sigma2theta=1
 
-kappas=[[betas_nelder[14],betas_nelder[15],betas_nelder[16],betas_nelder[17]],
-[betas_nelder[18],betas_nelder[19],betas_nelder[20],betas_nelder[21]]]
+kappas=[[betas_nelder[12],betas_nelder[13],betas_nelder[14],betas_nelder[15]],
+[betas_nelder[16],betas_nelder[17],betas_nelder[18],betas_nelder[19]]]
 
 #initial theta
-rho_theta_epsilon = betas_nelder[22]
+rho_theta_epsilon = betas_nelder[20]
+
 
 #All factor loadings are normalized
 lambdas=[1,1]
@@ -83,7 +85,7 @@ N=X_aux.shape[0]
 
 #Data for wage process
 #see wage_process.do to see the order of the variables.
-x_w=x_df[ ['age_ra', 'd_HS2', 'constant' ] ].values
+x_w=x_df[ ['d_HS2', 'constant' ] ].values
 
 
 #Data for marriage process
@@ -98,7 +100,7 @@ kidsp_betas=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount
 
 
 #Minimum set of x's (for interpolation)
-x_wmk=x_df[  ['age_ra', 'age_ra2', 'd_HS2', 'constant'] ].values
+x_wmk=x_df[  ['age_ra','age_ra2', 'd_HS2', 'constant'] ].values
 
 #Data for treatment status
 passign=x_df[ ['d_RA']   ].values
@@ -157,7 +159,7 @@ D=50
 M=1000
 
 #How many hours is part- and full-time work
-hours_p=15
+hours_p=20
 hours_f=40
 
 #Indicate if model includes a work requirement (wr), 
@@ -193,9 +195,12 @@ boo_f = hours_m == hours_f
 boo_u = hours_m == 0
 cc = choices['choice_matrix']>2
 ecc = np.mean(np.mean(cc,axis=2),axis=0)
-tch = cc*(148 - 40) + (1-cc)*(148 - hours_m) 
+tch = np.zeros((N,nperiods,M))
+for t in range(nperiods):
+	tch[age_ch[:,t]<=5,t,:] = cc[age_ch[:,t]<=5,t,:]*(168 - hours_f) + (1-cc[age_ch[:,t]<=5,t,:])*(168 - hours_m[age_ch[:,t]<=5,t,:])
+	tch[age_ch[:,t]>5,t,:] = 133 - hours_m[age_ch[:,t]>5,t,:]
 el = np.mean(np.mean(np.log(tch),axis=2),axis=0)
-e_age = np.mean(age_ch<=6,axis=0)
+e_age = np.mean(age_ch<=5,axis=0)
 np.save('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/experiments/NH/ec.npy',ec)
 np.save('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/experiments/NH/el.npy',el)
 np.save('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/experiments/NH/ecc.npy',ecc)

@@ -23,46 +23,44 @@ from scipy import stats
 
 
 #save dictionaries here:
-eitc_dic={}
-eitc_aux=[]
+eitc_list=[]
 
-for j in ['EITC']:
-	
-	#The parameters
-	for year in range(1995,2014):
+#The parameters
+for year in range(1995,2014):
 
-		#1 children
-		r1_1=0
-		r2_1=0
-		b1_1=6160
-		b2_1=11290
-		state_eitc1=0
+	#1 children
+	r1_1=0
+	r2_1=0
+	b1_1=6160
+	b2_1=11290
+	state_eitc1=0
 
-		#2+ children
-		r1_2=0
-		r2_2=0
-		b1_2=8640
-		b2_2=11290
-		state_eitc2=0
+	#2+ children
+	r1_2=0
+	r2_2=0
+	b1_2=8640
+	b2_2=11290
+	state_eitc2=0
 
-		#3 children
-		r1_3=0
-		r2_3=0
-		b1_3=8640
-		b2_3=11290
-		state_eitc3=0
+	#3 children
+	r1_3=0
+	r2_3=0
+	b1_3=8640
+	b2_3=11290
+	state_eitc3=0
 
-			
-		#Save dictionary in this list
-		eitc_aux.append({'r1_1': r1_1, 'r2_1': r2_1, 'b1_1':b1_1, 'b2_1': b2_1, 
-		'r1_2':r1_2, 'r2_2': r2_2, 'b1_2': b1_2, 'b2_2': b2_2,
-		'r1_3':r1_3, 'r2_3': r2_3, 'b1_3': b1_2, 'b2_3': b2_3,
-		   'state_eitc1': state_eitc1, 'state_eitc2': state_eitc2, 'state_eitc3': state_eitc3})
 		
-		eitc_dic[j] = eitc_aux
+	#Save dictionary in this list
+	dic_aux={'r1_1': r1_1, 'r2_1': r2_1, 'b1_1':b1_1, 'b2_1': b2_1, 
+	'r1_2':r1_2, 'r2_2': r2_2, 'b1_2': b1_2, 'b2_2': b2_2,
+	'r1_3':r1_3, 'r2_3': r2_3, 'b1_3': b1_3, 'b2_3': b2_3,
+	   'state_eitc1': state_eitc1, 'state_eitc2': state_eitc2, 'state_eitc3': state_eitc3}
+
+	#Save dictionary in this list
+	eitc_list.append(dic_aux)
 
 #Saving the list
-pickle.dump(eitc_dic,open('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/simulate_sample/eitc_dic_4.p','wb'))
+pickle.dump(eitc_list,open('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/simulate_sample/eitc_dic_4.p','wb'))
 		
 
 

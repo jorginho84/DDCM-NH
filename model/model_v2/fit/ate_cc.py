@@ -7,15 +7,14 @@ for x in range(nperiods):
 	age_child[:,x]=agech0[:,0] + x
 
 #sample: young by t=2 (to be consistent with data)
-boo_young = age_t2<=6
 boo_t = passign[:,0]==1
 boo_c = passign[:,0]==0
 
 ate_cc = np.zeros((5))
 se_ate_cc = np.zeros((5))
 for t in range(5):
-	ate_cc[t] = np.mean(np.mean(cc_t[(boo_young[:,t]) & (boo_t),t,:],axis = 0) - np.mean(cc_t[(boo_young[:,t]) & (boo_c),t,:],axis = 0),axis=0)
-	se_ate_cc[t] = np.std(np.mean(cc_t[(boo_young[:,t]) & (boo_t),t,:],axis = 0) - np.mean(cc_t[(boo_young[:,t]) & (boo_c),t,:],axis = 0),axis=0)
+	ate_cc[t] = np.mean(np.mean(cc_t[(boo_sample[:,0]) & (boo_t),t,:],axis = 0) - np.mean(cc_t[(boo_sample[:,0]) & (boo_c),t,:],axis = 0),axis=0)
+	se_ate_cc[t] = np.std(np.mean(cc_t[(boo_sample[:,0]) & (boo_t),t,:],axis = 0) - np.mean(cc_t[(boo_sample[:,0]) & (boo_c),t,:],axis = 0),axis=0)
 
 
 
@@ -40,8 +39,8 @@ fig, ax=plt.subplots()
 x = np.array(range(0,nperiods))
 plot1=ax.plot(x[0:3],ate_cc[0:3]*100,'bs-',label='Simulated',alpha=0.6)
 plot4=ax.errorbar(x[0:3],ate_cc[0:3]*100,yerr=se_ate_cc[0:3]*100,ecolor='b',alpha=0.6)
-plot2=ax.plot(x[s1mask][0:1],ate_cc_obs_long[s1mask][0:1]*100,'ko-',label='Data',alpha=0.9)
-plot3=ax.errorbar(x[s1mask][0:1],ate_cc_obs_long[s1mask][0:1]*100,yerr=se_ate_cc_obs_long[s1mask][0:1]*100,fmt='ko',ecolor='k',alpha=0.9)
+plot2=ax.plot(x[s1mask][0:1]+0.05,ate_cc_obs_long[s1mask][0:1]*100,'ko-',label='Data',alpha=0.9)
+plot3=ax.errorbar(x[s1mask][0:1]+0.05,ate_cc_obs_long[s1mask][0:1]*100,yerr=se_ate_cc_obs_long[s1mask][0:1]*100,fmt='ko',ecolor='k',alpha=0.9)
 plt.setp(plot1,linewidth=5)
 plt.setp(plot2,markeredgewidth=5)
 plt.setp(plot3,linewidth=3)

@@ -35,32 +35,33 @@ from bset import Budget
 
 np.random.seed(1)
 
-betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv16.npy')
+betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv24.npy')
 
 #Number of periods where all children are less than or equal to 18
 nperiods = 8
 
 #Utility function
-eta=betas_nelder[0]
-alphap=betas_nelder[1]
-alphaf=betas_nelder[2]
+eta = betas_nelder[0]
+alphap = betas_nelder[1]
+alphaf = betas_nelder[2]
 
 #wage process
 wagep_betas=np.array([betas_nelder[3],betas_nelder[4],betas_nelder[5],
-	betas_nelder[6],betas_nelder[7],betas_nelder[8],betas_nelder[9]]).reshape((7,1))
+	betas_nelder[6],betas_nelder[7]]).reshape((5,1))
+
 
 #Production function [young,old]
-gamma1= betas_nelder[10]
-gamma2= betas_nelder[11]
-gamma3= betas_nelder[12]
-tfp=betas_nelder[13]
+gamma1= betas_nelder[8]
+gamma2= betas_nelder[9]
+gamma3= betas_nelder[10]
+tfp=betas_nelder[11]
 sigma2theta=1
 
-kappas=[[betas_nelder[14],betas_nelder[15],betas_nelder[16],betas_nelder[17]],
-[betas_nelder[18],betas_nelder[19],betas_nelder[20],betas_nelder[21]]]
+kappas=[[betas_nelder[12],betas_nelder[13],betas_nelder[14],betas_nelder[15]],
+[betas_nelder[16],betas_nelder[17],betas_nelder[18],betas_nelder[19]]]
 
 #initial theta
-rho_theta_epsilon = betas_nelder[22]
+rho_theta_epsilon = betas_nelder[20]
 
 #First measure is normalized. starting arbitrary values
 #All factor loadings are normalized
@@ -86,7 +87,7 @@ N=X_aux.shape[0]
 
 #Data for wage process
 #see wage_process.do to see the order of the variables.
-x_w=x_df[ ['age_ra', 'd_HS2', 'constant' ] ].values
+x_w=x_df[ ['d_HS2', 'constant' ] ].values
 
 
 #Data for marriage process
@@ -101,7 +102,7 @@ kidsp_betas=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount
 
 
 #Minimum set of x's (for interpolation)
-x_wmk=x_df[  ['age_ra', 'age_ra2', 'd_HS2', 'constant'] ].values
+x_wmk=x_df[  ['age_ra','age_ra2', 'd_HS2', 'constant'] ].values
 
 #Data for treatment status
 passign=x_df[ ['d_RA']   ].values
@@ -111,16 +112,10 @@ passign=x_df[ ['d_RA']   ].values
 #The EITC parameters
 eitc_list = pickle.load( open( '/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/simulate_sample/eitc_list.p', 'rb' ) )
 
-#Exp 1: Full EITC vs No EITC
+#Exp 1: Full EITC, everybody
 eitc_list_1 = pickle.load( open( '/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/simulate_sample/eitc_dic_1.p', 'rb' ) )
 
-#Exp 2: Full EITC vs fixed EITC
-eitc_list_2 = pickle.load( open( '/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/simulate_sample/eitc_dic_2.p', 'rb' ) )
-
-#Exp 3: Everybody with EITC
-eitc_list_3 = pickle.load( open( '/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/simulate_sample/eitc_dic_3.p', 'rb' ) )
-
-#Exp 4: Everybody no EITC
+#Exp 2: Everybody no EITC
 eitc_list_4 = pickle.load( open( '/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/simulate_sample/eitc_dic_4.p', 'rb' ) )
 
 #The AFDC parameters
@@ -177,7 +172,7 @@ D=50
 M=1000
 
 #How many hours is part- and full-time work
-hours_p=15
+hours_p=20
 hours_f=40
 
 #Indicate if model includes a work requirement (wr), 
@@ -227,9 +222,12 @@ boo_f = hours_m == hours_f
 boo_u = hours_m == 0
 cc = choices_baseline['choice_matrix']>2
 ecc = np.mean(np.mean(cc,axis=2),axis=0)
-tch = cc*(148 - 40) + (1-cc)*(boo_u*148 + boo_p*(148 - hours_p) + boo_f*(148 - hours_f)) 
+tch = np.zeros((N,nperiods,M))
+for t in range(nperiods):
+	tch[age_ch[:,t]<=5,t,:] = cc[age_ch[:,t]<=5,t,:]*(168 - hours_f) + (1-cc[age_ch[:,t]<=5,t,:])*(168 - hours_m[age_ch[:,t]<=5,t,:])
+	tch[age_ch[:,t]>5,t,:] = 133 - hours_m[age_ch[:,t]>5,t,:] 
 el = np.mean(np.mean(np.log(tch),axis=2),axis=0)
-e_age = np.mean(age_ch<=6,axis=0)
+e_age = np.mean(age_ch<=5,axis=0)
 np.save('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/experiments/EITC/ec.npy',ec)
 np.save('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/experiments/EITC/el.npy',el)
 np.save('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/experiments/EITC/ecc.npy',ecc)
@@ -255,7 +253,7 @@ for j in range(M):
 #cc_sub_list: with (1) without (0) CC subsidy
 
 """
-eitc_list = [eitc_list_1,eitc_list_2,eitc_list_3,eitc_list_4]
+eitc_list = [eitc_list_4,eitc_list_1]
 cc_sub_list = [0,1]
 
 """
@@ -265,11 +263,12 @@ EXP2: no EITC, full CC
 EXP3: full EITC, full CC
 """
 
-experiments=[ [eitc_list[3],cc_sub_list[0]], [eitc_list[2],cc_sub_list[0]],
-[eitc_list[3],cc_sub_list[1]], [eitc_list[2],cc_sub_list[1]] ]
+experiments=[ [eitc_list[0],cc_sub_list[0]], [eitc_list[1],cc_sub_list[0]],
+[eitc_list[0],cc_sub_list[1]], [eitc_list[1],cc_sub_list[1]] ]
 
 choices = []
 models = []
+params = []
 
 
 ###The Experiment loop###
@@ -278,22 +277,22 @@ for j in range(len(experiments)): #the experiment loop
 	print 'Im in experiment number ', j
 
 	#Defines the instance with parameters
-	param0=util.Parameters(alphap,alphaf,eta,gamma1,gamma2,gamma3,
-		tfp,sigma2theta,rho_theta_epsilon,wagep_betas, marriagep_betas, kidsp_betas,
-		experiments[j][0],afdc_list,snap_list,cpi,lambdas,kappas,pafdc,psnap,mup)
+	params.append(util.Parameters(alphap,alphaf,eta,gamma1,gamma2,gamma3,
+			tfp,sigma2theta,rho_theta_epsilon,wagep_betas, marriagep_betas, kidsp_betas,
+			experiments[j][0],afdc_list,snap_list,cpi,lambdas,kappas,pafdc,psnap,mup))
 
-	output_ins=estimate.Estimate(nperiods,param0,x_w,x_m,x_k,x_wmk,passign,agech0,nkids0,
+	output_ins=estimate.Estimate(nperiods,params[j],x_w,x_m,x_k,x_wmk,passign,agech0,nkids0,
 		married0,D,dict_grid,M,N,moments_vector,var_cov,hours_p,hours_f,
 		wr,experiments[j][1],ws)
 
 	#The model (utility instance)	
-	models.append(Budget(param0,N,x_w,x_m,x_k,passign,nkids0,married0,
+	models.append(Budget(params[j],N,x_w,x_m,x_k,passign,nkids0,married0,
 			hours,childcare,agech0,hours_p,hours_f,wr,experiments[j][1],ws))
 
 	#Obtaining emax instances, samples, and betas for M samples
 	np.random.seed(1)
-	emax_instance = output_ins.emax(param0,models[j])
-	choices.append(output_ins.samples(param0,emax_instance,models[j]))
+	emax_instance = output_ins.emax(params[j],models[j])
+	choices.append(output_ins.samples(params[j],emax_instance,models[j]))
 
 ##Recovering choices
 cc_sim_matrix = []
@@ -415,7 +414,7 @@ for t in range(nperiods - 1):
 
 
 #Table: average effects
-outcome_list = [r'Consumption (US\$ 1,000)', 'Part-time', 'Full-time', 'Child care']
+outcome_list = [r'Consumption (US\$ 1,000)', 'Part-time (percentage points)', 'Full-time (percentage points)', 'Child care (percentage points)']
 
 ate_theta = [np.zeros((nperiods)),np.zeros((nperiods)),np.zeros((nperiods))]
 for j in range(3):
@@ -423,13 +422,17 @@ for j in range(3):
 
 output_list =  [ate_ct,ate_part,ate_full,ate_cc]
 
+for k in range(3):
+	for j in range(3):
+		output_list[k+1][j] = output_list[k+1][j]*100
+
 #number of periods to consider averaging
 periods = [nperiods,nperiods,nperiods,3,nperiods-1]
 
 with open('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/experiments/EITC/table_eitc_mech.tex','w') as f:
 	f.write(r'\begin{tabular}{llccccc}'+'\n')	
 	f.write(r'\hline'+'\n')
-	f.write(r'ATE   && (1)   && (2)   && (3) \bigstrut[b]\\'+'\n')
+	f.write(r'Variable   && (1)   && (2)   && (3) \bigstrut[b]\\'+'\n')
 	f.write(r'\cline{1-1}\cline{3-7}')
 	for j in range(len(output_list)):
 		f.write(outcome_list[j]+ '&&'+ '{:3.2f}'.format(np.mean(output_list[j][0][0:periods[j]]))  
@@ -442,8 +445,6 @@ with open('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model
 	f.write(r'Child care subsidy &       &       &       & $\checkmark$ &       & $\checkmark$ \bigstrut[b]\\'+'\n')
 	f.write(r'\hline'+'\n')
 	f.write(r'\end{tabular}%'+'\n')
-
-
 
 
 #Mechanisms: for paper
@@ -498,29 +499,23 @@ for j in range(3): #the experiment loop
 	ax.plot(x,horiz_line_data, 'k--',linewidth=2)
 	ax.fill_between(x,y2,(y2+y1), color='k' ,alpha=.65,zorder=2,label='Lagged human capital')
 	ax.fill_between(x,(y2+y1),(y2+y1+y3), color='k' ,alpha=.35,zorder=3,label='Child care')
-	ax.fill_between(x,(y2+y1+y3),(total), color='k' ,alpha=.12,zorder=4,label='Consumption')
-	ax.set_ylabel(r'Effect on child human capital ($\sigma$s)', fontsize=14)
-	ax.set_xlabel(r'Years after random assignment ($t$)', fontsize=14)
+	ax.fill_between(x,(y2+y1+y3),(total), color='k' ,alpha=.12,zorder=4,label='Money')
+	ax.set_ylabel(r'Effect on child human capital ($\sigma$s)', fontsize=20)
+	ax.set_xlabel(r'Years after random assignment ($t$)', fontsize=20)
+	#ax.annotate('Explained by time', xy=(2, y2[2]), xytext=(2.5, y2[2]-0.02),
+	#	arrowprops=dict(facecolor='black', shrink=0.05,connectionstyle="arc3"))
+	#ax.annotate('Explained by consumption', xy=(3, total[2]-0.01), xytext=(2, total[2]+0.02),
+	#	arrowprops=dict(facecolor='black', shrink=0.05,connectionstyle="arc3"))
 	
-
-	if j==0:
-
-		ax.annotate('Explained by time', xy=(2, y2[2]-0.003), xytext=(2.5, y2[2]-0.018),
-			arrowprops=dict(facecolor='black', shrink=0.05,connectionstyle="arc3"))
-		ax.set_ylim(y2[0]-0.02,total[5] + 0.02)
-	else:
-		ax.annotate('Explained by time', xy=(2, y2[2]), xytext=(2.5, y2[2]-0.02),
-			arrowprops=dict(facecolor='black', shrink=0.05,connectionstyle="arc3"))
-		ax.set_ylim(y2[0]-0.035,total[5] + 0.02)
-
-	ax.annotate('Total impact on human capital', xy=(3, total[2]), xytext=(2, total[2]+0.02),
-		arrowprops=dict(facecolor='black', shrink=0.05,connectionstyle="arc3"))
+	#ax.annotate('Explained by child care', xy=(2.2, y1[1]+0.04), xytext=(3, y1[1]+0.02),
+	#	arrowprops=dict(facecolor='black', shrink=0.05,connectionstyle="arc3"))
+	#ax.text(4,0.05,'Explained by lagged human capital')
 	ax.spines['right'].set_visible(False)
 	ax.spines['top'].set_visible(False)
 	ax.yaxis.set_ticks_position('left')
 	ax.xaxis.set_ticks_position('bottom')
 	ax.margins(0, 0)
-	ax.legend(loc=5)
+	ax.legend(loc=5,fontsize = 19)
 	plt.show()
 	fig.savefig('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/experiments/EITC/mech_' + exp[j] + '_slides.pdf', format='pdf')
 	plt.close()
@@ -528,26 +523,30 @@ for j in range(3): #the experiment loop
 	#this is for the next graph
 	y.append(np.concatenate((np.array([0]),total),axis=0))
 
+
+
 #Effects on ln theta
+names_list_v2 = [r'EITC $\checkmark$ - CC subsidy $\times$',
+r'EITC $\times$ - CC subsidy $\checkmark$',
+r'EITC $\checkmark$ - CC subsidy $\checkmark$']
+markers_list = ['k-','k--','k-o']
+facecolor_list = ['k','k','k']
+
 nper = av_impact[0].shape[0]
 fig, ax=plt.subplots()
 x = np.array(range(0,nper))
-plot0=ax.plot(x,y[0],'k-',label=r'EITC $\checkmark$ - CC subsidy $\times$',alpha=0.9)
-plot1=ax.plot(x,y[1],'k--',label=r'EITC $\times$ - CC subsidy $\checkmark$',alpha=0.9)
-plot2=ax.plot(x,y[2],'k:',label=r'EITC $\checkmark$ - CC subsidy $\checkmark$',alpha=0.9)
-plt.setp(plot0,linewidth=3)
-plt.setp(plot1,linewidth=3)
-plt.setp(plot2,linewidth=3)
-ax.set_ylabel(r'Effect on child human capital ($\sigma$s)', fontsize=14)
-ax.set_xlabel(r'Years after random assignment ($t$)', fontsize=14)
+for k in range(len(y)):
+	ax.plot(x,y[k],markers_list[k],markerfacecolor= facecolor_list[k],
+		markeredgewidth=1.0,label=names_list_v2[k],linewidth=3,markersize=11,alpha=0.9)
+ax.set_ylabel(r'Effect on child human capital ($\sigma$s)', fontsize=15)
+ax.set_xlabel(r'Years after random assignment ($t$)', fontsize=15)
 ax.spines['right'].set_visible(False)
 ax.spines['top'].set_visible(False)
 ax.yaxis.set_ticks_position('left')
 ax.xaxis.set_ticks_position('bottom')
-ax.legend([r'EITC $\checkmark$ - CC subsidy $\times$',
-	r'EITC $\times$ - CC subsidy $\checkmark$',
-	r'EITC $\checkmark$ - CC subsidy $\checkmark$'])
 ax.legend(loc=0)
+plt.yticks(fontsize=15)
+plt.xticks(fontsize=15)
 ax.set_ylim(-0.01,.50)
 plt.show()
 fig.savefig('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/experiments/EITC/ate_theta_eitc.pdf', format='pdf')

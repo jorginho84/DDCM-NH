@@ -33,33 +33,34 @@ from shock import Shock
 
 np.random.seed(1)
 
-betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv16.npy')
-var_cov=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/estimation/sesv2_modelv16_1pc.npy')
+betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv24.npy')
+var_cov=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/estimation/sesv3_modelv22.npy')
 
 #Number of periods where all children are less than or equal to 18
 nperiods = 8
 
 #Utility function
-eta=betas_nelder[0]
-alphap=betas_nelder[1]
-alphaf=betas_nelder[2]
+eta = betas_nelder[0]
+alphap = betas_nelder[1]
+alphaf = betas_nelder[2]
 
 #wage process
 wagep_betas=np.array([betas_nelder[3],betas_nelder[4],betas_nelder[5],
-	betas_nelder[6],betas_nelder[7],betas_nelder[8],betas_nelder[9]]).reshape((7,1))
+	betas_nelder[6],betas_nelder[7]]).reshape((5,1))
+
 
 #Production function [young,old]
-gamma1= betas_nelder[10]
-gamma2= betas_nelder[11]
-gamma3= betas_nelder[12]
-tfp=betas_nelder[13]
+gamma1= betas_nelder[8]
+gamma2= betas_nelder[9]
+gamma3= betas_nelder[10]
+tfp=betas_nelder[11]
 sigma2theta=1
 
-kappas=[[betas_nelder[14],betas_nelder[15],betas_nelder[16],betas_nelder[17]],
-[betas_nelder[18],betas_nelder[19],betas_nelder[20],betas_nelder[21]]]
+kappas=[[betas_nelder[12],betas_nelder[13],betas_nelder[14],betas_nelder[15]],
+[betas_nelder[16],betas_nelder[17],betas_nelder[18],betas_nelder[19]]]
 
 #initial theta
-rho_theta_epsilon = betas_nelder[22]
+rho_theta_epsilon = betas_nelder[20]
 
 #All factor loadings are normalized
 lambdas=[1,1]
@@ -83,7 +84,7 @@ N=X_aux.shape[0]
 
 #Data for wage process
 #see wage_process.do to see the order of the variables.
-x_w=x_df[ ['age_ra', 'd_HS2', 'constant' ] ].values
+x_w=x_df[ ['d_HS2', 'constant' ] ].values
 
 
 #Data for marriage process
@@ -98,7 +99,7 @@ kidsp_betas=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount
 
 
 #Minimum set of x's (for interpolation)
-x_wmk=x_df[  ['age_ra', 'age_ra2', 'd_HS2', 'constant'] ].values
+x_wmk=x_df[  ['age_ra','age_ra2', 'd_HS2', 'constant'] ].values
 
 #Data for treatment status
 passign=x_df[ ['d_RA']   ].values
@@ -157,7 +158,7 @@ D=50
 M=1000
 
 #How many hours is part- and full-time work
-hours_p=15
+hours_p=20
 hours_f=40
 
 #Indicate if model includes a work requirement (wr), 
@@ -185,17 +186,17 @@ def elast_gen(bs,shocks):
 	
 	#wage process
 	wagep_betas=np.array([bs[3],bs[4],bs[5],bs[6],
-		bs[7],bs[8],bs[9]]).reshape((7,1))
+		bs[7]]).reshape((5,1))
 
 	#Production function [young[cc0,cc1],old]
-	gamma1=bs[10]
-	gamma2=bs[11]
-	gamma3=bs[12]
-	tfp=bs[13]
+	gamma1=bs[8]
+	gamma2=bs[9]
+	gamma3=bs[10]
+	tfp=bs[11]
 	
-	kappas=[[bs[14],bs[15],bs[16],bs[17]],[bs[18],bs[19],bs[20],bs[21]]]
+	kappas=[[bs[12],bs[13],bs[14],bs[15]],[bs[16],bs[17],bs[18],bs[19]]]
 
-	rho_theta_epsilon =  bs[22]
+	rho_theta_epsilon =  bs[20]
 
 	lambdas=[1,1]
 
@@ -260,11 +261,11 @@ def elast_gen(bs,shocks):
 
 		for t in range(nperiods):
 			sample = (employment[0][:,t,j]==1)
-			elast_periods[t] = np.mean((full[1][sample,t,j] - full[0][sample,t,j]),axis=0)/(shocks[1]*np.mean((full[0][sample,t,j]),axis=0))
+			elast_periods[t] = np.mean((h_sim_matrix[1][sample,t,j] - h_sim_matrix[0][sample,t,j]),axis=0)/(shocks[1]*np.mean(h_sim_matrix[0][sample,t,j],axis=0))
 		
 		elast_intensive[j] = np.mean(elast_periods)
 
-	return {'Extensive': np.mean(elast_extensive), 'Intensive': np.mean(elast_intensive) }	
+	return {'Extensive': elast_extensive, 'Intensive': elast_intensive }	
 	
 
 
@@ -292,8 +293,9 @@ def partial(psi,eps,S,shocks):
 		psi_high = psi.copy()
 
 		#changing only relevant parameter, one at a time
-		psi_low[s] = psi[s] - eps
-		psi_high[s] = psi[s] + eps
+		h = eps*np.absolute(psi[s])
+		psi_low[s] = psi[s] - h
+		psi_high[s] = psi[s] + h
 
 		#Computing elasticities
 		low = elast_gen(psi_low,shocks)
@@ -303,8 +305,8 @@ def partial(psi,eps,S,shocks):
 		intensive_low = low['Intensive']
 		intensive_high = high['Intensive']
 
-		db_dt_extensive[s] = (extensive_high - extensive_low) / (psi_high[s]-psi_low[s])
-		db_dt_intensive[s] = (intensive_high - intensive_low) / (psi_high[s]-psi_low[s])
+		db_dt_extensive[s] = (np.mean(extensive_high - extensive_low)) / (psi_high[s]-psi_low[s])
+		db_dt_intensive[s] = (np.mean(intensive_high - intensive_low)) / (psi_high[s]-psi_low[s])
 
 	return {'der_extensive': db_dt_extensive, 'der_intensive': db_dt_intensive}
 
@@ -325,13 +327,13 @@ se_intensive = np.sqrt(np.dot(np.transpose(der_intensive),np.dot(var_cov,der_int
 print ''
 print 'Extensive-margin elasticity'
 print ''
-print 'Point estimate: ', elas['Extensive']
+print 'Point estimate: ', np.mean(elas['Extensive'])
 print 'SE: ', se_extensive
 print ''
 print ''
 print 'Intensive-margin elasticity'
 print ''
-print 'Point estimate: ', elas['Intensive']
+print 'Point estimate: ', np.mean(elas['Intensive'])
 print 'SE: ', se_intensive
 print ''
 

@@ -4,8 +4,8 @@ nperiods = 8
 #simulated
 income_aux = income.copy()
 income_aux[income_aux==0]=1
-ate_inc = np.mean( np.mean(np.log(income_aux[passign[:,0]==1 & boo_sample[:,0]==1,:,:]),axis=0) - np.mean(np.log(income_aux[passign[:,0]==0 & boo_sample[:,0]==1,:,:]),axis=0),axis=1)
-se_ate_inc = np.std( np.mean(np.log(income_aux[passign[:,0]==1 & boo_sample[:,0]==1,:,:]),axis=0) - np.mean(np.log(income_aux[passign[:,0]==0 & boo_sample[:,0]==1,:,:]),axis=0),axis=1)
+ate_inc = np.mean( np.mean(np.log(income_aux[(passign[:,0]==1) & (boo_sample[:,0]==1),:,:]),axis=0) - np.mean(np.log(income_aux[(passign[:,0]==0) & (boo_sample[:,0]==1),:,:]),axis=0),axis=1)
+se_ate_inc = np.std( np.mean(np.log(income_aux[(passign[:,0]==1) & (boo_sample[:,0]==1),:,:]),axis=0) - np.mean(np.log(income_aux[(passign[:,0]==0) & (boo_sample[:,0]==1),:,:]),axis=0),axis=1)
 
 #data
 dofile = "/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/fit/ate_inc.do"
@@ -31,8 +31,8 @@ fig, ax=plt.subplots()
 x = np.array(range(0,nperiods))
 plot1=ax.plot(x[0:3],ate_inc[0:3],'bs-',label='Simulated',alpha=0.6)
 plot4=ax.errorbar(x[0:3],ate_inc[0:3],yerr=se_ate_inc[0:3],ecolor='b',alpha=0.6)
-plot2=ax.plot(x[s1mask][0:1],ate_inc_obs_long[s1mask][0:1],'ko-',label='Data',alpha=0.9)
-plot3=ax.errorbar(x[s1mask][0:1],ate_inc_obs_long[s1mask][0:1],yerr=se_ate_inc_obs_long[s1mask][0:1],fmt='ko',ecolor='k',alpha=0.9)
+plot2=ax.plot(x[s1mask][0:1]+0.05,ate_inc_obs_long[s1mask][0:1],'ko-',label='Data',alpha=0.9)
+plot3=ax.errorbar(x[s1mask][0:1]+0.05,ate_inc_obs_long[s1mask][0:1],yerr=se_ate_inc_obs_long[s1mask][0:1],fmt='ko',ecolor='k',alpha=0.9)
 plt.setp(plot1,linewidth=5)
 plt.setp(plot2,linewidth=5)
 plt.setp(plot3,linewidth=3)

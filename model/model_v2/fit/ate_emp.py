@@ -3,13 +3,13 @@ full = choices['hours_matrix']==hours_f
 hours = choices['hours_matrix'].copy()
 
 #simulated
-ate_part = np.mean(np.mean(part[passign[:,0]==1 & boo_sample[:,0]==1,:,:],axis=0) - np.mean(part[passign[:,0]==0 & boo_sample[:,0]==1,:,:],axis=0),axis=1 )
-ate_full = np.mean(np.mean(full[passign[:,0]==1 & boo_sample[:,0]==1,:,:],axis=0) - np.mean(full[passign[:,0]==0 & boo_sample[:,0]==1,:,:],axis=0),axis=1 )
-ate_hours = np.mean(np.mean(hours[passign[:,0]==1 & boo_sample[:,0]==1,:,:],axis=0) - np.mean(hours[passign[:,0]==0 & boo_sample[:,0]==1,:,:],axis=0),axis=1 )
+ate_part = np.mean(np.mean(part[(passign[:,0]==1) & (boo_sample[:,0]==1),:,:],axis=0) - np.mean(part[(passign[:,0]==0) & (boo_sample[:,0]==1),:,:],axis=0),axis=1 )
+ate_full = np.mean(np.mean(full[(passign[:,0]==1) & (boo_sample[:,0]==1),:,:],axis=0) - np.mean(full[(passign[:,0]==0) & (boo_sample[:,0]==1),:,:],axis=0),axis=1 )
+ate_hours = np.mean(np.mean(hours[(passign[:,0]==1) & (boo_sample[:,0]==1),:,:],axis=0) - np.mean(hours[(passign[:,0]==0) & (boo_sample[:,0]==1),:,:],axis=0),axis=1 )
 
-se_ate_part = np.std(np.mean(part[passign[:,0]==1 & boo_sample[:,0]==1,:,:],axis=0) - np.mean(part[passign[:,0]==0 & boo_sample[:,0]==1,:,:],axis=0),axis=1 )
-se_ate_full = np.mean(np.mean(full[passign[:,0]==1 & boo_sample[:,0]==1,:,:],axis=0) - np.mean(full[passign[:,0]==0 & boo_sample[:,0]==1,:,:],axis=0),axis=1 )
-se_ate_hours = np.std(np.mean(hours[passign[:,0]==1 & boo_sample[:,0]==1,:,:],axis=0) - np.mean(hours[passign[:,0]==0 & boo_sample[:,0]==1,:,:],axis=0),axis=1 )
+se_ate_part = np.std(np.mean(part[(passign[:,0]==1) & (boo_sample[:,0]==1),:,:],axis=0) - np.mean(part[(passign[:,0]==0) & (boo_sample[:,0]==1),:,:],axis=0),axis=1 )
+se_ate_full = np.mean(np.mean(full[(passign[:,0]==1) & (boo_sample[:,0]==1),:,:],axis=0) - np.mean(full[(passign[:,0]==0) & (boo_sample[:,0]==1),:,:],axis=0),axis=1 )
+se_ate_hours = np.std(np.mean(hours[(passign[:,0]==1) & (boo_sample[:,0]==1),:,:],axis=0) - np.mean(hours[(passign[:,0]==0) & (boo_sample[:,0]==1),:,:],axis=0),axis=1 )
 
 #data
 dofile = "/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/fit/ate_emp.do"
@@ -50,8 +50,8 @@ for j in range(3):
 	x = np.array(range(0,nper))
 	plot1=ax.plot(x[0:3],ate_sim_list[j][0:3],'bs-',label='Simulated',alpha=0.6)
 	plot4=ax.errorbar(x[0:3],ate_sim_list[j][0:3],yerr=se_ate_list[j][0:3],ecolor='b',alpha=0.6)
-	plot2=ax.plot(x[s1mask][0:2],ate_emp_obs_long[s1mask][0:2],'ko-',label='Data',alpha=0.9)
-	plot3=ax.errorbar(x[s1mask][0:2],ate_emp_obs_long[s1mask][0:2],yerr=se_ate_emp_obs_long[s1mask][0:2],fmt='ko',ecolor='k',alpha=0.9)
+	plot2=ax.plot(x[s1mask][0:2]+0.05,ate_emp_obs_long[s1mask][0:2],'ko-',label='Data',alpha=0.9)
+	plot3=ax.errorbar(x[s1mask][0:2]+0.05,ate_emp_obs_long[s1mask][0:2],yerr=se_ate_emp_obs_long[s1mask][0:2],fmt='ko',ecolor='k',alpha=0.9)
 	plt.setp(plot1,linewidth=5)
 	plt.setp(plot2,linewidth=5)
 	plt.setp(plot3,linewidth=3)

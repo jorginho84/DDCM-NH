@@ -54,7 +54,7 @@ class Budget(Utility):
 
 
 		#the EITC parameters
-		dic_eitc=[self.param.eitc['EITC'][periodt]]
+		dic_eitc=self.param.eitc[periodt]
 
 		#The AFDC parameters
 		afdc_param=self.param.afdc[0]
@@ -75,11 +75,12 @@ class Budget(Utility):
 
 		#parameters of the EITC treatment
 		for nn in range(1,4):
-			r1.append(dic_eitc[0]['r1_' + str(nn)])
-			r2.append(dic_eitc[0]['r2_'+ str(nn)])
-			b1.append(dic_eitc[0]['b1_'+ str(nn)])
-			b2.append(dic_eitc[0]['b2_'+ str(nn)])
-			state_eitc.append(dic_eitc[0]['state_eitc'+ str(nn)])
+			r1.append(dic_eitc['r1_' + str(nn)])
+			r2.append(dic_eitc['r2_'+ str(nn)])
+			b1.append(dic_eitc['b1_'+ str(nn)])
+			b2.append(dic_eitc['b2_'+ str(nn)])
+			state_eitc.append(dic_eitc['state_eitc'+ str(nn)])
+			
 
 		#Obtaining individual's disposable income from EITC
 		eitc_fed=np.zeros(self.N)
@@ -179,7 +180,7 @@ class Budget(Utility):
 
 		d_work=h>=self.hours_p
 		agech=np.reshape(self.age_t0,(self.N)) + periodt
-		young=agech<=6
+		young=agech<=5
 		boo_nfree = free==0
 		
 
@@ -246,7 +247,8 @@ class Budget(Utility):
 		boo_f = h == self.hours_f
 		boo_u = h == 0
 
-		tch = cc*(148 - 40) + (1-cc)*(boo_u*148 + boo_p*(148 - self.hours_p) + boo_f*(148 - self.hours_f)) 
+		tch[agech<=5] = cc[agech<=5]*(168 - self.hours_f) + (1-cc[agech<=5])*(168 - h[agech<=5] )
+		tch[agech>5] = 133 - h[agech>5]
 		tch=np.log(tch)
 		
 					
@@ -260,12 +262,15 @@ class Budget(Utility):
 
 		
 		#The production of HC: young, cc=0
-		boo_age=agech<=6
+		boo_age=agech<=5
 		theta1 = tfp*cc*boo_age + gamma1*np.log(theta0) + gamma2*incomepc +	gamma3*tch 
 
 		#adjustment for E[theta = 0]: this is shut down
-		#alpha = - ecel[3][periodt]*ecel[2][periodt]*tfp - ecel[0][periodt]*gamma2 - ecel[1][periodt]*gamma3
+		if periodt<=7:
+			alpha = - ecel[3][periodt]*ecel[2][periodt]*tfp - ecel[0][periodt]*gamma2 - ecel[1][periodt]*gamma3
+		else:
+			alpha = - ecel[3][7]*ecel[2][7]*tfp - ecel[0][7]*gamma2 - ecel[1][7]*gamma3
 
-		return np.exp(theta1)
+		return np.exp(theta1 + alpha)
 	
 	

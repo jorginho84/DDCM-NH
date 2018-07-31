@@ -33,7 +33,7 @@ import estimate as estimate
 
 np.random.seed(1)
 
-betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv21.npy')
+betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv23.npy')
 
 
 #Number of periods where all children are less than or equal to 18
@@ -50,7 +50,7 @@ wagep_betas=np.array([betas_nelder[3],betas_nelder[4],betas_nelder[5],
 
 #Production function [young,old]
 gamma1= betas_nelder[8]
-gamma2= -betas_nelder[9]
+gamma2= betas_nelder[9]
 gamma3= betas_nelder[10]
 tfp=betas_nelder[11]
 sigma2theta=1
@@ -219,6 +219,6 @@ betas_opt=np.array([eta_opt, alphap_opt,alphaf_opt,
 	kappas_00,kappas_01,kappas_02,kappas_03,
 	kappas_10,kappas_11,kappas_12,kappas_13,rho_theta_epsilon_opt])
 
-np.save('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv22.npy',betas_opt)
+np.save('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv24.npy',betas_opt)
 
 

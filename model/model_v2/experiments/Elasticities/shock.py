@@ -41,17 +41,11 @@ class Shock(Utility):
 		
 
 		periodt = 0
-		age_ra=self.xwage[:,0].copy()
-		age=age_ra+periodt
-		age2=age**2
-		d_HS = self.xwage[:,1].copy()
-		lt = np.log(np.zeros((self.N,1)) + periodt + 1)
+		lt = np.zeros((self.N,1)) + periodt 
 
-		xw=np.concatenate((np.reshape(age,(self.N,1)),
-					np.reshape(age2,(self.N,1)),
-					np.reshape(self.xwage[:,1],(self.N,1)),
+		xw=np.concatenate((np.reshape(self.xwage[:,0],(self.N,1)), #higrade
 					lt,
-					np.reshape(self.xwage[:,2],(self.N,1)),),axis=1)
+					np.reshape(self.xwage[:,1],(self.N,1)),),axis=1) #constant
 
 		betas=self.param.betaw[0:-2,0] #everything but rho and variance
 
@@ -78,16 +72,11 @@ class Shock(Utility):
 
 		"""
 
-		age_ra=self.xwage[:,0].copy()
-		age=age_ra+periodt
-		age2=age**2
-		lt = np.log(np.zeros((self.N,1)) + periodt + 1)
+		lt =  np.zeros((self.N,1)) + periodt
 
-		xw=np.concatenate((np.reshape(age,(self.N,1)),
-					np.reshape(age2,(self.N,1)),
-					np.reshape(self.xwage[:,1],(self.N,1)),
+		xw=np.concatenate((np.reshape(self.xwage[:,0],(self.N,1)), #HS
 					lt,
-					np.reshape(self.xwage[:,2],(self.N,1)),),axis=1)
+					np.reshape(self.xwage[:,1],(self.N,1)),),axis=1) #constant
 
 		betas=self.param.betaw[0:-2,0] #everything but rho and variance
 

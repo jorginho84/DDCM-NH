@@ -23,8 +23,8 @@ output_ins=estimate.Estimate(nperiods,param0,x_w,x_m,x_k,x_wmk,passign,agech0,nk
 #build a grid around parameter value
 lenght = 0.5
 size_grid = 6
-max_p = -0.10
-min_p = -0.25
+max_p = alphaf + 0.3
+min_p = alphaf - 0.3
 p_list = np.linspace(min_p,max_p,size_grid)
 obs_moment = moments_vector[2,0].copy()
 
@@ -45,7 +45,7 @@ target_moment_noeitc = np.zeros((size_grid,))
 
 param0=util.Parameters(alphap,alphaf,eta,gamma1,gamma2,gamma3,
 	tfp,sigma2theta, rho_theta_epsilon,wagep_betas, marriagep_betas, kidsp_betas, 
-	eitc_list[3],afdc_list,snap_list,cpi,lambdas,kappas,pafdc,psnap,mup)
+	eitc_list[4],afdc_list,snap_list,cpi,lambdas,kappas,pafdc,psnap,mup)
 
 output_ins=estimate.Estimate(nperiods,param0,x_w,x_m,x_k,x_wmk,passign,agech0,nkids0,
 	married0,D,dict_grid,M,N,moments_vector,var_cov,hours_p,hours_f,
@@ -84,8 +84,6 @@ ax.spines['right'].set_visible(False)
 ax.spines['top'].set_visible(False)
 ax.yaxis.set_ticks_position('left')
 ax.xaxis.set_ticks_position('bottom')
-ax.set_ylim(0.4,0.5)
-ax.set_xlim(-0.22,-0.09)
 ax.legend(loc=0)
 plt.show()
 fig.savefig('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/experiments/EITC/alphaf_check_eitc.pdf', format='pdf')
@@ -103,9 +101,8 @@ ax.spines['right'].set_visible(False)
 ax.spines['top'].set_visible(False)
 ax.yaxis.set_ticks_position('left')
 ax.xaxis.set_ticks_position('bottom')
-ax.set_ylim(0.4,0.5)
-ax.set_xlim(-0.22,-0.09)
 ax.legend(loc=0)
 plt.show()
 fig.savefig('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/experiments/EITC/alphaf_check_eitc_1plot.pdf', format='pdf')
 plt.close()
+

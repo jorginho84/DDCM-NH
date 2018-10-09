@@ -6,8 +6,7 @@ fontsize_axis = 24
 bar_width=0.4
 
 #Opening workbook
-
-wb=openpyxl.load_workbook('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/fit/fit.xlsx')
+wb=openpyxl.load_workbook('C:\\Users\\jrodriguezo\\Dropbox\\Chicago\\Research\\Human capital and the household\\lizzie_backup\\results\\Model\\fit\\fit.xlsx')
 ws = wb["new_moments_data"]
 
 #A. Labor supply and child care decisions
@@ -15,12 +14,10 @@ list_aux = [beta_childcare,beta_hours1,beta_hours2]
 list_obs = [moments_vector[0,0],moments_vector[1,0],moments_vector[2,0]]
 list_sig = [se_vector[0],se_vector[1],se_vector[2]]
 for c in range(3):
-	sim_moment = ws.cell('B' + str(c + 2))
-	obs_moment = ws.cell('D' + str(c + 2))
-	obs_sigma = ws.cell('F' + str(c + 2))
-	sim_moment.value = np.float(list_aux[c])
-	obs_moment.value = np.float(list_obs[c])
-	obs_sigma.value = np.float(list_sig[c])
+	ws['B' + str(c + 2)] = np.float(list_aux[c])
+	ws['D' + str(c + 2)] = np.float(list_obs[c])
+	ws['F' + str(c + 2)] = np.float(list_sig[c])
+	
 
 #the graph
 fig, ax=plt.subplots()
@@ -38,7 +35,7 @@ ax.xaxis.set_ticks_position('bottom')
 ax.set_xticklabels([])
 ax.set_xticks(x + bar_width)
 plt.show()
-fig.savefig('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/fit/fit_utility.pdf', format='pdf')
+fig.savefig('C:\\Users\\jrodriguezo\\Dropbox\\Chicago\\Research\\Human capital and the household\\lizzie_backup\\results\\Model\\fit\\fit_utility.pdf', format='pdf')
 plt.close()
 
 
@@ -49,13 +46,10 @@ list_aux = []
 list_obs = []
 list_sig = []
 for c in range(5):
-	sim_moment = ws.cell('B' + str(c + pos))
-	obs_moment = ws.cell('D' + str(c + pos))
-	obs_sigma = ws.cell('F' + str(c + pos))
-	sim_moment.value = np.float(beta_wagep[c])
-	obs_moment.value = np.float(moments_vector[ind+c,0])
-	obs_sigma.value = np.float(se_vector[ind+c])
-
+	ws['B' + str(c + pos)] = np.float(beta_wagep[c])
+	ws['D' + str(c + pos)] = np.float(moments_vector[ind+c,0])
+	ws['F' + str(c + pos)] = np.float(se_vector[ind+c])
+	
 	list_aux.append(np.float(beta_wagep[c]))
 	list_obs.append(moments_vector[ind+c,0])
 	list_sig.append(se_vector[ind+c])
@@ -76,7 +70,7 @@ ax.xaxis.set_ticks_position('bottom')
 ax.set_xticklabels([])
 ax.set_xticks([])
 plt.show()
-fig.savefig('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/fit/fit_wage.pdf', format='pdf')
+fig.savefig('C:\\Users\\jrodriguezo\\Dropbox\\Chicago\\Research\\Human capital and the household\\lizzie_backup\\results\\Model\\fit\\fit_wage.pdf', format='pdf')
 plt.close()
 
 #A. t=2, kappas
@@ -86,13 +80,10 @@ list_aux = []
 list_obs = []
 list_sig = []
 for c in range(4):
-	sim_moment = ws.cell('B' + str(c + pos))
-	obs_moment = ws.cell('D' + str(c + pos))
-	obs_sigma = ws.cell('F' + str(c + pos))
-	sim_moment.value = np.float(beta_kappas_t2[c])
-	obs_moment.value = np.float(moments_vector[ind + c,0])
-	obs_sigma.value = np.float(se_vector[ind + c])
-
+	ws['B' + str(c + pos)] = np.float(beta_kappas_t2[c])
+	ws['D' + str(c + pos)] = np.float(moments_vector[ind + c,0])
+	ws['F' + str(c + pos)] = np.float(se_vector[ind + c])
+	
 	list_aux.append(np.float(beta_kappas_t2[c]))
 	list_obs.append(moments_vector[ind + c,0])
 	list_sig.append(se_vector[ind + c])
@@ -102,12 +93,9 @@ ind = ind + 4
 pos = 14
 #B. t=5, kappas
 for c in range(4):
-	sim_moment = ws.cell('B' + str(c + pos))
-	obs_moment = ws.cell('D' + str(c + pos))
-	obs_sigma = ws.cell('F' + str(c + pos))
-	sim_moment.value = np.float(beta_kappas_t5[c])
-	obs_moment.value = np.float(moments_vector[ind + c,0])
-	obs_sigma.value = np.float(se_vector[ind + c])
+	ws['B' + str(c + pos)] = np.float(beta_kappas_t5[c])
+	ws['D' + str(c + pos)] = np.float(moments_vector[ind + c,0])
+	ws['F' + str(c + pos)] = np.float(se_vector[ind + c])
 
 
 	list_aux.append(np.float(beta_kappas_t5[c]))
@@ -130,7 +118,7 @@ ax.xaxis.set_ticks_position('bottom')
 ax.set_xticklabels([])
 ax.set_xticks([])
 plt.show()
-fig.savefig('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/fit/fit_kappas.pdf', format='pdf')
+fig.savefig('C:\\Users\\jrodriguezo\\Dropbox\\Chicago\\Research\\Human capital and the household\\lizzie_backup\\results\\Model\\fit\\fit_kappas.pdf', format='pdf')
 plt.close()
 
 
@@ -146,13 +134,10 @@ list_aux = [np.concatenate((beta_inputs,betas_init_prod),axis=0)]
 list_obs = [moments_vector[ind:ind +5 ,0]]
 list_sig = [se_vector[ind:ind + 5]]
 
-for c in range(5): 
-	sim_moment = ws.cell('B' + str(c + pos))
-	obs_moment = ws.cell('D' + str(c + pos))
-	obs_sigma = ws.cell('F' + str(c + pos))
-	sim_moment.value = np.float(list_aux[0][c])
-	obs_moment.value = np.float(list_obs[0][c])
-	obs_sigma.value = np.float(list_sig[0][c])
+for c in range(5):
+	ws['B' + str(c + pos)] = np.float(list_aux[0][c])
+	ws['D' + str(c + pos)] = np.float(list_obs[0][c])
+	ws['F' + str(c + pos)] = np.float(list_sig[0][c])
 
 	
 		
@@ -172,9 +157,9 @@ ax.xaxis.set_ticks_position('bottom')
 ax.set_xticklabels([])
 ax.set_xticks([])
 plt.show()
-fig.savefig('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/fit/fit_ssrs.pdf', format='pdf')
+fig.savefig('C:\\Users\\jrodriguezo\\Dropbox\\Chicago\\Research\\Human capital and the household\\lizzie_backup\\results\\Model\\fit\\fit_ssrs.pdf', format='pdf')
 plt.close()
 
 
 	
-wb.save('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/fit/fit.xlsx')
+wb.save('C:\\Users\\jrodriguezo\\Dropbox\\Chicago\\Research\\Human capital and the household\\lizzie_backup\\results\\Model\\fit\\fit.xlsx')

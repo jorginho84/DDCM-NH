@@ -1,6 +1,8 @@
 """
 execfile('fit.py')
 
+exec(open("C:\\Users\\jrodriguezo\\Dropbox\\Chicago\\Research\\Human capital and the household\\codes\\DDCM-NH\\model\\model_v2\\fit\\fit.py").read())
+
 This file computes stats to validate model
 
 It uses:
@@ -31,7 +33,7 @@ matplotlib.use('Agg') # Force matplotlib to not use any Xwindows backend.
 import matplotlib.pyplot as plt
 import subprocess
 #sys.path.append("C:\\Users\\Jorge\\Dropbox\\Chicago\\Research\\Human capital and the household\]codes\\model")
-sys.path.append("/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/simulate_sample")
+sys.path.append("C:\\Users\\jrodriguezo\\Dropbox\\Chicago\\Research\\Human capital and the household\\codes\\DDCM-NH\\model\\model_v2\\simulate_sample")
 import utility as util
 import gridemax
 import time
@@ -39,13 +41,13 @@ import int_linear
 import emax as emax
 import simdata as simdata
 import openpyxl
-sys.path.append("/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/estimation")
+sys.path.append("C:\\Users\\jrodriguezo\\Dropbox\\Chicago\\Research\\Human capital and the household\\codes\\DDCM-NH\\model\\model_v2\\estimation")
 import estimate as estimate
 
 
 np.random.seed(1)
 
-betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv24.npy')
+betas_nelder=np.load("C:\\Users\\jrodriguezo\\Dropbox\\Chicago\\Research\\Human capital and the household\\lizzie_backup\\results\\betas_modelv24.npy")
 
 
 #Number of periods where all children are less than or equal to 18
@@ -88,7 +90,7 @@ pafdc=.60
 psnap=.70
 
 #Data
-X_aux=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/sample_model_v2.csv')
+X_aux=pd.read_csv("C:\\Users\\jrodriguezo\\Dropbox\\Chicago\\Research\\Human capital and the household\\lizzie_backup\\results\\Model\\sample_model_v2.csv")
 x_df=X_aux
 
 #Sample size 
@@ -102,12 +104,12 @@ x_w=x_df[ ['d_HS2', 'constant' ] ].values
 #Data for marriage process
 #Parameters: marriage. Last one is the constant
 x_m=x_df[ ['age_ra', 'constant']   ].values
-marriagep_betas=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/marriage_process/betas_m_v2.csv').values
+marriagep_betas=pd.read_csv("C:\\Users\\jrodriguezo\\Dropbox\\Chicago\\Research\\Human capital and the household\\lizzie_backup\\results\\marriage_process\\betas_m_v2.csv").values
 
 #Data for fertility process (only at X0)
 #Parameters: kids. last one is the constant
 x_k=x_df[ ['age_ra', 'age_ra2', 'constant']   ].values
-kidsp_betas=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/kids_process/betas_kids_v2.csv').values
+kidsp_betas=pd.read_csv("C:\\Users\\jrodriguezo\\Dropbox\\Chicago\\Research\\Human capital and the household\\lizzie_backup\\results\\kids_process\\betas_kids_v2.csv").values
 
 
 #Minimum set of x's (for interpolation)
@@ -117,16 +119,17 @@ x_wmk=x_df[  ['age_ra','age_ra2', 'd_HS2', 'constant'] ].values
 passign=x_df[ ['d_RA']   ].values
 
 #The EITC parameters
-eitc_list = pickle.load( open( '/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/simulate_sample/eitc_list.p', 'rb' ) )
+eitc_list = pickle.load( open("C:\\Users\\jrodriguezo\\Dropbox\\Chicago\\Research\\Human capital and the household\\codes\\DDCM-NH\\model\\model_v2\\simulate_sample\\eitc_list.p", 'rb' ) )
 
 #The AFDC parameters
-afdc_list = pickle.load( open( '/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/simulate_sample/afdc_list.p', 'rb' ) )
+afdc_list = pickle.load( open("C:\\Users\\jrodriguezo\\Dropbox\\Chicago\\Research\\Human capital and the household\\codes\\DDCM-NH\\model\\model_v2\\simulate_sample\\afdc_list.p", 'rb' ) )
 
 #The SNAP parameters
-snap_list = pickle.load( open( '/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/simulate_sample/snap_list.p', 'rb' ) )
+snap_list = pickle.load( open("C:\\Users\\jrodriguezo\\Dropbox\\Chicago\\Research\\Human capital and the household\\codes\\DDCM-NH\\model\\model_v2\\simulate_sample\\snap_list.p", 'rb' ) ) 
+
 
 #CPI index
-cpi =  pickle.load( open( '/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/simulate_sample/cpi.p', 'rb' ) )
+cpi =  pickle.load( open("C:\\Users\\jrodriguezo\\Dropbox\\Chicago\\Research\\Human capital and the household\\codes\\DDCM-NH\\model\\model_v2\\simulate_sample\\cpi.p", 'rb' ) )
 
 #Here: the estimates from the auxiliary model
 ###
@@ -155,10 +158,10 @@ param0=util.Parameters(alphap,alphaf,eta,gamma1,gamma2,gamma3,
 
 
 ###Auxiliary estimates###
-moments_vector=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/aux_model/moments_vector.csv').values
+moments_vector=pd.read_csv("C:\\Users\\jrodriguezo\\Dropbox\\Chicago\\Research\\Human capital and the household\\lizzie_backup\\results\\aux_model\\moments_vector.csv").values
 
 #This is the var cov matrix of aux estimates
-var_cov=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/aux_model/var_cov.csv').values
+var_cov=pd.read_csv("C:\\Users\\jrodriguezo\\Dropbox\\Chicago\\Research\\Human capital and the household\\lizzie_backup\\results\\aux_model\\var_cov.csv").values
 
 #The vector of aux standard errors
 #Using diagonal of Var-Cov matrix of simulated moments
@@ -198,22 +201,22 @@ model  = util.Utility(param0,N,x_w,x_m,x_k,passign,
 #Obtaining emax instances, samples, and betas for M samples
 np.random.seed(1)
 
-print ''
-print ''
-print 'Getting a dictionary of emax'
+print('')
+print('')
+print('Getting a dictionary of emax')
 start_emax = time.time()
-print ''
-print ''
+print('')
+print('')
 
 emax_instance = output_ins.emax(param0,model)
 
 time_emax=time.time() - start_emax
-print ''
-print ''
-print 'Done with emax in:'
+print('')
+print('')
+print('Done with emax in:')
 print("--- %s seconds ---" % (time_emax))
-print ''
-print ''
+print('')
+print('')
 choices = output_ins.samples(param0,emax_instance,model)
 dic_betas = output_ins.aux_model(choices)
 
@@ -234,40 +237,42 @@ boo_sample = agech_t2<=6
 #################################################################################
 #################################################################################
 #FIGURE: ATE ON INCOME#
-execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/fit/ate_inc.py')
+#exec(open("C:\\Users\\jrodriguezo\\Dropbox\\Chicago\\Research\\Human capital and the household\\codes\\DDCM-NH\\model\\model_v2\\fit\\ate_inc.py").read())
+
 
 #################################################################################
 #################################################################################
 #FIGURE: ATE ON CHILD CARE#
-execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/fit/ate_cc.py')
+#exec(open("C:\\Users\\jrodriguezo\\Dropbox\\Chicago\\Research\\Human capital and the household\\codes\\DDCM-NH\\model\\model_v2\\fit\\ate_cc.py").read())
 
 
 #################################################################################
 #################################################################################
 #FIGURE: ATE ON EMPLOYMENT#
-execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/fit/ate_emp.py')
+#exec(open("C:\\Users\\jrodriguezo\\Dropbox\\Chicago\\Research\\Human capital and the household\\codes\\DDCM-NH\\model\\model_v2\\fit\\ate_emp.py").read())
+
 
 #################################################################################
 #################################################################################
 #TABLE: COMPARING OPROBITS#
-execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/fit/oprobit.py')
+#execfile('C:\\Users\\jrodriguezo\\Dropbox\\Chicago\\Research\\Human capital and the household\\codes\\DDCM-NH\\model\\model_v2\\fit\\oprobit.py')
 
 #################################################################################
 #################################################################################
 #FIGURE: ATE ON THETA#
-execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/fit/ate_theta.py')
+#execfile('C:\\Users\\jrodriguezo\\Dropbox\\Chicago\\Research\\Human capital and the household\\codes\\DDCM-NH\\model\\model_v2\\fit\\ate_theta.py')
 
 
 #################################################################################
 #################################################################################
 #TABLE FIT: target moments#
-execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/fit/table_aux.py')
+exec(open("C:\\Users\\jrodriguezo\\Dropbox\\Chicago\\Research\\Human capital and the household\\codes\\DDCM-NH\\model\\model_v2\\fit\\table_aux.py").read())
 
 #GRAPHS FIT: target moments#
 
 #################################################################################
 #################################################################################
-
+"""
 #TABLE: model validation#
 ate_hours_obs_2=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/fit/ate_hours.csv').values
 se_ate_hours_obs_2=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/fit/se_ate_hours.csv').values
@@ -310,3 +315,4 @@ with open('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model
 
 
 
+"""

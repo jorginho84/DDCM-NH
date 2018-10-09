@@ -1,11 +1,13 @@
 """
 execfile('policies_mech.py')
 
-This graphs ATE theta and inputs of different New Hope policies
+exec(open("C:\\Users\\jrodriguezo\\Dropbox\\Chicago\\Research\\Human capital and the household\\codes\\DDCM-NH\\model\\model_v2\\experiments\\NH\\policies_mech.py").read())
+
+This file plots ATE theta of different New Hope policies
 
 """
 
-from __future__ import division #omit for python 3.x
+#from __future__ import division #omit for python 3.x
 import numpy as np
 import pandas as pd
 import pickle
@@ -17,19 +19,18 @@ from scipy.optimize import fmin_bfgs
 from joblib import Parallel, delayed
 from scipy import interpolate
 import matplotlib
-matplotlib.use('Agg') # Force matplotlib to not use any Xwindows backend.
+#matplotlib.use('Agg') # Force matplotlib to not use any Xwindows backend.
 import matplotlib.pyplot as plt
-#sys.path.append("C:\\Users\\Jorge\\Dropbox\\Chicago\\Research\\Human capital and the household\]codes\\model")
-sys.path.append("/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/simulate_sample")
+sys.path.append("C:\\Users\\jrodriguezo\\Dropbox\\Chicago\\Research\\Human capital and the household\\codes\\DDCM-NH\\model\\model_v2\\simulate_sample")
 import utility as util
 import gridemax
 import time
 import int_linear
 import emax as emax
 import simdata as simdata
-sys.path.append("/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/estimation")
+sys.path.append("C:\\Users\\jrodriguezo\\Dropbox\\Chicago\\Research\\Human capital and the household\\codes\\DDCM-NH\\model\\model_v2\\estimation")
 import estimate as estimate
-sys.path.append("/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/experiments")
+sys.path.append("C:\\Users\\jrodriguezo\\Dropbox\\Chicago\\Research\\Human capital and the household\\codes\\DDCM-NH\\model\\model_v2\\experiments\\NH")
 from ates import ATE
 from util2 import Prod2
 
@@ -37,7 +38,7 @@ from util2 import Prod2
 
 np.random.seed(1)
 
-betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv24.npy')
+betas_nelder=np.load("C:\\Users\\jrodriguezo\\Dropbox\\Chicago\\Research\\Human capital and the household\\lizzie_backup\\results\\betas_modelv24.npy")
 
 #Number of periods where all children are less than or equal to 18
 nperiods = 8
@@ -81,7 +82,7 @@ psnap=.70
 
 #Data
 #X_aux=pd.read_csv('C:\\Users\\Jorge\\Dropbox\\Chicago\\Research\\Human capital and the household\\results\\Model\\Xs.csv')
-X_aux=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/sample_model_v2.csv')
+X_aux=pd.read_csv("C:\\Users\\jrodriguezo\\Dropbox\\Chicago\\Research\\Human capital and the household\\lizzie_backup\\results\\Model\\sample_model_v2.csv")
 x_df=X_aux
 
 #Sample size 
@@ -95,12 +96,12 @@ x_w=x_df[ ['d_HS2', 'constant' ] ].values
 #Data for marriage process
 #Parameters: marriage. Last one is the constant
 x_m=x_df[ ['age_ra', 'constant']   ].values
-marriagep_betas=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/marriage_process/betas_m_v2.csv').values
+marriagep_betas=pd.read_csv("C:\\Users\\jrodriguezo\\Dropbox\\Chicago\\Research\\Human capital and the household\\lizzie_backup\\results\\marriage_process\\betas_m_v2.csv").values
 
 #Data for fertility process (only at X0)
 #Parameters: kids. last one is the constant
 x_k=x_df[ ['age_ra', 'age_ra2', 'constant']   ].values
-kidsp_betas=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/kids_process/betas_kids_v2.csv').values
+kidsp_betas=pd.read_csv("C:\\Users\\jrodriguezo\\Dropbox\\Chicago\\Research\\Human capital and the household\\lizzie_backup\\results\\kids_process\\betas_kids_v2.csv").values
 
 
 #Minimum set of x's (for interpolation)
@@ -110,16 +111,16 @@ x_wmk=x_df[  ['age_ra','age_ra2', 'd_HS2', 'constant'] ].values
 passign=x_df[ ['d_RA']   ].values
 
 #The EITC parameters
-eitc_list = pickle.load( open( '/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/simulate_sample/eitc_list.p', 'rb' ) )
+eitc_list = pickle.load( open("C:\\Users\\jrodriguezo\\Dropbox\\Chicago\\Research\\Human capital and the household\\codes\\DDCM-NH\\model\\model_v2\\simulate_sample\\eitc_list.p", 'rb' ) )
 
 #The AFDC parameters
-afdc_list = pickle.load( open( '/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/simulate_sample/afdc_list.p', 'rb' ) )
+afdc_list = pickle.load( open("C:\\Users\\jrodriguezo\\Dropbox\\Chicago\\Research\\Human capital and the household\\codes\\DDCM-NH\\model\\model_v2\\simulate_sample\\afdc_list.p", 'rb' ) )
 
 #The SNAP parameters
-snap_list = pickle.load( open( '/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/simulate_sample/snap_list.p', 'rb' ) )
+snap_list = pickle.load( open("C:\\Users\\jrodriguezo\\Dropbox\\Chicago\\Research\\Human capital and the household\\codes\\DDCM-NH\\model\\model_v2\\simulate_sample\\snap_list.p", 'rb' ) ) 
 
 #CPI index
-cpi =  pickle.load( open( '/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/simulate_sample/cpi.p', 'rb' ) )
+cpi =  pickle.load( open("C:\\Users\\jrodriguezo\\Dropbox\\Chicago\\Research\\Human capital and the household\\codes\\DDCM-NH\\model\\model_v2\\simulate_sample\\cpi.p", 'rb' ) )
 
 #Here: the estimates from the auxiliary model
 ###
@@ -147,10 +148,10 @@ param0=util.Parameters(alphap,alphaf,eta,gamma1,gamma2,gamma3,
 
 
 ###Auxiliary estimates###
-moments_vector=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/aux_model/moments_vector.csv').values
+moments_vector=pd.read_csv("C:\\Users\\jrodriguezo\\Dropbox\\Chicago\\Research\\Human capital and the household\\lizzie_backup\\results\\aux_model\\moments_vector.csv").values
 
 #This is the var cov matrix of aux estimates
-var_cov=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/aux_model/var_cov.csv').values
+var_cov=pd.read_csv("C:\\Users\\jrodriguezo\\Dropbox\\Chicago\\Research\\Human capital and the household\\lizzie_backup\\results\\aux_model\\var_cov.csv").values
 
 #The vector of aux standard errors
 #Using diagonal of Var-Cov matrix of simulated moments
@@ -228,11 +229,12 @@ for j in range(len(models_list)):
 	
 	el = np.mean(np.mean(np.log(tch),axis=2),axis=0)
 	e_age = np.mean(age_ch<=5,axis=0)
-	np.save('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/experiments/NH/ec.npy',ec)
-	np.save('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/experiments/NH/el.npy',el)
-	np.save('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/experiments/NH/ecc.npy',ecc)
-	np.save('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/experiments/NH/e_age.npy',e_age)
-
+	
+	np.save("C:\\Users\\jrodriguezo\\Dropbox\\Chicago\\Research\\Human capital and the household\\lizzie_backup\\results\\Model\\experiments\\NH\\el.npy",el)
+	np.save("C:\\Users\\jrodriguezo\\Dropbox\\Chicago\\Research\\Human capital and the household\\lizzie_backup\\results\\Model\\experiments\\NH\\ec.npy",ec)
+	np.save("C:\\Users\\jrodriguezo\\Dropbox\\Chicago\\Research\\Human capital and the household\\lizzie_backup\\results\\Model\\experiments\\NH\\ecc.npy",ecc)
+	np.save("C:\\Users\\jrodriguezo\\Dropbox\\Chicago\\Research\\Human capital and the household\\lizzie_backup\\results\\Model\\experiments\\NH\\e_age.npy",e_age)
+	
 	#SD matrix
 	ltheta = np.log(choices['theta_matrix'])
 	sd_matrix = np.zeros((nperiods,M))
@@ -284,15 +286,15 @@ for j in range(len(models_list)):
 	y3 = np.mean(contribution_list[j]['CC'],axis=1)
 	y4 = np.mean(contribution_list[j]['Money'],axis=1)
 	total = y1 + y2 + y3 + y4
-	horiz_line_data = np.array([0 for i in xrange(len(x))])
+	horiz_line_data = np.array([0 for i in range(len(x))])
 	fig, ax=plt.subplots()
 	ax.plot(x,y2, color='k',zorder=1,linewidth=4.5,label='Time')
 	ax.plot(x,horiz_line_data, 'k--',linewidth=2)
 	ax.fill_between(x,y2,(y2+y1), color='k' ,alpha=.65,zorder=2,label='Lagged human capital')
 	ax.fill_between(x,(y2+y1),(y2+y1+y3), color='k' ,alpha=.35,zorder=3,label='Child care')
 	ax.fill_between(x,(y2+y1+y3),(total), color='k' ,alpha=.12,zorder=4,label='Money')
-	ax.set_ylabel(r'Effect on child human capital ($\sigma$s)', fontsize=20)
-	ax.set_xlabel(r'Years after random assignment ($t$)', fontsize=20)
+	ax.set_ylabel(r'Effect on child human capital ($\sigma$s)', fontsize=14)
+	ax.set_xlabel(r'Years after random assignment ($t$)', fontsize=14)
 	#ax.annotate('Explained by time', xy=(2, y2[2]), xytext=(2.5, y2[2]-0.02),
 	#	arrowprops=dict(facecolor='black', shrink=0.05,connectionstyle="arc3"))
 	#ax.annotate('Explained by consumption', xy=(3, total[2]-0.01), xytext=(2, total[2]+0.02),
@@ -308,49 +310,85 @@ for j in range(len(models_list)):
 	ax.margins(0, 0)
 	#ax.set_ylim(y_limit_lower[0] - 0.02,y_limit_upper[3] + 0.02)
 	ax.legend(loc=5,fontsize=19)
-	plt.yticks(fontsize=15)
-	plt.xticks(fontsize=15)
+	plt.yticks(fontsize=11)
+	plt.xticks(fontsize=11)
 	#ax.legend(['Time', 'Lagged human capital','Child care','Consumption'],loc=5)
 	plt.show()
-	fig.savefig('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/experiments/NH/mech_' + models_names[j]+'.pdf', format='pdf')
+	fig.savefig('C:\\Users\\jrodriguezo\\Dropbox\\Chicago\\Research\\Human capital and the household\\lizzie_backup\\results\\Model\\experiments\\NH\\mech_' + models_names[j]+'.pdf', format='pdf')
 	plt.close()
 
 
+"""
+
+This is the order:
+
 names_list_v2 = ['Wage sub', 'Wage sub + Child care sub','Wage sub + Work req', 'Child care sub', 
 'Child care sub + Work req', 'Full treatment']
-markers_list = ['k-','k--','k-o', 'k-o','k--x','k-^' ]
-facecolor_list = ['k','k','k','none','k','k' ]
-
+"""
+#Figure: ATE on theta of wage sub vs cc sub/no work requirements
+names_list_v2 = ['Wage sub', 'Child care sub','Wage sub + Child care sub']
+markers_list = ['k-','k--','k-o' ]
+facecolor_list = ['k','k','k' ]
 y_list = []
+y_list.append(np.mean(ates_list[0]['Theta'],axis=1))
+y_list.append(np.mean(ates_list[3]['Theta'],axis=1))
+y_list.append(np.mean(ates_list[1]['Theta'],axis=1))
+
 x = np.array(range(1,nperiods))
 fig, ax=plt.subplots()
-for k in range(len(ates_list)):
-	y_list.append(np.mean(ates_list[k]['Theta'],axis=1))
+for k in range(len(y_list)):
 	ax.plot(x,y_list[k],markers_list[k],markerfacecolor= facecolor_list[k],
 		markeredgewidth=1.0,label=names_list_v2[k],linewidth=3,markersize=11,alpha=0.9)
-ax.set_ylabel(r'Impact on child human capital ($\sigma$s)', fontsize=15)
-ax.set_xlabel(r'Years after random assignment ($t$)', fontsize=15)
+ax.set_ylabel(r'Impact on child human capital ($\sigma$s)', fontsize=12)
+ax.set_xlabel(r'Years after random assignment ($t$)', fontsize=12)
+ax.set_ylim(0,0.16)
 ax.spines['right'].set_visible(False)
 ax.spines['top'].set_visible(False)
 ax.yaxis.set_ticks_position('left')
 ax.xaxis.set_ticks_position('bottom')
-plt.yticks(fontsize=15)
-plt.xticks(fontsize=15)
-ax.legend(fontsize = 11)
+plt.yticks(fontsize=11)
+plt.xticks(fontsize=11)
+ax.legend(loc=4,fontsize = 11)
 plt.show()
-fig.savefig('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/experiments/NH/ate_theta_policies.pdf', format='pdf')
+fig.savefig('C:\\Users\\jrodriguezo\\Dropbox\\Chicago\\Research\\Human capital and the household\\lizzie_backup\\results\\Model\\experiments\\NH\\ate_theta_policies_1.pdf', format='pdf')
 plt.close()
 
 
+#Figure: ATE on theta of wage sub vs cc sub/ work requirements
+names_list_v2 = ['Wage sub + Work req', 'Child care sub + Work req','Full treatment']
+markers_list = ['k-','k--','k-o' ]
+facecolor_list = ['k','k','k' ]
+y_list = []
+y_list.append(np.mean(ates_list[2]['Theta'],axis=1))
+y_list.append(np.mean(ates_list[4]['Theta'],axis=1))
+y_list.append(np.mean(ates_list[5]['Theta'],axis=1))
+
+x = np.array(range(1,nperiods))
+fig, ax=plt.subplots()
+for k in range(len(y_list)):
+	ax.plot(x,y_list[k],markers_list[k],markerfacecolor= facecolor_list[k],
+		markeredgewidth=1.0,label=names_list_v2[k],linewidth=3,markersize=11,alpha=0.9)
+ax.set_ylabel(r'Impact on child human capital ($\sigma$s)', fontsize=12)
+ax.set_xlabel(r'Years after random assignment ($t$)', fontsize=12)
+ax.set_ylim(0,0.16)
+ax.spines['right'].set_visible(False)
+ax.spines['top'].set_visible(False)
+ax.yaxis.set_ticks_position('left')
+ax.xaxis.set_ticks_position('bottom')
+plt.yticks(fontsize=11)
+plt.xticks(fontsize=11)
+ax.legend(loc=4,fontsize = 11)
+plt.show()
+fig.savefig('C:\\Users\\jrodriguezo\\Dropbox\\Chicago\\Research\\Human capital and the household\\lizzie_backup\\results\\Model\\experiments\\NH\\ate_theta_policies_2.pdf', format='pdf')
+plt.close()
+
 ####The table###
 #the list of policies
-
-
 outcome_list = [r'Consumption (US\$)', 'Part-time', 'Full-time', 'Child care']
 
 output_list = ['Consumption', 'Part-time', 'Full-time', 'CC']
 
-with open('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/experiments/NH/table_nhpol_hh.tex','w') as f:
+with open('C:\\Users\\jrodriguezo\\Dropbox\\Chicago\\Research\\Human capital and the household\\lizzie_backup\\results\\Model\\experiments\\NH\\table_nhpol_hh.tex','w') as f:
 	f.write(r'\begin{tabular}{lcccccccccccc}'+'\n')
 	f.write(r'\hline'+'\n')
 	f.write('ATE'+r'& & (1)   & & (2)&& (3)& & (4) && (5) && (6) \bigstrut[b]\\'+'\n')

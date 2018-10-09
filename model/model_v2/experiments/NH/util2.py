@@ -34,10 +34,10 @@ class Prod2(Utility):
 		"""
 		This function recovers expected values to normalize the constant in the prod function
 		"""
-		ec = np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/experiments/NH/ec.npy')
-		el = np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/experiments/NH/el.npy')
-		ecc = np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/experiments/NH/el.npy')
-		e_age = np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/experiments/NH/e_age.npy')
+		ec = np.load('C:\\Users\\jrodriguezo\\Dropbox\\Chicago\\Research\\Human capital and the household\\lizzie_backup\\results\\Model\\experiments\\NH\\ec.npy')
+		el = np.load('C:\\Users\\jrodriguezo\\Dropbox\\Chicago\\Research\\Human capital and the household\\lizzie_backup\\results\\Model\\experiments\\NH\\el.npy')
+		ecc = np.load('C:\\Users\\jrodriguezo\\Dropbox\\Chicago\\Research\\Human capital and the household\\lizzie_backup\\results\\Model\\experiments\\NH\\el.npy')
+		e_age = np.load('C:\\Users\\jrodriguezo\\Dropbox\\Chicago\\Research\\Human capital and the household\\lizzie_backup\\results\\Model\\experiments\\NH\\e_age.npy')
 		return [ec, el, ecc, e_age]
 
 	def thetat(self,periodt,theta0,h,cc,ct):

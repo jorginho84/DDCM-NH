@@ -84,15 +84,15 @@ class Estimate:
 			np.random.seed(j+100)
 			return simdata_ins.fake_data(self.nperiods)
 
-		pool = ProcessPool(nodes=20)
+		pool = ProcessPool(nodes=2)
 		dics = pool.map(sample_gen,range(self.M))
 		pool.close()
 		pool.join()
 		pool.clear()
-		#dics = []
-		#for j in range(self.M):
-		#	np.random.seed(j+100)
-		#	dics.append(simdata_ins.fake_data(self.nperiods))
+	#	dics = []
+	#	for j in range(self.M):
+	#		np.random.seed(j+100)
+	#		dics.append(simdata_ins.fake_data(self.nperiods))
 
 
     	#Saving results		
@@ -244,7 +244,7 @@ class Estimate:
 				u = e - e_t1*rho_eps[:,j]
 				sigma_w[:,j]=np.sum(np.square(u))/(e.shape[0] - rho_eps[:,j].shape[0])
 			else:
-				print 'disregarding m sample: singular matrix in wage process estimation'
+				print ('disregarding m sample: singular matrix in wage process estimation')
 				pass
 		beta_wagep=np.concatenate((beta_w,sigma_w,rho_eps),axis=0)
 
@@ -332,9 +332,9 @@ class Estimate:
 		
 		"""
 		start_time = time.time()
-		print ''
-		print ''
-		print 'Beginning sample generator'
+		print ('')
+		print ('')
+		print ('Beginning sample generator')
 
 		def sym(a):
 			return ((1/(1+np.exp(-a))) - 0.5)*2
@@ -384,14 +384,14 @@ class Estimate:
 		dic_betas=self.aux_model(choices)
 
 		time_opt=time.time() - start_time
-		print ''
-		print ''
-		print 'Done sample generation in'
+		print ('')
+		print ('')
+		print ('Done sample generation in')
 		print("--- %s seconds ---" % (time_opt))
-		print ''
-		print ''
+		print ('')
+		print ('')
 		start_time = time.time()
-		print 'Beginning aux model generator'
+		print ('Beginning aux model generator')
 
 
 		#utility_aux
@@ -445,12 +445,12 @@ class Estimate:
 		
 		#The Q metric
 		q_w=np.dot(np.dot(np.transpose(x_vector),self.w_matrix),x_vector)
-		print ''
-		print 'The objetive function value equals ', q_w
-		print ''
+		print ('')
+		print ('The objetive function value equals ', q_w)
+		print ('')
 
 		time_opt=time.time() - start_time
-		print 'Done aux model generation in'
+		print ('Done aux model generation in')
 		print("--- %s seconds ---" % (time_opt))
 
 		return q_w

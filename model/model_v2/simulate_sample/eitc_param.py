@@ -480,7 +480,7 @@ for year in range(1995,2014):
 	eitc_list.append(dic_aux)
 
 #Saving the list
-pickle.dump(eitc_list,open('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/simulate_sample/eitc_list.p','wb'))
+pickle.dump(eitc_list,open('C:\\Users\\jrodriguezo\\Dropbox\\Chicago\\Research\\Human capital and the household\\codes\\DDCM-NH\\model\\model_v2\\simulate_sample\\eitc_list.p','wb'))
 		
 
 

@@ -12,7 +12,7 @@ as a given
 
 """
 
-from __future__ import division #omit for python 3.x
+#from __future__ import division #omit for python 3.x
 import numpy as np
 import itertools
 from numba import jit
@@ -22,7 +22,7 @@ import gc
 from scipy import interpolate
 from pathos.multiprocessing import ProcessPool
 #sys.path.append("C:\\Users\\Jorge\\Dropbox\\Chicago\\Research\\Human capital and the household\]codes\\model")
-sys.path.append("/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model/simulate_sample")
+sys.path.append("C:\\Users\\jrodriguezo\\Dropbox\\Chicago\\Research\\Human capital and the household\\codes\\DDCM-NH\\model\\model_v2\\simulate_sample")
 import utility as util
 import gridemax
 import int_linear
@@ -454,7 +454,7 @@ class Emaxt:
 
 		"""	
 		
-		
+		"""
 		def emax_gen(j):
 			
 			for t in range(j,0,-1):
@@ -481,7 +481,7 @@ class Emaxt:
 
 			return [emax_dic,emax_values]
 
-		pool = ProcessPool(nodes=10)
+		pool = ProcessPool(nodes=3)
 
 		#7: old child (11 years old) solves for 7 emax 
 		#19: young child (0 years old) solves for 18 emax
@@ -496,10 +496,10 @@ class Emaxt:
 		
 		list_emax = []
 		for j in range(7,19):
-			print 'Im in emax j ', j
+			print ('Im in emax j ', j)
 			
 			for t in range(j,0,-1):
-				print 'In period t ', t
+				print ('In period t ', t)
 				
 				if t==j:#last period
 					emax_bigt_ins=self.emax_bigt(j)
@@ -518,7 +518,7 @@ class Emaxt:
 			list_emax.append([emax_dic,emax_values])
 
 		
-		"""
+		
 		
 		
 

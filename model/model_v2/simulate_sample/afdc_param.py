@@ -28,5 +28,5 @@ afdc_dic={'cutoff':cutoff,'benefit_std':benefit_std}
 afdc_list.append(afdc_dic)
 
 #Saving the list
-pickle.dump(afdc_list,open('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/simulate_sample/afdc_list.p','wb'))
+pickle.dump(afdc_list,open('C:\\Users\\jrodriguezo\\Dropbox\\Chicago\\Research\\Human capital and the household\\codes\\DDCM-NH\\model\\model_v2\\simulate_sample\\afdc_list.p','wb'))
 

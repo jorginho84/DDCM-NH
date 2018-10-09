@@ -1,4 +1,4 @@
-from __future__ import division #omit for python 3.x
+#from __future__ import division #omit for python 3.x
 import numpy as np
 import pandas as pd
 import itertools
@@ -43,7 +43,7 @@ def grid():
 	    it+=1
 
 
-	print 'the grid has size', grid.shape
+	print ('the grid has size', grid.shape)
 
 	#assign columns to names (dict)
 	dict_grid=dict(zip(keys,grid.T))

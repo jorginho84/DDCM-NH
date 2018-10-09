@@ -15,16 +15,16 @@ from scipy import stats
 snap_list = []
 
 #max B: a 9x10 matrix (family size x calendar years)
-maxb = pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/Data/databases/maxb_long.csv',header=None).values
+maxb = pd.read_csv('C:\\Users\\jrodriguezo\\Dropbox\\Chicago\\Research\\Human capital and the household\\lizzie_backup\\databases\\maxb_long.csv',header=None).values
 
 #Standard deductions: a 4x10 matrix (family size x calendar years)
-std = pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/Data/databases/std_long.csv',header=None).values
+std = pd.read_csv('C:\\Users\\jrodriguezo\\Dropbox\\Chicago\\Research\\Human capital and the household\\lizzie_backup\\databases\\std_long.csv',header=None).values
 
 #Net income test: a 9x10 matrix (family size x calendar years)
-ni = pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/Data/databases/netincome_long.csv',header=None).values
+ni = pd.read_csv('C:\\Users\\jrodriguezo\\Dropbox\\Chicago\\Research\\Human capital and the household\\lizzie_backup\\databases\\netincome_long.csv',header=None).values
 
 #gross income test: a 9x10 matrix (family size x calendar years)
-gi = pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/Data/databases/grossincome_long.csv',header=None).values
+gi = pd.read_csv('C:\\Users\\jrodriguezo\\Dropbox\\Chicago\\Research\\Human capital and the household\\lizzie_backup\\databases\\grossincome_long.csv',header=None).values
 
 
 snap_dic = {'max_benefit': maxb*12, 'std_deduction': std*12, 'net_income_test': ni*12,
@@ -33,4 +33,4 @@ snap_dic = {'max_benefit': maxb*12, 'std_deduction': std*12, 'net_income_test': 
 snap_list.append(snap_dic)
 
 #saving list
-pickle.dump(snap_list,open('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/simulate_sample/snap_list.p','wb'))
+pickle.dump(snap_list,open('C:\\Users\\jrodriguezo\\Dropbox\\Chicago\\Research\\Human capital and the household\\codes\\DDCM-NH\\model\\model_v2\\simulate_sample\\snap_list.p','wb'))

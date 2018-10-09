@@ -13,7 +13,7 @@ os.chdir("/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model")
 
 
 """
-from __future__ import division #omit for python 3.x
+#from __future__ import division #omit for python 3.x
 import numpy as np
 import pandas as pd
 import sys, os

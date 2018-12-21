@@ -21,8 +21,7 @@ from scipy import stats
 import gc
 from scipy import interpolate
 from pathos.multiprocessing import ProcessPool
-#sys.path.append("C:\\Users\\Jorge\\Dropbox\\Chicago\\Research\\Human capital and the household\]codes\\model")
-sys.path.append("C:\\Users\\jrodriguezo\\Dropbox\\Chicago\\Research\\Human capital and the household\\codes\\DDCM-NH\\model\\model_v2\\simulate_sample")
+sys.path.append("/home/jrodriguez/NH_HC/codes/simulate_sample")
 import utility as util
 import gridemax
 import int_linear
@@ -223,15 +222,11 @@ class Emaxt:
 				np.reshape(np.square(epsilon_1),(ngrid,1)),
 				x_wmk ), axis=1)
 
-
-			#Saving in the big matrix
-			emax_t1[:,jt]=av_max_ut
-
-			#saving instances.
-			if jt==0: 
-				emax_inst=[int_linear.Int_linear(data_int,av_max_ut)]
+			#saving betas for emax computation
+			if jt==0:
+				emax_inst=[int_linear.Int_linear().betas(data_int,av_max_ut)]
 			else:
-				emax_inst.append(int_linear.Int_linear(data_int,av_max_ut))
+				emax_inst.append(int_linear.Int_linear().betas(data_int,av_max_ut))
 
 			
 
@@ -240,10 +235,10 @@ class Emaxt:
 
 		#the instance with the eitc function and emax values
 
-		return [emax_inst,emax_t1]
+		return [emax_inst]
 
 
-	def emax_t(self,periodt,bigt,emax_t1_ins):
+	def emax_t(self,periodt,bigt,emax_t1_betas):
 		"""
 		Computes the emax function at period t<T, taking as input
 		an interpolating instance at t+1	
@@ -393,12 +388,9 @@ class Emaxt:
 					np.reshape(np.square(epsilon_t1),(ngrid,1)),
 					x_wmk ), axis=1)
 
-				#
-				#obtaining emaxT+1
-				#Emax instance of t+1 for choice j
-				emax_inst_choice=emax_t1_ins[j]
-				betas_t1_choice=emax_inst_choice.betas()
-				emax_t1_choice=emax_inst_choice.int_values(data_int_ex,betas_t1_choice)
+				#betas and data for extrapolation
+				emax_inst_choice = int_linear.Int_linear()
+				emax_t1_choice=emax_inst_choice.int_values(data_int_ex,emax_t1_betas[j])
 
 				#Value function at t.
 				u_vec[:,i,j]=u_vec[:,i,j]+0.86*emax_t1_choice
@@ -425,15 +417,12 @@ class Emaxt:
 				x_wmk ), axis=1)
 
 			
-			#Emax value for a given choice
-			emax_t1[:,jt]=av_max_ut
-
-			#saving instances
+						#saving instances
 
 			if jt==0:
-				emax_inst=[int_linear.Int_linear(data_int,av_max_ut)]
+				emax_inst=[int_linear.Int_linear().betas(data_int,av_max_ut)]
 			else:
-				emax_inst.append(int_linear.Int_linear(data_int,av_max_ut))
+				emax_inst.append(int_linear.Int_linear().betas(data_int,av_max_ut))
 
 
 
@@ -441,7 +430,7 @@ class Emaxt:
 
 		#the instance with the eitc function and emax values
 
-		return [emax_inst,emax_t1]
+		return [emax_inst]
 
 
 	def recursive(self):
@@ -454,7 +443,7 @@ class Emaxt:
 
 		"""	
 		
-		"""
+		
 		def emax_gen(j):
 			
 			for t in range(j,0,-1):
@@ -464,24 +453,24 @@ class Emaxt:
 					
 					
 					emax_dic={'emax'+str(t): emax_bigt_ins[0]}
-					emax_values={'emax'+str(t): emax_bigt_ins[1]}
+					
 				elif t==j-1: #at T-1
 					emax_t1_ins=self.emax_t(t,j,emax_bigt_ins[0])
 					
 					
 					emax_dic['emax'+str(t)]=emax_t1_ins[0]
-					emax_values['emax'+str(t)]=emax_t1_ins[1]
+					
 					
 				else:
 					emax_t1_ins=self.emax_t(t,j,emax_t1_ins[0])
 					
 					
 					emax_dic['emax'+str(t)]=emax_t1_ins[0]
-					emax_values['emax'+str(t)]=emax_t1_ins[1]
+					
 
-			return [emax_dic,emax_values]
+			return [emax_dic]
 
-		pool = ProcessPool(nodes=3)
+		pool = ProcessPool(nodes=8)
 
 		#7: old child (11 years old) solves for 7 emax 
 		#19: young child (0 years old) solves for 18 emax
@@ -489,10 +478,12 @@ class Emaxt:
 		pool.close()
 		pool.join()
 		pool.clear()
+
+		
+		
 		
 		
 		"""
-		
 		
 		list_emax = []
 		for j in range(7,19):
@@ -504,21 +495,21 @@ class Emaxt:
 				if t==j:#last period
 					emax_bigt_ins=self.emax_bigt(j)
 					emax_dic={'emax'+str(t): emax_bigt_ins[0]}
-					emax_values={'emax'+str(t): emax_bigt_ins[1]}
+					#emax_values={'emax'+str(t): emax_bigt_ins[1]}
 				elif t==j-1: #at T-1
 					emax_t1_ins=self.emax_t(t,j,emax_bigt_ins[0])
 					emax_dic['emax'+str(t)]=emax_t1_ins[0]
-					emax_values['emax'+str(t)]=emax_t1_ins[1]
+					#emax_values['emax'+str(t)]=emax_t1_ins[1]
 					
 				else:
 					emax_t1_ins=self.emax_t(t,j,emax_t1_ins[0])
 					emax_dic['emax'+str(t)]=emax_t1_ins[0]
-					emax_values['emax'+str(t)]=emax_t1_ins[1]
+					#emax_values['emax'+str(t)]=emax_t1_ins[1]
 
-			list_emax.append([emax_dic,emax_values])
+			list_emax.append([emax_dic])
 
-		
-		
+		"""		
+			
 		
 		
 

@@ -1,5 +1,5 @@
 """
-execfile('master_estimate.py')
+exec(open("/home/jrodriguez/NH_HC/codes/estimation/master_estimate.py").read())
 
 This file returns the structural parameters' estimates
 
@@ -21,19 +21,19 @@ from joblib import Parallel, delayed
 from scipy import interpolate
 import matplotlib.pyplot as plt
 #sys.path.append("C:\\Users\\Jorge\\Dropbox\\Chicago\\Research\\Human capital and the household\]codes\\model")
-sys.path.append("/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/simulate_sample")
+sys.path.append("/home/jrodriguez/NH_HC/codes/simulate_sample")
 import utility as util
 import gridemax
 import time
 import int_linear
 import emax as emax
 import simdata as simdata
-sys.path.append("/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/estimation")
+sys.path.append("/home/jrodriguez/NH_HC/codes/estimation")
 import estimate as estimate
 
 np.random.seed(1)
 
-betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv23.npy')
+betas_nelder=np.load('/home/jrodriguez/NH_HC/results/Model/estimation/betas_modelv23.npy')
 
 
 #Number of periods where all children are less than or equal to 18
@@ -75,7 +75,7 @@ psnap=.70
 
 #Data
 #X_aux=pd.read_csv('C:\\Users\\Jorge\\Dropbox\\Chicago\\Research\\Human capital and the household\\results\\Model\\Xs.csv')
-X_aux=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/sample_model_v2.csv')
+X_aux=pd.read_csv("/home/jrodriguez/NH_HC/results/Model/sample_model_v2.csv")
 x_df=X_aux
 
 #Sample size 
@@ -89,12 +89,12 @@ x_w=x_df[ ['d_HS2', 'constant' ] ].values
 #Data for marriage process
 #Parameters: marriage. Last one is the constant
 x_m=x_df[ ['age_ra', 'constant']   ].values
-marriagep_betas=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/marriage_process/betas_m_v2.csv').values
+marriagep_betas=pd.read_csv("/home/jrodriguez/NH_HC/results/marriage_process/betas_m_v2.csv").values
 
 #Data for fertility process (only at X0)
 #Parameters: kids. last one is the constant
 x_k=x_df[ ['age_ra', 'age_ra2', 'constant']   ].values
-kidsp_betas=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/kids_process/betas_kids_v2.csv').values
+kidsp_betas=pd.read_csv("/home/jrodriguez/NH_HC/results/kids_process/betas_kids_v2.csv").values
 
 
 #Minimum set of x's (for interpolation)
@@ -104,16 +104,17 @@ x_wmk=x_df[  ['age_ra','age_ra2', 'd_HS2', 'constant'] ].values
 passign=x_df[ ['d_RA']   ].values
 
 #The EITC parameters
-eitc_list = pickle.load( open( '/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/simulate_sample/eitc_list.p', 'rb' ) )
+eitc_list = pickle.load( open("/home/jrodriguez/NH_HC/codes/simulate_sample/eitc_list.p", 'rb' ) )
 
 #The AFDC parameters
-afdc_list = pickle.load( open( '/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/simulate_sample/afdc_list.p', 'rb' ) )
+afdc_list = pickle.load( open("/home/jrodriguez/NH_HC/codes/simulate_sample/afdc_list.p", 'rb' ) )
 
 #The SNAP parameters
-snap_list = pickle.load( open( '/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/simulate_sample/snap_list.p', 'rb' ) )
+snap_list = pickle.load( open("/home/jrodriguez/NH_HC/codes/simulate_sample/snap_list.p", 'rb' ) ) 
+
 
 #CPI index
-cpi =  pickle.load( open( '/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/simulate_sample/cpi.p', 'rb' ) )
+cpi =  pickle.load( open("/home/jrodriguez/NH_HC/codes/simulate_sample/cpi.p", 'rb' ) )
 
 #Here: the estimates from the auxiliary model
 ###
@@ -140,11 +141,10 @@ param0=util.Parameters(alphap,alphaf,eta,gamma1,gamma2,gamma3,
 
 ###Auxiliary estimates### 
 
-moments_vector=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/aux_model/moments_vector.csv').values
-
+moments_vector=pd.read_csv("/home/jrodriguez/NH_HC/results/aux_model/moments_vector.csv").values
 
 #This is the var cov matrix of aux estimates
-var_cov=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/aux_model/var_cov.csv').values
+var_cov=pd.read_csv("/home/jrodriguez/NH_HC/results/aux_model/var_cov.csv").values
 
 #The W matrix in Wald metric
 #Using inverse of diagonal of Var-Cov matrix of simulated moments
@@ -157,10 +157,11 @@ for i in range(var_cov.shape[0]):
 dict_grid=gridemax.grid()
 
 #For montercarlo integration
-D=50
+D=20
 
-#For II procedure
-M=1000
+#Number of samples to produce
+M=30
+
 
 #How many hours is part- and full-time work
 hours_p=20
@@ -181,7 +182,7 @@ start_time = time.time()
 output=output_ins.optimizer()
 
 time_opt=time.time() - start_time
-print 'Done in'
+print ('Done in')
 print("--- %s seconds ---" % (time_opt))
 
 def sym(a):
@@ -219,6 +220,6 @@ betas_opt=np.array([eta_opt, alphap_opt,alphaf_opt,
 	kappas_00,kappas_01,kappas_02,kappas_03,
 	kappas_10,kappas_11,kappas_12,kappas_13,rho_theta_epsilon_opt])
 
-np.save('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv24.npy',betas_opt)
+np.save('/home/jrodriguez/NH_HC/results/Model/estimation/betas_modelv24.npy',betas_opt)
 
 

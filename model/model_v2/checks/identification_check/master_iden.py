@@ -1,5 +1,5 @@
 """
-execfile('master_iden.py')
+exec(open("/home/jrodriguez/NH_HC/codes/checks/identification_check/master_iden.py").read())
 
 This file computes the objective function across different parameters values
 around the optimum.
@@ -7,7 +7,7 @@ around the optimum.
 
 """
 
-from __future__ import division #omit for python 3.x
+#from __future__ import division #omit for python 3.x
 import numpy as np
 import pandas as pd
 import pickle
@@ -21,15 +21,14 @@ from scipy import interpolate
 import matplotlib
 matplotlib.use('Agg') # Force matplotlib to not use any Xwindows backend.
 import matplotlib.pyplot as plt
-#sys.path.append("C:\\Users\\Jorge\\Dropbox\\Chicago\\Research\\Human capital and the household\]codes\\model")
-sys.path.append("/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/simulate_sample")
+sys.path.append("/home/jrodriguez/NH_HC/codes/simulate_sample")
 import utility as util
 import gridemax
 import time
 import int_linear
 import emax as emax
 import simdata as simdata
-sys.path.append("/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/estimation")
+sys.path.append("/home/jrodriguez/NH_HC/codes/estimation")
 import estimate as estimate
 
 np.random.seed(1)
@@ -37,13 +36,14 @@ np.random.seed(1)
 #Number of periods where all children are less than or equal to 18
 nperiods = 8
 
-execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/load_param.py')
+exec(open("/home/jrodriguez/NH_HC/codes/checks/identification_check/load_param.py").read())
+
 
 ###Auxiliary estimates### 
-moments_vector=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/aux_model/moments_vector.csv').values
+moments_vector=pd.read_csv("/home/jrodriguez/NH_HC/results/aux_model/moments_vector.csv").values
 
 #This is the var cov matrix of aux estimates
-var_cov=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/aux_model/var_cov.csv').values
+var_cov=pd.read_csv("/home/jrodriguez/NH_HC/results/aux_model/var_cov.csv").values
 
 #The W matrix in Wald metric
 #Using diagonal of Var-Cov matrix of simulated moments
@@ -93,53 +93,54 @@ font_size = 20
 #Utility function
 
 ####ETA###
-execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/eta.py')
+exec(open("/home/jrodriguez/NH_HC/codes/checks/identification_check/eta.py").read())
+
 
 ####Full-time work###
-execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/alphaf.py')
+#execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/alphaf.py')
 
 ####Part-time work###
-execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/alphap.py')
+#execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/alphap.py')
 
 #########################################################
 #Wage offer
 
 ####high school###
-execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/highschool_wage.py')
+#execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/highschool_wage.py')
 
 ####trend###
-execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/logt_wage.py')
+#execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/logt_wage.py')
 
 ####constant_wage###
-execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/constant_wage.py')
+#execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/constant_wage.py')
 
 ####sigma2###
-execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/sigma_wage.py')
+#execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/sigma_wage.py')
 
 ####rho###
-execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/rho_wage.py')
+#execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/rho_wage.py')
 
 
 #########################################################
 #Production function
 
 ##Kappas##
-execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/kappas.py')
+#execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/kappas.py')
 
 #***
 ####TFP###
-execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/tfp.py')
+#execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/tfp.py')
 
 ####\gamma_1###
-execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/gamma1.py')
+#execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/gamma1.py')
 
 
 ####\gamma_2###
-execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/gamma2.py')
+#execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/gamma2.py')
 
 #***
 ####\gamma_3###
-execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/gamma3.py')
+#execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/gamma3.py')
 
 
 #########################################################
@@ -147,5 +148,5 @@ execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2
 
 #***
 ####corr_theta0###
-execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/corr_theta0.py')
+#execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/corr_theta0.py')
 

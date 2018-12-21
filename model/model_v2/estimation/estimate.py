@@ -13,7 +13,7 @@ from scipy import stats
 from scipy.optimize import minimize
 from scipy.optimize import fmin_bfgs
 from pathos.multiprocessing import ProcessPool
-sys.path.append("/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/simulate_sample")
+sys.path.append("/home/jrodriguez/NH_HC/codes/simulate_sample")
 import utility as util
 import gridemax
 import time
@@ -481,6 +481,7 @@ class Estimate:
 		
 		#Here we go
 		opt = minimize(self.ll, beta0,  method='Nelder-Mead', options={'maxiter':5000, 'maxfev': 90000, 'ftol': 1e-3, 'disp': True});
+		#opt = minimize(self.ll, beta0,  method='Nelder-Mead', options={'maxiter':5000, 'gtol': 1e-3, 'disp': True});
 		
 		return opt
 

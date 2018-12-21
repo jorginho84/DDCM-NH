@@ -11,7 +11,7 @@ import itertools
 import sys, os
 from scipy import stats
 from scipy import interpolate
-sys.path.append("C:\\Users\\jrodriguezo\\Dropbox\\Chicago\\Research\\Human capital and the household\\codes\\DDCM-NH\\model\\model_v2\\simulate_sample")
+sys.path.append("/home/jrodriguez/NH_HC/codes/simulate_sample")
 import utility as util
 import int_linear
 import time
@@ -137,6 +137,10 @@ class SimData:
 					np.reshape(epsilon_t1,(self.N,1)),
 					np.reshape(np.square(epsilon_t1),(self.N,1)),
 					self.x_wmk), axis=1)
+				
+				#arbitrary initializacion
+				emax_ins = int_linear.Int_linear()
+				
 
 				#Getting dictionary to incorporate emax_t+1, choice j
 				for age in range(1,11):
@@ -146,13 +150,11 @@ class SimData:
 						if periodt+1>=19-age:
 							emax_t1 = np.zeros(self.N)
 						else:
-							emax_ins=self.emax_function[10-age][0]['emax'+str(periodt+1)][j]
-							emax_betas=emax_ins.betas()
+							emax_betas=self.emax_function[10-age][0]['emax'+str(periodt+1)][j]
 							emax_t1=emax_ins.int_values(data_int_t1,emax_betas)
 
 					else:
-						emax_ins=self.emax_function[10-age][0]['emax'+str(periodt+1)][j]
-						emax_betas=emax_ins.betas()
+						emax_betas=self.emax_function[10-age][0]['emax'+str(periodt+1)][j]
 						emax_t1=emax_ins.int_values(data_int_t1,emax_betas)
 		
 					#Including option value (discount factor 0.86)

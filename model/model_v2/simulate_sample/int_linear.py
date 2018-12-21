@@ -8,15 +8,15 @@ class Int_linear:
 	Implements OLS linear interpolation
 
 	"""
-	def __init__(self,x,y):
-		self.x,self.y=x,y
+	def __init__(self):
+		self.x = 0
 
-	def betas(self):
+	def betas(self,x,y):
 		"""
 		Calculates betas
 		"""
-		xx=np.dot(np.transpose(self.x),self.x)
-		xy=np.dot(np.transpose(self.x),self.y)
+		xx=np.dot(np.transpose(x),x)
+		xy=np.dot(np.transpose(x),y)
 		return np.dot(np.linalg.inv(xx),xy)
 
 	def int_values(self,x,betas):

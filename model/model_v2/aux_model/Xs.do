@@ -21,8 +21,10 @@ use "$databases/CFS_original.dta", clear
 do "$codes/data_cfs.do"
 
 
-keep p_assign sampleid p_radatr p_bdatey p_bdatem p_bdated b_bdater bifage p_bdatey p_bdatem gender ethnic marital higrade degree /*
-*/pastern2 work_ft curremp currwage c1 piinvyy epiinvyy 
+keep p_assign sampleid p_radatr p_bdatey p_bdatem p_bdated b_bdater bifage p_bdatey /*
+*/ p_bdatem gender ethnic marital higrade degree /*
+*/pastern2 work_ft curremp currwage c1 piinvyy epiinvyy spa*
+
 
 *Constructing age at RA (bifage has 24 odd values)
 
@@ -50,7 +52,7 @@ generate age_ra = floor(([ym(year(date_ra), month(date_ra)) - ym(year(bday), mon
 gen d_HS=degree==1 | degree==2
 label define educ_lbl 1 "High school diploma or GED" 0 "Less..."
 
-keep sampleid age_ra gender ethnic marital d_HS higrade pastern2
+keep sampleid age_ra gender ethnic marital d_HS higrade pastern2 spa*
 sort sampleid
 
 merge 1:m sampleid using `data_aux3'

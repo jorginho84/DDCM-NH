@@ -129,9 +129,22 @@ replace nkids_year8=. if epiinvyy==. /*Not in survey*/
 gen d_born_year8=epi74e=="1"
 replace d_born_year8=. if epiinvyy==.
 
+*Spouse income, dummy work spouse
+qui: destring spa*, replace force
+egen income_spouse = rowtotal(spapwlf1 spawslf1 spafslf1 spaaflf1)
+replace income_spouse = 0 if income_spouse==.
+gen lincome_spouse = log(income_spouse)
 
-keep sampleid d_RA age_ra age_ra2 d_marital* d_HS  nkids_baseline /*
-*/ constant curremp higrade nkids* married* c91 d_ethnic* d_black
+gen dummy_sp_work = 1 if married_year2 == 1 & lincome_spouse != .
+replace dummy_sp_work = 0 if married_year2 == 1 & lincome_spouse == .
+
+
+
+keep sampleid d_RA age_ra age_ra2 d_marital* d_HS  nkids_baseline  /*
+*/ constant curremp higrade nkids* married* c91 d_ethnic* d_black /*
+*/ lincome_spouse dummy_sp_work d_women
+
+
 
 *Expanding to children
 tempfile data_temp
@@ -181,7 +194,6 @@ gen age_t0=  year_ra - year_birth
 replace age_t0=1 if age_t0==0
 replace age_t0=10 if age_t0==11
 
-gen age_t02=age_t0^2
 
 
 /*
@@ -240,9 +252,6 @@ replace d_CC2_t4=. if max_months_t4==.
 * year 1
 rename c73 cc_pay_t1
 replace cc_pay_t1=0 if d_CC2_t1==0
-gen d_free=.
-replace d_free=1 if cc_pay_t1==0
-replace d_free=0 if cc_pay_t1>0 & cc_pay_t1!=. 
 
 
 *Year 4
@@ -267,7 +276,7 @@ rename tq17a skills_t2
 rename t2q17a skills_t5
 rename etsq13a skills_t8
 
-keep sampleid child d_CC* skills_* age_t0 age_t02 cc_pay* d_free
+keep sampleid child d_CC* skills_* age_t0 
 sort sampleid child
 
 merge 1:1 sampleid child using `data_control'
@@ -542,23 +551,6 @@ foreach x of numlist 0 1 4 7 {
 }
 
 
-*Child care payments are divided by two if Child A and B are in a family
-*To real numbers
-*duplicates tag sampleid, gen(dupli)
-*replace cc_pay_t1=cc_pay_t1*1.1653595/2 if dupli==1
-*replace cc_pay_t4=cc_pay_t4*1.0958820/2 if dupli==1
-
-replace cc_pay_t1=cc_pay_t1*1.1653595
-
-replace cc_pay_t1=cc_pay_t4*1.0958820
-
-/*
-This is how I'm deciding on hours categories NOT ANYMORE
-
-xtile q_h=hours_t0, nq(3)
-table q_h, c(min hours_t0 max hours_t0 med hours_t0 mean hours_t0)
-*/
-
 ****************************************************************
 
 gen emp_baseline=1 if curremp=="Yes"
@@ -579,25 +571,29 @@ gen d_HS2=higrade>=12
 drop if age_t0<1 | age_t0>11
 
 keep sampleid child d_RA p_assign age_ra age_ra2 d_marital* d_HS d_HS2 c91 /*
-*/ nkids* hours_t* d_CC* constant emp_baseline  delta_emp skills_* c1 piinvyy /*
-*/ epiinvyy total_income_y* married* cc_pay* gross_y* gross_nominal_y* grossv2_y* /*
-*/ age_t0 age_t02 d_free afdc_y* fs_y* sup_y* higrade d_ethnic* d_black
+*/ nkids* hours_t* d_CC* constant emp_baseline delta_emp skills_* c1 piinvyy /*
+*/ epiinvyy total_income_y* married*  gross_y* gross_nominal_y* grossv2_y* /*
+*/ age_t0 afdc_y* fs_y* sup_y* higrade d_ethnic* d_black /*
+*/ lincome_spouse dummy_sp_work d_women
 
+keep if d_women == 1
 
 *makign sure of no missing values
 foreach x of varlist d_RA age_ra d_marital_2 d_HS2 nkids_baseline age_t0{
 	drop if `x'==.
 }
 
+***Data for prod fn auxiliary model
+save "$results/sample_model_theta.dta", replace
+outsheet using "$results/sample_model_theta.csv", comma  replace
 
-save "$results/sample_model_v2.dta", replace
-outsheet using "$results/sample_model_v2.csv", comma  replace
+***Data for the rest of moments
+tostring child, force replace
+replace child = "A" if child == "1"
+replace child = "B" if child == "2"
+reshape wide skills* age_t0 d_CC*, i(sampleid) j(child) string
 
-gen d_one = nkids_baseline == 1
-
-
-/*how many families*/
-
-keep skills* sampleid child
-
-reshape wide skills*, i(sampleid) j(child)
+*Dummy for the presence of child #2
+gen d_childB = age_t0B != .
+save "$results/sample_model.dta", replace
+outsheet using "$results/sample_model.csv", comma  replace

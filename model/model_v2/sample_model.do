@@ -12,9 +12,9 @@ run data_income.do first
 */
 
 
-global databases "/mnt/Research/nealresearch/new-hope-secure/newhopemount/Data/databases"
-global codes "/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes"
-global results "/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model"
+global databases "/home/jrodriguez/NH-secure"
+global codes "/home/jrodriguez/NH_HC/codes"
+global results "/home/jrodriguez/NH_HC/results/Model"
 
 
 clear
@@ -36,7 +36,7 @@ Recovering control variables
 */
 ***************************************************************************************
 
-qui: do "$codes/model_v2/aux_model/Xs.do"
+qui: do "$codes/model/aux_model/Xs.do"
 
 
 
@@ -158,26 +158,47 @@ Recovering Child care and SSRS
 
 use "$databases/Youth_original2.dta", clear
 qui: do "$codes/data_youth.do"
-keep sampleid child agechild/* identifiers
+keep sampleid child agechild kid1dats p_radaym/* identifiers
 */ c68* c69* c70* c73 /*CC use and payments (year 2)
 */ piq113da  piq114* piq119a piq128a piq128b/* CC use and payments (year 5)    
 */ tq17a tq17b tq17c tq17h /*skills t1
 */ t2q17a etsq13a /*skills t5 and t8*/
-destring sampleid, force replace
+destring c68* c69* c70* c73 piq113da  piq114* piq119a piq128a piq128b tq17a tq17b tq17c tq17h t2q17a etsq13a, force replace
 
 *Age at baseline
-gen age_t0=agechild-2
+destring kid1dats, force replace
+format kid1dats %td
+gen year_birth=yofd(kid1dats)
+drop kid1dats
+
+*child age at baseline
+gen year_ra = substr(string(p_radaym),1,2)
+destring year_ra, force replace
+replace year_ra = 1900 + year_ra
+
+gen age_t0=  year_ra - year_birth
 *due to rounding errors, ages 0 and 11 are 1 and 10
 replace age_t0=1 if age_t0==0
 replace age_t0=10 if age_t0==11
+
 gen age_t02=age_t0^2
+
+
+/*
+destring agechild, force replace
+gen age_t0=agechild-2
+drop if age_t0<0
+
+replace age_t0=1 if age_t0==0
+replace age_t0=10 if age_t0==11
+gen age_t02=age_t0^2
+*/
 
 /*Local labels: use these in regressions*/
 local CC_use c68* c69*
 
 
 /*Number of months on each child care: t=1*/
-
 gen CC_HS_months=c70a_1 if c69a_2==child
 replace CC_HS_months=c70a_2 if c69a_4==child
 
@@ -468,7 +489,7 @@ save `data_hours', replace
 *Recover total income by year since RA from data_income.do
 **************************************************************
 
-use "/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Income/data_income.dta", clear
+use "/home/jrodriguez/understanding_NH/results/Income/data_income.dta", clear
 merge 1:m sampleid using `data_hours'
 keep if _merge==3
 drop _merge
@@ -554,65 +575,29 @@ gen delta_emp=d_emp_t1-d_emp_t0
 **Using d_HS based on highgrade: correlates more with wage
 gen d_HS2=higrade>=12
 
+*Age of child probably wrong
+drop if age_t0<1 | age_t0>11
+
 keep sampleid child d_RA p_assign age_ra age_ra2 d_marital* d_HS d_HS2 c91 /*
 */ nkids* hours_t* d_CC* constant emp_baseline  delta_emp skills_* c1 piinvyy /*
 */ epiinvyy total_income_y* married* cc_pay* gross_y* gross_nominal_y* grossv2_y* /*
 */ age_t0 age_t02 d_free afdc_y* fs_y* sup_y* higrade d_ethnic* d_black
 
-save "$results/sample_model_theta_v2.dta", replace
 
-
-*This is the sample to start the simulations
-keep if c1!=. & piinvyy!=. & epiinvyy!=.
-
-foreach x of varlist d_RA age_ra d_marital_2 d_HS2 nkids_baseline age_t0 d_black {
+*makign sure of no missing values
+foreach x of varlist d_RA age_ra d_marital_2 d_HS2 nkids_baseline age_t0{
 	drop if `x'==.
 }
 
-save "/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/sample_model_v2.dta", replace
-outsheet using "/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/sample_model_v2.csv", comma  replace
 
-/*
-*Statistics: how many families have one young and one old child in t=0
-preserve
-keep age_t0 sampleid child
-reshape wide age_t0, i(sampleid) j(child)
-*252 out of 438 (57%) families have two surveyed children
+save "$results/sample_model_v2.dta", replace
+outsheet using "$results/sample_model_v2.csv", comma  replace
 
-*a family with siblings
-gen d_sib=(age_t01!=. & age_t02!=.) 
-tab d_sib
-*a family with one old and one young: 28% of the sample (48% of those families with 
-gen d_s=(d_sib==1) & ((age_t01>5 & age_t02<=5) | (age_t01<=5 & age_t02>5) )
-tab d_s
-tab d_s if d_sib==1
-restore
+gen d_one = nkids_baseline == 1
 
-*Statistics: how many families with an old child, have a newborn
-preserve
-keep age_t0 nkids_baseline nkids_year2 nkids_year5 nkids_year8 sampleid child
-gen age_t2=age_t0+1
-gen age_t5=age_t0+5
-gen age_t8=age_t0+8
-drop age_t0
 
-*have a kid
-gen d_born_t2=nkids_year2>nkids_baseline
-gen d_born_t5=nkids_year5>nkids_year2
-gen d_born_t8=nkids_year8>nkids_year5
-drop nkids*
+/*how many families*/
 
-reshape wide age* d_born* , i(sampleid) j(child)
+keep skills* sampleid child
 
-*families with old children in t=2,5,8
-gen d_old=0
-forvalues sib=1/2{
-	foreach t in 2 5 8{
-		replace d_old = 1 if age_t`t'`sib'>5 & d_born_t`t'1
-	}
-}
-
-*41% of families have an old child in a given year, and then have another child
-*this is an upper bound, since one child could have been 4 when the other was born
-tab d_old
-*/
+reshape wide skills*, i(sampleid) j(child)

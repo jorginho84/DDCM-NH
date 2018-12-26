@@ -27,7 +27,8 @@ class Parameters:
 
 	"""
 	def __init__(self,alphap,alphaf,eta,gamma1,gamma2,gamma3,
-		tfp,sigma2theta,rho_theta_epsilon,betaw,betam,betak,eitc,afdc,snap,cpi,
+		tfp,sigma2theta,rho_theta_epsilon,betaw,beta_spouse,
+		betam,betak,eitc,afdc,snap,cpi,
 		lambdas,kappas,pafdc,psnap,mup):
 
 		self.alphap,self.alphaf,self.eta=alphap,alphaf,eta
@@ -35,6 +36,7 @@ class Parameters:
 		self.tfp=tfp
 		self.rho_theta_epsilon=rho_theta_epsilon
 		self.sigma2theta,self.betaw,self.betam,self.betak=sigma2theta,betaw,betam,betak
+		self.beta_spouse=beta_spouse
 		self.eitc,self.afdc,self.snap,self.cpi=eitc,afdc,snap,cpi
 		self.lambdas,self.kappas=lambdas,kappas
 		self.pafdc,self.psnap=pafdc,psnap
@@ -144,6 +146,23 @@ class Utility(object):
 		betas=self.param.betaw[0:-2,0] #everything but rho and variance
 
 		return np.exp( np.dot(xw,betas)+ epsilon )
+
+	def income_spouse(self):
+		"""
+		Computes income process for males
+
+		"""
+		xw=np.concatenate((np.reshape(self.xwage[:,0],(self.N,1)), #HS
+						np.reshape(self.xwage[:,1],(self.N,1)),),axis=1) #constant
+
+		betas=self.param.beta_spouse[0:-1,0] #everything but variance
+
+		epsilon = np.sqrt(self.param.beta_spouse[-1,0])*np.random.randn(self.N)
+
+		#spouse income (for everyone)
+		income_spouse = np.dot(xw,betas)+ epsilon 
+		
+		return np.exp(income_spouse)
 
 	def q_prob(self):
 		"""
@@ -409,7 +428,7 @@ class Utility(object):
 		return {'income': dincome*(self.param.cpi[8]/self.param.cpi[periodt]),
 		'NH': nh_supp, 'EITC_NH': nh_supp + eitc_fed + eitc_state}
 
-	def consumptiont(self,periodt,h,cc,dincome,marr,nkids,wage, free,price):
+	def consumptiont(self,periodt,h,cc,dincome,income_spouse,marr,nkids,wage, free,price):
 		"""
 		Computes per-capita consumption:
 		(income - cc_payment)/family size
@@ -467,8 +486,10 @@ class Utility(object):
 
 			nh_cost = np.zeros(self.N)
 
+		#spouse income only if married
+		income_spouse[marr==0] = 0
 
-		incomepc=(dincome - cc*cc_cost)/(ones+nkids+marr)
+		incomepc=(dincome + income_spouse - cc*cc_cost)/(ones+nkids+marr)
 		incomepc[incomepc<=0]=1
 
 
@@ -522,7 +543,7 @@ class Utility(object):
 		return np.exp(theta1 + alpha)
 
 
-	def Ut(self,periodt,dincome,marr,cc,nkids,ht,thetat,wage,free,price):
+	def Ut(self,periodt,dincome,income_spouse,marr,cc,nkids,ht,thetat,wage,free,price):
 		"""
 		Computes current-period utility
 
@@ -541,7 +562,8 @@ class Utility(object):
 		d_unemp=ht==0
 
 		#Consumption: depends on ra, cc, and period
-		ct=self.consumptiont(periodt,ht,cc,dincome,marr,nkids,wage,free,price)['income_pc']
+		ct=self.consumptiont(periodt,ht,cc,dincome,income_spouse,
+			marr,nkids,wage,free,price)['income_pc']
 
 		#parameters
 		ap=self.param.alphap
@@ -601,7 +623,7 @@ class Utility(object):
 		return z
 	
 	
-	def simulate(self,periodt,wage0,free,price,theta0):
+	def simulate(self,periodt,wage0,free,price,theta0,income_spouse):
 		"""
 		Takes states (theta0, nkids0, married0, wage0) and given choices
 		(self: hours and childcare) to compute current-period utility value.
@@ -612,8 +634,8 @@ class Utility(object):
 		#theta=self.thetat(periodt,self.theta0,self.hours,self.childcare,income,self.married0,self.nkids0)
 		
 
-		return self.Ut(periodt,income,self.married0,self.cc,self.nkids0,self.hours,
-			theta0,wage0,free,price)
+		return self.Ut(periodt,income,income_spouse,self.married0,self.cc,
+			self.nkids0,self.hours,theta0,wage0,free,price)
 
 	
 			

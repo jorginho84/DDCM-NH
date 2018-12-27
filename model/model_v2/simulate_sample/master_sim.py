@@ -73,12 +73,19 @@ gamma3 = betas_nelder[10]
 tfp = betas_nelder[11]
 gamma_spouse = .05
 sigma2theta = 1
+varphi = 0.5
+
+N=10
+
+
 
 kappas=[[betas_nelder[12],betas_nelder[13],betas_nelder[14],betas_nelder[15]],
 [betas_nelder[16],betas_nelder[17],betas_nelder[18],betas_nelder[19]]]
 
 #initial theta
 rho_theta_epsilon = betas_nelder[20]
+rho_theta_ab = 0.2
+
 
 #All factor loadings are normalized
 lambdas=[1,1]
@@ -94,7 +101,7 @@ psnap=.70
 
 #Data
 #X_aux=pd.read_csv('C:\\Users\\Jorge\\Dropbox\\Chicago\\Research\\Human capital and the household\\results\\Model\\Xs.csv')
-X_aux=pd.read_csv("/home/jrodriguez/NH_HC/results/Model/sample_model_v2.csv")
+X_aux=pd.read_csv("/home/jrodriguez/NH_HC/results/Model/sample_model.csv")
 x_df=X_aux
 
 #Sample size 
@@ -150,11 +157,13 @@ nkids0=x_df[ ['nkids_baseline']   ].values
 married0=x_df[ ['d_marital_2']   ].values
 
 #age of child at baseline
-agech0=x_df[['age_t0']].values
+agech0_a=x_df[['age_t0A']].values[:,0]
+agech0_b=x_df[['age_t0B']].values[:,0]
+d_childb=x_df[['d_childB']].values
 
 #Defines the instance with parameters
 param=util.Parameters(alphap,alphaf,eta,gamma1,gamma2,gamma3,
-	tfp,sigma2theta, rho_theta_epsilon,wagep_betas,income_male_betas,
+	tfp,sigma2theta,varphi,rho_theta_epsilon,rho_theta_ab,wagep_betas,income_male_betas,
 	marriagep_betas, kidsp_betas, eitc_list,
 	afdc_list,snap_list,cpi,lambdas,kappas,pafdc,psnap,mup)
 
@@ -172,7 +181,7 @@ wr,cs,ws=1,1,1
 
 #This is an arbitrary initialization of Utility class
 model = util.Utility(param,N,x_w,x_m,x_k,passign,nkids0,married0,hours,childcare,
-	agech0,hours_p,hours_f,wr,cs,ws)
+	agech0_a,agech0_b,d_childb,hours_p,hours_f,wr,cs,ws)
 
 tracemalloc.start()
 
@@ -210,7 +219,7 @@ print ('')
 print ('')
 
 
-sim_ins=simdata.SimData(N,param,emax_dic,x_w,x_m,x_k,x_wmk,passign,nkids0,married0,agech0,hours_p,hours_f,wr,cs,ws,model)
+sim_ins=simdata.SimData(N,param,emax_dic,x_w,x_m,x_k,x_wmk,passign,nkids0,married0,agech0_a,agech0_b,d_childb,hours_p,hours_f,wr,cs,ws,model)
 data_dic=sim_ins.fake_data(8)
 
 
@@ -264,7 +273,7 @@ np.mean(ltheta,axis=0)
 np.std(ltheta,axis=0)
 
 #Impact of NH on logtheta (SD units) in time
-ate_theta=np.mean(ltheta[passign[:,0]==1,:],axis=0) - np.mean(ltheta[passign[:,0]==0,:],axis=0)
+ate_theta=np.mean(ltheta[1][passign[:,0]==1,:],axis=0) - np.mean(ltheta[1][passign[:,0]==0,:],axis=0)
 
 ate_theta/np.std(ltheta,axis=0)
 

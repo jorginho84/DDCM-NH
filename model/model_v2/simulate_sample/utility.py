@@ -27,15 +27,16 @@ class Parameters:
 
 	"""
 	def __init__(self,alphap,alphaf,eta,gamma1,gamma2,gamma3,
-		tfp,sigma2theta,rho_theta_epsilon,betaw,beta_spouse,
+		tfp,sigma2theta,varphi,rho_theta_epsilon,rho_theta_ab,betaw,beta_spouse,
 		betam,betak,eitc,afdc,snap,cpi,
 		lambdas,kappas,pafdc,psnap,mup):
 
 		self.alphap,self.alphaf,self.eta=alphap,alphaf,eta
 		self.gamma1,self.gamma2,self.gamma3=gamma1,gamma2,gamma3
 		self.tfp=tfp
-		self.rho_theta_epsilon=rho_theta_epsilon
-		self.sigma2theta,self.betaw,self.betam,self.betak=sigma2theta,betaw,betam,betak
+		self.rho_theta_epsilon,self.rho_theta_ab=rho_theta_epsilon,rho_theta_ab
+		self.sigma2theta,self.varphi=sigma2theta,varphi
+		self.betaw,self.betam,self.betak=betaw,betam,betak
 		self.beta_spouse=beta_spouse
 		self.eitc,self.afdc,self.snap,self.cpi=eitc,afdc,snap,cpi
 		self.lambdas,self.kappas=lambdas,kappas
@@ -50,7 +51,7 @@ class Utility(object):
 
 	"""
 	def __init__(self,param,N,xwage,xmarr,xkid,ra,
-		nkids0,married0,hours,cc,age_t0,hours_p,hours_f,wr,cs,ws):
+		nkids0,married0,hours,cc,age_t0a,age_t0b,d_childb,hours_p,hours_f,wr,cs,ws):
 		"""
 		Set up model's data and paramaters
 
@@ -65,7 +66,8 @@ class Utility(object):
 		self.N,self.xwage,self.xmarr=N,xwage,xmarr
 		self.xkid,self.ra=xkid,np.reshape(ra,self.N)
 		self.nkids0,self.married0= nkids0,married0
-		self.hours,self.cc,self.age_t0=hours,cc,age_t0
+		self.hours,self.cc,self.age_t0a,self.age_t0b=hours,cc,age_t0a,age_t0b
+		self.d_childb=d_childb
 		self.hours_p,self.hours_f=hours_p,hours_f
 		self.wr,self.cs,self.ws=wr,cs,ws
 
@@ -74,21 +76,23 @@ class Utility(object):
 		Initial shocks to human capital and individual productivity
 		
 		"""
-		var =  np.random.multivariate_normal(np.zeros(2),
-			np.array([[self.param.sigma2theta**2,
-				self.param.rho_theta_epsilon*self.param.sigma2theta*
-				np.sqrt(self.param.betaw[-2,0])],
-				[self.param.rho_theta_epsilon*self.param.sigma2theta*
-				np.sqrt(self.param.betaw[-2,0]),self.param.betaw[-2,0]]]),self.N)
 
-		return {'epsilon_theta0': var[:,0], 'epsilon0': var[:,1]}
+		var =  np.random.multivariate_normal(np.zeros(3),
+			np.array([ [self.param.sigma2theta**2,self.param.rho_theta_ab,
+				self.param.rho_theta_epsilon*self.param.sigma2theta*np.sqrt(self.param.betaw[-2,0])],
+				[self.param.rho_theta_ab,self.param.sigma2theta**2,
+				self.param.rho_theta_epsilon*self.param.sigma2theta*np.sqrt(self.param.betaw[-2,0])],
+				[self.param.rho_theta_epsilon*self.param.sigma2theta*np.sqrt(self.param.betaw[-2,0]),
+				self.param.rho_theta_epsilon*self.param.sigma2theta*np.sqrt(self.param.betaw[-2,0]),
+				self.param.betaw[-2,0]]	]),self.N)
+
+		return {'epsilon_theta0_a': var[:,0],'epsilon_theta0_b': var[:,1],'epsilon0': var[:,2]}
 
 	def wage_init(self,epsilon_t):
 		"""
 		Initial shock to wages
 		"""
 		
-
 		periodt = 0
 		lt = np.zeros((self.N,1)) + periodt 
 
@@ -102,10 +106,10 @@ class Utility(object):
 
 	def theta_init(self,epsilon_theta0):
 		"""
-		The initial value of child human capital
+		The initial value of child human capital: [child A, child B]
 		"""
 		
-		return np.exp( epsilon_theta0)
+		return [np.exp( epsilon_theta0[0]),np.exp( epsilon_theta0[1])]
 
 		
 	def epsilon(self,epsilon_1):
@@ -137,6 +141,8 @@ class Utility(object):
 
 		"""
 
+
+
 		lt =  np.zeros((self.N,1)) + periodt
 
 		xw=np.concatenate((np.reshape(self.xwage[:,0],(self.N,1)), #HS
@@ -145,7 +151,8 @@ class Utility(object):
 
 		betas=self.param.betaw[0:-2,0] #everything but rho and variance
 
-		return np.exp( np.dot(xw,betas)+ epsilon )
+
+		return np.exp( np.dot(xw,betas)+ epsilon)
 
 	def income_spouse(self):
 		"""
@@ -441,7 +448,7 @@ class Utility(object):
 		pwage=np.reshape(h,self.N)*np.reshape(wage,self.N)*52
 
 		d_full=h>=self.hours_f
-		agech=np.reshape(self.age_t0,(self.N)) + periodt
+		agech=np.reshape(self.age_t0a,(self.N)) + periodt
 		young=agech<=5
 		boo_nfree = free==0
 		boo_ra = self.ra==1
@@ -506,24 +513,34 @@ class Utility(object):
 		Inputs must come from period t
 
 		"""
+
+		theta0_a = theta0[0].copy()
+		theta0_b = theta0[1].copy()
+
 		#age of child
-		agech=np.reshape(self.age_t0,(self.N)) + periodt
+		agech_a = np.reshape(self.age_t0a,(self.N)) + periodt
+		agech_b = np.zeros((self.N))
+		agech_b[self.d_childb[:,0] == 1] = self.age_t0b[self.d_childb[:,0] == 1] + periodt
 
 		#log consumption pc
 		incomepc=np.log(ct)
 		
 		
 		#log time w child (T=168 hours a week, -35 for older kids)
-		tch = np.zeros(self.N)
+		tch_a = np.zeros(self.N)
+		tch_b = np.zeros(self.N)
 		boo_p = h == self.hours_p
 		boo_f = h == self.hours_f
 		boo_u = h == 0
 
-		tch[agech<=5] = cc[agech<=5]*(168 - self.hours_f) + (1-cc[agech<=5])*(168 - h[agech<=5] ) 
-		tch[agech>5] = 133 - h[agech>5] 
-		tch=np.log(tch)
+		tch_a[agech_a<=5] = cc[agech_a<=5]*(168 - self.hours_f) + (1-cc[agech_a<=5])*(168 - h[agech_a<=5] ) 
+		tch_a[agech_a>5] = 133 - h[agech_a>5] 
+		tch_a=np.log(tch_a)
 
-		
+		tch_b[agech_b<=5] = cc[agech_b<=5]*(168 - self.hours_f) + (1-cc[agech_b<=5])*(168 - h[agech_b<=5] ) 
+		tch_b[agech_b>5] = 133 - h[agech_b>5] 
+		tch_b=np.log(tch_b)
+	
 				
 		#Parameters
 		gamma1=self.param.gamma1
@@ -531,30 +548,29 @@ class Utility(object):
 		gamma3=self.param.gamma3
 		tfp=self.param.tfp
 				
-		theta1=np.zeros(self.N)
+		theta1_a=np.zeros(self.N)
+		theta1_b=np.zeros(self.N)
 
 		#The production of HC: (young, cc=0), (young,cc1), (old)
-		boo_age=agech<=5
-		theta1 = tfp*cc*boo_age + gamma1*np.log(theta0) + gamma2*incomepc +	gamma3*tch
+		boo_age_a=agech_a<=5
+		boo_age_b=agech_b<=5
+		theta1_a = tfp*cc*boo_age_a + gamma1*np.log(theta0_a) + gamma2*incomepc +	gamma3*tch_a
+		theta1_b = tfp*cc*boo_age_b + gamma1*np.log(theta0_b) + gamma2*incomepc +	gamma3*tch_b
 			
-		#adjustment for E[theta = 0]
-		alpha = - np.mean(incomepc)*gamma2 - np.mean(tch)*gamma3  
-
-		return np.exp(theta1 + alpha)
+		return [np.exp(theta1_a),np.exp(theta1_b)]
 
 
-	def Ut(self,periodt,dincome,income_spouse,marr,cc,nkids,ht,thetat,wage,free,price):
+	def Ut(self,periodt,dincome,income_spouse,marr,cc,nkids,ht,thetat,
+		wage,free,price):
 		"""
 		Computes current-period utility
 
 		"""
-
-		#age of child
-		agech=np.reshape(self.age_t0,(self.N)) + periodt
-		d_age = agech<=5
+		thetat_a = thetat[0].copy()
+		thetat_b = thetat[1].copy()
 
 		#log-theta
-		ltheta=np.log(thetat)
+		ltheta=self.d_childb[:,0]*(self.param.varphi*np.log(thetat_a) + (1-self.param.varphi)*np.log(thetat_b)) + (1-self.d_childb[:,0])*np.log(thetat_a)
 
 		#Work dummies
 		d_workf=ht==self.hours_f
@@ -583,10 +599,10 @@ class Utility(object):
 		if (np.any(np.isnan(ut_h))==True) | (np.any(np.isinf(ut_h))==True) :
 			raise ValueError('Hours contribution to utility is not a real number')
 
-		if (np.any(np.isnan(thetat))==True) | (np.any(np.isinf(thetat))==True) :
+		if (np.any(np.isnan(thetat_a))==True) | (np.any(np.isinf(thetat_a))==True) :
 			raise ValueError('Theta is not a real number')
 
-		if (np.any(np.isnan(np.log(thetat)))==True) | (np.any(np.isinf(np.log(thetat)))==True) :
+		if (np.any(np.isnan(np.log(thetat_a)))==True) | (np.any(np.isinf(np.log(thetat_a)))==True) :
 			raise ValueError('Log of Theta is not a real number')
 
 		if (np.any(np.isnan(ut))==True) | (np.any(np.isinf(ut))==True) :
@@ -600,6 +616,10 @@ class Utility(object):
 		For a given periodt and measure, computes the SSRS, given a value for theta.
 		There is only one measure for period
 		"""
+
+		thetat_a = thetat[0].copy()
+		thetat_b = thetat[1].copy()
+
 		if periodt==2:
 			loc=0
 		elif periodt==5:
@@ -608,16 +628,20 @@ class Utility(object):
 		lambdam=self.param.lambdas[loc]
 		cuts=[self.param.kappas[loc][0],self.param.kappas[loc][1],
 		self.param.kappas[loc][2],self.param.kappas[loc][3]]
-				
-		z_star=lambdam*np.log(thetat) + np.random.randn(self.N)
+		z_star = []
+		z_star.append(lambdam*np.log(thetat_a) + np.random.randn(self.N))
+		z_star.append(lambdam*np.log(thetat_b) + np.random.randn(self.N))
 
-		#the SSRS measure
-		z=np.zeros(self.N)
-		z[z_star<=cuts[0]]=1
-		z[(z_star>cuts[0]) & (z_star<=cuts[1])]=2
-		z[(z_star>cuts[1]) & (z_star<=cuts[2])]=3
-		z[(z_star>cuts[2]) & (z_star<=cuts[3])]=4
-		z[(z_star>cuts[3])]=5
+		#the SSRS measure: [child A, child B]
+		z=[]
+		for j in [0,1]:
+			z_aux=np.zeros(self.N)
+			z_aux[z_star[j]<=cuts[0]]=1
+			z_aux[(z_star[j]>cuts[0]) & (z_star[j]<=cuts[1])]=2
+			z_aux[(z_star[j]>cuts[1]) & (z_star[j]<=cuts[2])]=3
+			z_aux[(z_star[j]>cuts[2]) & (z_star[j]<=cuts[3])]=4
+			z_aux[(z_star[j]>cuts[3])]=5
+			z.append(z_aux)
 
 
 		return z

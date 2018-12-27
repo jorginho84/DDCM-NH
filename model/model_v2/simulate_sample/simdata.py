@@ -24,27 +24,27 @@ class SimData:
 	The rest are state variables at period 0
 	"""
 	def __init__(self,N,param,emax_function,
-		x_w,x_m,x_k,x_wmk,passign,nkids0,married0,agech,hours_p,hours_f,
-		wr,cs,ws,model):
+		x_w,x_m,x_k,x_wmk,passign,nkids0,married0,agech_a,agech_b,d_childb,
+		hours_p,hours_f,wr,cs,ws,model):
 		"""
 		model: a utility instance (with arbitrary parameters)
 		"""
 		self.N,self.param,self.emax_function=N,param,emax_function
 		self.x_w,self.x_m,self.x_k,self.x_wmk=x_w,x_m,x_k,x_wmk
 		self.passign,self.nkids0,self.married0=passign,nkids0,married0
-		self.agech=agech
+		self.agech_a,self.agech_b,self.d_childb=agech_a,agech_b,d_childb
 		self.hours_p, self.hours_f=hours_p,hours_f
 		self.wr,self.cs,self.ws=wr,cs,ws
 		self.model = model
 		
 	def change_util(self,param,N,x_w,x_m,x_k,passign,
-				nkids0,married0,hours,childcare,agech,hours_p,hours_f,
-				wr,cs,ws):
+				nkids0,married0,hours,childcare,agech_a,agech_b,d_childb,
+				hours_p,hours_f,wr,cs,ws):
 		"""
 		This function changes parameters of util instance
 		"""
 		self.model.__init__(param,N,x_w,x_m,x_k,passign,nkids0,married0,
-			hours,childcare,agech,hours_p,hours_f,wr,cs,ws)
+			hours,childcare,agech_a,agech_b,d_childb,hours_p,hours_f,wr,cs,ws)
 
 		
 
@@ -105,8 +105,8 @@ class SimData:
 			
 			#Computing utility
 			self.change_util(self.param,self.N,self.x_w,self.x_m,self.x_k,self.passign,
-				nkids0,married0,hours,childcare,self.agech,self.hours_p,
-				self.hours_f,self.wr,self.cs,self.ws)
+				nkids0,married0,hours,childcare,self.agech_a,self.agech_b,self.d_childb,
+				self.hours_p,self.hours_f,self.wr,self.cs,self.ws)
 
 			#current consumption to get future theta
 			spouse_income0 = self.model.income_spouse()
@@ -131,9 +131,11 @@ class SimData:
 				epsilon_t1=self.model.epsilon(epsilon0)
 
 			
-				data_int_t1=np.concatenate((np.reshape(np.log(theta_t1),(self.N,1)), 
+				data_int_t1=np.concatenate((np.reshape(np.log(theta_t1[0]),(self.N,1)),
+					np.reshape(np.log(theta_t1[0]),(self.N,1)),
 					np.reshape(nkids_t1,(self.N,1)),married_t1,
-					np.reshape(np.square(np.log(theta_t1)),(self.N,1)),
+					np.reshape(np.square(np.log(theta_t1[0])),(self.N,1)),
+					np.reshape(np.square(np.log(theta_t1[1])),(self.N,1)),
 					np.reshape(self.passign,(self.N,1)), 
 					np.reshape(epsilon_t1,(self.N,1)),
 					np.reshape(np.square(epsilon_t1),(self.N,1)),
@@ -158,8 +160,8 @@ class SimData:
 						emax_betas=self.emax_function[10-age][0]['emax'+str(periodt+1)][j]
 						emax_t1=emax_ins.int_values(data_int_t1,emax_betas)
 		
-					#Including option value (discount factor 0.86)
-					util_values[self.agech[:,0]==age,j]=util_values[self.agech[:,0]==age,j]+0.86*emax_t1[self.agech[:,0]==age]
+					#Including option value (discount factor 0.86), youngest child
+					util_values[self.agech_a==age,j]=util_values[self.agech_a==age,j]+0.86*emax_t1[self.agech_a==age]
 
 		return [util_values,util_values_c]
 
@@ -174,7 +176,7 @@ class SimData:
 		"""
 		
 		#saving here
-		theta_matrix=np.zeros((self.N,n_periods))
+		theta_matrix=[np.zeros((self.N,n_periods)),np.zeros((self.N,n_periods))]
 		choice_matrix=np.zeros((self.N,n_periods))
 		dincome_matrix=np.zeros((self.N,n_periods))
 		nh_matrix=np.zeros((self.N,n_periods))
@@ -188,8 +190,7 @@ class SimData:
 		cs_cost_matrix=np.zeros((self.N,n_periods))
 		util_values_dic=[] #list of t=0,..,8 periods
 		util_values_c_dic=[] #current value utils
-		ssrs_t2=np.zeros(self.N)
-		ssrs_t5=np.zeros(self.N)
+
 		
 
 		#initialize state variables
@@ -199,12 +200,12 @@ class SimData:
 		hours=np.zeros(self.N)
 		childcare=np.zeros(self.N)
 		self.change_util(self.param,self.N,self.x_w,self.x_m,self.x_k,self.passign,
-			nkids0,married0,hours,childcare,self.agech,self.hours_p,
+			nkids0,married0,hours,childcare,self.agech_a,self.agech_b,self.d_childb,self.hours_p,
 			self.hours_f,self.wr,self.cs,self.ws)
 		
 		shocks_dic = self.model.shocks_init()
 		epsilon0= shocks_dic['epsilon0']
-		epsilon_theta0= shocks_dic['epsilon_theta0']
+		epsilon_theta0= [shocks_dic['epsilon_theta0_a'],shocks_dic['epsilon_theta0_b']]
 
 		wage_init_dic = self.model.wage_init(epsilon0)
 		wage0= wage_init_dic['wage']
@@ -218,7 +219,8 @@ class SimData:
 			
 			wage_matrix[:,periodt]=wage0.copy()
 			spouse_income_matrix[:,periodt]=spouse_income0.copy()
-			theta_matrix[:,periodt]=theta0.copy()
+			theta_matrix[0][:,periodt]=theta0[0].copy()
+			theta_matrix[1][:,periodt]=theta0[1].copy()
 			kids_matrix[:,periodt]=nkids0[:,0].copy()
 			marr_matrix[:,periodt]=married0[:,0].copy()
 
@@ -234,8 +236,8 @@ class SimData:
 			util_values_dic.append(utiliy_values)
 			util_values_c_dic.append(utiliy_values_c)
 
-			#Young vs OLD: maximization
-			age_child=np.reshape(self.agech,(self.N)) + periodt
+			#Young vs OLD: maximization (age of the youngest child)
+			age_child=np.reshape(self.agech_a,(self.N)) + periodt
 			choices_index=np.zeros(self.N)
 			choices_index[age_child<=5]=np.argmax(utiliy_values[age_child<=5,:],axis=1) #young
 			choices_index[age_child>5]=np.argmax(utiliy_values[age_child>5,0:3],axis=1) #old
@@ -256,7 +258,8 @@ class SimData:
 
 			#Current income
 			self.change_util(self.param,self.N,self.x_w,self.x_m,
-				self.x_k,self.passign,nkids0,married0,hours_t,childcare_t,self.agech,
+				self.x_k,self.passign,nkids0,married0,hours_t,childcare_t,
+				self.agech_a,self.agech_b,self.d_childb,
 				self.hours_p,self.hours_f,self.wr,self.cs,self.ws)
 			
 			dincome0=self.model.dincomet(periodt,hours_t,wage0,married0,nkids0)['income']

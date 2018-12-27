@@ -55,13 +55,13 @@ class Emaxt:
 		self.model = model
 
 	def change_util(self,param,N,x_w,x_m,x_k,passign,
-				nkids0,married0,hours,childcare,agech,hours_p,hours_f,
+				nkids0,married0,hours,childcare,agech_a,agech_b,d_childb,hours_p,hours_f,
 				wr,cs,ws):
 		"""
 		This function changes parameters of util instance
 		"""
 		self.model.__init__(param,N,x_w,x_m,x_k,passign,nkids0,married0,
-			hours,childcare,agech,hours_p,hours_f,wr,cs,ws)
+			hours,childcare,agech_a,agech_b,d_childb,hours_p,hours_f,wr,cs,ws)
 
 		
 	def emax_bigt(self,bigT):
@@ -80,11 +80,13 @@ class Emaxt:
 
 		#Defining state variables of T-1
 		passign=self.grid_dict['passign']
-		theta0=self.grid_dict['theta0']
+		theta0=[self.grid_dict['theta0_a'][:,0],self.grid_dict['theta0_b'][:,0]]
 		nkids0=self.grid_dict['nkids0']
 		married0=self.grid_dict['married0']
-		agech=self.grid_dict['agech']
-		epsilon_1=self.grid_dict['epsilon_1']#initial shock
+		agech_a=self.grid_dict['agech_a']
+		agech_b=self.grid_dict['agech_b']
+		d_childb=self.grid_dict['d_childb']
+		epsilon_1=self.grid_dict['epsilon_1'][:,0]#initial shock
 		
 
 		x_w=self.grid_dict['x_w']
@@ -95,10 +97,11 @@ class Emaxt:
 
 
 		#Sample size
-		ngrid=theta0.shape[0]
+		ngrid=theta0[0].shape[0]
 
-		agech=np.reshape(agech,ngrid)
-		#number of choices (hours worked * child care)
+		agech_a=np.reshape(agech_a,ngrid)
+		agech_b=np.reshape(agech_b,ngrid)
+		#number of choices (hours worked * child care 1,2)
 		J=6
 
 		#I save emaxT(T-1) values here
@@ -109,7 +112,7 @@ class Emaxt:
 		childcare=np.zeros(ngrid)
 
 		self.change_util(self.param,ngrid,x_w,x_m,x_k,passign,
-			nkids0,married0,hours,childcare,agech,self.hours_p,self.hours_f,
+			nkids0,married0,hours,childcare,agech_a,agech_b,d_childb,self.hours_p,self.hours_f,
 			self.wr,self.cs,self.ws)
 		wage0=self.model.waget(bigT-1,epsilon_1)
 		free0=self.model.q_prob()
@@ -156,7 +159,7 @@ class Emaxt:
 
 				#States at T
 				self.change_util(self.param,ngrid,x_w,x_m,x_k,
-					passign,nkids0,married0,hours,childcare,agech,
+					passign,nkids0,married0,hours,childcare,agech_a,agech_b,d_childb,
 					self.hours_p,self.hours_f,self.wr,self.cs,self.ws)
 
 				periodt=bigT 
@@ -195,7 +198,7 @@ class Emaxt:
 					childcare_t1=np.ones(ngrid)				
 
 				self.change_util(self.param,ngrid,x_w,x_m,x_k,
-					passign,nkids_t1,married_t1,hours_t1,childcare,agech,
+					passign,nkids_t1,married_t1,hours_t1,childcare,agech_a,agech_b,d_childb,
 					self.hours_p,self.hours_f,self.wr,self.cs,self.ws)
 				
 				#This is the terminal value!
@@ -206,8 +209,8 @@ class Emaxt:
 
 			#obtaining max over choices by random schocks: young vs old
 			max_ut=np.zeros((ngrid,self.D))
-			max_ut[agech<=5,:]=np.max(u_vec[agech<=5,:,:],axis=2) #young
-			max_ut[agech>5,:]=np.max(u_vec[agech>5,:,0:3],axis=2) #old
+			max_ut[agech_a<=5,:]=np.max(u_vec[agech_a<=5,:,:],axis=2) #young
+			max_ut[agech_a>5,:]=np.max(u_vec[agech_a>5,:,0:3],axis=2) #old
 
 			
 
@@ -216,9 +219,11 @@ class Emaxt:
 			av_max_ut=np.average(max_ut,axis=1)
 
 			#database for interpolation
-			data_int=np.concatenate( ( np.reshape(np.log(theta0),(ngrid,1)), 
+			data_int=np.concatenate( ( np.reshape(np.log(theta0[0]),(ngrid,1)),
+				np.reshape(np.log(theta0[1]),(ngrid,1)), 
 				np.reshape(nkids0,(ngrid,1)),np.reshape(married0,(ngrid,1)),
-				np.reshape(np.square(np.log(theta0)),(ngrid,1)),
+				np.reshape(np.square(np.log(theta0[0])),(ngrid,1)),
+				np.reshape(np.square(np.log(theta0[1])),(ngrid,1)),
 				np.reshape(passign,(ngrid,1)), 
 				np.reshape(epsilon_1,(ngrid,1)),#using present shock
 				np.reshape(np.square(epsilon_1),(ngrid,1)),
@@ -252,11 +257,13 @@ class Emaxt:
 
 		#Defining state variables at t-1
 		passign=self.grid_dict['passign']
-		theta0=self.grid_dict['theta0']
+		theta0=[self.grid_dict['theta0_a'][:,0],self.grid_dict['theta0_b'][:,0]]
 		nkids0=self.grid_dict['nkids0']
 		married0=self.grid_dict['married0']
-		agech=self.grid_dict['agech']
-		epsilon_1=self.grid_dict['epsilon_1']#initial shock
+		agech_a=self.grid_dict['agech_a']
+		agech_b=self.grid_dict['agech_b']
+		d_childb=self.grid_dict['d_childb']
+		epsilon_1=self.grid_dict['epsilon_1'][:,0]#initial shock
 		
 
 		x_w=self.grid_dict['x_w']
@@ -266,9 +273,10 @@ class Emaxt:
 
 		
 		#Sample size
-		ngrid=theta0.shape[0]
+		ngrid=theta0[0].shape[0]
 
-		agech=np.reshape(agech,ngrid)
+		agech_a=np.reshape(agech_a,ngrid)
+		agech_b=np.reshape(agech_b,ngrid)
 
 		
 		#Set number of choices at t-1
@@ -278,7 +286,7 @@ class Emaxt:
 		childcare=np.zeros(ngrid)
 		
 		self.change_util(self.param,ngrid,x_w,x_m,x_k,passign,
-			nkids0,married0,hours,childcare,agech,
+			nkids0,married0,hours,childcare,agech_a,agech_b,d_childb,
 			self.hours_p,self.hours_f,self.wr,self.cs,self.ws)
 		wage0=self.model.waget(periodt,epsilon_1)
 		free0=self.model.q_prob()
@@ -338,7 +346,7 @@ class Emaxt:
 				
 				#Computing states at t
 				self.change_util(self.param,ngrid,x_w,x_m,x_k,
-					passign,nkids0,married0,hours,childcare,agech,
+					passign,nkids0,married0,hours,childcare,agech_a,agech_b,d_childb,
 					self.hours_p,self.hours_f,self.wr,self.cs,self.ws)
 				
 				
@@ -377,16 +385,18 @@ class Emaxt:
 				
 				#Instance at period t
 				self.change_util(self.param,ngrid,x_w,x_m,x_k,
-					passign,nkids_t1,married_t1,hours_t1,childcare_t1,agech,
+					passign,nkids_t1,married_t1,hours_t1,childcare_t1,agech_a,agech_b,d_childb,
 					self.hours_p,self.hours_f,self.wr,self.cs,self.ws)
 
 				#Current-period utility at t
 				u_vec[:,i,j]=self.model.simulate(periodt,wage_t1,free_t1,price_t1,theta_t1,income_spouse_t1) 
 
 				#getting next-period already computed emaxt+1
-				data_int_ex=np.concatenate(( np.reshape(np.log(theta_t1),(ngrid,1)), 
+				data_int_ex=np.concatenate(( np.reshape(np.log(theta_t1[0]),(ngrid,1)),
+					np.reshape(np.log(theta_t1[1]),(ngrid,1)), 
 					np.reshape(nkids_t1,(ngrid,1)),np.reshape(married_t1,(ngrid,1)),
-					np.reshape(np.square(np.log(theta_t1)),(ngrid,1)),
+					np.reshape(np.square(np.log(theta_t1[0])),(ngrid,1)),
+					np.reshape(np.square(np.log(theta_t1[1])),(ngrid,1)),
 					np.reshape(passign,(ngrid,1)), 
 					np.reshape(epsilon_t1,(ngrid,1)),
 					np.reshape(np.square(epsilon_t1),(ngrid,1)),
@@ -403,8 +413,8 @@ class Emaxt:
 
 			#obtaining max over choices by random shock/choice at t-1. Young vs old
 			max_ut=np.zeros((ngrid,self.D))
-			max_ut[agech<=5,:]=np.max(u_vec[agech<=5,:,:],axis=2) #young
-			max_ut[agech>5,:]=np.max(u_vec[agech>5,:,0:3],axis=2) #old
+			max_ut[agech_a<=5,:]=np.max(u_vec[agech_a<=5,:,:],axis=2) #young
+			max_ut[agech_a>5,:]=np.max(u_vec[agech_a>5,:,0:3],axis=2) #old
 
 			
 
@@ -412,9 +422,11 @@ class Emaxt:
 			av_max_ut=np.average(max_ut,axis=1)
 
 			#Data for interpolating emaxt (states at t-1)
-			data_int=np.concatenate(( np.reshape(np.log(theta0),(ngrid,1)), 
+			data_int=np.concatenate(( np.reshape(np.log(theta0[0]),(ngrid,1)),
+				np.reshape(np.log(theta0[1]),(ngrid,1)), 
 				np.reshape(nkids0,(ngrid,1)),np.reshape(married0,(ngrid,1)),
-				np.reshape(np.square(np.log(theta0)),(ngrid,1)),
+				np.reshape(np.square(np.log(theta0[0])),(ngrid,1)),
+				np.reshape(np.square(np.log(theta0[1])),(ngrid,1)),
 				np.reshape(passign,(ngrid,1)), 
 				np.reshape(epsilon_1,(ngrid,1)),#current period shock
 				np.reshape(np.square(epsilon_1),(ngrid,1)),
@@ -442,12 +454,13 @@ class Emaxt:
 		Recursively computes a series of interpolating instances
 		Generates a dictionary with the emax instances
 
-		There is a sequence of Emax for each child age (0-11)
+		There is a sequence of Emax for each child age (1-10)
 		
 
 		"""	
 		
 		
+	
 		def emax_gen(j):
 			
 			for t in range(j,0,-1):
@@ -487,8 +500,8 @@ class Emaxt:
 		
 		
 		
-		"""
-		
+	
+		"""		
 		list_emax = []
 		for j in range(7,19):
 			print ('Im in emax j ', j)
@@ -512,8 +525,8 @@ class Emaxt:
 
 			list_emax.append([emax_dic])
 
-				
-		"""
+		"""	
+	
 		
 		
 

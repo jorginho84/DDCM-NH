@@ -24,7 +24,7 @@ class SimData:
 	The rest are state variables at period 0
 	"""
 	def __init__(self,N,param,emax_function,
-		x_w,x_m,x_k,x_wmk,passign,nkids0,married0,agech_a,agech_b,d_childb,
+		x_w,x_m,x_k,x_wmk,passign,nkids0,married0,agech_a,agech_b,d_childa,d_childb,
 		hours_p,hours_f,wr,cs,ws,model):
 		"""
 		model: a utility instance (with arbitrary parameters)
@@ -32,19 +32,20 @@ class SimData:
 		self.N,self.param,self.emax_function=N,param,emax_function
 		self.x_w,self.x_m,self.x_k,self.x_wmk=x_w,x_m,x_k,x_wmk
 		self.passign,self.nkids0,self.married0=passign,nkids0,married0
-		self.agech_a,self.agech_b,self.d_childb=agech_a,agech_b,d_childb
+		self.agech_a,self.agech_b,self.d_childa,self.d_childb=agech_a,agech_b,d_childa,d_childb
 		self.hours_p, self.hours_f=hours_p,hours_f
 		self.wr,self.cs,self.ws=wr,cs,ws
 		self.model = model
 		
 	def change_util(self,param,N,x_w,x_m,x_k,passign,
-				nkids0,married0,hours,childcare,agech_a,agech_b,d_childb,
-				hours_p,hours_f,wr,cs,ws):
+				nkids0,married0,hours,childcare_a,childcare_b,
+				agech_a,agech_b,d_childa,d_childb,hours_p,hours_f,wr,cs,ws):
 		"""
 		This function changes parameters of util instance
 		"""
 		self.model.__init__(param,N,x_w,x_m,x_k,passign,nkids0,married0,
-			hours,childcare,agech_a,agech_b,d_childb,hours_p,hours_f,wr,cs,ws)
+			hours,childcare_a,childcare_b,agech_a,agech_b,d_childa,d_childb,
+			hours_p,hours_f,wr,cs,ws)
 
 		
 
@@ -66,53 +67,48 @@ class SimData:
 		"""
 
 		#Set number of choices
-		J=6
+		J=3*2*2
 
 		#save choices utility  here
 		util_values=np.zeros((self.N,J))
 		#save current value here
 		util_values_c=np.zeros((self.N,J))
 		
+		hours_aux  = [0,self.hours_p,self.hours_f,
+					0,self.hours_p,self.hours_f,
+					0,self.hours_p,self.hours_f,
+					0,self.hours_p,self.hours_f,]
+
+		cc_a_aux  = [0,0,0,
+					1,1,1,
+					0,0,0,
+					1,1,1,]
+
+		cc_b_aux  = [0,0,0,
+					0,0,0,
+					1,1,1,
+					1,1,1,]
 
 		#The choice loop
 		for j in range(0,J):
 
-			if j<=2:
+			hours = np.full(self.N,hours_aux[j],dtype=float)
+			childcare_a = np.full(self.N,cc_a_aux[j],dtype=float)
+			childcare_b = np.full(self.N,cc_b_aux[j],dtype=float)
 
-				if j==0:
-					hours_aux=0
-				elif j==1:
-					hours_aux=self.hours_p
-				elif j==2:
-					hours_aux=self.hours_f
-
-				hours=np.full(self.N,hours_aux,dtype=float)
-				childcare=np.zeros(self.N)
-
-			else:
-				if j==3:
-					hours_aux=0
-				elif j==4:
-					hours_aux=self.hours_p
-				elif j==5:
-					hours_aux=self.hours_f
-
-				hours=np.full(self.N,hours_aux,dtype=float)
-				childcare=np.ones(self.N)
-
-			
-
-			
+					
 			#Computing utility
 			self.change_util(self.param,self.N,self.x_w,self.x_m,self.x_k,self.passign,
-				nkids0,married0,hours,childcare,self.agech_a,self.agech_b,self.d_childb,
+				nkids0,married0,hours,childcare_a,childcare_b,self.agech_a,self.agech_b,
+				self.d_childa,self.d_childb,
 				self.hours_p,self.hours_f,self.wr,self.cs,self.ws)
 
 			#current consumption to get future theta
 			spouse_income0 = self.model.income_spouse()
 			dincome0=self.model.dincomet(periodt,hours,wage0,married0,nkids0)['income']
-			consumption0=self.model.consumptiont(periodt,hours,childcare,dincome0,
-				spouse_income0,married0,nkids0,wage0,free0,price0)['income_pc']
+			consumption0=self.model.consumptiont(periodt,hours,childcare_a,
+				childcare_b,dincome0,spouse_income0,married0,
+				nkids0,wage0,free0,price0)['income_pc']
 
 			util_values[:,j]=self.model.simulate(periodt,wage0,free0,price0,theta0,spouse_income0)
 			util_values_c[:,j]=util_values[:,j].copy()
@@ -127,7 +123,8 @@ class SimData:
 				nkids_t1=self.model.kidst(periodt+1,np.reshape(nkids0,(self.N,1)),
 					married0)+nkids0
 				
-				theta_t1=self.model.thetat(periodt,theta0,hours,childcare,consumption0) #theta at t+1 uses inputs at t
+				theta_t1=self.model.thetat(periodt,theta0,hours,childcare_a,
+				childcare_b,consumption0) #theta at t+1 uses inputs at t
 				epsilon_t1=self.model.epsilon(epsilon0)
 
 			
@@ -184,14 +181,30 @@ class SimData:
 		wage_matrix=np.zeros((self.N,n_periods))
 		spouse_income_matrix=np.zeros((self.N,n_periods))
 		hours_matrix=np.zeros((self.N,n_periods))
-		childcare_matrix=np.zeros((self.N,n_periods))
+		childcare_a_matrix=np.zeros((self.N,n_periods))
+		childcare_b_matrix=np.zeros((self.N,n_periods))
 		marr_matrix=np.zeros((self.N,n_periods))
 		kids_matrix=np.zeros((self.N,n_periods))
 		cs_cost_matrix=np.zeros((self.N,n_periods))
 		util_values_dic=[] #list of t=0,..,8 periods
 		util_values_c_dic=[] #current value utils
 
-		
+		#choice index
+		J = 3*2*2
+		hours_aux  = [0,self.hours_p,self.hours_f,
+					0,self.hours_p,self.hours_f,
+					0,self.hours_p,self.hours_f,
+					0,self.hours_p,self.hours_f,]
+
+		cc_a_aux  = [0,0,0,
+					1,1,1,
+					0,0,0,
+					1,1,1,]
+
+		cc_b_aux  = [0,0,0,
+					0,0,0,
+					1,1,1,
+					1,1,1,]
 
 		#initialize state variables
 		married0=self.married0.copy()
@@ -200,8 +213,8 @@ class SimData:
 		hours=np.zeros(self.N)
 		childcare=np.zeros(self.N)
 		self.change_util(self.param,self.N,self.x_w,self.x_m,self.x_k,self.passign,
-			nkids0,married0,hours,childcare,self.agech_a,self.agech_b,self.d_childb,self.hours_p,
-			self.hours_f,self.wr,self.cs,self.ws)
+			nkids0,married0,hours,childcare,childcare,self.agech_a,self.agech_b,
+			self.d_childa,self.d_childb,self.hours_p,self.hours_f,self.wr,self.cs,self.ws)
 		
 		shocks_dic = self.model.shocks_init()
 		epsilon0= shocks_dic['epsilon0']
@@ -225,7 +238,8 @@ class SimData:
 			marr_matrix[:,periodt]=married0[:,0].copy()
 
 			hours_t=np.zeros(self.N)
-			childcare_t=np.zeros(self.N)
+			childcare_a_t=np.zeros(self.N)
+			childcare_b_t=np.zeros(self.N)
 			
 			#Use self.choice function to obtain choices and saving u_ijt
 			#array of J columns
@@ -236,40 +250,53 @@ class SimData:
 			util_values_dic.append(utiliy_values)
 			util_values_c_dic.append(utiliy_values_c)
 
-			#Young vs OLD: maximization (age of the youngest child)
-			age_child=np.reshape(self.agech_a,(self.N)) + periodt
+			#Maximization: restricting choice sets according to age
+			agech_a = np.zeros((self.N))
+			agech_b = np.zeros((self.N))
+			agech_a[self.d_childa[:,0] == 1] = self.agech_a[self.d_childa[:,0] == 1] + periodt
+			agech_b[self.d_childb[:,0] == 1] = self.agech_b[self.d_childb[:,0] == 1] + periodt
+			young_a = (agech_a<=5) & (agech_a != 0)
+			young_b = (agech_b<=5) & (agech_b != 0)
 			choices_index=np.zeros(self.N)
-			choices_index[age_child<=5]=np.argmax(utiliy_values[age_child<=5,:],axis=1) #young
-			choices_index[age_child>5]=np.argmax(utiliy_values[age_child>5,0:3],axis=1) #old
-			choice_matrix[:,periodt]=choices_index.copy()
-			
-			#at periodt=0, if choice>4, individual chooses childcare=1	
-			hours_t[choices_index==0]=0
-			hours_t[choices_index==1]=self.hours_p
-			hours_t[choices_index==2]=self.hours_f
-			hours_t[choices_index==3]=0
-			hours_t[choices_index==4]=self.hours_p
-			hours_t[choices_index==5]=self.hours_f
-			childcare_t[choices_index>2]=1
 
+			#restricting choice sets
+			util_young_b = np.concatenate((utiliy_values[(young_a==0) & (young_b==1),0:3],utiliy_values[(young_a==0) & (young_b==1),6:9]),axis=1)
+			util_young_a = utiliy_values[(young_a==1) & (young_b==0),0:6]
+			util_young_noone = utiliy_values[(young_a==0) & (young_b==0),0:3]
+			util_young_all = utiliy_values[(young_a==1) & (young_b==1)]
+
+			choices_index[(young_a==0) & (young_b==1) ] = np.argmax(util_young_b,axis=1) #old b, young b
+			choices_index[(young_a==1) & (young_b==0) ] = np.argmax(util_young_a,axis=1) #young a, old b
+			choices_index[(young_a==0) & (young_b==0) ] = np.argmax(util_young_noone,axis=1) #old a, old b
+			choices_index[(young_a==1) & (young_b==1) ] = np.argmax(util_young_all,axis=1) #young a, young b
+			
+			choice_matrix[:,periodt] = choices_index.copy()
+			
+			#Saving choices
+			for j in range(J):
+				hours_t[choices_index==j] = hours_aux[j]
+				childcare_a_t[choices_index==j] = cc_a_aux[j]
+				childcare_b_t[choices_index==j] = cc_b_aux[j]
+		
 			#Saving
 			hours_matrix[:,periodt]=hours_t.copy()
-			childcare_matrix[:,periodt]=childcare_t.copy()
+			childcare_a_matrix[:,periodt]=childcare_a_t.copy()
+			childcare_b_matrix[:,periodt]=childcare_b_t.copy()
 
 			#Current income
 			self.change_util(self.param,self.N,self.x_w,self.x_m,
-				self.x_k,self.passign,nkids0,married0,hours_t,childcare_t,
-				self.agech_a,self.agech_b,self.d_childb,
+				self.x_k,self.passign,nkids0,married0,hours_t,childcare_a_t,
+				childcare_b_t,self.agech_a,self.agech_b,self.d_childa,self.d_childb,
 				self.hours_p,self.hours_f,self.wr,self.cs,self.ws)
 			
 			dincome0=self.model.dincomet(periodt,hours_t,wage0,married0,nkids0)['income']
 			dincome_matrix[:,periodt]=dincome0.copy()
 			nh_matrix[:,periodt]=self.model.dincomet(periodt,hours_t,wage0,married0,nkids0)['NH'].copy()
-			consumption0=self.model.consumptiont(periodt,hours_t,childcare_t,dincome0,
-				spouse_income0,married0,nkids0,wage0,free0,price0)['income_pc']
+			consumption0=self.model.consumptiont(periodt,hours_t,childcare_a_t,
+				childcare_b_t,dincome0,spouse_income0,married0,nkids0,wage0,free0,price0)['income_pc']
 			consumption_matrix[:,periodt]=consumption0.copy()
-			cs_cost_matrix[:,periodt]=self.model.consumptiont(periodt,hours_t,childcare_t,
-				dincome0,spouse_income0,married0,nkids0,wage0,free0,price0)['nh_cc_cost']
+			cs_cost_matrix[:,periodt]=self.model.consumptiont(periodt,hours_t,childcare_a_t,
+				childcare_b_t,dincome0,spouse_income0,married0,nkids0,wage0,free0,price0)['nh_cc_cost']
 
 			#SSRS measures
 			if periodt==2: 
@@ -288,7 +315,8 @@ class SimData:
 				nkids_t1=self.model.kidst(periodt+1,np.reshape(nkids0,(self.N,1)),
 					married0)+nkids0 #baseline kids + if they have a kid next period
 				
-				theta_t1=self.model.thetat(periodt,theta0,hours_t,childcare_t,consumption0) #theta at t+1 uses inputs at t
+				theta_t1=self.model.thetat(periodt,theta0,hours_t,childcare_a_t,
+				childcare_b_t,consumption0) #theta at t+1 uses inputs at t
 				epsilon_t1=self.model.epsilon(epsilon0)
 				wage_t1=self.model.waget(periodt+1,epsilon_t1)
 				free_t1=self.model.q_prob()
@@ -307,7 +335,8 @@ class SimData:
 
 				
 		return {'Choices': choice_matrix, 'Theta': theta_matrix,
-		 'Income': dincome_matrix, 'Spouse_income': spouse_income_matrix, 'Hours':hours_matrix, 'Childcare': childcare_matrix,
+		 'Income': dincome_matrix, 'Spouse_income': spouse_income_matrix, 'Hours':hours_matrix, 
+		 'Childcare_a': childcare_a_matrix,'Childcare_b': childcare_b_matrix,
 		 'Wage': wage_matrix, 'Uti_values_dic': util_values_dic,'Uti_values_c_dic': util_values_c_dic,
 		 'Marriage': marr_matrix, 'Kids': kids_matrix,'Consumption': consumption_matrix,
 		 'SSRS_t2':ssrs_t2,'SSRS_t5':ssrs_t5, 'nh_matrix':nh_matrix, 'cs_cost_matrix':cs_cost_matrix}

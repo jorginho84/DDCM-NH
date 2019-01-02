@@ -171,7 +171,7 @@ Recovering Child care and SSRS
 
 use "$databases/Youth_original2.dta", clear
 qui: do "$codes/data_youth.do"
-keep sampleid child agechild kid1dats p_radaym/* identifiers
+keep sampleid child agechild kid1dats kid2dats kid3dats p_radaym cq11 sdkidbd/* identifiers
 */ c68* c69* c70* c73 /*CC use and payments (year 2)
 */ piq113da  piq114* piq119a piq128a piq128b/* CC use and payments (year 5)    
 */ tq17a tq17b tq17c tq17h /*skills t1
@@ -179,10 +179,9 @@ keep sampleid child agechild kid1dats p_radaym/* identifiers
 destring c68* c69* c70* c73 piq113da  piq114* piq119a piq128a piq128b tq17a tq17b tq17c tq17h t2q17a etsq13a, force replace
 
 *Age at baseline
-destring kid1dats, force replace
-format kid1dats %td
-gen year_birth=yofd(kid1dats)
-drop kid1dats
+destring sdkidbd, force replace
+format sdkidbd %td
+gen year_birth=yofd(sdkidbd)
 
 *child age at baseline
 gen year_ra = substr(string(p_radaym),1,2)
@@ -190,10 +189,11 @@ destring year_ra, force replace
 replace year_ra = 1900 + year_ra
 
 gen age_t0=  year_ra - year_birth
+
 *due to rounding errors, ages 0 and 11 are 1 and 10
 replace age_t0=1 if age_t0==0
 replace age_t0=10 if age_t0==11
-
+drop if age_t0 < 1 | age_t0 > 11
 
 
 /*
@@ -286,7 +286,6 @@ drop _merge
 sort sampleid child
 tempfile cc_data
 save `cc_data', replace
-
 
 ***************************************************************************************
 ***************************************************************************************
@@ -592,6 +591,9 @@ tostring child, force replace
 replace child = "A" if child == "1"
 replace child = "B" if child == "2"
 reshape wide skills* age_t0 d_CC*, i(sampleid) j(child) string
+
+*Dummy for the presence of child #1
+gen d_childA = age_t0A != .
 
 *Dummy for the presence of child #2
 gen d_childB = age_t0B != .

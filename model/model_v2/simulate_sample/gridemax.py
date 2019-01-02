@@ -14,16 +14,18 @@ def grid():
 	"""
 
 	#Lists of state variables (that determine emax)
-	nkids_grid=np.linspace(1,5,4).astype(int).tolist() 
+	nkids_grid=np.linspace(1,5,3).astype(int).tolist() 
 	married_grid=[i for i in range(0,2)]
 	passign_grid=[i for i in range(0,2)]
-	age_grid=np.linspace(18,45,5).astype(int).tolist() 
+	age_grid=np.linspace(18,45,4).astype(int).tolist() 
 	hs_grid=[i for i in range(0,2)]
 	d_childb_grid=[i for i in range(0,2)]
+	d_childa_grid=[i for i in range(0,2)]
 		
-	iterables=[nkids_grid,married_grid, passign_grid,age_grid,hs_grid,d_childb_grid]
+	iterables=[nkids_grid,married_grid, passign_grid,age_grid,hs_grid,d_childa_grid,d_childb_grid]
 	#copy the names here
-	keys=['nkids_grid','married_grid','passign_grid','age_grid','hs_grid','d_childb_grid']
+	keys=['nkids_grid','married_grid','passign_grid','age_grid','hs_grid',
+	'd_childa_grid','d_childb_grid']
 
 	#Array of combinations (cartesian product)
 	it=1
@@ -48,6 +50,7 @@ def grid():
 	passign = np.reshape(np.array(dict_grid['passign_grid']).astype(float),(grid.shape[0],1) )
 	age = np.reshape(np.array(dict_grid['age_grid']).astype(float),(grid.shape[0],1) )
 	d_hs = np.reshape(np.array(dict_grid['hs_grid']).astype(float),(grid.shape[0],1) )
+	d_childa = np.reshape(np.array(dict_grid['d_childa_grid']).astype(float),(grid.shape[0],1) )
 	d_childb = np.reshape(np.array(dict_grid['d_childb_grid']).astype(float),(grid.shape[0],1) )
 	
 
@@ -75,5 +78,6 @@ def grid():
 	
 	return { 'passign': passign,'theta0_a': theta0_a,'theta0_b': theta0_b,'nkids0': nkids0,
 		'married0': married0,'x_w': x_w, 'x_m':x_m, 'x_k': x_k, 'x_wmk': x_wmk,
-		'agech_a':agech_a,'agech_b':agech_b,'d_childb': d_childb,'epsilon_1':epsilon_1 }
+		'agech_a':agech_a,'agech_b':agech_b,'d_childa': d_childa,
+		'd_childb': d_childb,'epsilon_1':epsilon_1 }
 

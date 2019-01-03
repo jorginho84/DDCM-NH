@@ -14,10 +14,10 @@ def grid():
 	"""
 
 	#Lists of state variables (that determine emax)
-	nkids_grid=np.linspace(1,5,3).astype(int).tolist() 
+	nkids_grid=np.linspace(1,5,2).astype(int).tolist() 
 	married_grid=[i for i in range(0,2)]
 	passign_grid=[i for i in range(0,2)]
-	age_grid=np.linspace(18,45,4).astype(int).tolist() 
+	age_grid=np.linspace(18,45,5).astype(int).tolist() 
 	hs_grid=[i for i in range(0,2)]
 	d_childb_grid=[i for i in range(0,2)]
 	d_childa_grid=[i for i in range(0,2)]

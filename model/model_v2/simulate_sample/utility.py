@@ -27,7 +27,8 @@ class Parameters:
 
 	"""
 	def __init__(self,alphap,alphaf,eta,gamma1,gamma2,gamma3,
-		tfp,sigma2theta,varphi,rho_theta_epsilon,rho_theta_ab,betaw,beta_spouse,
+		tfp,sigma2theta,varphi,rho_theta_epsilon,rho_theta_ab,betaw,
+		beta_spouse,c_emp_spouse,
 		betam,betak,eitc,afdc,snap,cpi,
 		lambdas,kappas,pafdc,psnap,mup):
 
@@ -37,7 +38,7 @@ class Parameters:
 		self.rho_theta_epsilon,self.rho_theta_ab=rho_theta_epsilon,rho_theta_ab
 		self.sigma2theta,self.varphi=sigma2theta,varphi
 		self.betaw,self.betam,self.betak=betaw,betam,betak
-		self.beta_spouse=beta_spouse
+		self.beta_spouse,self.c_emp_spouse=beta_spouse,c_emp_spouse
 		self.eitc,self.afdc,self.snap,self.cpi=eitc,afdc,snap,cpi
 		self.lambdas,self.kappas=lambdas,kappas
 		self.pafdc,self.psnap=pafdc,psnap
@@ -155,6 +156,17 @@ class Utility(object):
 
 		return np.exp( np.dot(xw,betas)+ epsilon)
 
+	def employment_spouse(self):
+		"""
+		Computes income process for males
+
+		"""
+		v = np.random.randn(self.N)
+		boo_emp = v > self.param.c_emp_spouse
+		
+		return np.array(boo_emp)
+
+
 	def income_spouse(self):
 		"""
 		Computes income process for males
@@ -259,7 +271,7 @@ class Utility(object):
 		return  np.reshape(dummy,(self.N,1)) #1 if have a kid a t+1
 
 
-	def dincomet(self, periodt,hours,wage,marr,kid):
+	def dincomet(self, periodt,hours,wage,marr,kid,income_spouse,employment_spouse):
 		"""
 		Computes annual disposable income given weekly hours worked, hourly wage,
 		marital status and number of kids. 
@@ -274,10 +286,13 @@ class Utility(object):
 		""" 
 		
 		#from hourly wage to annual earnings
-		pwage=np.reshape(hours,self.N)*np.reshape(wage,self.N)*52
+		pwage = np.reshape(hours,self.N)*np.reshape(wage,self.N)*52
 
 		#To nominal prices (2003 prices)
-		pwage=pwage/(self.param.cpi[8]/self.param.cpi[periodt])
+		pwage = pwage/(self.param.cpi[8]/self.param.cpi[periodt])
+
+		#family earnings: used for eligibility
+		pwage_family = pwage + income_spouse*employment_spouse
 
 		#the EITC parameters
 		dic_eitc=self.param.eitc[periodt]
@@ -317,10 +332,17 @@ class Utility(object):
 			else:
 				kid_boo=kid[:,0]>=nn+1
 			
-			eitc_fed[(pwage<b1[nn]) & (kid_boo) ]=r1[nn]*pwage[(pwage<b1[nn]) & (kid_boo)]
-			eitc_fed[(pwage>=b1[nn]) & (pwage<b2[nn]) & (kid_boo)]=r1[nn]*b1[nn]
-			eitc_fed[(pwage>=b2[nn]) & (kid_boo)]=np.maximum(r1[nn]*b1[nn]-r2[nn]*(pwage[(pwage>=b2[nn]) & (kid_boo)]-b2[nn]),np.zeros(pwage[(pwage>=b2[nn]) & (kid_boo)].shape[0]))
-			eitc_state[kid_boo]=state_eitc[nn]*eitc_fed[kid_boo]
+			for k in range(0,1): #spouse employment
+
+				if k == 0:
+					boo_spouse = employment_spouse == 0
+				else:
+					boo_spouse = employment_spouse == 1
+
+				eitc_fed[(pwage_family<b1[nn]) & (kid_boo) & (boo_spouse) ]=r1[nn]*pwage_family[(pwage_family<b1[nn]) & (kid_boo) & (boo_spouse)]
+				eitc_fed[(pwage_family>=b1[nn]) & (pwage_family<b2[nn][k] & (boo_spouse)) & (kid_boo)]=r1[nn]*b1[nn]
+				eitc_fed[(pwage_family>=b2[nn][k]) & (kid_boo) & (boo_spouse)]=np.maximum(r1[nn]*b1[nn]-r2[nn]*(pwage_family[(pwage_family>=b2[nn][k]) & (kid_boo) & (boo_spouse)]-b2[nn][k]),np.zeros(pwage_family[(pwage_family>=b2[nn][k]) & (kid_boo) & (boo_spouse)].shape[0]))
+				eitc_state[kid_boo]=state_eitc[nn]*eitc_fed[kid_boo]
 
 		dincome_eitc=pwage+eitc_fed+eitc_state
 
@@ -328,7 +350,7 @@ class Utility(object):
 
 		if periodt<=2:
 
-			#the wage subsidy
+			#the wage subsidy: individual (not family) earnings
 			wsubsidy=np.zeros(self.N)
 			wsubsidy[pwage<=8500]=0.25*pwage[pwage<=8500]
 			wsubsidy[pwage>8500]=3825-0.2*pwage[pwage>8500]
@@ -353,10 +375,10 @@ class Utility(object):
 			#r_e: phase-out rate
 			beta_aux=xstar/(8500-bar_e)
 
-			#per-child allowance
-			childa=np.zeros(self.N) 
-			childa[pwage<=8500]=xstar[pwage<=8500].copy()
-			childa[pwage>8500]=xstar[pwage>8500] - beta_aux[pwage>8500]*(pwage[pwage>8500] - 8500)
+			#per-child allowance: includes spouse income
+			childa=np.zeros(self.N)
+			childa[pwage_family<=8500]=xstar[pwage_family<=8500].copy()
+			childa[pwage_family>8500]=xstar[pwage_family>8500] - beta_aux[pwage_family>8500]*(pwage_family[pwage_family>8500] - 8500)
 			childa[childa<0]=0
 
 			#disposable income
@@ -389,9 +411,9 @@ class Utility(object):
 				cutoff[boo_k] = afdc_param['cutoff'][nf-1]
 				benefit_std[boo_k] = afdc_param['benefit_std'][nf-1]
 
-			boo_eli=(pwage<=cutoff) & (afdc_takeup==1)
+			boo_eli=(pwage_family<=cutoff) & (afdc_takeup==1)
 			boo_min=benefit_std<=benefit_std-(pwage - 30)*.67
-			afdc_benefit[boo_eli]=(1-boo_min[boo_eli])*(benefit_std[boo_eli]-(pwage[boo_eli] - 30)*.67) + boo_min[boo_eli]*benefit_std[boo_eli]
+			afdc_benefit[boo_eli]=(1-boo_min[boo_eli])*(benefit_std[boo_eli]-(pwage_family[boo_eli] - 30)*.67) + boo_min[boo_eli]*benefit_std[boo_eli]
 			afdc_benefit[afdc_benefit<0]=0
 			#boo_max=afdc_benefit>0
 			#dincome[boo_max]=dincome[boo_max] + afdc_benefit[boo_max]
@@ -423,20 +445,22 @@ class Utility(object):
 
 				max_b[nfam==nf] = snap_param['max_benefit'][7,periodt] + snap_param['max_benefit'][8,periodt]*nfam[nfam==nf]
 			
-		net_inc = pwage + afdc_benefit + nh_supp - std_deduction
+		net_inc = pwage_family + afdc_benefit + nh_supp - std_deduction
 		boo_net_eli = net_inc <= net_i_test
-		boo_gro_eli = pwage <= gross_i_test
+		boo_gro_eli = pwage_family <= gross_i_test
 		boo_unemp=hours==0
 		snap = snap_takeup*((max_b - 0.3*net_inc)*boo_net_eli*boo_gro_eli*(1-boo_unemp) + boo_unemp*(max_b - 0.3*net_inc))*snap_takeup
 		snap[snap<0]=0
 
+		#income of household less spouse's earnings
 		dincome = pwage + afdc_benefit + nh_supp + snap + eitc_fed + eitc_state
 
 		#Back to real prices
 		return {'income': dincome*(self.param.cpi[8]/self.param.cpi[periodt]),
 		'NH': nh_supp, 'EITC_NH': nh_supp + eitc_fed + eitc_state}
 
-	def consumptiont(self,periodt,h,cc_a,cc_b,dincome,income_spouse,marr,nkids,wage, free,price):
+	def consumptiont(self,periodt,h,cc_a,cc_b,dincome,income_spouse,employment_spouse,
+		marr,nkids,wage, free,price):
 		"""
 		Computes per-capita consumption:
 		(income - cc_payment)/family size
@@ -500,7 +524,7 @@ class Utility(object):
 		#spouse income only if married
 		income_spouse[marr == 0] = 0
 
-		incomepc=(dincome + income_spouse - (cc_a*young_a + cc_b*young_b)*cc_cost)/(ones+nkids+marr)
+		incomepc=(dincome + income_spouse*employment_spouse - (cc_a*young_a + cc_b*young_b)*cc_cost)/(ones+nkids+marr)
 		incomepc[incomepc <= 0] = 1
 
 
@@ -568,7 +592,7 @@ class Utility(object):
 		return [np.exp(theta1_a),np.exp(theta1_b)]
 
 
-	def Ut(self,periodt,dincome,income_spouse,marr,cc_a,cc_b,nkids,ht,thetat,
+	def Ut(self,periodt,dincome,income_spouse,employment_spouse,marr,cc_a,cc_b,nkids,ht,thetat,
 		wage,free,price):
 		"""
 		Computes current-period utility
@@ -586,7 +610,7 @@ class Utility(object):
 		d_unemp=ht==0
 
 		#Consumption: depends on ra, cc, and period
-		ct=self.consumptiont(periodt,ht,cc_a,cc_b,dincome,income_spouse,
+		ct=self.consumptiont(periodt,ht,cc_a,cc_b,dincome,income_spouse,employment_spouse,
 			marr,nkids,wage,free,price)['income_pc']
 
 		#parameters
@@ -655,18 +679,19 @@ class Utility(object):
 		return z
 	
 	
-	def simulate(self,periodt,wage0,free,price,theta0,income_spouse):
+	def simulate(self,periodt,wage0,free,price,theta0,income_spouse,employment_spouse):
 		"""
 		Takes states (theta0, nkids0, married0, wage0) and given choices
 		(self: hours and childcare) to compute current-period utility value.
 
 		"""
 
-		income=self.dincomet(periodt, self.hours,wage0,self.married0,self.nkids0)['income']
+		income=self.dincomet(periodt, self.hours,wage0,self.married0,self.nkids0,income_spouse,employment_spouse)['income']
 		#theta=self.thetat(periodt,self.theta0,self.hours,self.childcare,income,self.married0,self.nkids0)
 		
 
-		return self.Ut(periodt,income,income_spouse,self.married0,self.cc_a,self.cc_b,
+		return self.Ut(periodt,income,income_spouse,employment_spouse,
+			self.married0,self.cc_a,self.cc_b,
 			self.nkids0,self.hours,theta0,wage0,free,price)
 
 	

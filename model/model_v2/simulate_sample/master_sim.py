@@ -59,12 +59,14 @@ eta = betas_nelder[0]
 alphap = betas_nelder[1]
 alphaf = betas_nelder[2]
 
-#wage process: female
+#wage process en employment processes: female
 wagep_betas = np.array([betas_nelder[3],betas_nelder[4],betas_nelder[5],
 	betas_nelder[6],betas_nelder[7]]).reshape((5,1))
 
 #income process: male
 income_male_betas = np.array([6.8,.33,.32]).reshape((3,1))
+
+c_emp_spouse = .3
 
 #Production function
 gamma1 = betas_nelder[8]
@@ -164,7 +166,8 @@ d_childa=x_df[['d_childA']].values
 
 #Defines the instance with parameters
 param=util.Parameters(alphap,alphaf,eta,gamma1,gamma2,gamma3,
-	tfp,sigma2theta,varphi,rho_theta_epsilon,rho_theta_ab,wagep_betas,income_male_betas,
+	tfp,sigma2theta,varphi,rho_theta_epsilon,rho_theta_ab,wagep_betas,
+	income_male_betas,c_emp_spouse,
 	marriagep_betas, kidsp_betas, eitc_list,
 	afdc_list,snap_list,cpi,lambdas,kappas,pafdc,psnap,mup)
 

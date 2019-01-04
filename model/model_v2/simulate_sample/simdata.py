@@ -49,7 +49,8 @@ class SimData:
 
 		
 
-	def choice(self,periodt,bigt,theta0,nkids0,married0,wage0,epsilon0,free0,price0):
+	def choice(self,periodt,bigt,theta0,nkids0,married0,wage0,epsilon0,free0,price0,
+		spouse_income0,spouse_employment0):
 		"""
 		Takes a set of state variables and computes the utility +option value
 		of different set of choices for a given periodt
@@ -104,13 +105,13 @@ class SimData:
 				self.hours_p,self.hours_f,self.wr,self.cs,self.ws)
 
 			#current consumption to get future theta
-			spouse_income0 = self.model.income_spouse()
-			dincome0=self.model.dincomet(periodt,hours,wage0,married0,nkids0)['income']
+			dincome0=self.model.dincomet(periodt,hours,wage0,married0,nkids0,spouse_income0,spouse_employment0)['income']
 			consumption0=self.model.consumptiont(periodt,hours,childcare_a,
-				childcare_b,dincome0,spouse_income0,married0,
+				childcare_b,dincome0,spouse_income0,spouse_employment0,married0,
 				nkids0,wage0,free0,price0)['income_pc']
 
-			util_values[:,j]=self.model.simulate(periodt,wage0,free0,price0,theta0,spouse_income0)
+			util_values[:,j]=self.model.simulate(periodt,wage0,free0,price0,
+				theta0,spouse_income0,spouse_employment0)
 			util_values_c[:,j]=util_values[:,j].copy()
 
 
@@ -180,6 +181,7 @@ class SimData:
 		consumption_matrix=np.zeros((self.N,n_periods))
 		wage_matrix=np.zeros((self.N,n_periods))
 		spouse_income_matrix=np.zeros((self.N,n_periods))
+		spouse_employment_matrix=np.zeros((self.N,n_periods))
 		hours_matrix=np.zeros((self.N,n_periods))
 		childcare_a_matrix=np.zeros((self.N,n_periods))
 		childcare_b_matrix=np.zeros((self.N,n_periods))
@@ -226,12 +228,14 @@ class SimData:
 		free0=self.model.q_prob()
 		price0=self.model.price_cc()
 		spouse_income0 = self.model.income_spouse()
+		spouse_employment0 = self.model.employment_spouse()
 				
 		#Generating data
 		for periodt in range(0,n_periods):
 			
 			wage_matrix[:,periodt]=wage0.copy()
 			spouse_income_matrix[:,periodt]=spouse_income0.copy()
+			spouse_employment_matrix[:,periodt]=spouse_employment0.copy()
 			theta_matrix[0][:,periodt]=theta0[0].copy()
 			theta_matrix[1][:,periodt]=theta0[1].copy()
 			kids_matrix[:,periodt]=nkids0[:,0].copy()
@@ -243,12 +247,10 @@ class SimData:
 			
 			#Use self.choice function to obtain choices and saving u_ijt
 			#array of J columns
-			utiliy_values=self.choice(periodt,n_periods-1,theta0,nkids0,married0,wage0,
-				epsilon0,free0,price0)[0]
-			utiliy_values_c=self.choice(periodt,n_periods-1,theta0,nkids0,married0,wage0,
-				epsilon0,free0,price0)[1]
-			util_values_dic.append(utiliy_values)
-			util_values_c_dic.append(utiliy_values_c)
+			utils = self.choice(periodt,n_periods-1,theta0,nkids0,married0,wage0,
+				epsilon0,free0,price0,spouse_income0,spouse_employment0)
+			util_values_dic.append(utils[0])
+			util_values_c_dic.append(utils[1])
 
 			#Maximization: restricting choice sets according to age
 			agech_a = np.zeros((self.N))
@@ -260,10 +262,11 @@ class SimData:
 			choices_index=np.zeros(self.N)
 
 			#restricting choice sets
-			util_young_b = np.concatenate((utiliy_values[(young_a==0) & (young_b==1),0:3],utiliy_values[(young_a==0) & (young_b==1),6:9]),axis=1)
-			util_young_a = utiliy_values[(young_a==1) & (young_b==0),0:6]
-			util_young_noone = utiliy_values[(young_a==0) & (young_b==0),0:3]
-			util_young_all = utiliy_values[(young_a==1) & (young_b==1)]
+			util_young_b = np.concatenate((utils[0][(young_a==0) & (young_b==1),0:3],
+				utils[0][(young_a==0) & (young_b==1),6:9]),axis=1)
+			util_young_a = utils[0][(young_a==1) & (young_b==0),0:6]
+			util_young_noone = utils[0][(young_a==0) & (young_b==0),0:3]
+			util_young_all = utils[0][(young_a==1) & (young_b==1)]
 
 			choices_index[(young_a==0) & (young_b==1) ] = np.argmax(util_young_b,axis=1) #old b, young b
 			choices_index[(young_a==1) & (young_b==0) ] = np.argmax(util_young_a,axis=1) #young a, old b
@@ -289,14 +292,18 @@ class SimData:
 				childcare_b_t,self.agech_a,self.agech_b,self.d_childa,self.d_childb,
 				self.hours_p,self.hours_f,self.wr,self.cs,self.ws)
 			
-			dincome0=self.model.dincomet(periodt,hours_t,wage0,married0,nkids0)['income']
+			dincome0=self.model.dincomet(periodt,hours_t,wage0,married0,nkids0,
+				spouse_income0,spouse_employment0)['income']
 			dincome_matrix[:,periodt]=dincome0.copy()
-			nh_matrix[:,periodt]=self.model.dincomet(periodt,hours_t,wage0,married0,nkids0)['NH'].copy()
+			nh_matrix[:,periodt]=self.model.dincomet(periodt,hours_t,wage0,married0,
+				nkids0,spouse_income0,spouse_employment0)['NH'].copy()
 			consumption0=self.model.consumptiont(periodt,hours_t,childcare_a_t,
-				childcare_b_t,dincome0,spouse_income0,married0,nkids0,wage0,free0,price0)['income_pc']
+				childcare_b_t,dincome0,spouse_income0,spouse_employment0,
+				married0,nkids0,wage0,free0,price0)['income_pc']
 			consumption_matrix[:,periodt]=consumption0.copy()
 			cs_cost_matrix[:,periodt]=self.model.consumptiont(periodt,hours_t,childcare_a_t,
-				childcare_b_t,dincome0,spouse_income0,married0,nkids0,wage0,free0,price0)['nh_cc_cost']
+				childcare_b_t,dincome0,spouse_income0,spouse_employment0,
+				married0,nkids0,wage0,free0,price0)['nh_cc_cost']
 
 			#SSRS measures
 			if periodt==2: 
@@ -322,6 +329,7 @@ class SimData:
 				free_t1=self.model.q_prob()
 				price_t1=self.model.price_cc()
 				spouse_income1 = self.model.income_spouse()
+				spouse_employment1 = self.model.employment_spouse()
 
 				#updating
 				married0=married_t1.copy()
@@ -332,6 +340,7 @@ class SimData:
 				free0=free_t1.copy()
 				price0=price_t1.copy()
 				spouse_income0=spouse_income1.copy()
+				spouse_employment0=spouse_income1.copy()
 
 				
 		return {'Choices': choice_matrix, 'Theta': theta_matrix,

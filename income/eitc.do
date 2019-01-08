@@ -189,6 +189,11 @@ scalar state_2_2002=14/100
 *3 children
 scalar state_3_2002=43/100
 
+**Married
+scalar b2_1_2002_m = b2_1_2002 + 1000
+
+scalar b2_2_2002_m = b2_2_2002 + 1000
+
 ***2003***
 
 *1 child
@@ -207,3 +212,8 @@ scalar state_2_2003=14/100
 
 *3 children
 scalar state_3_2003=43/100
+
+*Married
+scalar b2_1_2003_m = b2_1_2003 + 1000
+
+scalar b2_2_2003_m = b2_2_2003 + 1000

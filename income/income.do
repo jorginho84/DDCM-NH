@@ -14,9 +14,9 @@ To compute effects by employment status: change local 'emp"
 
 */
 
-global databases "/mnt/Research/nealresearch/new-hope-secure/newhopemount/Data/databases"
-global codes "/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes"
-global results "/mnt/Research/nealresearch/new-hope-secure/newhopemount/results"
+global databases "/home/jrodriguez/NH-secure"
+global codes "/home/jrodriguez/NH_HC/codes"
+global results "/home/jrodriguez/NH_HC/results/income"
 
 
 local SE="hc2"
@@ -38,7 +38,7 @@ local controls=0
 *Choose: 3 if total
 local emp=3
 
-use "$results/Income/data_income.dta", clear
+use "$results/data_income.dta", clear
 
 drop total_income_y0 gross_y0 gross_nominal_y0 grossv2_y0 employment_y0 /*
 */ fs_y0 afdc_y0 sup_y0 eitc_state_y0 eitc_fed_y0
@@ -262,7 +262,7 @@ forvalues x=0/2{/*the sample loop*/
 
 
 *The Table
-file open tab_income using "$results/Income/table_income.tex", write replace
+file open tab_income using "$results\table_income.tex", write replace
 file write tab_income "\begin{tabular}{llccccc}" _n
 file write tab_income "\hline" _n
 file write tab_income "\multicolumn{1}{l}{Estimate} && Young  && Old   && Overall \bigstrut\\" _n
@@ -347,7 +347,7 @@ forvalues x=0/2{/*the sample loop*/
 	
 }
 
-file open tab_dec using "$results/Income/table_income_decomposition.tex", write replace
+file open tab_dec using "$results\table_income_decomposition.tex", write replace
 file write tab_dec
 file write tab_dec "\begin{tabular}{llccccc}"_n
 file write tab_dec "\hline"_n
@@ -428,7 +428,7 @@ twoway (connected effect quan,msymbol(circle) mlcolor(blue) mfcolor(white))/*
 */ scheme(s2mono) ylabel(, nogrid) yline(0, lpattern(solid) lcolor(black)) scale(1.2) 
 
 
-graph export "$results/Income/earnings_QTE.pdf", as(pdf) replace
+graph export "$results\earnings_QTE.pdf", as(pdf) replace
 
 
 restore
@@ -507,7 +507,7 @@ twoway (bar effect year2) (rcap ub lb year2) /* These are the mean effect and th
 */ graphregion(fcolor(white) ifcolor(white) lcolor(white) ilcolor(white)) plotregion(fcolor(white) lcolor(white)  ifcolor(white) ilcolor(white))  /*
 */ scheme(s2mono) ylabel(, nogrid) yline(0, lpattern(solid) lcolor(black))
 
-graph export "$results/Income/income_diffdiff.pdf", as(pdf) replace
+graph export "$results\income_diffdiff.pdf", as(pdf) replace
 
 
 

@@ -39,8 +39,6 @@ Recovering control variables
 qui: do "$codes/model/aux_model/Xs.do"
 
 
-
-
 *ethnic dummies (baseline: black)
 forvalues x=2/5{
 	gen d_ethnic_`x'=ethnic==`x'
@@ -248,21 +246,25 @@ replace d_CC2_t4=0 if  max_months_t4==piq114aa | max_months_t4==piq114ba | max_m
 replace d_CC2_t4=. if max_months_t4==.
 
 
-*Payments child care
+*Payments child care: assuming one price only
 * year 1
 rename c73 cc_pay_t1
-replace cc_pay_t1=0 if d_CC2_t1==0
+replace cc_pay_t1 = 0 if d_CC2_t1 == 0
+replace cc_pay_t1 = 0.57*0 + (1-0.57)*750 if d_CC2_t1 == 1
 
 
 *Year 4
-rename piq128a cc_pay_t4 
+rename piq128a cc_pay_t4
+replace cc_pay_t4 = 0 if d_CC2_t4 == 0
+replace cc_pay_t4 = 0.57*0 + (1-0.57)*750 if d_CC2_t4 == 1
+/*
 replace cc_pay_t4=13 if piq128b==1
 replace cc_pay_t4=38 if piq128b==2
 replace cc_pay_t4=75 if piq128b==3
 replace cc_pay_t4=125 if piq128b==4
 replace cc_pay_t4=175 if piq128b==5
 replace cc_pay_t4=200 if piq128b==6
-
+*/
 
 rename tq17b skills_m1_t2
 rename tq17c skills_m2_t2
@@ -276,7 +278,7 @@ rename tq17a skills_t2
 rename t2q17a skills_t5
 rename etsq13a skills_t8
 
-keep sampleid child d_CC* skills_* age_t0 
+keep sampleid child d_CC* skills_* age_t0 cc_pay*
 sort sampleid child
 
 merge 1:1 sampleid child using `data_control'
@@ -497,7 +499,7 @@ save `data_hours', replace
 *Recover total income by year since RA from data_income.do
 **************************************************************
 
-use "/home/jrodriguez/understanding_NH/results/Income/data_income.dta", clear
+use "/home/jrodriguez/NH_HC/results/income/data_income.dta", clear
 merge 1:m sampleid using `data_hours'
 keep if _merge==3
 drop _merge
@@ -505,7 +507,7 @@ drop _merge
 *Note: total_income_y0 is actually one year behind!!
 
 drop total_income_y0 gross_y0 gross_nominal_y0 grossv2_y0 employment_y0 /*
-*/ fs_y0 afdc_y0 sup_y0
+*/ fs_y0 afdc_y0 sup_y0 income_spouse_y0
 forvalues x=1/9{
 	local z=`x'-1
 	rename total_income_y`x' total_income_y`z'
@@ -516,6 +518,7 @@ forvalues x=1/9{
 	rename afdc_y`x' afdc_y`z'
 	rename fs_y`x' fs_y`z'
 	rename sup_y`x' sup_y`z'
+	rename income_spouse_y`x' income_spouse_y`z'
 
 }
 
@@ -573,7 +576,7 @@ keep sampleid child d_RA p_assign age_ra age_ra2 d_marital* d_HS d_HS2 c91 /*
 */ nkids* hours_t* d_CC* constant emp_baseline delta_emp skills_* c1 piinvyy /*
 */ epiinvyy total_income_y* married*  gross_y* gross_nominal_y* grossv2_y* /*
 */ age_t0 afdc_y* fs_y* sup_y* higrade d_ethnic* d_black /*
-*/ lincome_spouse dummy_sp_work d_women
+*/ lincome_spouse dummy_sp_work d_women income_spouse_y2 cc_pay*
 
 keep if d_women == 1
 
@@ -590,7 +593,7 @@ outsheet using "$results/sample_model_theta.csv", comma  replace
 tostring child, force replace
 replace child = "A" if child == "1"
 replace child = "B" if child == "2"
-reshape wide skills* age_t0 d_CC*, i(sampleid) j(child) string
+reshape wide skills* age_t0 d_CC* cc_pay_t*, i(sampleid) j(child) string
 
 *Dummy for the presence of child #1
 gen d_childA = age_t0A != .

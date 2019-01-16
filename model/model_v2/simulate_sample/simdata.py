@@ -130,7 +130,7 @@ class SimData:
 
 			
 				data_int_t1=np.concatenate((np.reshape(np.log(theta_t1[0]),(self.N,1)),
-					np.reshape(np.log(theta_t1[0]),(self.N,1)),
+					np.reshape(np.log(theta_t1[1]),(self.N,1)),
 					np.reshape(nkids_t1,(self.N,1)),married_t1,
 					np.reshape(np.square(np.log(theta_t1[0])),(self.N,1)),
 					np.reshape(np.square(np.log(theta_t1[1])),(self.N,1)),
@@ -340,11 +340,12 @@ class SimData:
 				free0=free_t1.copy()
 				price0=price_t1.copy()
 				spouse_income0=spouse_income1.copy()
-				spouse_employment0=spouse_income1.copy()
+				spouse_employment0=spouse_employment1.copy()
 
 				
 		return {'Choices': choice_matrix, 'Theta': theta_matrix,
-		 'Income': dincome_matrix, 'Spouse_income': spouse_income_matrix, 'Hours':hours_matrix, 
+		 'Income': dincome_matrix, 'Spouse_income': spouse_income_matrix, 
+		 'Spouse_employment_matrix': spouse_employment_matrix, 'Hours':hours_matrix, 
 		 'Childcare_a': childcare_a_matrix,'Childcare_b': childcare_b_matrix,
 		 'Wage': wage_matrix, 'Uti_values_dic': util_values_dic,'Uti_values_c_dic': util_values_c_dic,
 		 'Marriage': marr_matrix, 'Kids': kids_matrix,'Consumption': consumption_matrix,

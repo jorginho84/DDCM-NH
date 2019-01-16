@@ -78,17 +78,17 @@ class SimData:
 		hours_aux  = [0,self.hours_p,self.hours_f,
 					0,self.hours_p,self.hours_f,
 					0,self.hours_p,self.hours_f,
-					0,self.hours_p,self.hours_f,]
+					0,self.hours_p,self.hours_f]
 
 		cc_a_aux  = [0,0,0,
 					1,1,1,
 					0,0,0,
-					1,1,1,]
+					1,1,1]
 
 		cc_b_aux  = [0,0,0,
 					0,0,0,
 					1,1,1,
-					1,1,1,]
+					1,1,1]
 
 		#The choice loop
 		for j in range(0,J):
@@ -196,17 +196,17 @@ class SimData:
 		hours_aux  = [0,self.hours_p,self.hours_f,
 					0,self.hours_p,self.hours_f,
 					0,self.hours_p,self.hours_f,
-					0,self.hours_p,self.hours_f,]
+					0,self.hours_p,self.hours_f]
 
 		cc_a_aux  = [0,0,0,
 					1,1,1,
 					0,0,0,
-					1,1,1,]
+					1,1,1]
 
 		cc_b_aux  = [0,0,0,
 					0,0,0,
 					1,1,1,
-					1,1,1,]
+					1,1,1]
 
 		#initialize state variables
 		married0=self.married0.copy()

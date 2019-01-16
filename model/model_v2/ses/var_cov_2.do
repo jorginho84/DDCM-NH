@@ -22,8 +22,8 @@ clear mata
 set more off
 set maxvar 15000
 
-global results "/mnt/Research/nealresearch/new-hope-secure/newhopemount/results"
-global codes "/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/aux_model" /*this is where I compute aux moments*/
+global results "/home/jrodriguez/NH_HC/results"
+global codes "/home/jrodriguez/NH_HC/codes/model/aux_model" /*this is where I compute aux moments*/
 
 set seed 2828
 local draws = 1000
@@ -33,22 +33,22 @@ program betas, rclass
 	version 13
 	args num_mom
 	preserve
-	qui: do "$codes/utility_aux_2.do"
+	qui: do "$codes/utility_aux.do"
 	restore
 	preserve
-	qui: do "$codes/wage_p_2.do"
+	qui: do "$codes/wage_p.do"
 	restore
 	preserve
-	qui: do "$codes/theta_aux_2.do"
+	qui: do "$codes/theta_aux.do"
 	restore
 
-	mat betas= beta_utility\beta_wage\betas_theta
+	mat betas= beta_utility\beta_wage\beta_spouse\beta_employment_spouse\betas_theta
 	forvalues x=1/`num_mom'{
 		return scalar mom`x' = betas[`x',1]
 	}
 end
 
-use "/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/sample_model_v2.dta", clear
+use "/home/jrodriguez/NH_HC/results/Model/sample_model.dta", clear
 
 bootstrap /*
 */ mom1=r(mom1) /*
@@ -73,7 +73,10 @@ bootstrap /*
 */ mom20=r(mom20) /*
 */ mom21=r(mom21) /*
 */ mom22=r(mom22) /*
-*/, cluster(sampleid) idcluster(newid) reps(`draws'): betas 22
+*/ mom23=r(mom23) /*
+*/ mom24=r(mom24) /*
+*/ mom25=r(mom25) /*
+*/, cluster(sampleid) idcluster(newid) reps(`draws'): betas 25
 
 
 

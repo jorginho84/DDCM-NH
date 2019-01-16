@@ -482,7 +482,7 @@ class Emaxt:
 
 		"""	
 		
-	
+		
 	
 		def emax_gen(j):
 			
@@ -510,7 +510,7 @@ class Emaxt:
 
 			return [emax_dic]
 
-		pool = ProcessPool(nodes=8)
+		pool = ProcessPool(nodes=10)
 
 		#7: old child (11 years old) solves for 7 emax 
 		#19: young child (0 years old) solves for 18 emax
@@ -523,8 +523,8 @@ class Emaxt:
 		
 		
 		
-	
-		"""	
+		"""
+			
 		list_emax = []
 		for j in range(7,19):
 			print ('Im in emax j ', j)

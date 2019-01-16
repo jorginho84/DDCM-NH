@@ -94,7 +94,7 @@ class Estimate:
 			np.random.seed(j+100)
 			return simdata_ins.fake_data(self.nperiods)
 
-		pool = ProcessPool(nodes=2)
+		pool = ProcessPool(nodes=10)
 		dics = pool.map(sample_gen,range(self.M))
 		pool.close()
 		pool.join()

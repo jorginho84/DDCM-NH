@@ -65,7 +65,6 @@ wagep_betas = np.array([betas_nelder[3],betas_nelder[4],betas_nelder[5],
 
 #income process: male
 income_male_betas = np.array([6.8,.33,.32]).reshape((3,1))
-
 c_emp_spouse = .3
 
 #Production function
@@ -73,13 +72,10 @@ gamma1 = betas_nelder[8]
 gamma2 = betas_nelder[9]
 gamma3 = betas_nelder[10]
 tfp = betas_nelder[11]
-gamma_spouse = .05
 sigma2theta = 1
 varphi = 0.5
 
 N=10
-
-
 
 kappas=[[betas_nelder[12],betas_nelder[13],betas_nelder[14],betas_nelder[15]],
 [betas_nelder[16],betas_nelder[17],betas_nelder[18],betas_nelder[19]]]
@@ -184,7 +180,8 @@ childcare = np.zeros(N)
 wr,cs,ws=1,1,1
 
 #This is an arbitrary initialization of Utility class
-model = util.Utility(param,N,x_w,x_m,x_k,passign,nkids0,married0,hours,childcare,childcare,
+model = util.Utility(param,N,x_w,x_m,x_k,passign,nkids0,
+	married0,hours,childcare,childcare,
 	agech0_a,agech0_b,d_childa,d_childb,hours_p,hours_f,wr,cs,ws)
 
 tracemalloc.start()
@@ -199,7 +196,8 @@ print ('')
 
 D=20
 np.random.seed(2)
-emax_function_in=emax.Emaxt(param,D,dict_grid,hours_p,hours_f,wr,cs,ws,model)
+emax_function_in=emax.Emaxt(param,D,dict_grid,hours_p,hours_f,
+	wr,cs,ws,model)
 emax_dic=emax_function_in.recursive() #8 emax (t=1 to t=8)
 
 
@@ -259,10 +257,11 @@ kids=data_dic['Kids']
 marr=data_dic['Marriage']
 income=data_dic['Income']
 spouse_income=data_dic['Spouse_income']
-
+spouse_employment=data_dic['Spouse_employment_matrix']
 
 #spouse income
 np.mean(spouse_income,axis=0)
+np.mean(spouse_employment,axis=0)
 
 #Expenditures
 np.count_nonzero(nh_sup[:,0])

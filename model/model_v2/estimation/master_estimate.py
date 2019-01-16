@@ -39,33 +39,42 @@ betas_nelder=np.load('/home/jrodriguez/NH_HC/results/Model/estimation/betas_mode
 #Number of periods where all children are less than or equal to 18
 nperiods = 8
 
+betas_nelder=np.load("/home/jrodriguez/NH_HC/results/Model/estimation/betas_modelv24.npy")
+
+
+#Number of periods where all children are less than or equal to 18
+nperiods = 8
+
 #Utility function
-eta = betas_nelder[0]
-alphap = -0.03
-alphaf = -0.1
+eta = betas_nelder[0] + 0.1
+alphap = betas_nelder[0]
+alphaf = betas_nelder[2] - 0.1 
 
 #wage process
-wagep_betas=np.array([betas_nelder[3],betas_nelder[4],betas_nelder[5],
+wagep_betas=np.array([betas_nelder[3],betas_nelder[4],1.65,
 	betas_nelder[6],betas_nelder[7]]).reshape((5,1))
 
 #income process: male
-income_male_betas = np.array([6.8,.33,.32]).reshape((3,1))
-c_emp_spouse = 0
+income_male_betas = np.array([0.2,7.2,.32]).reshape((3,1))
+c_emp_spouse = .8
+
 
 #Production function [young,old]
 gamma1= betas_nelder[8]
-gamma2= betas_nelder[9]
-gamma3= betas_nelder[10]
-tfp=betas_nelder[11]
-sigma2theta=1
-varphi = 0.5
+gamma2= 0.05
+gamma3= betas_nelder[10] + 0.02
+tfp=0.1
+sigma2theta = 1
+varphi = 0.7
+
 
 kappas=[[betas_nelder[12],betas_nelder[13],betas_nelder[14],betas_nelder[15]],
-[betas_nelder[16],betas_nelder[17],betas_nelder[18],betas_nelder[19]]]
+[betas_nelder[16]-0.15,betas_nelder[17]-0.15,betas_nelder[18]-0.15,
+betas_nelder[19]-0.15]]
 
 #initial theta
-rho_theta_epsilon = betas_nelder[20]
-rho_theta_ab = 0.2
+rho_theta_epsilon = 0.05
+rho_theta_ab = 0.25
 
 #All factor loadings are normalized
 lambdas=[1,1]
@@ -169,7 +178,7 @@ dict_grid=gridemax.grid()
 D=20
 
 #Number of samples to produce
-M=30
+M=200
 
 
 #How many hours is part- and full-time work
@@ -199,37 +208,41 @@ def sym(a):
 	return ((1/(1+np.exp(-a))) - 0.5)*2
 
 #the list of estimated parameters
-eta_opt=output.x[0]
-alphap_opt=output.x[1]
-alphaf_opt=output.x[2]
-betaw0=output.x[3]
-betaw1=output.x[4]
-betaw2=output.x[5]
-betaw3=np.exp(output.x[6])
-betaw4=output.x[7]
-gamma1_opt=output.x[8]
-gamma2_opt=output.x[9]
-gamma3_opt=output.x[10]
-tfp_opt=output.x[11]
-kappas_00=output.x[12]
-kappas_01=output.x[13]
-kappas_02=output.x[14]
-kappas_03=output.x[15]
-kappas_10=output.x[16]
-kappas_11=output.x[17]
-kappas_12=output.x[18]
-kappas_13=output.x[19]
-rho_theta_epsilon_opt = sym(output.x[20])
-
-
+eta_opt = output.x[0]
+alphap_opt = output.x[1]
+alphaf_opt = output.x[2]
+betaw0 = output.x[3]
+betaw1 = output.x[4]
+betaw2 = output.x[5]
+betaw3 = np.exp(output.x[6])
+betaw4 = output.x[7]
+beta_s1 = output.x[8]
+beta_s2 = output.x[9]
+beta_s3 = output.x[10]
+beta_emp_s = output.x[11]
+gamma1_opt = output.x[12]
+gamma2_opt = output.x[13]
+gamma3_opt = output.x[14]
+tfp_opt = output.x[15]
+kappas_00 = output.x[16]
+kappas_01 = output.x[17]
+kappas_02 = output.x[18]
+kappas_03 = output.x[19]
+kappas_10 = output.x[20]
+kappas_11 = output.x[21]
+kappas_12 = output.x[22]
+kappas_13 = output.x[23]
+rho_theta_epsilon_opt = sym(output.x[24])
+rho_theta_ab = sym(output.x[25])
 
 
 betas_opt=np.array([eta_opt, alphap_opt,alphaf_opt,
 	betaw0,betaw1,betaw2,betaw3,betaw4,
+	beta_s1,beta_s2,beta_s3,beta_emp_s,
 	gamma1_opt,gamma2_opt,gamma3_opt,tfp_opt,
 	kappas_00,kappas_01,kappas_02,kappas_03,
-	kappas_10,kappas_11,kappas_12,kappas_13,rho_theta_epsilon_opt])
+	kappas_10,kappas_11,kappas_12,kappas_13,rho_theta_epsilon_opt,rho_theta_ab])
 
-np.save('/home/jrodriguez/NH_HC/results/Model/estimation/betas_modelv24.npy',betas_opt)
+np.save('/home/jrodriguez/NH_HC/results/Model/estimation/betas_modelv25_twoch.npy',betas_opt)
 
 

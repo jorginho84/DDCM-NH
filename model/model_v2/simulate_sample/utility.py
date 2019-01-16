@@ -161,10 +161,8 @@ class Utility(object):
 		Computes income process for males
 
 		"""
-		v = np.random.randn(self.N)
-		boo_emp = v > self.param.c_emp_spouse
-		
-		return np.array(boo_emp)
+	
+		return np.random.randn(self.N) > self.param.c_emp_spouse
 
 
 	def income_spouse(self):
@@ -579,12 +577,16 @@ class Utility(object):
 		theta1_a=np.zeros(self.N)
 		theta1_b=np.zeros(self.N)
 
+		#adjustment for E[theta = 0]
+		alpha_a = - np.mean(incomepc)*gamma2 - np.mean(tch_a)*gamma3
+		alpha_b = - np.mean(incomepc)*gamma2 - np.mean(tch_b)*gamma3
+
 		#The production of HC: (young, cc=0), (young,cc1), (old)
 		boo_age_a=agech_a<=5
 		boo_age_b=agech_b<=5
-		theta1_a = tfp*cc_a*boo_age_a + gamma1*np.log(theta0_a) + gamma2*incomepc +	gamma3*tch_a
-		theta1_b = tfp*cc_b*boo_age_b + gamma1*np.log(theta0_b) + gamma2*incomepc +	gamma3*tch_b
-		
+		theta1_a = tfp*cc_a*boo_age_a + gamma1*np.log(theta0_a) + gamma2*incomepc +	gamma3*tch_a + alpha_a
+		theta1_b = tfp*cc_b*boo_age_b + gamma1*np.log(theta0_b) + gamma2*incomepc +	gamma3*tch_b + alpha_b
+
 		#When child A/B is not present
 		theta1_a[self.d_childa[:,0] == 0] = 0
 		theta1_b[self.d_childb[:,0] == 0] = 0
@@ -612,15 +614,10 @@ class Utility(object):
 		#Consumption: depends on ra, cc, and period
 		ct=self.consumptiont(periodt,ht,cc_a,cc_b,dincome,income_spouse,employment_spouse,
 			marr,nkids,wage,free,price)['income_pc']
-
-		#parameters
-		ap=self.param.alphap
-		af=self.param.alphaf
-		eta=self.param.eta
-		ut_h=d_workp*ap + d_workf*af
-
+		
 		#Current-period utility
-		ut=np.log(ct) + ut_h +  eta*ltheta
+		ut_h=d_workp*self.param.alphap + d_workf*self.param.alphaf
+		ut=np.log(ct) + ut_h +  self.param.eta*ltheta
 
 		if (np.any(np.isnan(ct))==True) | (np.any(np.isinf(ct))==True) :
 			raise ValueError('Consumption is not a real number')

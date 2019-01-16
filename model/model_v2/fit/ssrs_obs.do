@@ -11,7 +11,7 @@ set maxvar 15000
 set matsize 2000
 
 
-use "/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/sample_model_theta_v2.dta", clear
+use "/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/sample_model_theta.dta", clear
 set seed 2828
 local reps = 800
 
@@ -47,14 +47,14 @@ foreach x in 2 5{
 	clear
 	set obs 1
 	svmat betas_t`x'
-	outsheet using "/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/fit/beta_t`x'_obs.csv", comma replace
+	outsheet using "/home/jrodriguez/NH_HC/results/Model/fit/beta_t`x'_obs.csv", comma replace
 	restore
 
 	preserve
 	clear
 	set obs 1
 	svmat betas_t`x'_y
-	outsheet using "/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/fit/beta_t`x'_y_obs.csv", comma replace
+	outsheet using "/home/jrodriguez/NH_HC/results/Model/fit/beta_t`x'_y_obs.csv", comma replace
 	restore
 
 
@@ -62,28 +62,28 @@ foreach x in 2 5{
 	clear
 	set obs 1
 	svmat betas_t`x'_o
-	outsheet using "/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/fit/beta_t`x'_o_obs.csv", comma replace
+	outsheet using "/home/jrodriguez/NH_HC/results/Model/fit/beta_t`x'_o_obs.csv", comma replace
 	restore
 
 	preserve
 	clear
 	set obs 1
 	svmat ses_t`x'
-	outsheet using "/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/fit/ses_beta_t`x'_obs.csv", comma replace
+	outsheet using "/home/jrodriguez/NH_HC/results/Model/fit/ses_beta_t`x'_obs.csv", comma replace
 	restore
 
 	preserve
 	clear
 	set obs 1
 	svmat ses_t`x'_y
-	outsheet using "/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/fit/ses_beta_t`x'_y_obs.csv", comma replace
+	outsheet using "/home/jrodriguez/NH_HC/results/Model/fit/ses_beta_t`x'_y_obs.csv", comma replace
 	restore
 
 	preserve
 	clear
 	set obs 1
 	svmat ses_t`x'_o
-	outsheet using "/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/fit/ses_beta_t`x'_o_obs.csv", comma replace
+	outsheet using "/home/jrodriguez/NH_HC/results/Model/fit/ses_beta_t`x'_o_obs.csv", comma replace
 	restore
 
 

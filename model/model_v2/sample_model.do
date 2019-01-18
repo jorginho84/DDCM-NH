@@ -248,13 +248,15 @@ replace d_CC2_t4=. if max_months_t4==.
 
 *Payments child care: assuming one price only
 * year 1
-rename c73 cc_pay_t1
+drop c73
+gen cc_pay_t1 = .
 replace cc_pay_t1 = 0 if d_CC2_t1 == 0
 replace cc_pay_t1 = 0.57*0 + (1-0.57)*750 if d_CC2_t1 == 1
 
 
 *Year 4
-rename piq128a cc_pay_t4
+drop piq128a 
+gen cc_pay_t4 = .
 replace cc_pay_t4 = 0 if d_CC2_t4 == 0
 replace cc_pay_t4 = 0.57*0 + (1-0.57)*750 if d_CC2_t4 == 1
 /*

@@ -1,7 +1,6 @@
 """
-execfile('policies_mech.py')
 
-exec(open("C:\\Users\\jrodriguezo\\Dropbox\\Chicago\\Research\\Human capital and the household\\codes\\DDCM-NH\\model\\model_v2\\experiments\\NH\\policies_mech.py").read())
+exec(open("/home/jrodriguez/NH_HC/codes/model/experiments/NH/policies_mech.py").read())
 
 This file plots ATE theta of different New Hope policies
 
@@ -21,16 +20,16 @@ from scipy import interpolate
 import matplotlib
 #matplotlib.use('Agg') # Force matplotlib to not use any Xwindows backend.
 import matplotlib.pyplot as plt
-sys.path.append("C:\\Users\\jrodriguezo\\Dropbox\\Chicago\\Research\\Human capital and the household\\codes\\DDCM-NH\\model\\model_v2\\simulate_sample")
+sys.path.append("/home/jrodriguez/NH_HC/codes/model/simulate_sample")
 import utility as util
 import gridemax
 import time
 import int_linear
 import emax as emax
 import simdata as simdata
-sys.path.append("C:\\Users\\jrodriguezo\\Dropbox\\Chicago\\Research\\Human capital and the household\\codes\\DDCM-NH\\model\\model_v2\\estimation")
+sys.path.append("/home/jrodriguez/NH_HC/codes/model/estimation")
 import estimate as estimate
-sys.path.append("C:\\Users\\jrodriguezo\\Dropbox\\Chicago\\Research\\Human capital and the household\\codes\\DDCM-NH\\model\\model_v2\\experiments\\NH")
+sys.path.append("/home/jrodriguez/NH_HC/codes/model/experiments/NH")
 from ates import ATE
 from util2 import Prod2
 
@@ -38,33 +37,41 @@ from util2 import Prod2
 
 np.random.seed(1)
 
-betas_nelder=np.load("C:\\Users\\jrodriguezo\\Dropbox\\Chicago\\Research\\Human capital and the household\\lizzie_backup\\results\\betas_modelv24.npy")
+betas_nelder=np.load("/home/jrodriguez/NH_HC/results/Model/estimation/betas_modelv24.npy")
 
 #Number of periods where all children are less than or equal to 18
 nperiods = 8
 
 #Utility function
-eta = betas_nelder[0]
-alphap = betas_nelder[1]
-alphaf = betas_nelder[2]
+eta = betas_nelder[0] + 0.1
+alphap = betas_nelder[0]
+alphaf = betas_nelder[2] - 0.1 
 
 #wage process
-wagep_betas=np.array([betas_nelder[3],betas_nelder[4],betas_nelder[5],
+wagep_betas=np.array([betas_nelder[3],betas_nelder[4],1.65,
 	betas_nelder[6],betas_nelder[7]]).reshape((5,1))
+
+#income process: male
+income_male_betas = np.array([0.2,7.2,.32]).reshape((3,1))
+c_emp_spouse = .8
 
 
 #Production function [young,old]
 gamma1= betas_nelder[8]
-gamma2= betas_nelder[9]
-gamma3= betas_nelder[10]
-tfp=betas_nelder[11]
-sigma2theta=1
+gamma2= 0.05
+gamma3= betas_nelder[10] + 0.02
+tfp=0.1
+sigma2theta = 1
+varphi = 0.7
+
 
 kappas=[[betas_nelder[12],betas_nelder[13],betas_nelder[14],betas_nelder[15]],
-[betas_nelder[16],betas_nelder[17],betas_nelder[18],betas_nelder[19]]]
+[betas_nelder[16]-0.15,betas_nelder[17]-0.15,betas_nelder[18]-0.15,
+betas_nelder[19]-0.15]]
 
 #initial theta
-rho_theta_epsilon = betas_nelder[20]
+rho_theta_epsilon = 0.05
+rho_theta_ab = 0.25
 
 
 #First measure is normalized. starting arbitrary values
@@ -81,8 +88,7 @@ pafdc=.60
 psnap=.70
 
 #Data
-#X_aux=pd.read_csv('C:\\Users\\Jorge\\Dropbox\\Chicago\\Research\\Human capital and the household\\results\\Model\\Xs.csv')
-X_aux=pd.read_csv("C:\\Users\\jrodriguezo\\Dropbox\\Chicago\\Research\\Human capital and the household\\lizzie_backup\\results\\Model\\sample_model_v2.csv")
+X_aux=pd.read_csv('/home/jrodriguez/NH_HC/results/Model/sample_model.csv')
 x_df=X_aux
 
 #Sample size 
@@ -96,12 +102,12 @@ x_w=x_df[ ['d_HS2', 'constant' ] ].values
 #Data for marriage process
 #Parameters: marriage. Last one is the constant
 x_m=x_df[ ['age_ra', 'constant']   ].values
-marriagep_betas=pd.read_csv("C:\\Users\\jrodriguezo\\Dropbox\\Chicago\\Research\\Human capital and the household\\lizzie_backup\\results\\marriage_process\\betas_m_v2.csv").values
+marriagep_betas=pd.read_csv('/home/jrodriguez/NH_HC/results/marriage_process/betas_m_v2.csv').values
 
 #Data for fertility process (only at X0)
 #Parameters: kids. last one is the constant
 x_k=x_df[ ['age_ra', 'age_ra2', 'constant']   ].values
-kidsp_betas=pd.read_csv("C:\\Users\\jrodriguezo\\Dropbox\\Chicago\\Research\\Human capital and the household\\lizzie_backup\\results\\kids_process\\betas_kids_v2.csv").values
+kidsp_betas=pd.read_csv('/home/jrodriguez/NH_HC/results/kids_process/betas_kids_v2.csv').values
 
 
 #Minimum set of x's (for interpolation)
@@ -109,18 +115,22 @@ x_wmk=x_df[  ['age_ra','age_ra2', 'd_HS2', 'constant'] ].values
 
 #Data for treatment status
 passign=x_df[ ['d_RA']   ].values
+#passign = np.random.binomial(1,0.5,(N,1))
 
 #The EITC parameters
-eitc_list = pickle.load( open("C:\\Users\\jrodriguezo\\Dropbox\\Chicago\\Research\\Human capital and the household\\codes\\DDCM-NH\\model\\model_v2\\simulate_sample\\eitc_list.p", 'rb' ) )
+eitc_list = pickle.load( open("/home/jrodriguez/NH_HC/codes/model/simulate_sample/eitc_list.p", 'rb' ) )
 
 #The AFDC parameters
-afdc_list = pickle.load( open("C:\\Users\\jrodriguezo\\Dropbox\\Chicago\\Research\\Human capital and the household\\codes\\DDCM-NH\\model\\model_v2\\simulate_sample\\afdc_list.p", 'rb' ) )
+afdc_list = pickle.load( open("/home/jrodriguez/NH_HC/codes/model/simulate_sample/afdc_list.p", 'rb' ) )
 
 #The SNAP parameters
-snap_list = pickle.load( open("C:\\Users\\jrodriguezo\\Dropbox\\Chicago\\Research\\Human capital and the household\\codes\\DDCM-NH\\model\\model_v2\\simulate_sample\\snap_list.p", 'rb' ) ) 
+snap_list = pickle.load( open("/home/jrodriguez/NH_HC/codes/model/simulate_sample/snap_list.p", 'rb' ) ) 
+
 
 #CPI index
-cpi =  pickle.load( open("C:\\Users\\jrodriguezo\\Dropbox\\Chicago\\Research\\Human capital and the household\\codes\\DDCM-NH\\model\\model_v2\\simulate_sample\\cpi.p", 'rb' ) )
+cpi =  pickle.load( open("/home/jrodriguez/NH_HC/codes/model/simulate_sample/cpi.p", 'rb' ) )
+
+
 
 #Here: the estimates from the auxiliary model
 ###
@@ -136,22 +146,36 @@ nkids0=x_df[ ['nkids_baseline']   ].values
 married0=x_df[ ['d_marital_2']   ].values
 
 #age of child at baseline
-agech0=x_df[['age_t0']].values
-age_ch = np.zeros((N,nperiods))
-for t in range(nperiods):
-	age_ch[:,t] = agech0[:,0] + t
+agech0_a=x_df[['age_t0A']].values[:,0]
+agech0_b=x_df[['age_t0B']].values[:,0]
+d_childb=x_df[['d_childB']].values
+d_childa=x_df[['d_childA']].values
+
+agech_a = np.zeros((N,nperiods))
+agech_b = np.zeros((N,nperiods))
+
+for periodt in range(nperiods):
+	agech_a[d_childa[:,0] == 1,periodt] = agech0_a[d_childa[:,0] == 1] + periodt
+	agech_b[d_childb[:,0] == 1,periodt] = agech0_b[d_childb[:,0] == 1] + periodt
+
+
+agech = np.concatenate((agech_a[d_childa[:,0] == 1,:],
+	agech_b[d_childb[:,0] == 1,:]),axis=0)
+
 
 #Defines the instance with parameters
-param0=util.Parameters(alphap,alphaf,eta,gamma1,gamma2,gamma3,
-	tfp,sigma2theta, rho_theta_epsilon,wagep_betas, marriagep_betas, kidsp_betas, eitc_list,
+param0 = util.Parameters(alphap,alphaf,eta,gamma1,gamma2,gamma3,
+	tfp,sigma2theta,varphi,rho_theta_epsilon,rho_theta_ab,wagep_betas,
+	income_male_betas,c_emp_spouse,
+	marriagep_betas, kidsp_betas, eitc_list,
 	afdc_list,snap_list,cpi,lambdas,kappas,pafdc,psnap,mup)
 
 
 ###Auxiliary estimates###
-moments_vector=pd.read_csv("C:\\Users\\jrodriguezo\\Dropbox\\Chicago\\Research\\Human capital and the household\\lizzie_backup\\results\\aux_model\\moments_vector.csv").values
+moments_vector=pd.read_csv("/home/jrodriguez/NH_HC/results/aux_model/moments_vector.csv").values
 
 #This is the var cov matrix of aux estimates
-var_cov=pd.read_csv("C:\\Users\\jrodriguezo\\Dropbox\\Chicago\\Research\\Human capital and the household\\lizzie_backup\\results\\aux_model\\var_cov.csv").values
+var_cov=pd.read_csv("/home/jrodriguez/NH_HC/results/aux_model/var_cov.csv").values
 
 #The vector of aux standard errors
 #Using diagonal of Var-Cov matrix of simulated moments
@@ -161,14 +185,14 @@ se_vector  = np.sqrt(np.diagonal(var_cov))
 dict_grid=gridemax.grid()
 
 #For montercarlo integration
-D=50
+D = 20
 
 #Number of samples to produce
-M=1000
+M = 20
 
 #How many hours is part- and full-time work
-hours_p=20
-hours_f=40
+hours_p = 15
+hours_f = 40
 
 #################################################################################
 ###Obtaining counterfactuals
@@ -198,8 +222,10 @@ choices_list = []
 cost_list = []
 contribution_list = []
 sd_matrix_list = []
+
 for j in range(len(models_list)):
-	output_ins=estimate.Estimate(nperiods,param0,x_w,x_m,x_k,x_wmk,passign,agech0,nkids0,
+	output_ins=estimate.Estimate(nperiods,param0,x_w,x_m,x_k,x_wmk,passign,
+		agech0_a,agech0_b,d_childa,d_childb,nkids0,
 		married0,D,dict_grid,M,N,moments_vector,var_cov,hours_p,hours_f,
 		models_list[j][0],models_list[j][1],models_list[j][2])
 
@@ -207,8 +233,9 @@ for j in range(len(models_list)):
 	childcare  = np.zeros(N)
 
 	#obtaining values to normalize theta
-	model = util.Utility(param0,N,x_w,x_m,x_k,passign,nkids0,married0,hours,childcare,
-		agech0,hours_p,hours_f,models_list[j][0],models_list[j][1],models_list[j][2])
+	model = util.Utility(param0,N,x_w,x_m,x_k,passign,nkids0,married0,hours,
+		childcare,childcare,agech0_a,agech0_b,d_childa,d_childb,
+		hours_p,hours_f,models_list[j][0],models_list[j][1],models_list[j][2])
 
 	np.random.seed(1)
 	emax_instance = output_ins.emax(param0,model)
@@ -219,44 +246,61 @@ for j in range(len(models_list)):
 	boo_p = hours_m == hours_p
 	boo_f = hours_m == hours_f
 	boo_u = hours_m == 0
-	cc = choices['choice_matrix']>2
-	ecc = np.mean(np.mean(cc,axis=2),axis=0)
+	cc_a = choices['childcare_a_matrix'].copy()
+	cc_b = choices['childcare_b_matrix'].copy()
+	ecc_a = np.mean(np.mean(cc_a,axis=2),axis=0)
+	ecc_b = np.mean(np.mean(cc_a,axis=2),axis=0)
 	
-	tch = np.zeros((N,nperiods,M))
+	tch_a = np.zeros((N,nperiods,M))
+	tch_b = np.zeros((N,nperiods,M))
 	for t in range(nperiods):
-		tch[age_ch[:,t]<=5,t,:] = cc[age_ch[:,t]<=5,t,:]*(168 - hours_f) + (1-cc[age_ch[:,t]<=5,t,:])*(168 - hours_m[age_ch[:,t]<=5,t,:])
-		tch[age_ch[:,t]>5,t,:] = 133 - hours_m[age_ch[:,t]>5,t,:] 
+		tch_a[agech_a[:,t]<=5,t,:] = cc_a[agech_a[:,t]<=5,t,:]*(168 - hours_f) + (1-cc_a[agech_a[:,t]<=5,t,:])*(168 - hours_m[agech_a[:,t]<=5,t,:])
+		tch_a[agech_a[:,t]>5,t,:] = 133 - hours_m[agech_a[:,t]>5,t,:]
+
+		tch_b[agech_b[:,t]<=5,t,:] = cc_b[agech_b[:,t]<=5,t,:]*(168 - hours_f) + (1-cc_b[agech_b[:,t]<=5,t,:])*(168 - hours_m[agech_b[:,t]<=5,t,:])
+		tch_b[agech_b[:,t]>5,t,:] = 133 - hours_m[agech_b[:,t]>5,t,:] 
 	
-	el = np.mean(np.mean(np.log(tch),axis=2),axis=0)
-	e_age = np.mean(age_ch<=5,axis=0)
+	el_a = np.mean(np.mean(np.log(tch_a),axis=2),axis=0)
+	el_b = np.mean(np.mean(np.log(tch_b),axis=2),axis=0)
+	e_age_a = np.mean(agech_a<=5,axis=0)
+	e_age_b = np.mean(agech_b<=5,axis=0)
 	
-	np.save("C:\\Users\\jrodriguezo\\Dropbox\\Chicago\\Research\\Human capital and the household\\lizzie_backup\\results\\Model\\experiments\\NH\\el.npy",el)
-	np.save("C:\\Users\\jrodriguezo\\Dropbox\\Chicago\\Research\\Human capital and the household\\lizzie_backup\\results\\Model\\experiments\\NH\\ec.npy",ec)
-	np.save("C:\\Users\\jrodriguezo\\Dropbox\\Chicago\\Research\\Human capital and the household\\lizzie_backup\\results\\Model\\experiments\\NH\\ecc.npy",ecc)
-	np.save("C:\\Users\\jrodriguezo\\Dropbox\\Chicago\\Research\\Human capital and the household\\lizzie_backup\\results\\Model\\experiments\\NH\\e_age.npy",e_age)
+	np.save('/home/jrodriguez/NH_HC/results/Model/experiments/NH/ec.npy',ec)
+	np.save('/home/jrodriguez/NH_HC/results/Model/experiments/NH/el_a.npy',el_a)
+	np.save('/home/jrodriguez/NH_HC/results/Model/experiments/NH/el_b.npy',el_b)
+	np.save('/home/jrodriguez/NH_HC/results/Model/experiments/NH/ecc_a.npy',ecc_a)
+	np.save('/home/jrodriguez/NH_HC/results/Model/experiments/NH/ecc_b.npy',ecc_b)
+	np.save('/home/jrodriguez/NH_HC/results/Model/experiments/NH/e_age_a.npy',e_age_a)
+	np.save('/home/jrodriguez/NH_HC/results/Model/experiments/NH/e_age_b.npy',e_age_b)
 	
-	#SD matrix
-	ltheta = np.log(choices['theta_matrix'])
+		#SD matrix
+	ltheta_a = np.log(choices['theta_matrix_a'])
+	ltheta_b = np.log(choices['theta_matrix_b'])
+	ltheta = np.concatenate((ltheta_a[d_childa[:,0]==1,:,:],
+		ltheta_b[d_childb[:,0]==1,:,:]),axis=0)
+
 	sd_matrix = np.zeros((nperiods,M))
 	for jj in range (M):
 		for t in range(nperiods):
 			sd_matrix[t,jj] = np.std(ltheta[:,t,jj],axis=0)
 	
 	sd_matrix_list.append(sd_matrix)
-
+	
 	#Obtaining counterfactuals with the same emax
 	choices_c = {}
 	models = []
 	for k in range(2):
 		passign_aux=k*np.ones((N,1))#everybody in treatment/control
 		models.append(Prod2(param0,N,x_w,x_m,x_k,passign,
-					nkids0,married0,hours,childcare,agech0,hours_p,hours_f,
+					nkids0,married0,hours,childcare,childcare,
+					agech0_a,agech0_b,d_childa,d_childb,hours_p,hours_f,
 					models_list[j][0],models_list[j][1],models_list[j][2]))
 		output_ins.__dict__['passign'] = passign_aux
 		choices_c['Choice_' + str(k)] = output_ins.samples(param0,emax_instance,models[k])
 
 	choices_list.append(choices_c)
-	ate_ins = ATE(M,choices_c,models,agech0,passign,hours_p,hours_f,nperiods,
+	ate_ins = ATE(N,M,choices_c,models,agech0_a,agech0_b,d_childa,d_childb,
+		passign,hours_p,hours_f,nperiods,
 		nperiods_cc,nperiods_ct,nperiods_emp,nperiods_theta,period_y,sd_matrix)
 	ates = ate_ins.sim_ate()
 	ates_list.append(ates['ATES'])
@@ -273,7 +317,7 @@ for j in range(len(models_list)):
 
 #################################################################################
 #Figures
-
+"""
 y_limit_upper = np.mean(contribution_list[1]['Theta'],axis=1) + np.mean(contribution_list[1]['Time'],axis=1) + np.mean(contribution_list[1]['CC'],axis=1) + np.mean(contribution_list[j]['Money'],axis=1)
 y_limit_lower = np.mean(contribution_list[5]['Time'],axis=1)
 
@@ -317,6 +361,8 @@ for j in range(len(models_list)):
 	fig.savefig('C:\\Users\\jrodriguezo\\Dropbox\\Chicago\\Research\\Human capital and the household\\lizzie_backup\\results\\Model\\experiments\\NH\\mech_' + models_names[j]+'.pdf', format='pdf')
 	plt.close()
 
+"""
+
 
 """
 
@@ -325,6 +371,9 @@ This is the order:
 names_list_v2 = ['Wage sub', 'Wage sub + Child care sub','Wage sub + Work req', 'Child care sub', 
 'Child care sub + Work req', 'Full treatment']
 """
+
+"""
+
 #Figure: ATE on theta of wage sub vs cc sub/no work requirements
 names_list_v2 = ['Wage sub', 'Child care sub','Wage sub + Child care sub']
 markers_list = ['k-','k--','k-o' ]
@@ -413,3 +462,6 @@ with open('C:\\Users\\jrodriguezo\\Dropbox\\Chicago\\Research\\Human capital and
 	f.write(r'Work requirement &       &       &       &       &       & $\checkmark$ &       &       &       & $\checkmark$ &       & $\checkmark$ \bigstrut[b]\\'+'\n')
 	f.write(r'\hline'+'\n')
 	f.write(r'\end{tabular}'+'\n')
+
+
+"""

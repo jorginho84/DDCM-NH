@@ -1,43 +1,102 @@
+"""
+exec(open("/home/jrodriguez/NH_HC/codes/model/experiments/NH/draft.py").read())
+
+This file computes a decomposition analysis of variables that explain ATE on theta
 
 """
-exec(open("C:\\Users\\jrodriguezo\\Dropbox\\Chicago\\Research\\Human capital and the household\\codes\\DDCM-NH\\model\\model_v2\\experiments\\NH\\draft.py").read())
-"""
 
-#Mechanisms figures
-for j in range(len(models_list)):
-	x = np.array(range(1,nperiods))
-	y1 = np.mean(contribution_list[j]['Theta'],axis=1)
-	y2 = np.mean(contribution_list[j]['Time'],axis=1)
-	y3 = np.mean(contribution_list[j]['CC'],axis=1)
-	y4 = np.mean(contribution_list[j]['Money'],axis=1)
-	total = y1 + y2 + y3 + y4
-	horiz_line_data = np.array([0 for i in range(len(x))])
-	fig, ax=plt.subplots()
-	ax.plot(x,y2, color='k',zorder=1,linewidth=4.5,label='Time')
-	ax.plot(x,horiz_line_data, 'k--',linewidth=2)
-	ax.fill_between(x,y2,(y2+y1), color='k' ,alpha=.65,zorder=2,label='Lagged human capital')
-	ax.fill_between(x,(y2+y1),(y2+y1+y3), color='k' ,alpha=.35,zorder=3,label='Child care')
-	ax.fill_between(x,(y2+y1+y3),(total), color='k' ,alpha=.12,zorder=4,label='Money')
-	ax.set_ylabel(r'Effect on child human capital ($\sigma$s)', fontsize=14)
-	ax.set_xlabel(r'Years after random assignment ($t$)', fontsize=14)
-	#ax.annotate('Explained by time', xy=(2, y2[2]), xytext=(2.5, y2[2]-0.02),
-	#	arrowprops=dict(facecolor='black', shrink=0.05,connectionstyle="arc3"))
-	#ax.annotate('Explained by consumption', xy=(3, total[2]-0.01), xytext=(2, total[2]+0.02),
-	#	arrowprops=dict(facecolor='black', shrink=0.05,connectionstyle="arc3"))
+
+#Choices
+for periodt in range(nperiods-1):									
+
+	for j in range(M):
+		#theta0
+		theta0 = []
+		theta_00 = []
+		theta_01 = []
+		theta_00.append(choices_c['Choice_' + str(0)]['theta_matrix_a'][:,periodt,j])
+		theta_00.append(choices_c['Choice_' + str(0)]['theta_matrix_b'][:,periodt,j])
+		theta_01.append(choices_c['Choice_' + str(1)]['theta_matrix_a'][:,periodt,j])
+		theta_01.append(choices_c['Choice_' + str(1)]['theta_matrix_b'][:,periodt,j])
+		theta0.append(theta_00)
+		theta0.append(theta_01)
+
+		#the theta contribution
+		ltheta_th1 = models[1].thetat(periodt,theta0[1],
+			h_sim_matrix[0][:,periodt,j],cc_sim_matrix_a[0][:,periodt,j],
+			cc_sim_matrix_b[0][:,periodt,j],
+			ct_sim_matrix[0][:,periodt,j])
+		ltheta_th0 = models[0].thetat(periodt,theta0[0],
+			h_sim_matrix[0][:,periodt,j],cc_sim_matrix_a[0][:,periodt,j],
+			cc_sim_matrix_b[0][:,periodt,j],
+			ct_sim_matrix[0][:,periodt,j])
+
+		ltheta_th1_aux = np.concatenate((ltheta_th1[0][d_childa[:,0]==1],
+			ltheta_th1[1][d_childb[:,0]==1]),axis=0)
+
+		ltheta_th0_aux = np.concatenate((ltheta_th0[0][d_childa[:,0]==1],
+			ltheta_th0[1][d_childb[:,0]==1]),axis=0)
+
+		ate_cont_theta[periodt,j] = np.mean(np.log(ltheta_th1_aux[boo_y]) - np.log(ltheta_th0_aux[boo_y]))/sd_matrix[periodt,j]
+		
+
+		#The leisure contribution
+		ltheta_th1 = models[1].thetat(periodt,theta_sim_matrix[1][:,periodt,j],
+			h_sim_matrix[1][:,periodt,j],cc_sim_matrix_a[0][:,periodt,j],
+			cc_sim_matrix_b[0][:,periodt,j],
+			ct_sim_matrix[0][:,periodt,j])
+		ltheta_th0 = models[0].thetat(periodt,theta_sim_matrix[1][:,periodt,j],
+			h_sim_matrix[0][:,periodt,j],cc_sim_matrix_a[0][:,periodt,j],
+			cc_sim_matrix_b[0][:,periodt,j],
+			ct_sim_matrix[0][:,periodt,j])
+		
+		ltheta_th1_aux = np.concatenate((ltheta_th1[0][d_childa[:,0]==1],
+			ltheta_th1[1][d_childb[:,0]==1]),axis=0)
+
+		ltheta_th0_aux = np.concatenate((ltheta_th0[0][d_childa[:,0]==1],
+			ltheta_th0[1][d_childb[:,0]==1]),axis=0)
+
+
+		ate_cont_lt[periodt,j] = np.mean(np.log(ltheta_th1_aux[boo_y]) - np.log(ltheta_th0_aux[boo_y]))/sd_matrix[periodt,j]
+		
+
+
+		
+		#The CC contribution
+		ltheta_th1 = models[1].thetat(periodt,theta_sim_matrix[1][:,periodt,j],
+			h_sim_matrix[1][:,periodt,j],cc_sim_matrix_a[1][:,periodt,j],
+			cc_sim_matrix_b[1][:,periodt,j],
+			ct_sim_matrix[0][:,periodt,j])
+		ltheta_th0 = models[0].thetat(periodt,theta_sim_matrix[1][:,periodt,j],
+			h_sim_matrix[1][:,periodt,j],cc_sim_matrix_a[0][:,periodt,j],
+			cc_sim_matrix_b[0][:,periodt,j],
+			ct_sim_matrix[0][:,periodt,j])
+		
+		ltheta_th1_aux = np.concatenate((ltheta_th1[0][d_childa[:,0]==1],
+			ltheta_th1[1][d_childb[:,0]==1]),axis=0)
+
+		ltheta_th0_aux = np.concatenate((ltheta_th0[0][d_childa[:,0]==1],
+			ltheta_th0[1][d_childb[:,0]==1]),axis=0)
+
+		ate_cont_cc[periodt,j] = np.mean(np.log(ltheta_th1_aux[boo_y]) - np.log(ltheta_th0_aux[boo_y]))/sd_matrix[periodt,j]
+		
+
 	
-	#ax.annotate('Explained by child care', xy=(2.2, y1[1]+0.04), xytext=(3, y1[1]+0.02),
-	#	arrowprops=dict(facecolor='black', shrink=0.05,connectionstyle="arc3"))
-	#ax.text(4,0.05,'Explained by lagged human capital')
-	ax.spines['right'].set_visible(False)
-	ax.spines['top'].set_visible(False)
-	ax.yaxis.set_ticks_position('left')
-	ax.xaxis.set_ticks_position('bottom')
-	ax.margins(0, 0)
-	#ax.set_ylim(y_limit_lower[0] - 0.02,y_limit_upper[3] + 0.02)
-	ax.legend(loc=5,fontsize=19)
-	plt.yticks(fontsize=11)
-	plt.xticks(fontsize=11)
-	#ax.legend(['Time', 'Lagged human capital','Child care','Consumption'],loc=5)
-	plt.show()
-	fig.savefig('C:\\Users\\jrodriguezo\\Dropbox\\Chicago\\Research\\Human capital and the household\\lizzie_backup\\results\\Model\\experiments\\NH\\mech_' + models_names[j]+'.pdf', format='pdf')
-	plt.close()
+		#The consumption contribution
+		ltheta_th1 = models[1].thetat(periodt,theta_sim_matrix[1][:,periodt,j],
+			h_sim_matrix[1][:,periodt,j],cc_sim_matrix_a[1][:,periodt,j],
+			cc_sim_matrix_b[1][:,periodt,j],
+			ct_sim_matrix[1][:,periodt,j])
+		ltheta_th0 = models[0].thetat(periodt,theta_sim_matrix[1][:,periodt,j],
+			h_sim_matrix[1][:,periodt,j],cc_sim_matrix_a[1][:,periodt,j],
+			cc_sim_matrix_b[1][:,periodt,j],
+			ct_sim_matrix[0][:,periodt,j])
+
+		ltheta_th1_aux = np.concatenate((ltheta_th1[0][d_childa[:,0]==1],
+			ltheta_th1[1][d_childb[:,0]==1]),axis=0)
+
+		ltheta_th0_aux = np.concatenate((ltheta_th0[0][d_childa[:,0]==1],
+			ltheta_th0[1][d_childb[:,0]==1]),axis=0)
+
+		ate_cont_ct[periodt,j] = np.mean(np.log(ltheta_th1_aux[boo_y]) - np.log(ltheta_th0_aux[boo_y]))/sd_matrix[periodt,j]
+		

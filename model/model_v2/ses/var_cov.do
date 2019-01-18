@@ -22,16 +22,16 @@ clear mata
 set more off
 set maxvar 15000
 
-global results "/mnt/Research/nealresearch/new-hope-secure/newhopemount/results"
-global codes "/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/aux_model" /*this is where I compute aux moments*/
+global results "/home/jrodriguez/NH_HC/results"
+global codes "/home/jrodriguez/NH_HC/codes/model/aux_model"  /*this is where I compute aux moments*/
 
 
-use "/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/sample_model_v2.dta", clear
+use "/home/jrodriguez/NH_HC/results/Model/sample_model.dta", clear
 qui: save "$results/data_aux.dta", replace
 qui: do "$codes/utility_aux.do"
 qui: do "$codes/wage_p.do"
 qui: do "$codes/theta_aux.do"
-mat betas_orig=beta_utility\beta_wage\betas_theta
+mat betas_orig=beta_utility\beta_wage\beta_spouse\beta_employment_spouse\betas_theta
 svmat betas_orig
 preserve
 keep betas_orig1
@@ -44,13 +44,15 @@ local draws = 500
 local n_moments = rowsof(betas_orig)
 
 forvalues x = 1/`draws'{
-	use "/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/sample_model_v2.dta", clear
+	use "/home/jrodriguez/NH_HC/results/Model/sample_model.dta", clear
 	bsample
-	qui: save "$results/data_aux.dta", replace
+	drop sampleid
+	egen sampleid = seq()
+	*qui: save "$results/data_aux.dta", replace
 	qui: do "$codes/utility_aux.do"
 	qui: do "$codes/wage_p.do"
 	qui: do "$codes/theta_aux.do"
-	mat betas=beta_utility\beta_wage\betas_theta
+	mat betas=beta_utility\beta_wage\beta_spouse\beta_employment_spouse\betas_theta
 	svmat betas
 	keep betas1
 	rename betas1 betas

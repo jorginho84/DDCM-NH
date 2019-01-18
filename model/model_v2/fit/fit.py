@@ -1,6 +1,6 @@
 """
 
-exec(open("/home/jrodriguez/NH_HC/codes/fit/fit.py").read())
+exec(open("/home/jrodriguez/NH_HC/codes//model/fit/fit.py").read())
 
 This file computes stats to validate model
 
@@ -16,7 +16,7 @@ ate_cc.do
 ate_emp.do
 
 """
-from __future__ import division #omit for python 3.x
+#from __future__ import division #omit for python 3.x#
 import numpy as np
 import pandas as pd
 import pickle
@@ -33,7 +33,7 @@ matplotlib.use('Agg') # Force matplotlib to not use any Xwindows backend.
 import matplotlib.pyplot as plt
 import subprocess
 #sys.path.append("C:\\Users\\Jorge\\Dropbox\\Chicago\\Research\\Human capital and the household\]codes\\model")
-sys.path.append("/home/jrodriguez/NH_HC/codes/simulate_sample")
+sys.path.append("/home/jrodriguez/NH_HC/codes/model/simulate_sample")
 import utility as util
 import gridemax
 import time
@@ -41,39 +41,48 @@ import int_linear
 import emax as emax
 import simdata as simdata
 import openpyxl
-sys.path.append("/home/jrodriguez/NH_HC/codes/estimation")
+sys.path.append("/home/jrodriguez/NH_HC/codes/model/estimation")
 import estimate as estimate
 
 
 np.random.seed(1)
 
-betas_nelder=np.load("/home/jrodriguez/NH_HC/results/betas_modelv24.npy")
+betas_nelder=np.load("/home/jrodriguez/NH_HC/results/Model/estimation/betas_modelv24.npy")
 
 
 #Number of periods where all children are less than or equal to 18
 nperiods = 8
 
 #Utility function
-eta = betas_nelder[0]
-alphap = betas_nelder[1]
-alphaf = betas_nelder[2]
+eta = betas_nelder[0] + 0.1
+alphap = betas_nelder[0]
+alphaf = betas_nelder[2] - 0.1 
 
 #wage process
-wagep_betas=np.array([betas_nelder[3],betas_nelder[4],betas_nelder[5],
+wagep_betas=np.array([betas_nelder[3],betas_nelder[4],1.65,
 	betas_nelder[6],betas_nelder[7]]).reshape((5,1))
+
+#income process: male
+income_male_betas = np.array([0.2,7.2,.32]).reshape((3,1))
+c_emp_spouse = .8
+
 
 #Production function [young,old]
 gamma1= betas_nelder[8]
-gamma2= betas_nelder[9]
-gamma3= betas_nelder[10]
-tfp=betas_nelder[11]
-sigma2theta=1
+gamma2= 0.05
+gamma3= betas_nelder[10] + 0.02
+tfp=0.1
+sigma2theta = 1
+varphi = 0.7
+
 
 kappas=[[betas_nelder[12],betas_nelder[13],betas_nelder[14],betas_nelder[15]],
-[betas_nelder[16],betas_nelder[17],betas_nelder[18],betas_nelder[19]]]
+[betas_nelder[16]-0.15,betas_nelder[17]-0.15,betas_nelder[18]-0.15,
+betas_nelder[19]-0.15]]
 
 #initial theta
-rho_theta_epsilon = betas_nelder[20]
+rho_theta_epsilon = 0.05
+rho_theta_ab = 0.25
 
 
 #First measure is normalized. starting arbitrary values
@@ -90,7 +99,7 @@ pafdc=.60
 psnap=.70
 
 #Data
-X_aux=pd.read_csv("/home/jrodriguez/NH_HC/results/Model/sample_model_v2.csv")
+X_aux=pd.read_csv("/home/jrodriguez/NH_HC/results/Model/sample_model.csv")
 x_df=X_aux
 
 #Sample size 
@@ -119,17 +128,17 @@ x_wmk=x_df[  ['age_ra','age_ra2', 'd_HS2', 'constant'] ].values
 passign=x_df[ ['d_RA']   ].values
 
 #The EITC parameters
-eitc_list = pickle.load( open("/home/jrodriguez/NH_HC/codes/simulate_sample/eitc_list.p", 'rb' ) )
+eitc_list = pickle.load( open("/home/jrodriguez/NH_HC/codes/model/simulate_sample/eitc_list.p", 'rb' ) )
 
 #The AFDC parameters
-afdc_list = pickle.load( open("/home/jrodriguez/NH_HC/codes/simulate_sample/afdc_list.p", 'rb' ) )
+afdc_list = pickle.load( open("/home/jrodriguez/NH_HC/codes/model/simulate_sample/afdc_list.p", 'rb' ) )
 
 #The SNAP parameters
-snap_list = pickle.load( open("/home/jrodriguez/NH_HC/codes/simulate_sample/snap_list.p", 'rb' ) ) 
+snap_list = pickle.load( open("/home/jrodriguez/NH_HC/codes/model/simulate_sample/snap_list.p", 'rb' ) ) 
 
 
 #CPI index
-cpi =  pickle.load( open("/home/jrodriguez/NH_HC/codes/simulate_sample/cpi.p", 'rb' ) )
+cpi =  pickle.load( open("/home/jrodriguez/NH_HC/codes/model/simulate_sample/cpi.p", 'rb' ) )
 
 #Here: the estimates from the auxiliary model
 ###
@@ -145,16 +154,18 @@ nkids0=x_df[ ['nkids_baseline']   ].values
 married0=x_df[ ['d_marital_2']   ].values
 
 #age of child at baseline
-agech0=x_df[['age_t0']].values
-
-#age of child two years after baseline
-agech_t2 = agech0 + 2
+#age of child at baseline
+agech0_a=x_df[['age_t0A']].values[:,0]
+agech0_b=x_df[['age_t0B']].values[:,0]
+d_childb=x_df[['d_childB']].values
+d_childa=x_df[['d_childA']].values
 
 #Defines the instance with parameters
 param0=util.Parameters(alphap,alphaf,eta,gamma1,gamma2,gamma3,
-	tfp,sigma2theta,rho_theta_epsilon,wagep_betas, marriagep_betas, kidsp_betas, eitc_list,
+	tfp,sigma2theta,varphi,rho_theta_epsilon,rho_theta_ab,wagep_betas,
+	income_male_betas,c_emp_spouse,
+	marriagep_betas, kidsp_betas, eitc_list,
 	afdc_list,snap_list,cpi,lambdas,kappas,pafdc,psnap,mup)
-
 
 
 ###Auxiliary estimates###
@@ -167,18 +178,17 @@ var_cov=pd.read_csv("/home/jrodriguez/NH_HC/results/aux_model/var_cov.csv").valu
 #Using diagonal of Var-Cov matrix of simulated moments
 se_vector  = np.sqrt(np.diagonal(var_cov))
 
-
 #Creating a grid for the emax computation
 dict_grid=gridemax.grid()
 
 #For montercarlo integration
-D=50
+D=20		
 
 #For II procedure
-M=1000
+M=200
 
 #How many hours is part- and full-time work
-hours_p=20
+hours_p=15
 hours_f=40
 
 #Indicate if model includes a work requirement (wr), 
@@ -187,16 +197,21 @@ wr=1
 cs=1
 ws=1
 
-output_ins=estimate.Estimate(nperiods,param0,x_w,x_m,x_k,x_wmk,passign,agech0,nkids0,
+
+output_ins = estimate.Estimate(nperiods,param0,x_w,x_m,x_k,x_wmk,passign,
+	agech0_a,agech0_b,d_childa,d_childb,nkids0,
 	married0,D,dict_grid,M,N,moments_vector,var_cov,hours_p,hours_f,
 	wr,cs,ws)
+
+
 
 #The model (utility instance)
 hours = np.zeros(N)
 childcare  = np.zeros(N)
 
-model  = util.Utility(param0,N,x_w,x_m,x_k,passign,
-	nkids0,married0,hours,childcare,agech0,hours_p,hours_f,wr,cs,ws)
+model  = util.Utility(param0,N,x_w,x_m,x_k,passign,nkids0,
+	married0,hours,childcare,childcare,
+	agech0_a,agech0_b,d_childa,d_childb,hours_p,hours_f,wr,cs,ws)
 
 #Obtaining emax instances, samples, and betas for M samples
 np.random.seed(1)
@@ -232,43 +247,47 @@ beta_kappas_t2=np.mean(dic_betas['beta_kappas_t2'],axis=1) #4 x 3
 beta_kappas_t5=np.mean(dic_betas['beta_kappas_t5'],axis=1) #4 x 1
 beta_inputs=np.mean(dic_betas['beta_inputs'],axis=1) #5 x 1
 betas_init_prod=np.mean(dic_betas['betas_init_prod'],axis=1) #1 x 1
+beta_wage_spouse=np.mean(dic_betas['beta_wage_spouse'],axis=1)
+beta_emp_spouse=np.mean(dic_betas['beta_emp_spouse'],axis=0)
+beta_theta_corr=np.mean(dic_betas['beta_theta_corr'],axis=0)
 
-#The sample: with young children at t=2
-boo_sample = agech_t2<=6
+#sample: age of the youngest child is six years or less by t=2
+boo_sample = (agech0_a<= 4) | (agech0_b<= 4)
 
 #################################################################################
 #################################################################################
 #FIGURE: ATE ON INCOME#
-#exec(open("C:\\Users\\jrodriguezo\\Dropbox\\Chicago\\Research\\Human capital and the household\\codes\\DDCM-NH\\model\\model_v2\\fit\\ate_inc.py").read())
+exec(open("/home/jrodriguez/NH_HC/codes//model/fit/ate_inc.py").read())
 
 
 #################################################################################
 #################################################################################
 #FIGURE: ATE ON CHILD CARE#
-#exec(open("C:\\Users\\jrodriguezo\\Dropbox\\Chicago\\Research\\Human capital and the household\\codes\\DDCM-NH\\model\\model_v2\\fit\\ate_cc.py").read())
+exec(open("/home/jrodriguez/NH_HC/codes/model/fit/ate_cc.py").read())
 
 
 #################################################################################
 #################################################################################
 #FIGURE: ATE ON EMPLOYMENT#
-#exec(open("C:\\Users\\jrodriguezo\\Dropbox\\Chicago\\Research\\Human capital and the household\\codes\\DDCM-NH\\model\\model_v2\\fit\\ate_emp.py").read())
+exec(open('/home/jrodriguez/NH_HC/codes/model/fit/ate_emp.py').read())
 
 
 #################################################################################
 #################################################################################
 #TABLE: COMPARING OPROBITS#
-#execfile('C:\\Users\\jrodriguezo\\Dropbox\\Chicago\\Research\\Human capital and the household\\codes\\DDCM-NH\\model\\model_v2\\fit\\oprobit.py')
+#exec(open('/home/jrodriguez/NH_HC/codes/model/fit/oprobit.py').read())
+
 
 #################################################################################
 #################################################################################
 #FIGURE: ATE ON THETA#
-#execfile('C:\\Users\\jrodriguezo\\Dropbox\\Chicago\\Research\\Human capital and the household\\codes\\DDCM-NH\\model\\model_v2\\fit\\ate_theta.py')
+exec(open('/home/jrodriguez/NH_HC/codes/model/fit/ate_theta.py').read())
 
 
 #################################################################################
 #################################################################################
 #TABLE FIT: target moments#
-#exec(open("/home/jrodriguez/NH_HC/codes/fit/table_aux.py").read())
+exec(open("/home/jrodriguez/NH_HC/codes/model/fit/table_aux.py").read())
 
 #GRAPHS FIT: target moments#
 

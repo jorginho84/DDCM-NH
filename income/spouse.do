@@ -43,8 +43,9 @@ egen income_primary=rowtotal(rpapwlf1 rpawslf1 rpafslf1 rpaaflf1)
 replace income_primary=0 if income_primary==.
 
 *Income from spose: paid work, AFDC, and Food Stamps
-egen income_spouse=rowtotal(spapwlf1 spawslf1 spafslf1 spaaflf1)
+egen income_spouse=rowtotal(spapwlf1)
 replace income_spouse=0 if income_spouse==.
+gen lincome_spouse = log(income_spouse)
 
 *Compare primary income and total income (year 2)
 gen primary_total=income_primary/total_income_year2

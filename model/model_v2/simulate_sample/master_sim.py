@@ -1,6 +1,5 @@
 """
-exec(open("/home/jrodriguez/NH_HC/codes/simulate_sample/master_sim.py").read())
-
+exec(open("/home/jrodriguez/NH_HC/codes/model/simulate_sample/master_sim.py").read())
 
 (1) Defines a set of parameters and X's
 (2) Defines a grid of state variables
@@ -27,7 +26,6 @@ pip2.7 install --user line_profiler
 
 
 """
-from __future__ import division #omit for python 3.x
 import numpy as np
 import pandas as pd
 import pickle
@@ -39,12 +37,12 @@ from scipy import interpolate
 import matplotlib.pyplot as plt
 import time
 from pathos.multiprocessing import ProcessPool
-sys.path.append("/home/jrodriguez/NH_HC/codes/simulate_sample")
+sys.path.append("/home/jrodriguez/NH_HC/codes/model/simulate_sample")
 import utility as util
 import gridemax
 import int_linear
-import emax_v2 as emax
-import simdata_v2 as simdata
+import emax as emax
+import simdata as simdata
 
 
 np.random.seed(1);
@@ -61,22 +59,31 @@ eta = betas_nelder[0]
 alphap = betas_nelder[1]
 alphaf = betas_nelder[2]
 
-#wage process
-wagep_betas=np.array([betas_nelder[3],betas_nelder[4],betas_nelder[5],
+#wage process en employment processes: female
+wagep_betas = np.array([betas_nelder[3],betas_nelder[4],betas_nelder[5],
 	betas_nelder[6],betas_nelder[7]]).reshape((5,1))
 
-#Production function [young,old]
-gamma1= betas_nelder[8]
-gamma2= betas_nelder[9]
-gamma3= betas_nelder[10]
-tfp=betas_nelder[11]
-sigma2theta=1
+#income process: male
+income_male_betas = np.array([6.8,.33,.32]).reshape((3,1))
+c_emp_spouse = .3
+
+#Production function
+gamma1 = betas_nelder[8]
+gamma2 = betas_nelder[9]
+gamma3 = betas_nelder[10]
+tfp = betas_nelder[11]
+sigma2theta = 1
+varphi = 0.5
+
+N=10
 
 kappas=[[betas_nelder[12],betas_nelder[13],betas_nelder[14],betas_nelder[15]],
 [betas_nelder[16],betas_nelder[17],betas_nelder[18],betas_nelder[19]]]
 
 #initial theta
 rho_theta_epsilon = betas_nelder[20]
+rho_theta_ab = 0.2
+
 
 #All factor loadings are normalized
 lambdas=[1,1]
@@ -92,7 +99,7 @@ psnap=.70
 
 #Data
 #X_aux=pd.read_csv('C:\\Users\\Jorge\\Dropbox\\Chicago\\Research\\Human capital and the household\\results\\Model\\Xs.csv')
-X_aux=pd.read_csv("/home/jrodriguez/NH_HC/results/Model/sample_model_v2.csv")
+X_aux=pd.read_csv("/home/jrodriguez/NH_HC/results/Model/sample_model.csv")
 x_df=X_aux
 
 #Sample size 
@@ -121,17 +128,17 @@ x_wmk=x_df[  ['age_ra','age_ra2', 'd_HS2', 'constant'] ].values
 passign=x_df[ ['d_RA']   ].values
 
 #The EITC parameters
-eitc_list = pickle.load( open("/home/jrodriguez/NH_HC/codes/simulate_sample/eitc_list.p", 'rb' ) )
+eitc_list = pickle.load( open("/home/jrodriguez/NH_HC/codes/model/simulate_sample/eitc_list.p", 'rb' ) )
 
 #The AFDC parameters
-afdc_list = pickle.load( open("/home/jrodriguez/NH_HC/codes/simulate_sample/afdc_list.p", 'rb' ) )
+afdc_list = pickle.load( open("/home/jrodriguez/NH_HC/codes/model/simulate_sample/afdc_list.p", 'rb' ) )
 
 #The SNAP parameters
-snap_list = pickle.load( open("/home/jrodriguez/NH_HC/codes/simulate_sample/snap_list.p", 'rb' ) ) 
+snap_list = pickle.load( open("/home/jrodriguez/NH_HC/codes/model/simulate_sample/snap_list.p", 'rb' ) ) 
 
 
 #CPI index
-cpi =  pickle.load( open("/home/jrodriguez/NH_HC/codes/simulate_sample/cpi.p", 'rb' ) )
+cpi =  pickle.load( open("/home/jrodriguez/NH_HC/codes/model/simulate_sample/cpi.p", 'rb' ) )
 
 #Here: the estimates from the auxiliary model
 ###
@@ -148,11 +155,16 @@ nkids0=x_df[ ['nkids_baseline']   ].values
 married0=x_df[ ['d_marital_2']   ].values
 
 #age of child at baseline
-agech0=x_df[['age_t0']].values
+agech0_a=x_df[['age_t0A']].values[:,0]
+agech0_b=x_df[['age_t0B']].values[:,0]
+d_childb=x_df[['d_childB']].values
+d_childa=x_df[['d_childA']].values
 
 #Defines the instance with parameters
 param=util.Parameters(alphap,alphaf,eta,gamma1,gamma2,gamma3,
-	tfp,sigma2theta, rho_theta_epsilon,wagep_betas, marriagep_betas, kidsp_betas, eitc_list,
+	tfp,sigma2theta,varphi,rho_theta_epsilon,rho_theta_ab,wagep_betas,
+	income_male_betas,c_emp_spouse,
+	marriagep_betas, kidsp_betas, eitc_list,
 	afdc_list,snap_list,cpi,lambdas,kappas,pafdc,psnap,mup)
 
 
@@ -168,8 +180,9 @@ childcare = np.zeros(N)
 wr,cs,ws=1,1,1
 
 #This is an arbitrary initialization of Utility class
-model = util.Utility(param,N,x_w,x_m,x_k,passign,nkids0,married0,hours,childcare,
-	agech0,hours_p,hours_f,wr,cs,ws)
+model = util.Utility(param,N,x_w,x_m,x_k,passign,nkids0,
+	married0,hours,childcare,childcare,
+	agech0_a,agech0_b,d_childa,d_childb,hours_p,hours_f,wr,cs,ws)
 
 tracemalloc.start()
 
@@ -181,9 +194,10 @@ start_time = time.time()
 print ('')
 print ('')
 
-D=50
+D=20
 np.random.seed(2)
-emax_function_in=emax.Emaxt(param,D,dict_grid,hours_p,hours_f,wr,cs,ws,model)
+emax_function_in=emax.Emaxt(param,D,dict_grid,hours_p,hours_f,
+	wr,cs,ws,model)
 emax_dic=emax_function_in.recursive() #8 emax (t=1 to t=8)
 
 
@@ -207,7 +221,9 @@ print ('')
 print ('')
 
 
-sim_ins=simdata.SimData(N,param,emax_dic,x_w,x_m,x_k,x_wmk,passign,nkids0,married0,agech0,hours_p,hours_f,wr,cs,ws,model)
+sim_ins=simdata.SimData(N,param,emax_dic,x_w,x_m,x_k,x_wmk,passign,nkids0,married0,
+	agech0_a,agech0_b,d_childa,d_childb,hours_p,hours_f,wr,cs,ws,model)
+
 data_dic=sim_ins.fake_data(8)
 
 
@@ -233,12 +249,19 @@ income=data_dic['Income']
 nh_sup=data_dic['nh_matrix']
 nh_cc=data_dic['cs_cost_matrix']
 theta_t=data_dic['Theta']
-cc_t=data_dic['Childcare']
+cc_a_t=data_dic['Childcare_a']
+cc_b_t=data_dic['Childcare_b']
 hours_t=data_dic['Hours']
 wage_t=data_dic['Wage']
 kids=data_dic['Kids']
 marr=data_dic['Marriage']
 income=data_dic['Income']
+spouse_income=data_dic['Spouse_income']
+spouse_employment=data_dic['Spouse_employment_matrix']
+
+#spouse income
+np.mean(spouse_income,axis=0)
+np.mean(spouse_employment,axis=0)
 
 #Expenditures
 np.count_nonzero(nh_sup[:,0])
@@ -251,20 +274,23 @@ np.count_nonzero(passign)
 np.mean(nh_cc[nh_cc>0],axis=0)
 
 #log theta in SD units
-ltheta=np.log(theta_t)
+cc_t = np.concatenate((cc_a_t[d_childa[:,0]==1,:],cc_b_t[d_childb[:,0]==1,:]),axis=0)
+ltheta=np.concatenate((np.log(theta_t[0][d_childa[:,0]==1,:]),np.log(theta_t[1][d_childb[:,0]==1,:])),axis=0)
 np.mean(ltheta,axis=0)
 np.std(ltheta,axis=0)
 
-#Impact of NH on logtheta (SD units) in time
-ate_theta=np.mean(ltheta[passign[:,0]==1,:],axis=0) - np.mean(ltheta[passign[:,0]==0,:],axis=0)
+np.mean(cc_t,axis=0)
+
+
+#Impact of NH on logtheta (SD units) and child care in time
+passign_long = np.concatenate((passign[d_childa[:,0]==1,0],passign[d_childb[:,0]==1,0]),axis=0)
+ate_theta=np.mean(ltheta[passign_long==1,:],axis=0) - np.mean(ltheta[passign_long==0,:],axis=0)
 
 ate_theta/np.std(ltheta,axis=0)
 
-#NH supplement
-np.mean(nh_sup[passign[:,0]==1,:],axis=0)
-np.mean(nh_sup[passign[:,0]==1,:],axis=0)
+#need to adjust for age (age_long)
+ate_cc=np.mean(cc_t[passign_long==1,:],axis=0) - np.mean(cc_t[passign_long==0,:],axis=0)
 
-np.mean(nh_sup[(passign[:,0]==1) & (nh_sup[:,0]>0)  & (nkids0[:,0]==3),0])
 
 #Impact on income
 np.mean(income,axis=0)
@@ -275,15 +301,6 @@ np.mean(np.mean(ct[passign[:,0]==0,:],axis=0))
 
 
 
-#Child care (t=0, all young)
-np.mean(cc_t[agech0[:,0]<=6,:],axis=0)
-ate_cc=np.mean(cc_t[(passign[:,0]==1) & (agech0[:,0]<=5),:],axis=0) - np.mean(cc_t[(passign[:,0]==0) & (agech0[:,0]<=5),:],axis=0)
-
-#Child care (t=0, all young, employed)
-np.mean(cc_t[(agech0[:,0]<=6),0],axis=0)
-np.mean(cc_t[(agech0[:,0]<=6) & (hours_t[:,0]==40),0],axis=0)
-np.mean(cc_t[(agech0[:,0]<=6) & (hours_t[:,0]==15),0],axis=0)
-
 
 #Labor supply
 unemp_t=hours_t==0
@@ -292,7 +309,6 @@ full_t=hours_t==hours_f
 
 ate_hours = np.mean(hours_t[passign[:,0]==1,:],axis=0) - np.mean(hours_t[passign[:,0]==0,:],axis=0)
 
-np.mean(unemp_t[agech0[:,0]<=6,:],axis=0)
 
 np.mean(unemp_t,axis=0)
 np.mean(full_t,axis=0)
@@ -316,10 +332,4 @@ ate_income_un=np.mean(income[(unemp_t[:,0]==1) & (passign[:,0]==1),0],axis=0) - 
 ate_unem=np.mean(unemp_t[passign[:,0]==1,:],axis=0) - np.mean(unemp_t[passign[:,0]==0,:],axis=0)
 ate_part=np.mean(part_t[passign[:,0]==1,:],axis=0) - np.mean(part_t[passign[:,0]==0,:],axis=0)
 ate_full=np.mean(full_t[passign[:,0]==1,:],axis=0) - np.mean(full_t[passign[:,0]==0,:],axis=0)
-
-#Child care cost
-np.mean(ct[agech0[:,0]<=6,:],axis=0)
-np.mean(ct[(cc_t[:,0]==1) & (agech0[:,0]<=6),:],axis=0)
-np.mean(ct[(cc_t[:,0]==1) & (agech0[:,0]<=6) & (passign[:,0]==0) & (full_t[:,0]==1),:],axis=0)
-np.mean(ct[(cc_t[:,0]==0) & (agech0[:,0]<=6) & (passign[:,0]==0) & (full_t[:,0]==1),:],axis=0)
 

@@ -39,8 +39,6 @@ Recovering control variables
 qui: do "$codes/model/aux_model/Xs.do"
 
 
-
-
 *ethnic dummies (baseline: black)
 forvalues x=2/5{
 	gen d_ethnic_`x'=ethnic==`x'
@@ -129,9 +127,22 @@ replace nkids_year8=. if epiinvyy==. /*Not in survey*/
 gen d_born_year8=epi74e=="1"
 replace d_born_year8=. if epiinvyy==.
 
+*Spouse income, dummy work spouse
+qui: destring spa*, replace force
+egen income_spouse = rowtotal(spapwlf1 spawslf1 spafslf1 spaaflf1)
+replace income_spouse = 0 if income_spouse==.
+gen lincome_spouse = log(income_spouse)
 
-keep sampleid d_RA age_ra age_ra2 d_marital* d_HS  nkids_baseline /*
-*/ constant curremp higrade nkids* married* c91 d_ethnic* d_black
+gen dummy_sp_work = 1 if married_year2 == 1 & lincome_spouse != .
+replace dummy_sp_work = 0 if married_year2 == 1 & lincome_spouse == .
+
+
+
+keep sampleid d_RA age_ra age_ra2 d_marital* d_HS  nkids_baseline  /*
+*/ constant curremp higrade nkids* married* c91 d_ethnic* d_black /*
+*/ lincome_spouse dummy_sp_work d_women
+
+
 
 *Expanding to children
 tempfile data_temp
@@ -158,7 +169,7 @@ Recovering Child care and SSRS
 
 use "$databases/Youth_original2.dta", clear
 qui: do "$codes/data_youth.do"
-keep sampleid child agechild kid1dats p_radaym/* identifiers
+keep sampleid child agechild kid1dats kid2dats kid3dats p_radaym cq11 sdkidbd/* identifiers
 */ c68* c69* c70* c73 /*CC use and payments (year 2)
 */ piq113da  piq114* piq119a piq128a piq128b/* CC use and payments (year 5)    
 */ tq17a tq17b tq17c tq17h /*skills t1
@@ -166,10 +177,9 @@ keep sampleid child agechild kid1dats p_radaym/* identifiers
 destring c68* c69* c70* c73 piq113da  piq114* piq119a piq128a piq128b tq17a tq17b tq17c tq17h t2q17a etsq13a, force replace
 
 *Age at baseline
-destring kid1dats, force replace
-format kid1dats %td
-gen year_birth=yofd(kid1dats)
-drop kid1dats
+destring sdkidbd, force replace
+format sdkidbd %td
+gen year_birth=yofd(sdkidbd)
 
 *child age at baseline
 gen year_ra = substr(string(p_radaym),1,2)
@@ -177,11 +187,11 @@ destring year_ra, force replace
 replace year_ra = 1900 + year_ra
 
 gen age_t0=  year_ra - year_birth
+
 *due to rounding errors, ages 0 and 11 are 1 and 10
 replace age_t0=1 if age_t0==0
 replace age_t0=10 if age_t0==11
-
-gen age_t02=age_t0^2
+drop if age_t0 < 1 | age_t0 > 11
 
 
 /*
@@ -236,24 +246,27 @@ replace d_CC2_t4=0 if  max_months_t4==piq114aa | max_months_t4==piq114ba | max_m
 replace d_CC2_t4=. if max_months_t4==.
 
 
-*Payments child care
+*Payments child care: assuming one price only
 * year 1
-rename c73 cc_pay_t1
-replace cc_pay_t1=0 if d_CC2_t1==0
-gen d_free=.
-replace d_free=1 if cc_pay_t1==0
-replace d_free=0 if cc_pay_t1>0 & cc_pay_t1!=. 
+drop c73
+gen cc_pay_t1 = .
+replace cc_pay_t1 = 0 if d_CC2_t1 == 0
+replace cc_pay_t1 = 0.57*0 + (1-0.57)*750 if d_CC2_t1 == 1
 
 
 *Year 4
-rename piq128a cc_pay_t4 
+drop piq128a 
+gen cc_pay_t4 = .
+replace cc_pay_t4 = 0 if d_CC2_t4 == 0
+replace cc_pay_t4 = 0.57*0 + (1-0.57)*750 if d_CC2_t4 == 1
+/*
 replace cc_pay_t4=13 if piq128b==1
 replace cc_pay_t4=38 if piq128b==2
 replace cc_pay_t4=75 if piq128b==3
 replace cc_pay_t4=125 if piq128b==4
 replace cc_pay_t4=175 if piq128b==5
 replace cc_pay_t4=200 if piq128b==6
-
+*/
 
 rename tq17b skills_m1_t2
 rename tq17c skills_m2_t2
@@ -267,7 +280,7 @@ rename tq17a skills_t2
 rename t2q17a skills_t5
 rename etsq13a skills_t8
 
-keep sampleid child d_CC* skills_* age_t0 age_t02 cc_pay* d_free
+keep sampleid child d_CC* skills_* age_t0 cc_pay*
 sort sampleid child
 
 merge 1:1 sampleid child using `data_control'
@@ -277,7 +290,6 @@ drop _merge
 sort sampleid child
 tempfile cc_data
 save `cc_data', replace
-
 
 ***************************************************************************************
 ***************************************************************************************
@@ -489,7 +501,7 @@ save `data_hours', replace
 *Recover total income by year since RA from data_income.do
 **************************************************************
 
-use "/home/jrodriguez/understanding_NH/results/Income/data_income.dta", clear
+use "/home/jrodriguez/NH_HC/results/income/data_income.dta", clear
 merge 1:m sampleid using `data_hours'
 keep if _merge==3
 drop _merge
@@ -497,7 +509,7 @@ drop _merge
 *Note: total_income_y0 is actually one year behind!!
 
 drop total_income_y0 gross_y0 gross_nominal_y0 grossv2_y0 employment_y0 /*
-*/ fs_y0 afdc_y0 sup_y0
+*/ fs_y0 afdc_y0 sup_y0 income_spouse_y0
 forvalues x=1/9{
 	local z=`x'-1
 	rename total_income_y`x' total_income_y`z'
@@ -508,6 +520,7 @@ forvalues x=1/9{
 	rename afdc_y`x' afdc_y`z'
 	rename fs_y`x' fs_y`z'
 	rename sup_y`x' sup_y`z'
+	rename income_spouse_y`x' income_spouse_y`z'
 
 }
 
@@ -542,23 +555,6 @@ foreach x of numlist 0 1 4 7 {
 }
 
 
-*Child care payments are divided by two if Child A and B are in a family
-*To real numbers
-*duplicates tag sampleid, gen(dupli)
-*replace cc_pay_t1=cc_pay_t1*1.1653595/2 if dupli==1
-*replace cc_pay_t4=cc_pay_t4*1.0958820/2 if dupli==1
-
-replace cc_pay_t1=cc_pay_t1*1.1653595
-
-replace cc_pay_t1=cc_pay_t4*1.0958820
-
-/*
-This is how I'm deciding on hours categories NOT ANYMORE
-
-xtile q_h=hours_t0, nq(3)
-table q_h, c(min hours_t0 max hours_t0 med hours_t0 mean hours_t0)
-*/
-
 ****************************************************************
 
 gen emp_baseline=1 if curremp=="Yes"
@@ -579,25 +575,32 @@ gen d_HS2=higrade>=12
 drop if age_t0<1 | age_t0>11
 
 keep sampleid child d_RA p_assign age_ra age_ra2 d_marital* d_HS d_HS2 c91 /*
-*/ nkids* hours_t* d_CC* constant emp_baseline  delta_emp skills_* c1 piinvyy /*
-*/ epiinvyy total_income_y* married* cc_pay* gross_y* gross_nominal_y* grossv2_y* /*
-*/ age_t0 age_t02 d_free afdc_y* fs_y* sup_y* higrade d_ethnic* d_black
+*/ nkids* hours_t* d_CC* constant emp_baseline delta_emp skills_* c1 piinvyy /*
+*/ epiinvyy total_income_y* married*  gross_y* gross_nominal_y* grossv2_y* /*
+*/ age_t0 afdc_y* fs_y* sup_y* higrade d_ethnic* d_black /*
+*/ lincome_spouse dummy_sp_work d_women income_spouse_y2 cc_pay*
 
+keep if d_women == 1
 
 *makign sure of no missing values
 foreach x of varlist d_RA age_ra d_marital_2 d_HS2 nkids_baseline age_t0{
 	drop if `x'==.
 }
 
+***Data for prod fn auxiliary model
+save "$results/sample_model_theta.dta", replace
+outsheet using "$results/sample_model_theta.csv", comma  replace
 
-save "$results/sample_model_v2.dta", replace
-outsheet using "$results/sample_model_v2.csv", comma  replace
+***Data for the rest of moments
+tostring child, force replace
+replace child = "A" if child == "1"
+replace child = "B" if child == "2"
+reshape wide skills* age_t0 d_CC* cc_pay_t*, i(sampleid) j(child) string
 
-gen d_one = nkids_baseline == 1
+*Dummy for the presence of child #1
+gen d_childA = age_t0A != .
 
-
-/*how many families*/
-
-keep skills* sampleid child
-
-reshape wide skills*, i(sampleid) j(child)
+*Dummy for the presence of child #2
+gen d_childB = age_t0B != .
+save "$results/sample_model.dta", replace
+outsheet using "$results/sample_model.csv", comma  replace

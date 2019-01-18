@@ -10,12 +10,12 @@ clear mata
 set more off
 
 
-use "/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/sample_model_v2.dta", clear
+use "/home/jrodriguez/NH_HC/results/Model/sample_model_theta.dta", clear
 set seed 2828
 local reps = 800
 
 program prob_diff, rclass
-	version 13
+	version 15
 	tempname mean_1 mean_2
 	args cc_t
 	qui: sum `cc_t' if d_RA==1
@@ -30,7 +30,6 @@ gen age_t1=age_t0+1
 gen age_t2=age_t0+2
 gen age_t4=age_t0+4
 gen age_t7=age_t0+7
-
 
 *Computing ATE for each year
 mat ate_cc=J(2,1,.)
@@ -49,14 +48,14 @@ preserve
 clear
 set obs 2
 svmat ate_cc
-outsheet using "/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/fit/ate_cc.csv", comma replace
+outsheet using "/home/jrodriguez/NH_HC/results/Model/fit/ate_cc.csv", comma replace
 restore
 
 preserve
 clear
 set obs 2
 svmat se_ate_cc
-outsheet using "/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/fit/se_ate_cc.csv", comma replace
+outsheet using "/home/jrodriguez/NH_HC/results/Model/fit/se_ate_cc.csv", comma replace
 restore
 
 exit, STATA clear

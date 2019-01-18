@@ -27,14 +27,18 @@ class Parameters:
 
 	"""
 	def __init__(self,alphap,alphaf,eta,gamma1,gamma2,gamma3,
-		tfp,sigma2theta,rho_theta_epsilon,betaw,betam,betak,eitc,afdc,snap,cpi,
+		tfp,sigma2theta,varphi,rho_theta_epsilon,rho_theta_ab,betaw,
+		beta_spouse,c_emp_spouse,
+		betam,betak,eitc,afdc,snap,cpi,
 		lambdas,kappas,pafdc,psnap,mup):
 
 		self.alphap,self.alphaf,self.eta=alphap,alphaf,eta
 		self.gamma1,self.gamma2,self.gamma3=gamma1,gamma2,gamma3
 		self.tfp=tfp
-		self.rho_theta_epsilon=rho_theta_epsilon
-		self.sigma2theta,self.betaw,self.betam,self.betak=sigma2theta,betaw,betam,betak
+		self.rho_theta_epsilon,self.rho_theta_ab=rho_theta_epsilon,rho_theta_ab
+		self.sigma2theta,self.varphi=sigma2theta,varphi
+		self.betaw,self.betam,self.betak=betaw,betam,betak
+		self.beta_spouse,self.c_emp_spouse=beta_spouse,c_emp_spouse
 		self.eitc,self.afdc,self.snap,self.cpi=eitc,afdc,snap,cpi
 		self.lambdas,self.kappas=lambdas,kappas
 		self.pafdc,self.psnap=pafdc,psnap
@@ -48,7 +52,8 @@ class Utility(object):
 
 	"""
 	def __init__(self,param,N,xwage,xmarr,xkid,ra,
-		nkids0,married0,hours,cc,age_t0,hours_p,hours_f,wr,cs,ws):
+		nkids0,married0,hours,cc_a,cc_b,age_t0a,age_t0b,d_childa,
+		d_childb,hours_p,hours_f,wr,cs,ws):
 		"""
 		Set up model's data and paramaters
 
@@ -63,7 +68,8 @@ class Utility(object):
 		self.N,self.xwage,self.xmarr=N,xwage,xmarr
 		self.xkid,self.ra=xkid,np.reshape(ra,self.N)
 		self.nkids0,self.married0= nkids0,married0
-		self.hours,self.cc,self.age_t0=hours,cc,age_t0
+		self.hours,self.cc_a,self.cc_b,self.age_t0a,self.age_t0b=hours,cc_a,cc_b,age_t0a,age_t0b
+		self.d_childa,self.d_childb=d_childa,d_childb
 		self.hours_p,self.hours_f=hours_p,hours_f
 		self.wr,self.cs,self.ws=wr,cs,ws
 
@@ -72,21 +78,23 @@ class Utility(object):
 		Initial shocks to human capital and individual productivity
 		
 		"""
-		var =  np.random.multivariate_normal(np.zeros(2),
-			np.array([[self.param.sigma2theta**2,
-				self.param.rho_theta_epsilon*self.param.sigma2theta*
-				np.sqrt(self.param.betaw[-2,0])],
-				[self.param.rho_theta_epsilon*self.param.sigma2theta*
-				np.sqrt(self.param.betaw[-2,0]),self.param.betaw[-2,0]]]),self.N)
 
-		return {'epsilon_theta0': var[:,0], 'epsilon0': var[:,1]}
+		var =  np.random.multivariate_normal(np.zeros(3),
+			np.array([ [self.param.sigma2theta**2,self.param.rho_theta_ab,
+				self.param.rho_theta_epsilon*self.param.sigma2theta*np.sqrt(self.param.betaw[-2,0])],
+				[self.param.rho_theta_ab,self.param.sigma2theta**2,
+				self.param.rho_theta_epsilon*self.param.sigma2theta*np.sqrt(self.param.betaw[-2,0])],
+				[self.param.rho_theta_epsilon*self.param.sigma2theta*np.sqrt(self.param.betaw[-2,0]),
+				self.param.rho_theta_epsilon*self.param.sigma2theta*np.sqrt(self.param.betaw[-2,0]),
+				self.param.betaw[-2,0]]	]),self.N)
+
+		return {'epsilon_theta0_a': var[:,0],'epsilon_theta0_b': var[:,1],'epsilon0': var[:,2]}
 
 	def wage_init(self,epsilon_t):
 		"""
 		Initial shock to wages
 		"""
 		
-
 		periodt = 0
 		lt = np.zeros((self.N,1)) + periodt 
 
@@ -100,10 +108,10 @@ class Utility(object):
 
 	def theta_init(self,epsilon_theta0):
 		"""
-		The initial value of child human capital
+		The initial value of child human capital: [child A, child B]
 		"""
 		
-		return np.exp( epsilon_theta0)
+		return [np.exp(self.d_childa[:,0]*epsilon_theta0[0]),np.exp(self.d_childb[:,0]*epsilon_theta0[1])]
 
 		
 	def epsilon(self,epsilon_1):
@@ -135,6 +143,8 @@ class Utility(object):
 
 		"""
 
+
+
 		lt =  np.zeros((self.N,1)) + periodt
 
 		xw=np.concatenate((np.reshape(self.xwage[:,0],(self.N,1)), #HS
@@ -143,7 +153,34 @@ class Utility(object):
 
 		betas=self.param.betaw[0:-2,0] #everything but rho and variance
 
-		return np.exp( np.dot(xw,betas)+ epsilon )
+
+		return np.exp( np.dot(xw,betas)+ epsilon)
+
+	def employment_spouse(self):
+		"""
+		Computes income process for males
+
+		"""
+	
+		return np.random.randn(self.N) > self.param.c_emp_spouse
+
+
+	def income_spouse(self):
+		"""
+		Computes income process for males
+
+		"""
+		xw=np.concatenate((np.reshape(self.xwage[:,0],(self.N,1)), #HS
+						np.reshape(self.xwage[:,1],(self.N,1)),),axis=1) #constant
+
+		betas=self.param.beta_spouse[0:-1,0] #everything but variance
+
+		epsilon = np.sqrt(self.param.beta_spouse[-1,0])*np.random.randn(self.N)
+
+		#spouse income (for everyone)
+		income_spouse = np.dot(xw,betas)+ epsilon 
+		
+		return np.exp(income_spouse)
 
 	def q_prob(self):
 		"""
@@ -232,7 +269,7 @@ class Utility(object):
 		return  np.reshape(dummy,(self.N,1)) #1 if have a kid a t+1
 
 
-	def dincomet(self, periodt,hours,wage,marr,kid):
+	def dincomet(self, periodt,hours,wage,marr,kid,income_spouse,employment_spouse):
 		"""
 		Computes annual disposable income given weekly hours worked, hourly wage,
 		marital status and number of kids. 
@@ -247,10 +284,13 @@ class Utility(object):
 		""" 
 		
 		#from hourly wage to annual earnings
-		pwage=np.reshape(hours,self.N)*np.reshape(wage,self.N)*52
+		pwage = np.reshape(hours,self.N)*np.reshape(wage,self.N)*52
 
 		#To nominal prices (2003 prices)
-		pwage=pwage/(self.param.cpi[8]/self.param.cpi[periodt])
+		pwage = pwage/(self.param.cpi[8]/self.param.cpi[periodt])
+
+		#family earnings: used for eligibility
+		pwage_family = pwage + income_spouse*employment_spouse
 
 		#the EITC parameters
 		dic_eitc=self.param.eitc[periodt]
@@ -290,10 +330,17 @@ class Utility(object):
 			else:
 				kid_boo=kid[:,0]>=nn+1
 			
-			eitc_fed[(pwage<b1[nn]) & (kid_boo) ]=r1[nn]*pwage[(pwage<b1[nn]) & (kid_boo)]
-			eitc_fed[(pwage>=b1[nn]) & (pwage<b2[nn]) & (kid_boo)]=r1[nn]*b1[nn]
-			eitc_fed[(pwage>=b2[nn]) & (kid_boo)]=np.maximum(r1[nn]*b1[nn]-r2[nn]*(pwage[(pwage>=b2[nn]) & (kid_boo)]-b2[nn]),np.zeros(pwage[(pwage>=b2[nn]) & (kid_boo)].shape[0]))
-			eitc_state[kid_boo]=state_eitc[nn]*eitc_fed[kid_boo]
+			for k in range(0,1): #spouse employment
+
+				if k == 0:
+					boo_spouse = employment_spouse == 0
+				else:
+					boo_spouse = employment_spouse == 1
+
+				eitc_fed[(pwage_family<b1[nn]) & (kid_boo) & (boo_spouse) ]=r1[nn]*pwage_family[(pwage_family<b1[nn]) & (kid_boo) & (boo_spouse)]
+				eitc_fed[(pwage_family>=b1[nn]) & (pwage_family<b2[nn][k] & (boo_spouse)) & (kid_boo)]=r1[nn]*b1[nn]
+				eitc_fed[(pwage_family>=b2[nn][k]) & (kid_boo) & (boo_spouse)]=np.maximum(r1[nn]*b1[nn]-r2[nn]*(pwage_family[(pwage_family>=b2[nn][k]) & (kid_boo) & (boo_spouse)]-b2[nn][k]),np.zeros(pwage_family[(pwage_family>=b2[nn][k]) & (kid_boo) & (boo_spouse)].shape[0]))
+				eitc_state[kid_boo]=state_eitc[nn]*eitc_fed[kid_boo]
 
 		dincome_eitc=pwage+eitc_fed+eitc_state
 
@@ -301,7 +348,7 @@ class Utility(object):
 
 		if periodt<=2:
 
-			#the wage subsidy
+			#the wage subsidy: individual (not family) earnings
 			wsubsidy=np.zeros(self.N)
 			wsubsidy[pwage<=8500]=0.25*pwage[pwage<=8500]
 			wsubsidy[pwage>8500]=3825-0.2*pwage[pwage>8500]
@@ -326,10 +373,10 @@ class Utility(object):
 			#r_e: phase-out rate
 			beta_aux=xstar/(8500-bar_e)
 
-			#per-child allowance
-			childa=np.zeros(self.N) 
-			childa[pwage<=8500]=xstar[pwage<=8500].copy()
-			childa[pwage>8500]=xstar[pwage>8500] - beta_aux[pwage>8500]*(pwage[pwage>8500] - 8500)
+			#per-child allowance: includes spouse income
+			childa=np.zeros(self.N)
+			childa[pwage_family<=8500]=xstar[pwage_family<=8500].copy()
+			childa[pwage_family>8500]=xstar[pwage_family>8500] - beta_aux[pwage_family>8500]*(pwage_family[pwage_family>8500] - 8500)
 			childa[childa<0]=0
 
 			#disposable income
@@ -362,9 +409,9 @@ class Utility(object):
 				cutoff[boo_k] = afdc_param['cutoff'][nf-1]
 				benefit_std[boo_k] = afdc_param['benefit_std'][nf-1]
 
-			boo_eli=(pwage<=cutoff) & (afdc_takeup==1)
+			boo_eli=(pwage_family<=cutoff) & (afdc_takeup==1)
 			boo_min=benefit_std<=benefit_std-(pwage - 30)*.67
-			afdc_benefit[boo_eli]=(1-boo_min[boo_eli])*(benefit_std[boo_eli]-(pwage[boo_eli] - 30)*.67) + boo_min[boo_eli]*benefit_std[boo_eli]
+			afdc_benefit[boo_eli]=(1-boo_min[boo_eli])*(benefit_std[boo_eli]-(pwage_family[boo_eli] - 30)*.67) + boo_min[boo_eli]*benefit_std[boo_eli]
 			afdc_benefit[afdc_benefit<0]=0
 			#boo_max=afdc_benefit>0
 			#dincome[boo_max]=dincome[boo_max] + afdc_benefit[boo_max]
@@ -396,20 +443,22 @@ class Utility(object):
 
 				max_b[nfam==nf] = snap_param['max_benefit'][7,periodt] + snap_param['max_benefit'][8,periodt]*nfam[nfam==nf]
 			
-		net_inc = pwage + afdc_benefit + nh_supp - std_deduction
+		net_inc = pwage_family + afdc_benefit + nh_supp - std_deduction
 		boo_net_eli = net_inc <= net_i_test
-		boo_gro_eli = pwage <= gross_i_test
+		boo_gro_eli = pwage_family <= gross_i_test
 		boo_unemp=hours==0
 		snap = snap_takeup*((max_b - 0.3*net_inc)*boo_net_eli*boo_gro_eli*(1-boo_unemp) + boo_unemp*(max_b - 0.3*net_inc))*snap_takeup
 		snap[snap<0]=0
 
+		#income of household less spouse's earnings
 		dincome = pwage + afdc_benefit + nh_supp + snap + eitc_fed + eitc_state
 
 		#Back to real prices
 		return {'income': dincome*(self.param.cpi[8]/self.param.cpi[periodt]),
 		'NH': nh_supp, 'EITC_NH': nh_supp + eitc_fed + eitc_state}
 
-	def consumptiont(self,periodt,h,cc,dincome,marr,nkids,wage, free,price):
+	def consumptiont(self,periodt,h,cc_a,cc_b,dincome,income_spouse,employment_spouse,
+		marr,nkids,wage, free,price):
 		"""
 		Computes per-capita consumption:
 		(income - cc_payment)/family size
@@ -422,8 +471,12 @@ class Utility(object):
 		pwage=np.reshape(h,self.N)*np.reshape(wage,self.N)*52
 
 		d_full=h>=self.hours_f
-		agech=np.reshape(self.age_t0,(self.N)) + periodt
-		young=agech<=5
+		agech_a = np.zeros((self.N))
+		agech_b = np.zeros((self.N))
+		agech_a[self.d_childa[:,0] == 1] = self.age_t0a[self.d_childa[:,0] == 1] + periodt
+		agech_b[self.d_childb[:,0] == 1] = self.age_t0b[self.d_childb[:,0] == 1] + periodt
+		young_a = (agech_a<=5) & (agech_a != 0)
+		young_b = (agech_b<=5) & (agech_b != 0)
 		boo_nfree = free==0
 		boo_ra = self.ra==1
 
@@ -440,22 +493,21 @@ class Utility(object):
 		#For those who copayment would be bigger than price
 		copayment[price[:,0]<copayment] = price[price[:,0]<copayment,0].copy()
 
-
 		#child care cost
 		cc_cost = np.zeros(self.N)
 
-		cc_cost[young & boo_nfree] = price[young & boo_nfree,0].copy()
+		cc_cost[boo_nfree] = price[boo_nfree,0].copy()
 		if periodt<=2:
 			
 			if self.cs==1:
 				if self.wr==1:
-					cc_cost[boo_ra & d_full & boo_nfree & young] = copayment[boo_ra & d_full & boo_nfree & young].copy()
+					cc_cost[boo_ra & d_full & boo_nfree] = copayment[boo_ra & d_full & boo_nfree].copy()
 					
 				else:
-					cc_cost[boo_ra &  boo_nfree & young] = copayment[boo_ra &  boo_nfree & young].copy()
+					cc_cost[boo_ra &  boo_nfree] = copayment[boo_ra &  boo_nfree].copy()
 					
 
-				nh_cost = cc*(price[:,0] - cc_cost)
+				nh_cost = (cc_a*young_a + cc_b*young_b)*(price[:,0] - cc_cost)
 			else:
 				nh_cost = np.zeros(self.N)
 
@@ -463,13 +515,15 @@ class Utility(object):
 
 		else:
 			if self.cs==1:
-				cc_cost[boo_nfree & young] = copayment[boo_nfree & young].copy()
+				cc_cost[boo_nfree] = copayment[boo_nfree].copy()
 
 			nh_cost = np.zeros(self.N)
 
+		#spouse income only if married
+		income_spouse[marr == 0] = 0
 
-		incomepc=(dincome - cc*cc_cost)/(ones+nkids+marr)
-		incomepc[incomepc<=0]=1
+		incomepc=(dincome + income_spouse*employment_spouse - (cc_a*young_a + cc_b*young_b)*cc_cost)/(ones+nkids+marr)
+		incomepc[incomepc <= 0] = 1
 
 
 		
@@ -477,7 +531,7 @@ class Utility(object):
 
 
 
-	def thetat(self,periodt,theta0,h,cc,ct):
+	def thetat(self,periodt,theta0,h,cc_a,cc_b,ct):
 		"""
 		Computes theta at period (t+1) (next period)
 		t+1 goes from 1-8
@@ -485,24 +539,34 @@ class Utility(object):
 		Inputs must come from period t
 
 		"""
+
+		theta0_a = theta0[0].copy()
+		theta0_b = theta0[1].copy()
+
 		#age of child
-		agech=np.reshape(self.age_t0,(self.N)) + periodt
+		agech_a = np.zeros((self.N))
+		agech_b = np.zeros((self.N))
+		agech_a[self.d_childa[:,0] == 1] = self.age_t0a[self.d_childa[:,0] == 1] + periodt
+		agech_b[self.d_childb[:,0] == 1] = self.age_t0b[self.d_childb[:,0] == 1] + periodt
 
 		#log consumption pc
 		incomepc=np.log(ct)
 		
-		
 		#log time w child (T=168 hours a week, -35 for older kids)
-		tch = np.zeros(self.N)
+		tch_a = np.zeros(self.N)
+		tch_b = np.zeros(self.N)
 		boo_p = h == self.hours_p
 		boo_f = h == self.hours_f
 		boo_u = h == 0
 
-		tch[agech<=5] = cc[agech<=5]*(168 - self.hours_f) + (1-cc[agech<=5])*(168 - h[agech<=5] ) 
-		tch[agech>5] = 133 - h[agech>5] 
-		tch=np.log(tch)
+		tch_a[agech_a<=5] = cc_a[agech_a<=5]*(168 - self.hours_f) + (1-cc_a[agech_a<=5])*(168 - h[agech_a<=5] ) 
+		tch_a[agech_a>5] = 133 - h[agech_a>5] 
+		tch_a=np.log(tch_a)
 
-		
+		tch_b[agech_b<=5] = cc_b[agech_b<=5]*(168 - self.hours_f) + (1-cc_b[agech_b<=5])*(168 - h[agech_b<=5] ) 
+		tch_b[agech_b>5] = 133 - h[agech_b>5] 
+		tch_b=np.log(tch_b)
+	
 				
 		#Parameters
 		gamma1=self.param.gamma1
@@ -510,47 +574,50 @@ class Utility(object):
 		gamma3=self.param.gamma3
 		tfp=self.param.tfp
 				
-		theta1=np.zeros(self.N)
+		theta1_a=np.zeros(self.N)
+		theta1_b=np.zeros(self.N)
+
+		#adjustment for E[theta = 0]
+		alpha_a = - np.mean(incomepc)*gamma2 - np.mean(tch_a)*gamma3
+		alpha_b = - np.mean(incomepc)*gamma2 - np.mean(tch_b)*gamma3
 
 		#The production of HC: (young, cc=0), (young,cc1), (old)
-		boo_age=agech<=5
-		theta1 = tfp*cc*boo_age + gamma1*np.log(theta0) + gamma2*incomepc +	gamma3*tch
-			
-		#adjustment for E[theta = 0]
-		alpha = - np.mean(incomepc)*gamma2 - np.mean(tch)*gamma3  
+		boo_age_a=agech_a<=5
+		boo_age_b=agech_b<=5
+		theta1_a = tfp*cc_a*boo_age_a + gamma1*np.log(theta0_a) + gamma2*incomepc +	gamma3*tch_a + alpha_a
+		theta1_b = tfp*cc_b*boo_age_b + gamma1*np.log(theta0_b) + gamma2*incomepc +	gamma3*tch_b + alpha_b
 
-		return np.exp(theta1 + alpha)
+		#When child A/B is not present
+		theta1_a[self.d_childa[:,0] == 0] = 0
+		theta1_b[self.d_childb[:,0] == 0] = 0
+
+		return [np.exp(theta1_a),np.exp(theta1_b)]
 
 
-	def Ut(self,periodt,dincome,marr,cc,nkids,ht,thetat,wage,free,price):
+	def Ut(self,periodt,dincome,income_spouse,employment_spouse,marr,cc_a,cc_b,nkids,ht,thetat,
+		wage,free,price):
 		"""
 		Computes current-period utility
 
 		"""
+		thetat_a = thetat[0].copy()
+		thetat_b = thetat[1].copy()
 
-		#age of child
-		agech=np.reshape(self.age_t0,(self.N)) + periodt
-		d_age = agech<=5
-
-		#log-theta
-		ltheta=np.log(thetat)
-
+		#log-theta: if child is not present, log theta = 0
+		ltheta = self.d_childa[:,0]*self.param.varphi*np.log(thetat_a) + self.d_childb[:,0]*(1-self.param.varphi)*np.log(thetat_b)
+		
 		#Work dummies
 		d_workf=ht==self.hours_f
 		d_workp=ht==self.hours_p
 		d_unemp=ht==0
 
 		#Consumption: depends on ra, cc, and period
-		ct=self.consumptiont(periodt,ht,cc,dincome,marr,nkids,wage,free,price)['income_pc']
-
-		#parameters
-		ap=self.param.alphap
-		af=self.param.alphaf
-		eta=self.param.eta
-		ut_h=d_workp*ap + d_workf*af
-
+		ct=self.consumptiont(periodt,ht,cc_a,cc_b,dincome,income_spouse,employment_spouse,
+			marr,nkids,wage,free,price)['income_pc']
+		
 		#Current-period utility
-		ut=np.log(ct) + ut_h +  eta*ltheta
+		ut_h=d_workp*self.param.alphap + d_workf*self.param.alphaf
+		ut=np.log(ct) + ut_h +  self.param.eta*ltheta
 
 		if (np.any(np.isnan(ct))==True) | (np.any(np.isinf(ct))==True) :
 			raise ValueError('Consumption is not a real number')
@@ -561,10 +628,10 @@ class Utility(object):
 		if (np.any(np.isnan(ut_h))==True) | (np.any(np.isinf(ut_h))==True) :
 			raise ValueError('Hours contribution to utility is not a real number')
 
-		if (np.any(np.isnan(thetat))==True) | (np.any(np.isinf(thetat))==True) :
+		if (np.any(np.isnan(thetat_a))==True) | (np.any(np.isinf(thetat_a))==True) :
 			raise ValueError('Theta is not a real number')
 
-		if (np.any(np.isnan(np.log(thetat)))==True) | (np.any(np.isinf(np.log(thetat)))==True) :
+		if (np.any(np.isnan(np.log(thetat_a)))==True) | (np.any(np.isinf(np.log(thetat_a)))==True) :
 			raise ValueError('Log of Theta is not a real number')
 
 		if (np.any(np.isnan(ut))==True) | (np.any(np.isinf(ut))==True) :
@@ -578,6 +645,10 @@ class Utility(object):
 		For a given periodt and measure, computes the SSRS, given a value for theta.
 		There is only one measure for period
 		"""
+
+		thetat_a = thetat[0].copy()
+		thetat_b = thetat[1].copy()
+
 		if periodt==2:
 			loc=0
 		elif periodt==5:
@@ -586,34 +657,39 @@ class Utility(object):
 		lambdam=self.param.lambdas[loc]
 		cuts=[self.param.kappas[loc][0],self.param.kappas[loc][1],
 		self.param.kappas[loc][2],self.param.kappas[loc][3]]
-				
-		z_star=lambdam*np.log(thetat) + np.random.randn(self.N)
+		z_star = []
+		z_star.append(lambdam*np.log(thetat_a) + np.random.randn(self.N))
+		z_star.append(lambdam*np.log(thetat_b) + np.random.randn(self.N))
 
-		#the SSRS measure
-		z=np.zeros(self.N)
-		z[z_star<=cuts[0]]=1
-		z[(z_star>cuts[0]) & (z_star<=cuts[1])]=2
-		z[(z_star>cuts[1]) & (z_star<=cuts[2])]=3
-		z[(z_star>cuts[2]) & (z_star<=cuts[3])]=4
-		z[(z_star>cuts[3])]=5
+		#the SSRS measure: [child A, child B]
+		z=[]
+		for j in [0,1]:
+			z_aux=np.zeros(self.N)
+			z_aux[z_star[j]<=cuts[0]]=1
+			z_aux[(z_star[j]>cuts[0]) & (z_star[j]<=cuts[1])]=2
+			z_aux[(z_star[j]>cuts[1]) & (z_star[j]<=cuts[2])]=3
+			z_aux[(z_star[j]>cuts[2]) & (z_star[j]<=cuts[3])]=4
+			z_aux[(z_star[j]>cuts[3])]=5
+			z.append(z_aux)
 
 
 		return z
 	
 	
-	def simulate(self,periodt,wage0,free,price,theta0):
+	def simulate(self,periodt,wage0,free,price,theta0,income_spouse,employment_spouse):
 		"""
 		Takes states (theta0, nkids0, married0, wage0) and given choices
 		(self: hours and childcare) to compute current-period utility value.
 
 		"""
 
-		income=self.dincomet(periodt, self.hours,wage0,self.married0,self.nkids0)['income']
+		income=self.dincomet(periodt, self.hours,wage0,self.married0,self.nkids0,income_spouse,employment_spouse)['income']
 		#theta=self.thetat(periodt,self.theta0,self.hours,self.childcare,income,self.married0,self.nkids0)
 		
 
-		return self.Ut(periodt,income,self.married0,self.cc,self.nkids0,self.hours,
-			theta0,wage0,free,price)
+		return self.Ut(periodt,income,income_spouse,employment_spouse,
+			self.married0,self.cc_a,self.cc_b,
+			self.nkids0,self.hours,theta0,wage0,free,price)
 
 	
 			

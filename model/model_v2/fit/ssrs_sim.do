@@ -11,7 +11,7 @@ set maxvar 15000
 set matsize 2000
 
 
-use "/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/fit/ssrs_sample.dta", clear
+use "/home/jrodriguez/NH_HC/results/Model/fit/ssrs_sample.dta", clear
 
 mat betas = J(1000,1,.)
 mat betas_young = J(1000,1,.)
@@ -66,7 +66,7 @@ svmat betas_old
 foreach beta of varlist betas1 betas_young1 betas_old1{
 	preserve
 	keep `beta'
-	outsheet using "/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/fit/`beta'_vector.csv", comma replace
+	outsheet using "/home/jrodriguez/NH_HC/results/Model/fit/`beta'_vector.csv", comma replace
 	restore
 }
 

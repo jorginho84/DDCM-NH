@@ -108,7 +108,7 @@ class Emaxt:
 		J=3*2*2
 
 		#I save emaxT(T-1) values here
-		emax_t1=np.zeros((ngrid,J))
+		emax_t1 = np.zeros((ngrid,J))
 
 		#At T-1, possible choices
 		hours=np.zeros(ngrid)
@@ -158,11 +158,9 @@ class Emaxt:
 			u_vec=np.zeros((ngrid,self.D,J))
 
 			#Income and consumption at T-1
+			dincome0=self.model.dincomet(bigT-1,hours,wage0,married0,nkids0)['income']
 			spouse_income = self.model.income_spouse()
-			employment_spouse = self.model.employment_spouse()
-			dincome0=self.model.dincomet(bigT-1,hours,wage0,married0,nkids0,spouse_income,employment_spouse)['income']
-			consumption0=self.model.consumptiont(bigT-1,hours,childcare_a,
-				childcare_b,dincome0,spouse_income,employment_spouse,
+			consumption0=self.model.consumptiont(bigT-1,hours,childcare_a,childcare_b,dincome0,spouse_income,
 				married0,nkids0,wage0,free0,price0)['income_pc']
 			
 
@@ -191,7 +189,6 @@ class Emaxt:
 					free_t1=self.model.q_prob()
 					price_t1=self.model.price_cc()
 					income_spouse_t1=self.model.income_spouse()
-					employment_spouse_t1=self.model.employment_spouse()
 					#using t-1 income to get theta_T
 					
 					theta_t1=self.model.thetat(periodt-1,theta0,hours,childcare_a,childcare_b,consumption0) #theta at t+1 uses inputs at t
@@ -208,8 +205,7 @@ class Emaxt:
 						self.hours_p,self.hours_f,self.wr,self.cs,self.ws)
 					
 					#This is the terminal value!
-					u_vec[:,i,j]=self.model.simulate(bigT,wage_t1,free_t1,price_t1,theta_t1,
-					income_spouse_t1,employment_spouse_t1) #Last period is T=8. Terminal value=0
+					u_vec[:,i,j]=self.model.simulate(bigT,wage_t1,free_t1,price_t1,theta_t1,income_spouse_t1) #Last period is T=8. Terminal value=0
 
 				
 
@@ -239,6 +235,8 @@ class Emaxt:
 			#This is the emax for a given (for a given at choice T-1)
 			av_max_ut=np.average(max_ut,axis=1)
 
+			emax_t1[:,jt] = av_max_ut.copy()
+
 			#database for interpolation
 			data_int=np.concatenate( ( np.reshape(np.log(theta0[0]),(ngrid,1)),
 				np.reshape(np.log(theta0[1]),(ngrid,1)), 
@@ -263,7 +261,7 @@ class Emaxt:
 
 		#the instance with the eitc function and emax values
 
-		return [emax_inst]
+		return [emax_inst,emax_t1]
 
 
 	def emax_t(self,periodt,bigt,emax_t1_betas):
@@ -344,13 +342,10 @@ class Emaxt:
 			childcare_b = np.full(ngrid,cc_b_aux[jt],dtype=float)
 
 			#I get these to compute theta_t1
+			dincome0=self.model.dincomet(periodt-1,hours,wage0,married0,nkids0)['income']
 			spouse_income0 = self.model.income_spouse()
-			spouse_employment0 = self.model.employment_spouse()
-			dincome0=self.model.dincomet(periodt-1,hours,wage0,married0,nkids0,
-				spouse_income0,spouse_employment0)['income']
-			consumption0=self.model.consumptiont(periodt-1,hours,childcare_a,
-				childcare_b,dincome0,spouse_income0,spouse_employment0,
-				married0,nkids0,wage0,free0,price0)['income_pc']
+			consumption0=self.model.consumptiont(periodt-1,hours,childcare_a,childcare_b,
+				dincome0,spouse_income0,married0,nkids0,wage0,free0,price0)['income_pc']
 			
 
 			J=3*2*2 #number of choides in the inner loop
@@ -380,7 +375,6 @@ class Emaxt:
 					free_t1=self.model.q_prob()
 					price_t1=self.model.price_cc()
 					income_spouse_t1=self.model.income_spouse()
-					employment_spouse_t1=self.model.employment_spouse()
 					#income at t-1 to compute theta_t
 					theta_t1=self.model.thetat(periodt-1,theta0,hours,childcare_a,childcare_b,consumption0) #theta at t+1 uses inputs at t
 
@@ -397,8 +391,7 @@ class Emaxt:
 						self.hours_p,self.hours_f,self.wr,self.cs,self.ws)
 
 					#Current-period utility at t
-					u_vec[:,i,j]=self.model.simulate(periodt,wage_t1,free_t1,price_t1,
-						theta_t1,income_spouse_t1,employment_spouse_t1) 
+					u_vec[:,i,j]=self.model.simulate(periodt,wage_t1,free_t1,price_t1,theta_t1,income_spouse_t1) 
 
 					#getting next-period already computed emaxt+1
 					data_int_ex=np.concatenate(( np.reshape(np.log(theta_t1[0]),(ngrid,1)),
@@ -458,6 +451,7 @@ class Emaxt:
 
 			
 			#saving instances
+			emax_t1[:,jt] = av_max_ut.copy()
 
 			if jt==0:
 				emax_inst=[int_linear.Int_linear().betas(data_int,av_max_ut)]
@@ -469,7 +463,7 @@ class Emaxt:
 
 
 		#the instance with the eitc function
-		return [emax_inst]
+		return [emax_inst,emax_t1]
 
 
 	def recursive(self):
@@ -482,7 +476,7 @@ class Emaxt:
 
 		"""	
 		
-		
+	
 	
 		def emax_gen(j):
 			
@@ -493,12 +487,14 @@ class Emaxt:
 					
 					
 					emax_dic={'emax'+str(t): emax_bigt_ins[0]}
+					emax_values={'emax'+str(t): emax_bigt_ins[1]}
 					
 				elif t==j-1: #at T-1
 					emax_t1_ins=self.emax_t(t,j,emax_bigt_ins[0])
 					
 					
 					emax_dic['emax'+str(t)]=emax_t1_ins[0]
+					emax_values['emax'+str(t)]=emax_t1_ins[1]
 					
 					
 				else:
@@ -506,11 +502,12 @@ class Emaxt:
 					
 					
 					emax_dic['emax'+str(t)]=emax_t1_ins[0]
+					emax_values['emax'+str(t)]=emax_t1_ins[1]
 					
 
-			return [emax_dic]
+			return [emax_dic,emax_values]
 
-		pool = ProcessPool(nodes=10)
+		pool = ProcessPool(nodes=8)
 
 		#7: old child (11 years old) solves for 7 emax 
 		#19: young child (0 years old) solves for 18 emax
@@ -535,21 +532,22 @@ class Emaxt:
 				if t==j:#last period
 					emax_bigt_ins=self.emax_bigt(j)
 					emax_dic={'emax'+str(t): emax_bigt_ins[0]}
-					#emax_values={'emax'+str(t): emax_bigt_ins[1]}
+					emax_values={'emax'+str(t): emax_bigt_ins[1]}
 				elif t==j-1: #at T-1
 					emax_t1_ins=self.emax_t(t,j,emax_bigt_ins[0])
 					emax_dic['emax'+str(t)]=emax_t1_ins[0]
-					#emax_values['emax'+str(t)]=emax_t1_ins[1]
+					emax_values['emax'+str(t)]=emax_t1_ins[1]
 					
 				else:
 					emax_t1_ins=self.emax_t(t,j,emax_t1_ins[0])
 					emax_dic['emax'+str(t)]=emax_t1_ins[0]
-					#emax_values['emax'+str(t)]=emax_t1_ins[1]
+					emax_values['emax'+str(t)]=emax_t1_ins[1]
 
-			list_emax.append([emax_dic])
+			list_emax.append([emax_dic,emax_values])
 
 	
 		"""
+		
 		
 
 		

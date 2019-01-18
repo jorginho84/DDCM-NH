@@ -7,9 +7,10 @@ information for sample_model.do
 */
 
 
-global databases "/mnt/Research/nealresearch/new-hope-secure/newhopemount/Data/databases"
-global codes "/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes"
-global results "/mnt/Research/nealresearch/new-hope-secure/newhopemount/results"
+global databases "/home/jrodriguez/NH-secure"
+global codes "/home/jrodriguez/NH_HC/codes"
+global results "/home/jrodriguez/NH_HC/results/income"
+
 
 
 
@@ -30,39 +31,11 @@ qui: do "$codes/data_cfs.do"
 keep sampleid p_assign p_radatr cstartm curremp c1 piinvyy epiinvyy /*
 */ern*q* sup*q* csjm9* /*UI earnings, NH supplement, CSJ's
 */ kid*daty  c53d_1 piq93e epi74e /*kids at baseline and births
-*/ c53d_3 /*Year of birth*/
+*/ c53d_3 /*Year of birth
+*/ spapwlf1 /*earnings of spouse
+*/ c54 c55 c1 /*Marital status*/
 
 
-
-**********************************
-*CSJ: quarters in calendar time
-**********************************
-
-*Renaming CSJ calendar-time variables
-forvalues y=94/97{
-
-	local m=1
-	foreach month in "01" "02" "03" "04" "05" "06" "07" "08" "09" "10" "11" "12"{
-		rename csjm`y'`month' csj19`y'm`m'
-		local m=`m'+1
-	}
-	
-} 
-
-
-*Quarters
-
-forvalues y=1994/1997{
-
-	local m1=1
-	forvalues q=1/4{
-		local m2=`m1'+1
-		local m3=`m2'+1
-		egen csj`y'q`q'=rowtotal(csj`y'm`m1' csj`y'm`m2' csj`y'm`m3')
-		local m1=`m3'+1
-	}
-
-}
 
 ****************************************
 *UI Earnings: quarters in calendar time
@@ -124,13 +97,8 @@ forvalues q=1/4{
 forvalues y=1994/2003{
 	forvalues q=1/4{
 	
-		if `y'<=1997{
-			gen d_emp`y'q`q'=(ern`y'q`q'!=. & ern`y'q`q'>0) | (csj`y'q`q'!=. & csj`y'q`q'>0) 
-		}
-		else{
-			gen d_emp`y'q`q'=(ern`y'q`q'!=. & ern`y'q`q'>0)
-		}
-	
+		gen d_emp`y'q`q'=(ern`y'q`q'!=. & ern`y'q`q'>0)
+			
 	}
 
 }
@@ -173,28 +141,24 @@ forvalues y=1994/2003{
 	
 	}
 	
-	*CSJ earnings
-	if `y'<=1997{
-		egen csj_y`y'=rowmean(csj`y'q1 csj`y'q2 csj`y'q3 csj`y'q4)
-		replace csj_y`y'=csj_y`y'
-	}
-
 }
 
 *Gross income (to compute EITC amounts. does not have NH supplements)
 forvalues y=1994/2003{
 	
-	if `y'<=1997{
-		egen gross_y`y'=rowtotal(earn_y`y' csj_y`y')
+	gen gross_y`y'= earn_y`y'
 	
-	}
-	else{
-		gen gross_y`y'=earn_y`y'
-	}
-
 }
 
-*Employment by year
+*Spouse's earnings and marital status at second-year interview
+qui: destring spapwlf1, force replace
+rename spapwlf1 income_spouse
+replace income_spouse=0 if income_spouse==.
+
+gen married_year2=0
+replace married_year2=1 if c54=="2"
+replace married_year2=1 if c55=="1"
+replace married_year2=. if c1==" " /*Not in survey*/
 
 *****************************************
 *Predicting the EITC
@@ -249,7 +213,30 @@ forvalues y=1994/2003{
 	gen eitc_state_y`y'=0
 	
 	
-	replace eitc_fed_y`y'=r1_1_`y'*b1_1_`y' if (gross_y`y'>=b1_1_`y' & gross_y`y'<b2_1_`y') & nkids_y`y'==1
+	if `y'>=2002{
+
+		*Single
+		replace eitc_fed_y`y'=r1_1_`y'*b1_1_`y' if (gross_y`y'>=b1_1_`y' & gross_y`y'<b2_1_`y') & nkids_y`y'==1 & married_year2 == 0 
+		replace eitc_fed_y`y'=r1_1_`y'*b1_1_`y'-r2_1_`y'*(gross_y`y'-b2_1_`y') if gross_y`y'>=b2_1_`y' & nkids_y`y'==1 & married_year2 == 0
+		replace eitc_fed_y`y'=0 if eitc_fed_y`y'<0 & gross_y`y'>=b2_1_`y' & nkids_y`y'==1 & married_year2 == 0
+		
+		replace eitc_fed_y`y'=r1_2_`y'*b1_2_`y' if (gross_y`y'>=b1_2_`y' & gross_y`y'<b2_2_`y') & nkids_y`y'>=2 & married_year2 == 0
+		replace eitc_fed_y`y'=r1_2_`y'*b1_2_`y'-r2_2_`y'*(gross_y`y'-b2_2_`y') if gross_y`y'>=b2_2_`y' & nkids_y`y'>=2 & married_year2 == 0
+		replace eitc_fed_y`y'=0 if eitc_fed_y`y'<0 & gross_y`y'>=b2_2_`y' & nkids_y`y'>=2 & married_year2 == 0
+
+		*Married
+		replace eitc_fed_y`y'=r1_1_`y'*b1_1_`y' if (gross_y`y'>=b1_1_`y' & gross_y`y'<b2_1_`y'_m) & nkids_y`y'==1 & married_year2 == 1 
+		replace eitc_fed_y`y'=r1_1_`y'*b1_1_`y'-r2_1_`y'*(gross_y`y'-b2_1_`y'_m) if gross_y`y'>=b2_1_`y'_m & nkids_y`y'==1 & married_year2 == 1
+		replace eitc_fed_y`y'=0 if eitc_fed_y`y'<0 & gross_y`y'>=b2_1_`y'_m & nkids_y`y'==1 & married_year2 == 0
+		
+		replace eitc_fed_y`y'=r1_2_`y'*b1_2_`y' if (gross_y`y'>=b1_2_`y' & gross_y`y'<b2_2_`y'_m) & nkids_y`y'>=2 & married_year2 == 1
+		replace eitc_fed_y`y'=r1_2_`y'*b1_2_`y'-r2_2_`y'*(gross_y`y'-b2_2_`y'_m) if gross_y`y'>=b2_2_`y'_m & nkids_y`y'>=2 & married_year2 == 1
+		replace eitc_fed_y`y'=0 if eitc_fed_y`y'<0 & gross_y`y'>=b2_2_`y'_m & nkids_y`y'>=2 & married_year2 == 1
+
+	}
+
+
+	replace eitc_fed_y`y'=r1_1_`y'*b1_1_`y' if (gross_y`y'>=b1_1_`y' & gross_y`y'<b2_1_`y') & nkids_y`y'==1 
 	replace eitc_fed_y`y'=r1_1_`y'*b1_1_`y'-r2_1_`y'*(gross_y`y'-b2_1_`y') if gross_y`y'>=b2_1_`y' & nkids_y`y'==1
 	replace eitc_fed_y`y'=0 if eitc_fed_y`y'<0 & gross_y`y'>=b2_1_`y' & nkids_y`y'==1
 	
@@ -257,6 +244,9 @@ forvalues y=1994/2003{
 	replace eitc_fed_y`y'=r1_2_`y'*b1_2_`y' if (gross_y`y'>=b1_2_`y' & gross_y`y'<b2_2_`y') & nkids_y`y'>=2
 	replace eitc_fed_y`y'=r1_2_`y'*b1_2_`y'-r2_2_`y'*(gross_y`y'-b2_2_`y') if gross_y`y'>=b2_2_`y' & nkids_y`y'>=2
 	replace eitc_fed_y`y'=0 if eitc_fed_y`y'<0 & gross_y`y'>=b2_2_`y' & nkids_y`y'>=2
+
+
+
 	
 	if `y'==1994{
 		replace eitc_state_y`y'=min(state_1_1994*eitc_fed_y`y', min_state_1_1994 ) if nkids_y`y'==1
@@ -353,6 +343,7 @@ forvalues y=1994/2002{
 
 }
 
+replace income_spouse = income_spouse*cpi_1997
 
 
 *****************************************
@@ -365,7 +356,7 @@ format ra_year %ty
 tab ra_year
 
 keep  gross_y* gross_nominal_y* grossv2_y* employment_y* /*
-*/ sampleid ra_year afdc_y* fs_y* sup_y* eitc_fed_y* eitc_fed_y* eitc_state_y*
+*/ sampleid ra_year afdc_y* fs_y* sup_y* eitc_fed_y* eitc_fed_y* eitc_state_y* income_spouse
 reshape long  gross_y gross_nominal_y grossv2_y employment_y /*
 */ afdc_y fs_y sup_y eitc_fed_y eitc_state_y, i(sampleid) j(year)
 
@@ -373,16 +364,24 @@ reshape long  gross_y gross_nominal_y grossv2_y employment_y /*
 gen year_ra=year-ra_year
 
 
+
 *Reshape again
 
 *only one year behind
-replace year_ra=year_ra+1 
-keep year_ra sampleid gross_y gross_nominal_y grossv2_y employment_y /*
-*/afdc_y fs_y sup_y eitc_fed_y eitc_state_y
-reshape wide gross_y gross_nominal_y grossv2_y employment_y /*
-*/ afdc_y fs_y sup_y eitc_fed_y eitc_state_y, i(sampleid) j(year_ra)
+replace year_ra=year_ra+1
 
-*Total income
+*Spouse income adjustment
+replace income_spouse = 0 if year_ra != 3
+replace income_spouse = 0 if income_spouse == .
+
+rename income_spouse income_spouse_y
+
+keep year_ra sampleid gross_y gross_nominal_y grossv2_y employment_y /*
+*/afdc_y fs_y sup_y eitc_fed_y eitc_state_y income_spouse_y
+reshape wide gross_y gross_nominal_y grossv2_y employment_y /*
+*/ afdc_y fs_y sup_y eitc_fed_y eitc_state_y income_spouse_y, i(sampleid) j(year_ra)
+
+*Total income (individual)
 
 forvalues y=0/10{
 	
@@ -409,4 +408,4 @@ forvalues y=0/10{
 
 *This database if for using it in the sample_model.do
 sort sampleid
-save "$results/Income/data_income.dta", replace
+save "$results/data_income.dta", replace

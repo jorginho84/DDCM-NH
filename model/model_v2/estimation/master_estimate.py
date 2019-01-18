@@ -33,12 +33,6 @@ import estimate as estimate
 
 np.random.seed(1)
 
-betas_nelder=np.load('/home/jrodriguez/NH_HC/results/Model/estimation/betas_modelv23.npy')
-
-
-#Number of periods where all children are less than or equal to 18
-nperiods = 8
-
 betas_nelder=np.load("/home/jrodriguez/NH_HC/results/Model/estimation/betas_modelv24.npy")
 
 
@@ -182,8 +176,8 @@ M=200
 
 
 #How many hours is part- and full-time work
-hours_p=20
-hours_f=40
+hours_p = 15
+hours_f = 40
 
 #Indicate if model includes a work requirement (wr), 
 #and child care subsidy (cs) and a wage subsidy (ws)

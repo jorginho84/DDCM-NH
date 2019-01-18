@@ -54,9 +54,9 @@ betas_nelder=np.load("/home/jrodriguez/NH_HC/results/Model/estimation/betas_mode
 nperiods = 8
 
 #Utility function
-eta = betas_nelder[0]
-alphap = betas_nelder[1]
-alphaf = -0.05
+eta = betas_nelder[0] + 0.1
+alphap = betas_nelder[0]
+alphaf = betas_nelder[2] - 0.1 
 
 #wage process
 wagep_betas=np.array([betas_nelder[3],betas_nelder[4],1.65,
@@ -69,21 +69,20 @@ c_emp_spouse = .8
 
 #Production function [young,old]
 gamma1= betas_nelder[8]
-gamma2= betas_nelder[9]
-gamma3= betas_nelder[10]
-tfp=0.25
+gamma2= 0.05
+gamma3= betas_nelder[10] + 0.02
+tfp=0.1
 sigma2theta = 1
 varphi = 0.7
 
 
-kappas=[[betas_nelder[12] + 10,betas_nelder[13]+ 10,betas_nelder[14]+ 10
-,betas_nelder[15]+ 10],
-[betas_nelder[16] + 28,betas_nelder[17] + 28,betas_nelder[18] + 28,
-betas_nelder[19] + 28]]
+kappas=[[betas_nelder[12],betas_nelder[13],betas_nelder[14],betas_nelder[15]],
+[betas_nelder[16]-0.15,betas_nelder[17]-0.15,betas_nelder[18]-0.15,
+betas_nelder[19]-0.15]]
 
 #initial theta
-rho_theta_epsilon = betas_nelder[20]
-rho_theta_ab = 0.2
+rho_theta_epsilon = 0.05
+rho_theta_ab = 0.25
 
 
 #First measure is normalized. starting arbitrary values
@@ -199,10 +198,12 @@ cs=1
 ws=1
 
 
-output_ins=estimate.Estimate(nperiods,param0,x_w,x_m,x_k,x_wmk,passign,
+output_ins = estimate.Estimate(nperiods,param0,x_w,x_m,x_k,x_wmk,passign,
 	agech0_a,agech0_b,d_childa,d_childb,nkids0,
 	married0,D,dict_grid,M,N,moments_vector,var_cov,hours_p,hours_f,
 	wr,cs,ws)
+
+
 
 #The model (utility instance)
 hours = np.zeros(N)

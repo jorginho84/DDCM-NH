@@ -578,14 +578,14 @@ class Utility(object):
 		theta1_b=np.zeros(self.N)
 
 		#adjustment for E[theta = 0]
-		alpha_a = - np.mean(incomepc)*gamma2 - np.mean(tch_a)*gamma3
-		alpha_b = - np.mean(incomepc)*gamma2 - np.mean(tch_b)*gamma3
+		#alpha_a = - np.mean(incomepc)*gamma2 - np.mean(tch_a)*gamma3
+		#alpha_b = - np.mean(incomepc)*gamma2 - np.mean(tch_b)*gamma3
 
 		#The production of HC: (young, cc=0), (young,cc1), (old)
 		boo_age_a=agech_a<=5
 		boo_age_b=agech_b<=5
-		theta1_a = tfp*cc_a*boo_age_a + gamma1*np.log(theta0_a) + gamma2*incomepc +	gamma3*tch_a + alpha_a
-		theta1_b = tfp*cc_b*boo_age_b + gamma1*np.log(theta0_b) + gamma2*incomepc +	gamma3*tch_b + alpha_b
+		theta1_a = tfp*cc_a*boo_age_a + gamma1*np.log(theta0_a) + gamma2*incomepc +	gamma3*tch_a 
+		theta1_b = tfp*cc_b*boo_age_b + gamma1*np.log(theta0_b) + gamma2*incomepc +	gamma3*tch_b
 
 		#When child A/B is not present
 		theta1_a[self.d_childa[:,0] == 0] = 0

@@ -49,6 +49,7 @@ foreach x of numlist 2 5 8{
 	gen d_skills_t`x' = .
 	replace d_skills_t`x' = 1 if skills_t`x'_aux>3
 	replace d_skills_t`x' = 0 if skills_t`x'_aux<=3
+	replace d_skills_t`x' = . if skills_t`x'_aux == .
 }
 
 

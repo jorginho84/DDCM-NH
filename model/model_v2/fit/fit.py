@@ -47,42 +47,44 @@ import estimate as estimate
 
 np.random.seed(1)
 
-betas_nelder=np.load("/home/jrodriguez/NH_HC/results/Model/estimation/betas_modelv24.npy")
+betas_nelder=np.load("/home/jrodriguez/NH_HC/results/Model/estimation/betas_modelv26_twoch.npy")
 
 
 #Number of periods where all children are less than or equal to 18
 nperiods = 8
 
 #Utility function
-eta = betas_nelder[0] + 0.1
-alphap = betas_nelder[0]
-alphaf = betas_nelder[2] - 0.1 
+eta = betas_nelder[0]
+alphap = betas_nelder[1]
+alphaf = betas_nelder[2]
 
 #wage process
-wagep_betas=np.array([betas_nelder[3],betas_nelder[4],1.65,
-	betas_nelder[6],betas_nelder[7]]).reshape((5,1))
+wagep_betas=np.array([betas_nelder[3],0.07,1.6,
+	betas_nelder[6],0.6]).reshape((5,1))
 
 #income process: male
-income_male_betas = np.array([0.2,7.2,.32]).reshape((3,1))
-c_emp_spouse = .8
+income_male_betas = np.array([betas_nelder[8],betas_nelder[9],
+	betas_nelder[10]]).reshape((3,1))
+c_emp_spouse = betas_nelder[11]
 
 
 #Production function [young,old]
-gamma1= betas_nelder[8]
-gamma2= 0.05
-gamma3= betas_nelder[10] + 0.02
-tfp=0.1
+gamma1= 1.1
+gamma2= 0.02
+gamma3= 0.45
+tfp = 0.5
 sigma2theta = 1
-varphi = 0.7
+varphi = 0.5
 
 
-kappas=[[betas_nelder[12],betas_nelder[13],betas_nelder[14],betas_nelder[15]],
-[betas_nelder[16]-0.15,betas_nelder[17]-0.15,betas_nelder[18]-0.15,
-betas_nelder[19]-0.15]]
+kappas=[[betas_nelder[16]+1.2,betas_nelder[17]+1.2+0.2,
+betas_nelder[18]+1.2+0.4,betas_nelder[19]+1.2+0.4],
+[betas_nelder[20]+5.35,betas_nelder[21]+5.35+0.4,betas_nelder[22]+5.35+0.4+0.4,
+betas_nelder[23]+5.35+0.4+0.4+0.4]]
 
 #initial theta
-rho_theta_epsilon = 0.05
-rho_theta_ab = 0.25
+rho_theta_epsilon = betas_nelder[24]
+rho_theta_ab = betas_nelder[25]
 
 
 #First measure is normalized. starting arbitrary values
@@ -188,7 +190,7 @@ D=20
 M=200
 
 #How many hours is part- and full-time work
-hours_p=15
+hours_p=20
 hours_f=40
 
 #Indicate if model includes a work requirement (wr), 

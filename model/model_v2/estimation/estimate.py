@@ -160,8 +160,6 @@ class Estimate:
 		##Obtaining Auxiliary estimate for every m##
 		childcare_a_matrix=choices['childcare_a_matrix'].copy()
 		childcare_b_matrix=choices['childcare_b_matrix'].copy()
-		childcare=np.concatenate((childcare_a_matrix[self.d_childa[:,0]==1,:,:],
-			childcare_b_matrix[self.d_childb[:,0]==1,:,:]),axis=0)
 		hours_matrix=choices['hours_matrix'].copy()
 		wage_matrix=choices['wage_matrix'].copy()
 		spouse_income_matrix=choices['spouse_income_matrix'].copy()
@@ -173,9 +171,14 @@ class Estimate:
 		consumption_matrix=choices['consumption_matrix'].copy()
 
 
+
+
 		############################################################
 		####Utility function########################
 		############################################################
+
+		childcare=np.concatenate((childcare_a_matrix[self.d_childa[:,0]==1,:,:],
+			childcare_b_matrix[self.d_childb[:,0]==1,:,:]),axis=0)
 
 		#child care at period t=1
 		age_aux=age_child[:,1].copy()
@@ -328,10 +331,12 @@ class Estimate:
 		ssrs_t2_matrix_b[(self.d_childa[:,0]==1) & (self.d_childb[:,0]==1),:] 
 		d_skills_a = ssrs_t2_matrix_a[(self.d_childa[:,0]==1) & (self.d_childb[:,0]==1),:] > 3
 		d_skills_b = ssrs_t2_matrix_b[(self.d_childa[:,0]==1) & (self.d_childb[:,0]==1),:] > 3
+		passign_aux = self.passign[(self.d_childa[:,0]==1) & (self.d_childb[:,0]==1),0]
 		beta_theta_corr = np.zeros(self.M)
 
 		for j in range(self.M):
-			beta_theta_corr[j] = np.corrcoef(d_skills_a[:,j],d_skills_b[:,j])[1,0]
+			beta_theta_corr[j] = np.corrcoef(d_skills_a[passign_aux==1,j],
+				d_skills_b[passign_aux==1,j])[1,0]
 
 		ssrs_t2_matrix_aux = np.concatenate((ssrs_t2_matrix_a[self.d_childa[:,0]==1,:],
 			ssrs_t2_matrix_b[self.d_childb[:,0]==1,:]),axis=0)

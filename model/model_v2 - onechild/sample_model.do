@@ -14,7 +14,7 @@ run data_income.do first
 
 global databases "/home/jrodriguez/NH-secure"
 global codes "/home/jrodriguez/NH_HC/codes"
-global results "/home/jrodriguez/NH_HC/results/Model"
+global results "/home/jrodriguez/NH_HC/results/model_v2"
 
 
 clear
@@ -181,6 +181,7 @@ destring sdkidbd, force replace
 format sdkidbd %td
 gen year_birth=yofd(sdkidbd)
 
+
 *child age at baseline
 gen year_ra = substr(string(p_radaym),1,2)
 destring year_ra, force replace
@@ -280,7 +281,7 @@ rename tq17a skills_t2
 rename t2q17a skills_t5
 rename etsq13a skills_t8
 
-keep sampleid child d_CC* skills_* age_t0 cc_pay*
+keep sampleid child d_CC* skills_* age_t0 cc_pay* sdkidbd
 sort sampleid child
 
 merge 1:1 sampleid child using `data_control'
@@ -578,7 +579,7 @@ keep sampleid child d_RA p_assign age_ra age_ra2 d_marital* d_HS d_HS2 c91 /*
 */ nkids* hours_t* d_CC* constant emp_baseline delta_emp skills_* c1 piinvyy /*
 */ epiinvyy total_income_y* married*  gross_y* gross_nominal_y* grossv2_y* /*
 */ age_t0 afdc_y* fs_y* sup_y* higrade d_ethnic* d_black /*
-*/ lincome_spouse dummy_sp_work d_women income_spouse_y2 cc_pay*
+*/ lincome_spouse dummy_sp_work d_women income_spouse_y2 cc_pay* sdkidbd
 
 keep if d_women == 1
 
@@ -587,20 +588,25 @@ foreach x of varlist d_RA age_ra d_marital_2 d_HS2 nkids_baseline age_t0{
 	drop if `x'==.
 }
 
+*Leaving youngest child
+sort sampleid sdkidbd
+
+bysort sampleid: egen seq_aux = seq()
+replace seq_aux = - seq_aux
+
+sort sampleid seq_aux
+
+bysort sampleid: egen seq_aux_2 = seq()
+
+keep if seq_aux_2 == 1
+drop seq_aux* sdkidbd
+
+
+
 ***Data for prod fn auxiliary model
 save "$results/sample_model_theta.dta", replace
 outsheet using "$results/sample_model_theta.csv", comma  replace
 
-***Data for the rest of moments
-tostring child, force replace
-replace child = "A" if child == "1"
-replace child = "B" if child == "2"
-reshape wide skills* age_t0 d_CC* cc_pay_t*, i(sampleid) j(child) string
 
-*Dummy for the presence of child #1
-gen d_childA = age_t0A != .
-
-*Dummy for the presence of child #2
-gen d_childB = age_t0B != .
 save "$results/sample_model.dta", replace
 outsheet using "$results/sample_model.csv", comma  replace

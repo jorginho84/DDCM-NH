@@ -27,7 +27,7 @@ class Parameters:
 
 	"""
 	def __init__(self,alphap,alphaf,eta,gamma1,gamma2,gamma3,
-		tfp,sigma2theta,varphi,rho_theta_epsilon,rho_theta_ab,betaw,
+		tfp,sigma2theta,rho_theta_epsilon,betaw,
 		beta_spouse,c_emp_spouse,
 		betam,betak,eitc,afdc,snap,cpi,
 		lambdas,kappas,pafdc,psnap,mup):
@@ -35,8 +35,8 @@ class Parameters:
 		self.alphap,self.alphaf,self.eta=alphap,alphaf,eta
 		self.gamma1,self.gamma2,self.gamma3=gamma1,gamma2,gamma3
 		self.tfp=tfp
-		self.rho_theta_epsilon,self.rho_theta_ab=rho_theta_epsilon,rho_theta_ab
-		self.sigma2theta,self.varphi=sigma2theta,varphi
+		self.rho_theta_epsilon=rho_theta_epsilon
+		self.sigma2theta=sigma2theta
 		self.betaw,self.betam,self.betak=betaw,betam,betak
 		self.beta_spouse,self.c_emp_spouse=beta_spouse,c_emp_spouse
 		self.eitc,self.afdc,self.snap,self.cpi=eitc,afdc,snap,cpi
@@ -52,8 +52,7 @@ class Utility(object):
 
 	"""
 	def __init__(self,param,N,xwage,xmarr,xkid,ra,
-		nkids0,married0,hours,cc_a,cc_b,age_t0a,age_t0b,d_childa,
-		d_childb,hours_p,hours_f,wr,cs,ws):
+		nkids0,married0,hours,cc,age_t0,hours_p,hours_f,wr,cs,ws):
 		"""
 		Set up model's data and paramaters
 
@@ -68,8 +67,7 @@ class Utility(object):
 		self.N,self.xwage,self.xmarr=N,xwage,xmarr
 		self.xkid,self.ra=xkid,np.reshape(ra,self.N)
 		self.nkids0,self.married0= nkids0,married0
-		self.hours,self.cc_a,self.cc_b,self.age_t0a,self.age_t0b=hours,cc_a,cc_b,age_t0a,age_t0b
-		self.d_childa,self.d_childb=d_childa,d_childb
+		self.hours,self.cc,self.age_t0=hours,cc,age_t0
 		self.hours_p,self.hours_f=hours_p,hours_f
 		self.wr,self.cs,self.ws=wr,cs,ws
 
@@ -79,16 +77,14 @@ class Utility(object):
 		
 		"""
 
-		var =  np.random.multivariate_normal(np.zeros(3),
-			np.array([ [self.param.sigma2theta**2,self.param.rho_theta_ab,
-				self.param.rho_theta_epsilon*self.param.sigma2theta*np.sqrt(self.param.betaw[-2,0])],
-				[self.param.rho_theta_ab,self.param.sigma2theta**2,
-				self.param.rho_theta_epsilon*self.param.sigma2theta*np.sqrt(self.param.betaw[-2,0])],
-				[self.param.rho_theta_epsilon*self.param.sigma2theta*np.sqrt(self.param.betaw[-2,0]),
-				self.param.rho_theta_epsilon*self.param.sigma2theta*np.sqrt(self.param.betaw[-2,0]),
-				self.param.betaw[-2,0]]	]),self.N)
+		var =  np.random.multivariate_normal(np.zeros(2),
+			np.array([[self.param.sigma2theta**2,
+			self.param.rho_theta_epsilon*self.param.sigma2theta*
+			np.sqrt(self.param.betaw[-2,0])],
+			[self.param.rho_theta_epsilon*self.param.sigma2theta*
+			np.sqrt(self.param.betaw[-2,0]),self.param.betaw[-2,0]]]),self.N)
 
-		return {'epsilon_theta0_a': var[:,0],'epsilon_theta0_b': var[:,1],'epsilon0': var[:,2]}
+		return {'epsilon_theta0': var[:,0], 'epsilon0': var[:,1]}
 
 	def wage_init(self,epsilon_t):
 		"""
@@ -111,7 +107,7 @@ class Utility(object):
 		The initial value of child human capital: [child A, child B]
 		"""
 		
-		return [np.exp(self.d_childa[:,0]*epsilon_theta0[0]),np.exp(self.d_childb[:,0]*epsilon_theta0[1])]
+		return np.exp( epsilon_theta0)
 
 		
 	def epsilon(self,epsilon_1):
@@ -457,7 +453,7 @@ class Utility(object):
 		return {'income': dincome*(self.param.cpi[8]/self.param.cpi[periodt]),
 		'NH': nh_supp, 'EITC_NH': nh_supp + eitc_fed + eitc_state}
 
-	def consumptiont(self,periodt,h,cc_a,cc_b,dincome,income_spouse,employment_spouse,
+	def consumptiont(self,periodt,h,cc,dincome,income_spouse,employment_spouse,
 		marr,nkids,wage, free,price):
 		"""
 		Computes per-capita consumption:
@@ -471,12 +467,8 @@ class Utility(object):
 		pwage=np.reshape(h,self.N)*np.reshape(wage,self.N)*52
 
 		d_full=h>=self.hours_f
-		agech_a = np.zeros((self.N))
-		agech_b = np.zeros((self.N))
-		agech_a[self.d_childa[:,0] == 1] = self.age_t0a[self.d_childa[:,0] == 1] + periodt
-		agech_b[self.d_childb[:,0] == 1] = self.age_t0b[self.d_childb[:,0] == 1] + periodt
-		young_a = (agech_a<=5) & (agech_a != 0)
-		young_b = (agech_b<=5) & (agech_b != 0)
+		agech=np.reshape(self.age_t0,(self.N)) + periodt
+		young=agech<=5
 		boo_nfree = free==0
 		boo_ra = self.ra==1
 
@@ -507,7 +499,7 @@ class Utility(object):
 					cc_cost[boo_ra &  boo_nfree] = copayment[boo_ra &  boo_nfree].copy()
 					
 
-				nh_cost = (cc_a*young_a + cc_b*young_b)*(price[:,0] - cc_cost)
+				nh_cost = (cc*young)*(price[:,0] - cc_cost)
 			else:
 				nh_cost = np.zeros(self.N)
 
@@ -522,7 +514,7 @@ class Utility(object):
 		#spouse income only if married
 		income_spouse[marr == 0] = 0
 
-		incomepc=(dincome + income_spouse*employment_spouse - (cc_a*young_a + cc_b*young_b)*cc_cost)/(ones+nkids+marr)
+		incomepc=(dincome + income_spouse*employment_spouse - cc*young*cc_cost)/(ones+nkids+marr)
 		incomepc[incomepc <= 0] = 1
 
 
@@ -531,7 +523,7 @@ class Utility(object):
 
 
 
-	def thetat(self,periodt,theta0,h,cc_a,cc_b,ct):
+	def thetat(self,periodt,theta0,h,cc,ct):
 		"""
 		Computes theta at period (t+1) (next period)
 		t+1 goes from 1-8
@@ -539,33 +531,21 @@ class Utility(object):
 		Inputs must come from period t
 
 		"""
-
-		theta0_a = theta0[0].copy()
-		theta0_b = theta0[1].copy()
-
 		#age of child
-		agech_a = np.zeros((self.N))
-		agech_b = np.zeros((self.N))
-		agech_a[self.d_childa[:,0] == 1] = self.age_t0a[self.d_childa[:,0] == 1] + periodt
-		agech_b[self.d_childb[:,0] == 1] = self.age_t0b[self.d_childb[:,0] == 1] + periodt
+		agech=np.reshape(self.age_t0,(self.N)) + periodt
 
 		#log consumption pc
 		incomepc=np.log(ct)
 		
 		#log time w child (T=168 hours a week, -35 for older kids)
-		tch_a = np.zeros(self.N)
-		tch_b = np.zeros(self.N)
+		tch = np.zeros(self.N)
 		boo_p = h == self.hours_p
 		boo_f = h == self.hours_f
 		boo_u = h == 0
 
-		tch_a[agech_a<=5] = cc_a[agech_a<=5]*(168 - self.hours_f) + (1-cc_a[agech_a<=5])*(168 - h[agech_a<=5] ) 
-		tch_a[agech_a>5] = 133 - h[agech_a>5] 
-		tch_a=np.log(tch_a)
-
-		tch_b[agech_b<=5] = cc_b[agech_b<=5]*(168 - self.hours_f) + (1-cc_b[agech_b<=5])*(168 - h[agech_b<=5] ) 
-		tch_b[agech_b>5] = 133 - h[agech_b>5] 
-		tch_b=np.log(tch_b)
+		tch[agech<=5] = cc[agech<=5]*(168 - self.hours_f) + (1-cc[agech<=5])*(168 - h[agech<=5] ) 
+		tch[agech>5] = 133 - h[agech>5] 
+		tch=np.log(tch)
 	
 				
 		#Parameters
@@ -574,45 +554,31 @@ class Utility(object):
 		gamma3=self.param.gamma3
 		tfp=self.param.tfp
 				
-		theta1_a=np.zeros(self.N)
-		theta1_b=np.zeros(self.N)
-
-		#adjustment for E[theta = 0]
-		#alpha_a = - np.mean(incomepc)*gamma2 - np.mean(tch_a)*gamma3
-		#alpha_b = - np.mean(incomepc)*gamma2 - np.mean(tch_b)*gamma3
-
 		#The production of HC: (young, cc=0), (young,cc1), (old)
-		boo_age_a=agech_a<=5
-		boo_age_b=agech_b<=5
-		theta1_a = tfp*cc_a*boo_age_a + gamma1*np.log(theta0_a) + gamma2*incomepc +	gamma3*tch_a 
-		theta1_b = tfp*cc_b*boo_age_b + gamma1*np.log(theta0_b) + gamma2*incomepc +	gamma3*tch_b
+		boo_age=agech<=5
+		theta1 = tfp*cc*boo_age + gamma1*np.log(theta0) + gamma2*incomepc +	gamma3*tch
 
-		#When child A/B is not present
-		theta1_a[self.d_childa[:,0] == 0] = 0
-		theta1_b[self.d_childb[:,0] == 0] = 0
-
-		return [np.exp(theta1_a),np.exp(theta1_b)]
+		return np.exp(theta1)
 
 
-	def Ut(self,periodt,dincome,income_spouse,employment_spouse,marr,cc_a,cc_b,nkids,ht,thetat,
+	def Ut(self,periodt,dincome,income_spouse,employment_spouse,marr,cc,nkids,ht,thetat,
 		wage,free,price):
 		"""
 		Computes current-period utility
 
 		"""
-		thetat_a = thetat[0].copy()
-		thetat_b = thetat[1].copy()
+
 
 		#log-theta: if child is not present, log theta = 0
-		ltheta = self.d_childa[:,0]*self.param.varphi*np.log(thetat_a) + self.d_childb[:,0]*(1-self.param.varphi)*np.log(thetat_b)
-		
+		ltheta=np.log(thetat)
+				
 		#Work dummies
 		d_workf=ht==self.hours_f
 		d_workp=ht==self.hours_p
 		d_unemp=ht==0
 
 		#Consumption: depends on ra, cc, and period
-		ct=self.consumptiont(periodt,ht,cc_a,cc_b,dincome,income_spouse,employment_spouse,
+		ct=self.consumptiont(periodt,ht,cc,dincome,income_spouse,employment_spouse,
 			marr,nkids,wage,free,price)['income_pc']
 		
 		#Current-period utility
@@ -628,10 +594,10 @@ class Utility(object):
 		if (np.any(np.isnan(ut_h))==True) | (np.any(np.isinf(ut_h))==True) :
 			raise ValueError('Hours contribution to utility is not a real number')
 
-		if (np.any(np.isnan(thetat_a))==True) | (np.any(np.isinf(thetat_a))==True) :
+		if (np.any(np.isnan(thetat))==True) | (np.any(np.isinf(thetat))==True) :
 			raise ValueError('Theta is not a real number')
 
-		if (np.any(np.isnan(np.log(thetat_a)))==True) | (np.any(np.isinf(np.log(thetat_a)))==True) :
+		if (np.any(np.isnan(np.log(thetat)))==True) | (np.any(np.isinf(np.log(thetat)))==True) :
 			raise ValueError('Log of Theta is not a real number')
 
 		if (np.any(np.isnan(ut))==True) | (np.any(np.isinf(ut))==True) :
@@ -645,10 +611,6 @@ class Utility(object):
 		For a given periodt and measure, computes the SSRS, given a value for theta.
 		There is only one measure for period
 		"""
-
-		thetat_a = thetat[0].copy()
-		thetat_b = thetat[1].copy()
-
 		if periodt==2:
 			loc=0
 		elif periodt==5:
@@ -657,20 +619,16 @@ class Utility(object):
 		lambdam=self.param.lambdas[loc]
 		cuts=[self.param.kappas[loc][0],self.param.kappas[loc][1],
 		self.param.kappas[loc][2],self.param.kappas[loc][3]]
-		z_star = []
-		z_star.append(lambdam*np.log(thetat_a) + np.random.randn(self.N))
-		z_star.append(lambdam*np.log(thetat_b) + np.random.randn(self.N))
+		
+		z_star=lambdam*np.log(thetat) + np.random.randn(self.N)
 
 		#the SSRS measure: [child A, child B]
-		z=[]
-		for j in [0,1]:
-			z_aux=np.zeros(self.N)
-			z_aux[z_star[j]<=cuts[0]]=1
-			z_aux[(z_star[j]>cuts[0]) & (z_star[j]<=cuts[1])]=2
-			z_aux[(z_star[j]>cuts[1]) & (z_star[j]<=cuts[2])]=3
-			z_aux[(z_star[j]>cuts[2]) & (z_star[j]<=cuts[3])]=4
-			z_aux[(z_star[j]>cuts[3])]=5
-			z.append(z_aux)
+		z=np.zeros(self.N)
+		z[z_star<=cuts[0]]=1
+		z[(z_star>cuts[0]) & (z_star<=cuts[1])]=2
+		z[(z_star>cuts[1]) & (z_star<=cuts[2])]=3
+		z[(z_star>cuts[2]) & (z_star<=cuts[3])]=4
+		z[(z_star>cuts[3])]=5
 
 
 		return z
@@ -688,8 +646,7 @@ class Utility(object):
 		
 
 		return self.Ut(periodt,income,income_spouse,employment_spouse,
-			self.married0,self.cc_a,self.cc_b,
-			self.nkids0,self.hours,theta0,wage0,free,price)
+			self.married0,self.cc,self.nkids0,self.hours,theta0,wage0,free,price)
 
 	
 			

@@ -19,13 +19,10 @@ def grid():
 	passign_grid=[i for i in range(0,2)]
 	age_grid=np.linspace(18,45,5).astype(int).tolist() 
 	hs_grid=[i for i in range(0,2)]
-	d_childb_grid=[i for i in range(0,2)]
-	d_childa_grid=[i for i in range(0,2)]
 		
-	iterables=[nkids_grid,married_grid, passign_grid,age_grid,hs_grid,d_childa_grid,d_childb_grid]
+	iterables=[nkids_grid,married_grid, passign_grid,age_grid,hs_grid]
 	#copy the names here
-	keys=['nkids_grid','married_grid','passign_grid','age_grid','hs_grid',
-	'd_childa_grid','d_childb_grid']
+	keys=['nkids_grid','married_grid','passign_grid','age_grid','hs_grid']
 
 	#Array of combinations (cartesian product)
 	it=1
@@ -50,25 +47,22 @@ def grid():
 	passign = np.reshape(np.array(dict_grid['passign_grid']).astype(float),(grid.shape[0],1) )
 	age = np.reshape(np.array(dict_grid['age_grid']).astype(float),(grid.shape[0],1) )
 	d_hs = np.reshape(np.array(dict_grid['hs_grid']).astype(float),(grid.shape[0],1) )
-	d_childa = np.reshape(np.array(dict_grid['d_childa_grid']).astype(float),(grid.shape[0],1) )
-	d_childb = np.reshape(np.array(dict_grid['d_childb_grid']).astype(float),(grid.shape[0],1) )
+	
 	
 
-	theta0_a = np.random.uniform(0.01,2,(grid.shape[0],1))
-	theta0_b = np.random.uniform(0.01,2,(grid.shape[0],1))
+	theta0 = np.random.uniform(0.01,2,(grid.shape[0],1))
 	epsilon_1 = np.random.uniform(-2,2,(grid.shape[0],1))
-	agech_a = np.random.randint(0,11,(grid.shape[0],1))
-	agech_b = np.random.randint(0,11,(grid.shape[0],1))
-
+	agech = np.random.randint(0,11,(grid.shape[0],1))
+	
 
 
 	#Shuffling variables 
 	#to avoid collinearity on interpolation rutines
-	for var in [theta0_a,theta0_b,nkids0,married0,passign,d_hs,age,agech_a,agech_b,epsilon_1]:
+	for var in [theta0,nkids0,married0,passign,d_hs,age,agech,epsilon_1]:
 		np.random.shuffle(var) 
 
 	#follow the same order as master_sim (line 71)
-	ngrid=theta0_a.shape[0]
+	ngrid=theta0.shape[0]
 	age2=np.square(age)
 	x_w=np.concatenate(( d_hs,np.ones((ngrid,1)) ),axis=1)
 	x_m=np.concatenate(( age,np.ones((ngrid,1)) ),axis=1)
@@ -76,8 +70,7 @@ def grid():
 	x_wmk=np.concatenate(( age,age2,d_hs,np.ones((ngrid,1)) ),axis=1)
 
 	
-	return { 'passign': passign,'theta0_a': theta0_a,'theta0_b': theta0_b,'nkids0': nkids0,
+	return { 'passign': passign,'theta0': theta0,'nkids0': nkids0,
 		'married0': married0,'x_w': x_w, 'x_m':x_m, 'x_k': x_k, 'x_wmk': x_wmk,
-		'agech_a':agech_a,'agech_b':agech_b,'d_childa': d_childa,
-		'd_childb': d_childb,'epsilon_1':epsilon_1 }
+		'agech':agech,'epsilon_1':epsilon_1 }
 

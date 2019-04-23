@@ -1,6 +1,6 @@
-global databases "/mnt/Research/nealresearch/new-hope-secure/newhopemount/Data/databases"
-global codes "/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes"
-global results "/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Skills"
+global databases "/home/jrodriguez/NH-secure"
+global codes "/home/jrodriguez/NH_HC/codes"
+global results "/home/jrodriguez/NH_HC/results/hh_summary"
 
 clear
 program drop _all

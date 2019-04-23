@@ -2,9 +2,9 @@
 This do-file computes impacts on the SSRS measure
 */
 
-global databases "/mnt/Research/nealresearch/new-hope-secure/newhopemount/Data/databases"
-global codes "/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes"
-global results "/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/HH_summary"
+global databases "/home/jrodriguez/NH-secure"
+global codes "/home/jrodriguez/NH_HC/codes"
+global results "/home/jrodriguez/NH_HC/results/hh_summary"
 
 /*
 robust SE for small samples. Set to hc3 for more conservatives. 

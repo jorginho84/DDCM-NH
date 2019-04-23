@@ -1,6 +1,6 @@
 """
 
-exec(open("/home/jrodriguez/NH_HC/codes//model/fit/fit.py").read())
+exec(open("/home/jrodriguez/NH_HC/codes/model_v2/fit/fit.py").read())
 
 This file computes stats to validate model
 
@@ -33,7 +33,7 @@ matplotlib.use('Agg') # Force matplotlib to not use any Xwindows backend.
 import matplotlib.pyplot as plt
 import subprocess
 #sys.path.append("C:\\Users\\Jorge\\Dropbox\\Chicago\\Research\\Human capital and the household\]codes\\model")
-sys.path.append("/home/jrodriguez/NH_HC/codes/model/simulate_sample")
+sys.path.append("/home/jrodriguez/NH_HC/codes/model_v2/simulate_sample")
 import utility as util
 import gridemax
 import time
@@ -41,22 +41,24 @@ import int_linear
 import emax as emax
 import simdata as simdata
 import openpyxl
-sys.path.append("/home/jrodriguez/NH_HC/codes/model/estimation")
+sys.path.append("/home/jrodriguez/NH_HC/codes/model_v2/estimation")
 import estimate as estimate
 
 
 np.random.seed(1)
 
-betas_nelder=np.load("/home/jrodriguez/NH_HC/results/Model/estimation/betas_modelv28_twoch.npy")
+betas_nelder=np.load("/home/jrodriguez/NH_HC/results/Model/estimation/betas_modelv34.npy")
 
 
 #Number of periods where all children are less than or equal to 18
 nperiods = 8
 
 #Utility function
-eta = betas_nelder[0]
+eta =  betas_nelder[0]
 alphap = betas_nelder[1]
 alphaf = betas_nelder[2]
+mu_c = -0.56
+
 
 #wage process
 wagep_betas=np.array([betas_nelder[3],betas_nelder[4],betas_nelder[5],
@@ -74,7 +76,7 @@ gamma2= betas_nelder[13]
 gamma3= betas_nelder[14]
 tfp = betas_nelder[15]
 sigma2theta = 1
-varphi = 0.5
+
 
 
 kappas=[[betas_nelder[16],betas_nelder[17],
@@ -84,7 +86,6 @@ betas_nelder[23]]]
 
 #initial theta
 rho_theta_epsilon = betas_nelder[24]
-rho_theta_ab = betas_nelder[25]
 
 
 #First measure is normalized. starting arbitrary values
@@ -101,7 +102,7 @@ pafdc=.60
 psnap=.70
 
 #Data
-X_aux=pd.read_csv("/home/jrodriguez/NH_HC/results/Model/sample_model.csv")
+X_aux=pd.read_csv("/home/jrodriguez/NH_HC/results/model_v2/sample_model.csv")
 x_df=X_aux
 
 #Sample size 
@@ -115,12 +116,12 @@ x_w=x_df[ ['d_HS2', 'constant' ] ].values
 #Data for marriage process
 #Parameters: marriage. Last one is the constant
 x_m=x_df[ ['age_ra', 'constant']   ].values
-marriagep_betas=pd.read_csv("/home/jrodriguez/NH_HC/results/marriage_process/betas_m_v2.csv").values
+marriagep_betas=pd.read_csv("/home/jrodriguez/NH_HC/results/model_v2/marriage_process/betas_m_v2.csv").values
 
 #Data for fertility process (only at X0)
 #Parameters: kids. last one is the constant
 x_k=x_df[ ['age_ra', 'age_ra2', 'constant']   ].values
-kidsp_betas=pd.read_csv("/home/jrodriguez/NH_HC/results/kids_process/betas_kids_v2.csv").values
+kidsp_betas=pd.read_csv("/home/jrodriguez/NH_HC/results/model_v2/kids_process/betas_kids_v2.csv").values
 
 
 #Minimum set of x's (for interpolation)
@@ -130,17 +131,17 @@ x_wmk=x_df[  ['age_ra','age_ra2', 'd_HS2', 'constant'] ].values
 passign=x_df[ ['d_RA']   ].values
 
 #The EITC parameters
-eitc_list = pickle.load( open("/home/jrodriguez/NH_HC/codes/model/simulate_sample/eitc_list.p", 'rb' ) )
+eitc_list = pickle.load( open("/home/jrodriguez/NH_HC/codes/model_v2/simulate_sample/eitc_list.p", 'rb' ) )
 
 #The AFDC parameters
-afdc_list = pickle.load( open("/home/jrodriguez/NH_HC/codes/model/simulate_sample/afdc_list.p", 'rb' ) )
+afdc_list = pickle.load( open("/home/jrodriguez/NH_HC/codes/model_v2/simulate_sample/afdc_list.p", 'rb' ) )
 
 #The SNAP parameters
-snap_list = pickle.load( open("/home/jrodriguez/NH_HC/codes/model/simulate_sample/snap_list.p", 'rb' ) ) 
+snap_list = pickle.load( open("/home/jrodriguez/NH_HC/codes/model_v2/simulate_sample/snap_list.p", 'rb' ) ) 
 
 
 #CPI index
-cpi =  pickle.load( open("/home/jrodriguez/NH_HC/codes/model/simulate_sample/cpi.p", 'rb' ) )
+cpi =  pickle.load( open("/home/jrodriguez/NH_HC/codes/model_v2/simulate_sample/cpi.p", 'rb' ) )
 
 #Here: the estimates from the auxiliary model
 ###
@@ -156,25 +157,22 @@ nkids0=x_df[ ['nkids_baseline']   ].values
 married0=x_df[ ['d_marital_2']   ].values
 
 #age of child at baseline
-#age of child at baseline
-agech0_a=x_df[['age_t0A']].values[:,0]
-agech0_b=x_df[['age_t0B']].values[:,0]
-d_childb=x_df[['d_childB']].values
-d_childa=x_df[['d_childA']].values
+agech0=x_df[['age_t0']].values
 
 #Defines the instance with parameters
-param0=util.Parameters(alphap,alphaf,eta,gamma1,gamma2,gamma3,
-	tfp,sigma2theta,varphi,rho_theta_epsilon,rho_theta_ab,wagep_betas,
+param0=util.Parameters(alphap,alphaf,mu_c,
+	eta,gamma1,gamma2,gamma3,
+	tfp,sigma2theta,rho_theta_epsilon,wagep_betas,
 	income_male_betas,c_emp_spouse,
 	marriagep_betas, kidsp_betas, eitc_list,
 	afdc_list,snap_list,cpi,lambdas,kappas,pafdc,psnap,mup)
 
 
 ###Auxiliary estimates###
-moments_vector=pd.read_csv("/home/jrodriguez/NH_HC/results/aux_model/moments_vector.csv").values
+moments_vector=pd.read_csv("/home/jrodriguez/NH_HC/results/model_v2/aux_model/moments_vector.csv").values
 
 #This is the var cov matrix of aux estimates
-var_cov=pd.read_csv("/home/jrodriguez/NH_HC/results/aux_model/var_cov.csv").values
+var_cov=pd.read_csv("/home/jrodriguez/NH_HC/results/model_v2/aux_model/var_cov.csv").values
 
 #The vector of aux standard errors
 #Using diagonal of Var-Cov matrix of simulated moments
@@ -201,8 +199,7 @@ ws=1
 
 
 output_ins = estimate.Estimate(nperiods,param0,x_w,x_m,x_k,x_wmk,passign,
-	agech0_a,agech0_b,d_childa,d_childb,nkids0,
-	married0,D,dict_grid,M,N,moments_vector,var_cov,hours_p,hours_f,
+	agech0,nkids0,married0,D,dict_grid,M,N,moments_vector,var_cov,hours_p,hours_f,
 	wr,cs,ws)
 
 
@@ -212,8 +209,7 @@ hours = np.zeros(N)
 childcare  = np.zeros(N)
 
 model  = util.Utility(param0,N,x_w,x_m,x_k,passign,nkids0,
-	married0,hours,childcare,childcare,
-	agech0_a,agech0_b,d_childa,d_childb,hours_p,hours_f,wr,cs,ws)
+	married0,hours,childcare,agech0,hours_p,hours_f,wr,cs,ws)
 
 #Obtaining emax instances, samples, and betas for M samples
 np.random.seed(1)
@@ -251,27 +247,27 @@ beta_inputs=np.mean(dic_betas['beta_inputs'],axis=1) #5 x 1
 betas_init_prod=np.mean(dic_betas['betas_init_prod'],axis=1) #1 x 1
 beta_wage_spouse=np.mean(dic_betas['beta_wage_spouse'],axis=1)
 beta_emp_spouse=np.mean(dic_betas['beta_emp_spouse'],axis=0)
-beta_theta_corr=np.mean(dic_betas['beta_theta_corr'],axis=0)
+
 
 #sample: age of the youngest child is six years or less by t=2
-boo_sample = (agech0_a<= 4) | (agech0_b<= 4)
+boo_sample = (agech0[:,0]<= 4)
 
 #################################################################################
 #################################################################################
 #FIGURE: ATE ON INCOME#
-exec(open("/home/jrodriguez/NH_HC/codes//model/fit/ate_inc.py").read())
+exec(open("/home/jrodriguez/NH_HC/codes/model_v2/fit/ate_inc.py").read())
 
 
 #################################################################################
 #################################################################################
 #FIGURE: ATE ON CHILD CARE#
-exec(open("/home/jrodriguez/NH_HC/codes/model/fit/ate_cc.py").read())
+exec(open("/home/jrodriguez/NH_HC/codes/model_v2/fit/ate_cc.py").read())
 
 
 #################################################################################
 #################################################################################
 #FIGURE: ATE ON EMPLOYMENT#
-exec(open('/home/jrodriguez/NH_HC/codes/model/fit/ate_emp.py').read())
+exec(open('/home/jrodriguez/NH_HC/codes/model_v2/fit/ate_emp.py').read())
 
 
 #################################################################################
@@ -283,13 +279,13 @@ exec(open('/home/jrodriguez/NH_HC/codes/model/fit/ate_emp.py').read())
 #################################################################################
 #################################################################################
 #FIGURE: ATE ON THETA#
-exec(open('/home/jrodriguez/NH_HC/codes/model/fit/ate_theta.py').read())
+exec(open('/home/jrodriguez/NH_HC/codes/model_v2/fit/ate_theta.py').read())
 
 
 #################################################################################
 #################################################################################
 #TABLE FIT: target moments#
-exec(open("/home/jrodriguez/NH_HC/codes/model/fit/table_aux.py").read())
+exec(open("/home/jrodriguez/NH_HC/codes/model_v2/fit/table_aux.py").read())
 
 #GRAPHS FIT: target moments#
 
@@ -297,15 +293,15 @@ exec(open("/home/jrodriguez/NH_HC/codes/model/fit/table_aux.py").read())
 #################################################################################
 """
 #TABLE: model validation#
-ate_hours_obs_2=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/fit/ate_hours.csv').values
-se_ate_hours_obs_2=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/fit/se_ate_hours.csv').values
+ate_hours_obs_2=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/model_v2/fit/ate_hours.csv').values
+se_ate_hours_obs_2=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/model_v2/fit/se_ate_hours.csv').values
 
-ate_inc_obs_2=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/fit/ate_inc_2.csv').values
-se_ate_inc_obs_2=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/fit/se_ate_inc_2.csv').values
+ate_inc_obs_2=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/model_v2/fit/ate_inc_2.csv').values
+se_ate_inc_obs_2=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/model_v2/fit/se_ate_inc_2.csv').values
 
 #these ones are the same as the figure (only 2 data points)
-ate_cc_obs=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/fit/ate_cc.csv').values
-se_ate_cc_obs=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/fit/se_ate_cc.csv').values
+ate_cc_obs=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/model_v2/fit/ate_cc.csv').values
+se_ate_cc_obs=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/model_v2/fit/se_ate_cc.csv').values
 
 #Simulated: only during NH
 ate_hours_2 = [np.mean(ate_hours[0]),np.mean(ate_hours[1])]
@@ -318,7 +314,7 @@ obs_list_se = [se_ate_hours_obs_2[0,0],se_ate_hours_obs_2[1,0],se_ate_cc_obs[0,0
 var_list = [r'Hours worked ($t=0$)', r'Hours worked ($t=1$)', r'Child care ($t=1$)',r'Log consumption ($t=1$)']
 
 #writing the table
-with open('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/fit/table_validation.tex','w') as f:
+with open('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/model_v2/fit/table_validation.tex','w') as f:
 	f.write(r'\begin{tabular}{llccc}'+'\n')
 	f.write(r'\hline' + '\n')
 	f.write(r'\textbf{Treatment effect} && \textbf{Simulated} && \textbf{Observed} \bigstrut\\' + '\n')
@@ -336,6 +332,5 @@ with open('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model
 	f.write(r'\end{tabular}' + '\n')
 	f.close()
 
-
-
 """
+

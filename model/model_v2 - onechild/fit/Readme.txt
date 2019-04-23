@@ -1,0 +1,1 @@
+Use fit.py to produce tables and graphs. The rest of .py and .do are inputs in fit.py.

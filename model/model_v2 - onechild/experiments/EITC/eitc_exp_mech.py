@@ -1,5 +1,7 @@
 """
-execfile('eitc_exp_mech.py')
+
+exec(open("/home/jrodriguez/NH_HC/codes/model_v2/experiments/EITC/eitc_exp_mech.py").read())
+
 
 This file computes EITC experiments using the whole sample to build counterfactuals
 """
@@ -19,23 +21,22 @@ import matplotlib
 matplotlib.use('Agg') # Force matplotlib to not use any Xwindows backend.
 import matplotlib.pyplot as plt
 #sys.path.append("C:\\Users\\Jorge\\Dropbox\\Chicago\\Research\\Human capital and the household\]codes\\model")
-sys.path.append("/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/simulate_sample")
+sys.path.append("/home/jrodriguez/NH_HC/codes/model_v2/simulate_sample")
 import utility as util
 import gridemax
 import time
 import int_linear
 import emax as emax
 import simdata as simdata
-sys.path.append("/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/estimation")
+sys.path.append("/home/jrodriguez/NH_HC/codes/model_v2/estimation")
 import estimate as estimate
-sys.path.append("/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/experiments")
-from ate_gen import ATE
-sys.path.append("/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/experiments/EITC")
+sys.path.append("/home/jrodriguez/NH_HC/codes/model_v2/experiments/EITC")
 from bset import Budget
 
 np.random.seed(1)
 
-betas_nelder=np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/betas_modelv24.npy')
+betas_nelder=np.load("/home/jrodriguez/NH_HC/results/model_v2/estimation/betas_modelv27_twoch.npy")
+
 
 #Number of periods where all children are less than or equal to 18
 nperiods = 8
@@ -49,19 +50,28 @@ alphaf = betas_nelder[2]
 wagep_betas=np.array([betas_nelder[3],betas_nelder[4],betas_nelder[5],
 	betas_nelder[6],betas_nelder[7]]).reshape((5,1))
 
+#income process: male
+income_male_betas = np.array([betas_nelder[8],betas_nelder[9],
+	betas_nelder[10]]).reshape((3,1))
+c_emp_spouse = betas_nelder[11]
+
 
 #Production function [young,old]
-gamma1= betas_nelder[8]
-gamma2= betas_nelder[9]
-gamma3= betas_nelder[10]
-tfp=betas_nelder[11]
-sigma2theta=1
+gamma1= betas_nelder[12]
+gamma2= betas_nelder[13]
+gamma3= betas_nelder[14] - 0.05
+tfp = betas_nelder[15]
+sigma2theta = 1
 
-kappas=[[betas_nelder[12],betas_nelder[13],betas_nelder[14],betas_nelder[15]],
-[betas_nelder[16],betas_nelder[17],betas_nelder[18],betas_nelder[19]]]
+
+
+kappas=[[betas_nelder[16],betas_nelder[17],
+betas_nelder[18],betas_nelder[19]],
+[betas_nelder[20],betas_nelder[21],betas_nelder[22],
+betas_nelder[23]]]
 
 #initial theta
-rho_theta_epsilon = betas_nelder[20]
+rho_theta_epsilon = betas_nelder[24]
 
 #First measure is normalized. starting arbitrary values
 #All factor loadings are normalized
@@ -78,8 +88,7 @@ pafdc=.60
 psnap=.70
 
 #Data
-#X_aux=pd.read_csv('C:\\Users\\Jorge\\Dropbox\\Chicago\\Research\\Human capital and the household\\results\\Model\\Xs.csv')
-X_aux=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/sample_model_v2.csv')
+X_aux=pd.read_csv("/home/jrodriguez/NH_HC/results/model_v2/sample_model.csv")
 x_df=X_aux
 
 #Sample size 
@@ -93,12 +102,12 @@ x_w=x_df[ ['d_HS2', 'constant' ] ].values
 #Data for marriage process
 #Parameters: marriage. Last one is the constant
 x_m=x_df[ ['age_ra', 'constant']   ].values
-marriagep_betas=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/marriage_process/betas_m_v2.csv').values
+marriagep_betas=pd.read_csv("/home/jrodriguez/NH_HC/results/model_v2/marriage_process/betas_m_v2.csv").values
 
 #Data for fertility process (only at X0)
 #Parameters: kids. last one is the constant
 x_k=x_df[ ['age_ra', 'age_ra2', 'constant']   ].values
-kidsp_betas=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/kids_process/betas_kids_v2.csv').values
+kidsp_betas=pd.read_csv("/home/jrodriguez/NH_HC/results/model_v2/kids_process/betas_kids_v2.csv").values
 
 
 #Minimum set of x's (for interpolation)
@@ -110,22 +119,23 @@ passign=x_df[ ['d_RA']   ].values
 #The EITC parameters: experiments 1 and 2
 
 #The EITC parameters
-eitc_list = pickle.load( open( '/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/simulate_sample/eitc_list.p', 'rb' ) )
+eitc_list = pickle.load( open( '/home/jrodriguez/NH_HC/codes/model_v2/simulate_sample/eitc_list.p', 'rb' ) )
 
 #Exp 1: Full EITC, everybody
-eitc_list_1 = pickle.load( open( '/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/simulate_sample/eitc_dic_1.p', 'rb' ) )
+eitc_list_1 = pickle.load( open( '/home/jrodriguez/NH_HC/codes/model_v2/simulate_sample/eitc_dic_1.p', 'rb' ) )
 
 #Exp 2: Everybody no EITC
-eitc_list_4 = pickle.load( open( '/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/simulate_sample/eitc_dic_4.p', 'rb' ) )
+eitc_list_4 = pickle.load( open( '/home/jrodriguez/NH_HC/codes/model_v2/simulate_sample/eitc_dic_4.p', 'rb' ) )
 
 #The AFDC parameters
-afdc_list = pickle.load( open( '/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/simulate_sample/afdc_list.p', 'rb' ) )
+afdc_list = pickle.load( open("/home/jrodriguez/NH_HC/codes/model_v2/simulate_sample/afdc_list.p", 'rb' ) )
 
 #The SNAP parameters
-snap_list = pickle.load( open( '/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/simulate_sample/snap_list.p', 'rb' ) )
+snap_list = pickle.load( open("/home/jrodriguez/NH_HC/codes/model_v2/simulate_sample/snap_list.p", 'rb' ) ) 
+
 
 #CPI index
-cpi =  pickle.load( open( '/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/simulate_sample/cpi.p', 'rb' ) )
+cpi =  pickle.load( open("/home/jrodriguez/NH_HC/codes/model_v2/simulate_sample/cpi.p", 'rb' ) )
 
 #Here: the estimates from the auxiliary model
 ###
@@ -149,11 +159,10 @@ for t in range(nperiods):
 
 ###Auxiliary estimates### 
 
-moments_vector=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/aux_model/moments_vector.csv').values
-
+moments_vector=pd.read_csv("/home/jrodriguez/NH_HC/results/model_v2/aux_model/moments_vector.csv").values
 
 #This is the var cov matrix of aux estimates
-var_cov=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/aux_model/var_cov.csv').values
+var_cov=pd.read_csv("/home/jrodriguez/NH_HC/results/model_v2/aux_model/var_cov.csv").values
 
 #The W matrix in Wald metric
 #Using diagonal of Var-Cov matrix of simulated moments
@@ -166,10 +175,10 @@ for i in range(var_cov.shape[0]):
 dict_grid=gridemax.grid()
 
 #For montercarlo integration
-D=50
+D=20
 
 #For II procedure
-M=1000
+M=200
 
 #How many hours is part- and full-time work
 hours_p=20
@@ -201,7 +210,9 @@ childcare  = np.zeros(N)
 
 cs=0
 param0=util.Parameters(alphap,alphaf,eta,gamma1,gamma2,gamma3,
-	tfp,sigma2theta, rho_theta_epsilon,wagep_betas, marriagep_betas, kidsp_betas, eitc_list,
+	tfp,sigma2theta,rho_theta_epsilon,wagep_betas,
+	income_male_betas,c_emp_spouse,
+	marriagep_betas, kidsp_betas, eitc_list,
 	afdc_list,snap_list,cpi,lambdas,kappas,pafdc,psnap,mup)
 
 output_ins=estimate.Estimate(nperiods,param0,x_w,x_m,x_k,x_wmk,passign,agech0,nkids0,
@@ -214,27 +225,7 @@ model  = util.Utility(param0,N,x_w,x_m,x_k,passign,
 emax_instance = output_ins.emax(param0,model)
 choices_baseline = output_ins.samples(param0,emax_instance,model)
 
-#The E[Log] of consumption and leisure
-ec = np.mean(np.mean(np.log(choices_baseline['consumption_matrix']),axis=2),axis=0)
-hours_m = choices_baseline['hours_matrix']
-boo_p = hours_m == hours_p
-boo_f = hours_m == hours_f
-boo_u = hours_m == 0
-cc = choices_baseline['choice_matrix']>2
-ecc = np.mean(np.mean(cc,axis=2),axis=0)
-tch = np.zeros((N,nperiods,M))
-for t in range(nperiods):
-	tch[age_ch[:,t]<=5,t,:] = cc[age_ch[:,t]<=5,t,:]*(168 - hours_f) + (1-cc[age_ch[:,t]<=5,t,:])*(168 - hours_m[age_ch[:,t]<=5,t,:])
-	tch[age_ch[:,t]>5,t,:] = 133 - hours_m[age_ch[:,t]>5,t,:] 
-el = np.mean(np.mean(np.log(tch),axis=2),axis=0)
-e_age = np.mean(age_ch<=5,axis=0)
-np.save('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/experiments/EITC/ec.npy',ec)
-np.save('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/experiments/EITC/el.npy',el)
-np.save('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/experiments/EITC/ecc.npy',ecc)
-np.save('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/experiments/EITC/e_age.npy',e_age)
-
-
-#SD of no EITC (t=0...8)
+##SD of no EITC (t=0...8)
 sd_matrix = np.zeros((nperiods,M))
 
 for j in range(M):
@@ -245,9 +236,7 @@ for j in range(M):
 #COMPUTING EXPERIMENTS
 
 """
-#eitc_list_1: Full EITC vs No EITC
-#eitc_list_2: Full EITC vs fixed EITC
-#eitc_list_3: Everybody with EITC
+#eitc_list_1: Everybody with EITC
 #eitc_list_4: Everybody no EITC
 
 #cc_sub_list: with (1) without (0) CC subsidy
@@ -274,11 +263,13 @@ params = []
 ###The Experiment loop###
 for j in range(len(experiments)): #the experiment loop
 
-	print 'Im in experiment number ', j
+	print('Im in experiment number ', j)
 
 	#Defines the instance with parameters
 	params.append(util.Parameters(alphap,alphaf,eta,gamma1,gamma2,gamma3,
-			tfp,sigma2theta,rho_theta_epsilon,wagep_betas, marriagep_betas, kidsp_betas,
+			tfp,sigma2theta,rho_theta_epsilon,wagep_betas, 
+			income_male_betas,c_emp_spouse,
+			marriagep_betas, kidsp_betas,
 			experiments[j][0],afdc_list,snap_list,cpi,lambdas,kappas,pafdc,psnap,mup))
 
 	output_ins=estimate.Estimate(nperiods,params[j],x_w,x_m,x_k,x_wmk,passign,agech0,nkids0,
@@ -303,7 +294,7 @@ wage_sim_matrix = []
 theta_sd = [np.zeros((N,nperiods,M)),np.zeros((N,nperiods,M)),np.zeros((N,nperiods,M))]
 for j in range(len(experiments)): #the experiment loop
 	theta_sd.append(np.zeros((N,nperiods,M)))
-	cc_sim_matrix.append(choices[j]['choice_matrix']>=3)
+	cc_sim_matrix.append(choices[j]['childcare_matrix'])
 	ct_sim_matrix.append(choices[j]['consumption_matrix'])
 	h_sim_matrix.append(choices[j]['hours_matrix'])
 	theta_sim_matrix.append(choices[j]['theta_matrix'])
@@ -429,7 +420,7 @@ for k in range(3):
 #number of periods to consider averaging
 periods = [nperiods,nperiods,nperiods,3,nperiods-1]
 
-with open('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/experiments/EITC/table_eitc_mech.tex','w') as f:
+with open('/home/jrodriguez/NH_HC/results/model_v2/experiments/EITC/table_eitc_mech.tex','w') as f:
 	f.write(r'\begin{tabular}{llccccc}'+'\n')	
 	f.write(r'\hline'+'\n')
 	f.write(r'Variable   && (1)   && (2)   && (3) \bigstrut[b]\\'+'\n')
@@ -475,7 +466,7 @@ for j in range(3): #the experiment loop
 	ax.set_ylim(-0.01,.50)
 	ax.legend(['Time', r'$\theta_t$','Child care','Consumption'],loc=7)
 	plt.show()
-	fig.savefig('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/experiments/EITC/mech_' + exp[j] + '.pdf', format='pdf')
+	fig.savefig('/home/jrodriguez/NH_HC/results/model_v2/experiments/EITC/mech_' + exp[j] + '.pdf', format='pdf')
 	plt.close()
 
 	#this is for the next graph
@@ -492,7 +483,7 @@ for j in range(3): #the experiment loop
 	y3 = np.mean(ate_cont_cc[j],axis=1)
 	y4 = np.mean(ate_cont_ct[j],axis=1)
 	total = y1 + y2 + y3 + y4
-	horiz_line_data = np.array([0 for i in xrange(len(x))])
+	horiz_line_data = np.array([0 for i in range(len(x))])
 
 	fig, ax=plt.subplots()
 	ax.plot(x,y2, color='k',zorder=1,linewidth=4.5,label='Time')
@@ -517,7 +508,7 @@ for j in range(3): #the experiment loop
 	ax.margins(0, 0)
 	ax.legend(loc=5,fontsize = 19)
 	plt.show()
-	fig.savefig('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/experiments/EITC/mech_' + exp[j] + '_slides.pdf', format='pdf')
+	fig.savefig('/home/jrodriguez/NH_HC/results/model_v2/experiments/EITC/mech_' + exp[j] + '_slides.pdf', format='pdf')
 	plt.close()
 
 	#this is for the next graph
@@ -549,5 +540,5 @@ plt.yticks(fontsize=15)
 plt.xticks(fontsize=15)
 ax.set_ylim(-0.01,.50)
 plt.show()
-fig.savefig('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/experiments/EITC/ate_theta_eitc.pdf', format='pdf')
+fig.savefig('/home/jrodriguez/NH_HC/results/model_v2/experiments/EITC/ate_theta_eitc.pdf', format='pdf')
 plt.close()

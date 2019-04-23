@@ -1,25 +1,8 @@
+"""
+exec(open("/home/jrodriguez/NH_HC/codes/model_v2/checks/identification_check/draft.py").read())
 
-#build a grid around parameter value
-lenght = 0.1
-size_grid = 6
-max_p = eta + 0.05
-min_p = eta - 0.05
-p_list = np.linspace(min_p,max_p,size_grid)
-obs_moment = moments_vector[0,0].copy()
+"""
 
-
-
-target_moment = np.zeros((size_grid,))
-for i in range(size_grid): 
-	param0.eta= p_list[i]
-	emax_instance = output_ins.emax(param0,model)
-	choices = output_ins.samples(param0,emax_instance,model)
-	dic_betas = output_ins.aux_model(choices)
-	target_moment[i] = np.mean(dic_betas['beta_childcare'],axis=0) #The matrix is 1X1
-	
-
-
-#Back to original
 exec(open("/home/jrodriguez/NH_HC/codes/model_v2/checks/identification_check/load_param.py").read())
 
 #the graph

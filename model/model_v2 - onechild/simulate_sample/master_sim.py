@@ -58,6 +58,8 @@ nperiods = 8
 eta = betas_nelder[0]
 alphap = betas_nelder[1]
 alphaf = betas_nelder[2]
+alphap_theta = -0.003
+alphaf_theta = -0.006
 
 #wage process en employment processes: female
 wagep_betas = np.array([betas_nelder[3],betas_nelder[4],betas_nelder[5],
@@ -155,7 +157,8 @@ agech0=x_df[['age_t0']].values
 
 
 #Defines the instance with parameters
-param=util.Parameters(alphap,alphaf,eta,gamma1,gamma2,gamma3,
+param=util.Parameters(alphap,alphaf,alphap_theta,alphaf_theta,
+	eta,gamma1,gamma2,gamma3,
 	tfp,sigma2theta,rho_theta_epsilon,wagep_betas,
 	income_male_betas,c_emp_spouse,
 	marriagep_betas, kidsp_betas, eitc_list,
@@ -174,7 +177,8 @@ childcare = np.zeros(N)
 wr,cs,ws=1,1,1
 
 #This is an arbitrary initialization of Utility class
-model = util.Utility(param,N,x_w,x_m,x_k,passign,nkids0,married0,hours,childcare,agech0,hours_p,hours_f,wr,cs,ws)
+model = util.Utility(param,N,x_w,x_m,x_k,passign,nkids0,married0,hours,childcare,
+	agech0,hours_p,hours_f,wr,cs,ws)
 
 tracemalloc.start()
 

@@ -9,7 +9,7 @@ clear mata
 set more off
 
 
-use "/home/jrodriguez/NH_HC/results/Model/sample_model.dta", clear
+use "/home/jrodriguez/NH_HC/results/model_v2/sample_model.dta", clear
 set seed 2828
 local reps = 800
 
@@ -18,16 +18,15 @@ program prob_diff, rclass
 	version 1
 	tempname mean_1 mean_2
 	args emp
-	qui: sum `emp' if d_RA==1 & (agech_t2A<=6 | agech_t2B<=6)
+	qui: sum `emp' if d_RA==1 & (agech_t2<=6)
 	scalar `mean_1'=r(mean)
-	qui: sum `emp' if d_RA==0 & (agech_t2A<=6 | agech_t2B<=6)
+	qui: sum `emp' if d_RA==0 & (agech_t2<=6)
 	scalar `mean_2'=r(mean)
 	return scalar ate=`mean_1' - `mean_2'
 end
 
 *Child age at t=2
-gen agech_t2A = age_t0A + 2
-gen agech_t2B = age_t0B + 2
+gen agech_t2 = age_t0 + 2
 
 *Computing ATEs for each year
 mat ate_part=J(9,1,.)
@@ -66,7 +65,7 @@ mat se_ate_hours_2=J(1,1,.)
 *Before
 preserve
 
-keep d_part_t0 d_part_t1 d_full_t0 d_full_t1 hours_t0 hours_t1 d_RA sampleid agech_t2A agech_t2B
+keep d_part_t0 d_part_t1 d_full_t0 d_full_t1 hours_t0 hours_t1 d_RA sampleid agech_t2
 reshape long d_full_t d_part_t hours_t, i(sampleid) j(year)
 
 gen newid = sampleid
@@ -92,14 +91,14 @@ foreach vars in part full hours{
 	clear
 	set obs 9
 	svmat ate_`vars'
-	outsheet using "/home/jrodriguez/NH_HC/results/Model/fit/ate_`vars'.csv", comma replace
+	outsheet using "/home/jrodriguez/NH_HC/results/model_v2/fit/ate_`vars'.csv", comma replace
 	restore
 
 	preserve
 	clear
 	set obs 9
 	svmat se_ate_`vars'
-	outsheet using "/home/jrodriguez/NH_HC/results/Model/fit/se_ate_`vars'.csv", comma replace
+	outsheet using "/home/jrodriguez/NH_HC/results/model_v2/fit/se_ate_`vars'.csv", comma replace
 	restore
 
 	*Before/after
@@ -107,14 +106,14 @@ foreach vars in part full hours{
 	clear
 	set obs 1
 	svmat ate_`vars'_2
-	outsheet using "/home/jrodriguez/NH_HC/results/Model/fit/ate_`vars'_2.csv", comma replace
+	outsheet using "/home/jrodriguez/NH_HC/results/model_v2/fit/ate_`vars'_2.csv", comma replace
 	restore
 
 	preserve
 	clear
 	set obs 1
 	svmat se_ate_`vars'_2
-	outsheet using "/home/jrodriguez/NH_HC/results/Model/fit/se_ate_`vars'_2.csv", comma replace
+	outsheet using "/home/jrodriguez/NH_HC/results/model_v2/fit/se_ate_`vars'_2.csv", comma replace
 	restore
 
 } 

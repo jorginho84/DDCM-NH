@@ -1,26 +1,24 @@
 
 #build a grid around parameter value
-lenght = 0.05
+lenght = 1
 size_grid = 6
-max_p = 0.15
-min_p = -0.15
+max_p = income_male_betas[1] + 0.25
+min_p = income_male_betas[1] - 0.25
 p_list = np.linspace(min_p,max_p,size_grid)
-obs_moment = moments_vector[24,0].copy()
+obs_moment = moments_vector[9,0].copy()
 
 #draft: try updating a parameter
 target_moment = np.zeros((size_grid,))
 for i in range(size_grid): 
-	param0.rho_theta_epsilon = p_list[i].copy()
+	param0.beta_spouse[1,0] = p_list[i]
 	emax_instance=output_ins.emax(param0,model)
 	choices=output_ins.samples(param0,emax_instance,model)
 	dic_betas=output_ins.aux_model(choices)
-	target_moment[i] = np.mean(dic_betas['betas_init_prod'][0,:],axis=0)
-
-
+	target_moment[i] = np.mean(dic_betas['beta_wage_spouse'][1,:],axis=0)
+	
 
 #Back to original
-execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/load_param.py')
-
+exec(open("/home/jrodriguez/NH_HC/codes/model_v2/checks/identification_check/load_param.py").read())
 #the graph
 fig, ax=plt.subplots()
 plot1=ax.plot(p_list,target_moment,'b-o',label='Simulated',alpha=0.9)
@@ -28,14 +26,14 @@ plot2=ax.plot(p_list,np.full((size_grid,),obs_moment),'b-.',label='Observed',alp
 plt.setp(plot1,linewidth=3)
 plt.setp(plot2,linewidth=3)
 ax.legend()
-ax.set_ylabel(r'$Corr(SSRS_2,\log(w_0))$',fontsize=font_size)
-ax.set_xlabel(r'Correlation initial shocks',fontsize=font_size)
+ax.set_ylabel(r'Constant of wage regression (spouse)',fontsize=font_size)
+ax.set_xlabel(r'Constant of wage offer process (spouse)',fontsize=font_size)
 ax.spines['right'].set_visible(False)
 ax.spines['top'].set_visible(False)
 ax.yaxis.set_ticks_position('left')
 ax.xaxis.set_ticks_position('bottom')
-plt.show()
 ax.legend(loc=0)
-fig.savefig('/home/jrodriguez/NH_HC/results/model_v2/checks/corr_theta0.pdf', format='pdf')
+plt.show()
+fig.savefig('/home/jrodriguez/NH_HC/results/model_v2/checks/constant_spouse.pdf', format='pdf')
 plt.close()
 

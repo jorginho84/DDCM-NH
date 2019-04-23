@@ -8,11 +8,11 @@ ate_inc = np.mean( np.mean(np.log(income_aux[(passign[:,0]==1) & (boo_sample==1)
 se_ate_inc = np.std( np.mean(np.log(income_aux[(passign[:,0]==1) & (boo_sample==1),:,:]),axis=0) - np.mean(np.log(income_aux[(passign[:,0]==0) & (boo_sample==1),:,:]),axis=0),axis=1)
 
 #data
-dofile = "/home/jrodriguez/NH_HC/codes//model/fit/ate_inc.do"
+dofile = "/home/jrodriguez/NH_HC/codes/model_v2/fit/ate_inc.do"
 cmd = ["stata-se", "do", dofile]
 subprocess.call(cmd)
-ate_inc_obs=pd.read_csv('/home/jrodriguez/NH_HC/results/Model/fit/ate_inc_2.csv').values
-se_ate_inc_obs=pd.read_csv('/home/jrodriguez/NH_HC/results/Model/fit/se_ate_inc_2.csv').values
+ate_inc_obs=pd.read_csv('/home/jrodriguez/NH_HC/results/model_v2/fit/ate_inc_2.csv').values
+se_ate_inc_obs=pd.read_csv('/home/jrodriguez/NH_HC/results/model_v2/fit/se_ate_inc_2.csv').values
 
 
 ate_inc_obs_long=np.zeros((ate_inc.shape))
@@ -51,7 +51,7 @@ ax.xaxis.set_ticks_position('bottom')
 plt.yticks(fontsize=15)
 plt.xticks(fontsize=15)
 plt.show()
-fig.savefig('/home/jrodriguez/NH_HC/results/Model/fit/ate_income.pdf', format='pdf')
+fig.savefig('/home/jrodriguez/NH_HC/results/model_v2/fit/ate_income.pdf', format='pdf')
 plt.close()
 
 

@@ -1,5 +1,5 @@
 """
-exec(open("/home/jrodriguez/NH_HC/codes/model/simulate_sample/eitc_param.py").read())
+exec(open("/home/jrodriguez/NH_HC/codes/model_v2/simulate_sample/eitc_param.py").read())
 
 This file generates a list of EITC parameters
 Each element of the list (0-9) corresponds to a dictionary of parameters
@@ -482,7 +482,7 @@ for year in range(1995,2014):
 	eitc_list.append(dic_aux)
 
 #Saving the list
-pickle.dump(eitc_list,open('/home/jrodriguez/NH_HC/codes/model/simulate_sample/eitc_list.p','wb'))
+pickle.dump(eitc_list,open('/home/jrodriguez/NH_HC/codes/model_v2/simulate_sample/eitc_list.p','wb'))
 		
 
 

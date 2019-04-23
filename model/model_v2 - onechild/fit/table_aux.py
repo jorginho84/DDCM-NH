@@ -6,7 +6,7 @@ fontsize_axis = 24
 bar_width=0.4
 
 #Opening workbook
-wb=openpyxl.load_workbook('/home/jrodriguez/NH_HC/results/Model/fit/fit_twoch.xlsx')
+wb=openpyxl.load_workbook('/home/jrodriguez/NH_HC/results/model_v2/fit/fit.xlsx')
 ws = wb["new_moments_data"]
 
 #A. Labor supply and child care decisions
@@ -35,7 +35,7 @@ ax.xaxis.set_ticks_position('bottom')
 ax.set_xticklabels([])
 ax.set_xticks(x + bar_width)
 plt.show()
-fig.savefig('/home/jrodriguez/NH_HC/results/Model/fit/fit_utility.pdf', format='pdf')
+fig.savefig('/home/jrodriguez/NH_HC/results/model_v2/fit/fit_utility.pdf', format='pdf')
 plt.close()
 
 
@@ -70,7 +70,7 @@ ax.xaxis.set_ticks_position('bottom')
 ax.set_xticklabels([])
 ax.set_xticks([])
 plt.show()
-fig.savefig('/home/jrodriguez/NH_HC/results/Model/fit/fit_wage.pdf', format='pdf')
+fig.savefig('/home/jrodriguez/NH_HC/results/model_v2/fit/fit_wage.pdf', format='pdf')
 plt.close()
 
 #B. Spouse's log wage equation
@@ -145,7 +145,7 @@ ax.xaxis.set_ticks_position('bottom')
 ax.set_xticklabels([])
 ax.set_xticks([])
 plt.show()
-fig.savefig('/home/jrodriguez/NH_HC/results/Model/fit/fit_kappas.pdf', format='pdf')
+fig.savefig('/home/jrodriguez/NH_HC/results/model_v2/fit/fit_kappas.pdf', format='pdf')
 plt.close()
 
 
@@ -157,11 +157,11 @@ list_aux = []
 list_obs = []
 list_sig = []
 #C. prod fn
-list_aux = [np.concatenate((beta_inputs,betas_init_prod,np.array([beta_theta_corr])),axis=0)]
-list_obs = [moments_vector[ind:ind +6 ,0]]
-list_sig = [se_vector[ind:ind + 6]]
+list_aux = [np.concatenate((beta_inputs,betas_init_prod),axis=0)]
+list_obs = [moments_vector[ind:ind + 5 ,0]]
+list_sig = [se_vector[ind:ind + 5]]
 
-for c in range(6):
+for c in range(5):
 	ws['B' + str(c + pos)] = np.float(list_aux[0][c])
 	ws['D' + str(c + pos)] = np.float(list_obs[0][c])
 	ws['F' + str(c + pos)] = np.float(list_sig[0][c])
@@ -184,8 +184,8 @@ ax.xaxis.set_ticks_position('bottom')
 ax.set_xticklabels([])
 ax.set_xticks([])
 plt.show()
-fig.savefig('/home/jrodriguez/NH_HC/results/Model/fit/fit_ssrs.pdf', format='pdf')
+fig.savefig('/home/jrodriguez/NH_HC/results/model_v2/fit/fit_ssrs.pdf', format='pdf')
 plt.close()
 
 
-wb.save('/home/jrodriguez/NH_HC/results/Model/fit/fit_twoch.xlsx')
+wb.save('/home/jrodriguez/NH_HC/results/model_v2/fit/fit.xlsx')

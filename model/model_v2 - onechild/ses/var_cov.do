@@ -22,11 +22,11 @@ clear mata
 set more off
 set maxvar 15000
 
-global results "/home/jrodriguez/NH_HC/results"
-global codes "/home/jrodriguez/NH_HC/codes/model/aux_model"  /*this is where I compute aux moments*/
+global results "/home/jrodriguez/NH_HC/results/model_v2"
+global codes "/home/jrodriguez/NH_HC/codes/model_v2/aux_model"  /*this is where I compute aux moments*/
 
 
-use "/home/jrodriguez/NH_HC/results/Model/sample_model.dta", clear
+use "$results/sample_model.dta", clear
 qui: save "$results/data_aux.dta", replace
 qui: do "$codes/utility_aux.do"
 qui: do "$codes/wage_p.do"
@@ -44,7 +44,7 @@ local draws = 500
 local n_moments = rowsof(betas_orig)
 
 forvalues x = 1/`draws'{
-	use "/home/jrodriguez/NH_HC/results/Model/sample_model.dta", clear
+	use "$results/sample_model.dta", clear
 	bsample
 	drop sampleid
 	egen sampleid = seq()

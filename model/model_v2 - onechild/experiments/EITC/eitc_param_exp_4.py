@@ -1,5 +1,5 @@
 """
-execfile('eitc_param_exp_4.py')
+exec(open("/home/jrodriguez/NH_HC/codes/model_v2/experiments/EITC/eitc_param_exp_4.py").read())
 
 This file generates a list of EITC parameters
 Each element of the list (0-9) corresponds to a dictionary of parameters
@@ -32,21 +32,21 @@ for year in range(1995,2014):
 	r1_1=0
 	r2_1=0
 	b1_1=6160
-	b2_1=11290
+	b2_1=[11290,11290]
 	state_eitc1=0
 
 	#2+ children
 	r1_2=0
 	r2_2=0
 	b1_2=8640
-	b2_2=11290
+	b2_2=[11290,11290]
 	state_eitc2=0
 
 	#3 children
 	r1_3=0
 	r2_3=0
 	b1_3=8640
-	b2_3=11290
+	b2_3=[11290,11290]
 	state_eitc3=0
 
 		
@@ -60,7 +60,7 @@ for year in range(1995,2014):
 	eitc_list.append(dic_aux)
 
 #Saving the list
-pickle.dump(eitc_list,open('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/simulate_sample/eitc_dic_4.p','wb'))
+pickle.dump(eitc_list,open('/home/jrodriguez/NH_HC/codes/model_v2/simulate_sample/eitc_dic_4.p','wb'))
 		
 
 

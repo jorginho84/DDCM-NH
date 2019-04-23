@@ -12,15 +12,15 @@ se_ate_full = np.mean(np.mean(full[(passign[:,0]==1) & (boo_sample==1),:,:],axis
 se_ate_hours = np.std(np.mean(hours[(passign[:,0]==1) & (boo_sample==1),:,:],axis=0) - np.mean(hours[(passign[:,0]==0) & (boo_sample==1),:,:],axis=0),axis=1 )
 
 #data
-dofile = "/home/jrodriguez/NH_HC/codes//model/fit/ate_emp.do"
+dofile = "/home/jrodriguez/NH_HC/codes/model_v2/fit/ate_emp.do"
 cmd = ["stata-se", "do", dofile]
 subprocess.call(cmd)
-ate_part_obs=pd.read_csv('/home/jrodriguez/NH_HC/results/Model/fit/ate_part.csv').values
-se_ate_part_obs=pd.read_csv('/home/jrodriguez/NH_HC/results/Model/fit/se_ate_part.csv').values
-ate_full_obs=pd.read_csv('/home/jrodriguez/NH_HC/results/Model/fit/ate_full.csv').values
-se_ate_full_obs=pd.read_csv('/home/jrodriguez/NH_HC/results/Model/fit/se_ate_full.csv').values
-ate_hours_obs=pd.read_csv('/home/jrodriguez/NH_HC/results/Model/fit/ate_hours.csv').values
-se_ate_hours_obs=pd.read_csv('/home/jrodriguez/NH_HC/results/Model/fit/se_ate_hours.csv').values
+ate_part_obs=pd.read_csv('/home/jrodriguez/NH_HC/results/model_v2/fit/ate_part.csv').values
+se_ate_part_obs=pd.read_csv('/home/jrodriguez/NH_HC/results/model_v2/fit/se_ate_part.csv').values
+ate_full_obs=pd.read_csv('/home/jrodriguez/NH_HC/results/model_v2/fit/ate_full.csv').values
+se_ate_full_obs=pd.read_csv('/home/jrodriguez/NH_HC/results/model_v2/fit/se_ate_full.csv').values
+ate_hours_obs=pd.read_csv('/home/jrodriguez/NH_HC/results/model_v2/fit/ate_hours.csv').values
+se_ate_hours_obs=pd.read_csv('/home/jrodriguez/NH_HC/results/model_v2/fit/se_ate_hours.csv').values
 
 
 ate_sim_list = [ate_part,ate_full,ate_hours]
@@ -71,6 +71,6 @@ for j in range(3):
 	plt.xticks(fontsize=15)
 	ax.legend(loc=1,fontsize=20)
 	plt.show()
-	fig.savefig('/home/jrodriguez/NH_HC/results/Model/fit/ate_' + graph_list[j] +'.pdf', format='pdf')
+	fig.savefig('/home/jrodriguez/NH_HC/results/model_v2/fit/ate_' + graph_list[j] +'.pdf', format='pdf')
 	plt.close()
 

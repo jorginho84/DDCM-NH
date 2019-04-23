@@ -1,9 +1,5 @@
 use "/home/jrodriguez/NH_HC/results/Model/sample_model.dta", clear
 
-
-
-*Correlation between ssrs2 measures
-
 foreach ch in "A" "B"{
 	gen d_skills_t2`ch' = skills_t2`ch'>3
 	replace d_skills_t2`ch' = 0 if skills_t2`ch'<=3	
@@ -30,38 +26,32 @@ gen age_t1=age_t0+1
 gen age_t4=age_t0+4
 gen age_t7=age_t0+7
 
-*Standardized measures
-foreach x of numlist 2 5 8{
-	rename skills_t`x' skills_t`x'_aux
-	egen skills_t`x'=std(skills_t`x'_aux)
-}
 
 *Dummies
 foreach x of numlist 2 5 8{
 	gen d_skills_t`x' = .
-	replace d_skills_t`x' = 1 if skills_t`x'_aux > 3
-	replace d_skills_t`x' = 0 if skills_t`x'_aux <= 3
-	replace d_skills_t`x' = . if skills_t`x'_aux == .
+	replace d_skills_t`x' = 1 if skills_t`x'>3
+	replace d_skills_t`x' = 0 if skills_t`x'<=3
+	replace d_skills_t`x' = . if skills_t`x' == .
 }
-
 
 
 *Time outside market
 foreach x of numlist 1 4 7{
-	gen l_t`x' = .
-	replace l_t`x' = (168-hours_t`x') if d_CC2_t`x'==0 & age_t`x'<=6
-	replace l_t`x' = (168-40) if d_CC2_t`x'==1 & age_t`x'<=6
-	replace l_t`x' = (133-hours_t`x') if age_t`x'>6
+	gen l_t`x'=.
+	replace l_t`x'=(168-hours_t`x') if d_CC2_t`x'==0 & age_t`x'<=6
+	replace l_t`x'=(168-40) if d_CC2_t`x'==1 & age_t`x'<=6
+	replace l_t`x'=(133-hours_t`x') if age_t`x'>6
 }
 
 *Income
-gen incomepc_t1 = (total_income_y1 -cc_pay_t1*12)/(1 + nkids_year2 + married_year2)
-gen incomepc_t4 = (total_income_y4-cc_pay_t4*12)/(1 + nkids_year5 + married_year5)
-gen incomepc_t7 = (total_income_y7)/(1 + nkids_year8 + married_year8)
+gen incomepc_t1=(total_income_y1 -cc_pay_t1*12)/(1 + nkids_year2 + married_year2)
+gen incomepc_t4=(total_income_y4-cc_pay_t4*12)/(1 + nkids_year5 + married_year5)
+gen incomepc_t7=(total_income_y7)/(1 + nkids_year8 + married_year8)
 
-replace incomepc_t1 = 0 if incomepc_t1 < 0
-replace incomepc_t4 = 0 if incomepc_t4 < 0
-replace incomepc_t7 = 0 if incomepc_t7 < 0
+replace incomepc_t1=0 if incomepc_t1<0
+replace incomepc_t4=0 if incomepc_t4<0
+replace incomepc_t7=0 if incomepc_t7<0
 
 
 
@@ -92,7 +82,7 @@ gen lhwage_t0=log(hwage_t0)
 matrix prob_inc_t2=J(4,1,.)
 local obs=1
 foreach j of numlist 2 3 4 5{
-	gen d_prob=skills_t2_aux==`j'
+	gen d_prob=skills_t2==`j'
 	replace d_prob=. if  skills_t2==.
 	qui: sum d_prob if d_prob!=. & p_assign=="C" & d_child == 1
 	mat beta_aux=r(mean)
@@ -104,7 +94,7 @@ foreach j of numlist 2 3 4 5{
 matrix prob_inc_t5=J(4,1,.)
 local jj=1
 foreach j of numlist 2 3 4 5{
-	gen d_prob=skills_t5_aux==`j'
+	gen d_prob=skills_t5==`j'
 	replace d_prob=. if  skills_t5==.
 	sum d_prob if d_prob!=. & p_assign=="C" & d_child == 1
 	mat prob_inc_t5[`jj',1]=r(mean)
@@ -153,15 +143,11 @@ reg d_skills_t incomepc_t l_t if p_assign=="C" & year<7 & d_child == 1
 mat inputs_moments[2,1] = _b[incomepc_t]
 mat inputs_moments[3,1] = _b[l_t]
 
-reg d_skills_t d_CC2_t if age_t<=5 & p_assign=="C" & year<7 & d_child == 1
-mat inputs_moments[4,1] = _b[d_CC2_t]
+reg d_skills_t d_CC2_t if age_t<=5 & p_assign=="C" & year==1 & d_child == 1
+
+reg d_skills_t d_CC2_t if age_t<=5 & year==1 & d_child == 1
+
+reg skills_t d_CC2_t if age_t<=5 & p_assign=="C" & year<7 & d_child == 1
 
 
-
-**********************************************
-**********************************************
-**********************************************
-/*Saving betas*/
-
-matrix betas_theta =prob_inc_t2\prob_inc_t5\inputs_moments\betas_corr
 

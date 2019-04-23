@@ -7,10 +7,10 @@ def kappas_iden(k,t,min_p,max_p,size_grid,fon):
 #build a grid around parameter value
 	p_list = np.linspace(min_p,max_p,size_grid)
 	if t==2:
-		obs_moment = moments_vector[7 + k,0].copy()
+		obs_moment = moments_vector[11 + k,0].copy()
 	
 	else:
-		obs_moment = moments_vector[11 + k,0].copy()
+		obs_moment = moments_vector[15 + k,0].copy()
 	
 	target_moment = np.zeros((size_grid,))
 	for i in range(size_grid):
@@ -27,7 +27,8 @@ def kappas_iden(k,t,min_p,max_p,size_grid,fon):
 
 
 	#Back to original
-	execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/load_param.py')
+	exec(open("/home/jrodriguez/NH_HC/codes/model_v2/checks/identification_check/load_param.py").read())
+
 
 	#the graph
 	fig, ax=plt.subplots()
@@ -44,7 +45,7 @@ def kappas_iden(k,t,min_p,max_p,size_grid,fon):
 	ax.xaxis.set_ticks_position('bottom')
 	ax.legend(loc=0)
 	plt.show()
-	fig.savefig('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/checks/kappa' + str(k) + '_t' + str(t) + '.pdf', format='pdf')
+	fig.savefig('/home/jrodriguez/NH_HC/results/model_v2/checks/kappa' + str(k) + '_t' + str(t) + '.pdf', format='pdf')
 	plt.close()
 
 

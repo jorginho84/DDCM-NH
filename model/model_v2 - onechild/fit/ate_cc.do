@@ -10,7 +10,7 @@ clear mata
 set more off
 
 
-use "/home/jrodriguez/NH_HC/results/Model/sample_model_theta.dta", clear
+use "/home/jrodriguez/NH_HC/results/model_v2/sample_model.dta", clear
 set seed 2828
 local reps = 800
 
@@ -48,14 +48,14 @@ preserve
 clear
 set obs 2
 svmat ate_cc
-outsheet using "/home/jrodriguez/NH_HC/results/Model/fit/ate_cc.csv", comma replace
+outsheet using "/home/jrodriguez/NH_HC/results/model_v2/fit/ate_cc.csv", comma replace
 restore
 
 preserve
 clear
 set obs 2
 svmat se_ate_cc
-outsheet using "/home/jrodriguez/NH_HC/results/Model/fit/se_ate_cc.csv", comma replace
+outsheet using "/home/jrodriguez/NH_HC/results/model_v2/fit/se_ate_cc.csv", comma replace
 restore
 
 exit, STATA clear

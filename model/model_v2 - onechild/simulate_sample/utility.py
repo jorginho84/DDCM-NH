@@ -26,13 +26,14 @@ class Parameters:
 	List of structural parameters and prices
 
 	"""
-	def __init__(self,alphap,alphaf,eta,gamma1,gamma2,gamma3,
+	def __init__(self,alphap,alphaf,mu_c,
+		eta,gamma1,gamma2,gamma3,
 		tfp,sigma2theta,rho_theta_epsilon,betaw,
 		beta_spouse,c_emp_spouse,
 		betam,betak,eitc,afdc,snap,cpi,
 		lambdas,kappas,pafdc,psnap,mup):
 
-		self.alphap,self.alphaf,self.eta=alphap,alphaf,eta
+		self.alphap,self.alphaf,self.eta,self.mu_c=alphap,alphaf,eta,mu_c
 		self.gamma1,self.gamma2,self.gamma3=gamma1,gamma2,gamma3
 		self.tfp=tfp
 		self.rho_theta_epsilon=rho_theta_epsilon
@@ -286,7 +287,7 @@ class Utility(object):
 		pwage = pwage/(self.param.cpi[8]/self.param.cpi[periodt])
 
 		#family earnings: used for eligibility
-		pwage_family = pwage + income_spouse*employment_spouse
+		pwage_family = pwage + income_spouse*employment_spouse*marr[:,0]
 
 		#the EITC parameters
 		dic_eitc=self.param.eitc[periodt]
@@ -331,8 +332,8 @@ class Utility(object):
 				if k == 0:
 					boo_spouse = employment_spouse == 0
 				else:
-					boo_spouse = employment_spouse == 1
-
+					boo_spouse = employment_spouse & marr == 1
+				
 				eitc_fed[(pwage_family<b1[nn]) & (kid_boo) & (boo_spouse) ]=r1[nn]*pwage_family[(pwage_family<b1[nn]) & (kid_boo) & (boo_spouse)]
 				eitc_fed[(pwage_family>=b1[nn]) & (pwage_family<b2[nn][k] & (boo_spouse)) & (kid_boo)]=r1[nn]*b1[nn]
 				eitc_fed[(pwage_family>=b2[nn][k]) & (kid_boo) & (boo_spouse)]=np.maximum(r1[nn]*b1[nn]-r2[nn]*(pwage_family[(pwage_family>=b2[nn][k]) & (kid_boo) & (boo_spouse)]-b2[nn][k]),np.zeros(pwage_family[(pwage_family>=b2[nn][k]) & (kid_boo) & (boo_spouse)].shape[0]))
@@ -443,14 +444,14 @@ class Utility(object):
 		boo_net_eli = net_inc <= net_i_test
 		boo_gro_eli = pwage_family <= gross_i_test
 		boo_unemp=hours==0
-		snap = snap_takeup*((max_b - 0.3*net_inc)*boo_net_eli*boo_gro_eli*(1-boo_unemp) + boo_unemp*(max_b - 0.3*net_inc))*snap_takeup
+		snap = snap_takeup*((max_b - 0.3*net_inc)*boo_net_eli*boo_gro_eli*(1-boo_unemp) + boo_unemp*(max_b - 0.3*net_inc))
 		snap[snap<0]=0
 
 		#income of household less spouse's earnings
 		dincome = pwage + afdc_benefit + nh_supp + snap + eitc_fed + eitc_state
 
-		#Back to real prices
-		return {'income': dincome*(self.param.cpi[8]/self.param.cpi[periodt]),
+		#Back to real prices, on monthly basis
+		return {'income': dincome*(self.param.cpi[8]/self.param.cpi[periodt])/12,
 		'NH': nh_supp, 'EITC_NH': nh_supp + eitc_fed + eitc_state}
 
 	def consumptiont(self,periodt,h,cc,dincome,income_spouse,employment_spouse,
@@ -464,7 +465,13 @@ class Utility(object):
 		It also returns what New Hope pays (nh_cost) for cost/benefit calculations
 
 		"""
+
+		nkids=np.reshape(nkids,self.N)
+		marr=np.reshape(marr,self.N)
+			
 		pwage=np.reshape(h,self.N)*np.reshape(wage,self.N)*52
+
+		pwage_family = pwage + income_spouse*employment_spouse*marr
 
 		d_full=h>=self.hours_f
 		agech=np.reshape(self.age_t0,(self.N)) + periodt
@@ -472,18 +479,19 @@ class Utility(object):
 		boo_nfree = free==0
 		boo_ra = self.ra==1
 
-		nkids=np.reshape(nkids,self.N)
-		marr=np.reshape(marr,self.N)
-		ones=np.ones(self.N)
+
 		
 		#NH copayment
 		copayment=np.zeros(self.N)
 		copayment[price[:,0]<400]=price[price[:,0]<400,0].copy()
-		copayment[(price[:,0]>400) & (pwage<=8500) ] = 400
-		copayment[(price[:,0]>400) & (pwage>8500)] = 315 + 0.01*pwage[(price[:,0]>400) & (pwage>8500)]
+		copayment[(price[:,0]>400) & (pwage_family<=8500) ] = 400
+		copayment[(price[:,0]>400) & (pwage_family>8500)] = 315 + 0.01*pwage_family[(price[:,0]>400) & (pwage_family>8500)]
 
 		#For those who copayment would be bigger than price
 		copayment[price[:,0]<copayment] = price[price[:,0]<copayment,0].copy()
+
+		#if married, spouse must work
+		copayment[(marr==1) & (employment_spouse==0) ] == 0
 
 		#child care cost
 		cc_cost = np.zeros(self.N)
@@ -511,15 +519,13 @@ class Utility(object):
 
 			nh_cost = np.zeros(self.N)
 
-		#spouse income only if married
-		income_spouse[marr == 0] = 0
 
-		incomepc=(dincome + income_spouse*employment_spouse - cc*young*cc_cost)/(ones+nkids+marr)
+		incomepc=(dincome + income_spouse*employment_spouse*marr - cc*young*cc_cost)/(np.ones(self.N)+nkids+marr)
 		incomepc[incomepc <= 0] = 1
 
 
-		
-		return {'income_pc': incomepc, 'nh_cc_cost': nh_cost}
+		#monthly basis
+		return {'income_pc': incomepc/12, 'nh_cc_cost': nh_cost}
 
 
 
@@ -570,7 +576,8 @@ class Utility(object):
 
 
 		#log-theta: if child is not present, log theta = 0
-		ltheta=np.log(thetat)
+		ltheta = (thetat - np.mean(thetat))/np.std(thetat)
+		#ltheta = (thetat**0.9 - 1)/0.9
 				
 		#Work dummies
 		d_workf=ht==self.hours_f
@@ -583,7 +590,8 @@ class Utility(object):
 		
 		#Current-period utility
 		ut_h=d_workp*self.param.alphap + d_workf*self.param.alphaf
-		ut=np.log(ct) + ut_h +  self.param.eta*ltheta
+		#ut=((ct*np.exp(ut_h)*(thetat**self.param.eta))**self.param.mu_c)/self.param.mu_c
+		ut = np.log(ct) + ut_h + self.param.eta*ltheta
 
 		if (np.any(np.isnan(ct))==True) | (np.any(np.isinf(ct))==True) :
 			raise ValueError('Consumption is not a real number')

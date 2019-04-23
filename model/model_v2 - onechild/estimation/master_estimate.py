@@ -1,5 +1,5 @@
 """
-exec(open("/home/jrodriguez/NH_HC/codes/model/estimation/master_estimate.py").read())
+exec(open("/home/jrodriguez/NH_HC/codes/model_v2/estimation/master_estimate.py").read())
 
 This file returns the structural parameters' estimates
 
@@ -21,32 +21,34 @@ from joblib import Parallel, delayed
 from scipy import interpolate
 import matplotlib.pyplot as plt
 #sys.path.append("C:\\Users\\Jorge\\Dropbox\\Chicago\\Research\\Human capital and the household\]codes\\model")
-sys.path.append("/home/jrodriguez/NH_HC/codes/model/simulate_sample")
+sys.path.append("/home/jrodriguez/NH_HC/codes/model_v2/simulate_sample")
 import utility as util
 import gridemax
 import time
 import int_linear
 import emax as emax
 import simdata as simdata
-sys.path.append("/home/jrodriguez/NH_HC/codes/model/estimation")
+sys.path.append("/home/jrodriguez/NH_HC/codes/model_v2/estimation")
 import estimate as estimate
 
 np.random.seed(1)
 
-betas_nelder=np.load("/home/jrodriguez/NH_HC/results/Model/estimation/betas_modelv26_twoch.npy")
+betas_nelder=np.load("/home/jrodriguez/NH_HC/results/Model/estimation/betas_modelv33.npy")
 
 
 #Number of periods where all children are less than or equal to 18
 nperiods = 8
 
 #Utility function
-eta = betas_nelder[0]
+eta =  1.8
 alphap = betas_nelder[1]
-alphaf = betas_nelder[2]
+alphaf = -2.5
+mu_c = -0.56
+
 
 #wage process
-wagep_betas=np.array([betas_nelder[3],0.07,1.6,
-	betas_nelder[6],0.6]).reshape((5,1))
+wagep_betas=np.array([betas_nelder[3],betas_nelder[4],1.6,
+	betas_nelder[6],betas_nelder[7]]).reshape((5,1))
 
 #income process: male
 income_male_betas = np.array([betas_nelder[8],betas_nelder[9],
@@ -55,23 +57,21 @@ c_emp_spouse = betas_nelder[11]
 
 
 #Production function [young,old]
-gamma1= 1.1
-gamma2= 0.02
-gamma3= 0.45
-tfp = 0.5
+gamma1= betas_nelder[12]
+gamma2= betas_nelder[13]
+gamma3= betas_nelder[14]
+tfp = betas_nelder[15]
 sigma2theta = 1
-varphi = 0.5
 
 
-kappas=[[betas_nelder[16]+1.2,betas_nelder[17]+1.2+0.2,
-betas_nelder[18]+1.2+0.4,betas_nelder[19]+1.2+0.4],
-[betas_nelder[20]+5.35,betas_nelder[21]+5.35+0.4,betas_nelder[22]+5.35+0.4+0.4,
-betas_nelder[23]+5.35+0.4+0.4+0.4]]
+
+kappas=[[betas_nelder[16],betas_nelder[17],
+betas_nelder[18],betas_nelder[19]],
+[betas_nelder[20],betas_nelder[21],betas_nelder[22],
+betas_nelder[23]]]
 
 #initial theta
 rho_theta_epsilon = betas_nelder[24]
-rho_theta_ab = betas_nelder[25]
-
 
 
 #All factor loadings are normalized
@@ -88,7 +88,7 @@ psnap=.70
 
 #Data
 #X_aux=pd.read_csv('C:\\Users\\Jorge\\Dropbox\\Chicago\\Research\\Human capital and the household\\results\\Model\\Xs.csv')
-X_aux=pd.read_csv("/home/jrodriguez/NH_HC/results/Model/sample_model.csv")
+X_aux=pd.read_csv("/home/jrodriguez/NH_HC/results/model_v2/sample_model.csv")
 x_df=X_aux
 
 #Sample size 
@@ -102,12 +102,12 @@ x_w=x_df[ ['d_HS2', 'constant' ] ].values
 #Data for marriage process
 #Parameters: marriage. Last one is the constant
 x_m=x_df[ ['age_ra', 'constant']   ].values
-marriagep_betas=pd.read_csv("/home/jrodriguez/NH_HC/results/marriage_process/betas_m_v2.csv").values
+marriagep_betas=pd.read_csv("/home/jrodriguez/NH_HC/results/model_v2/marriage_process/betas_m_v2.csv").values
 
 #Data for fertility process (only at X0)
 #Parameters: kids. last one is the constant
 x_k=x_df[ ['age_ra', 'age_ra2', 'constant']   ].values
-kidsp_betas=pd.read_csv("/home/jrodriguez/NH_HC/results/kids_process/betas_kids_v2.csv").values
+kidsp_betas=pd.read_csv("/home/jrodriguez/NH_HC/results/model_v2/kids_process/betas_kids_v2.csv").values
 
 #Minimum set of x's (for interpolation)
 x_wmk=x_df[  ['age_ra','age_ra2','d_HS2','constant'] ].values
@@ -116,17 +116,17 @@ x_wmk=x_df[  ['age_ra','age_ra2','d_HS2','constant'] ].values
 passign=x_df[ ['d_RA']   ].values
 
 #The EITC parameters
-eitc_list = pickle.load( open("/home/jrodriguez/NH_HC/codes/model/simulate_sample/eitc_list.p", 'rb' ) )
+eitc_list = pickle.load( open("/home/jrodriguez/NH_HC/codes/model_v2/simulate_sample/eitc_list.p", 'rb' ) )
 
 #The AFDC parameters
-afdc_list = pickle.load( open("/home/jrodriguez/NH_HC/codes/model/simulate_sample/afdc_list.p", 'rb' ) )
+afdc_list = pickle.load( open("/home/jrodriguez/NH_HC/codes/model_v2/simulate_sample/afdc_list.p", 'rb' ) )
 
 #The SNAP parameters
-snap_list = pickle.load( open("/home/jrodriguez/NH_HC/codes/model/simulate_sample/snap_list.p", 'rb' ) ) 
+snap_list = pickle.load( open("/home/jrodriguez/NH_HC/codes/model_v2/simulate_sample/snap_list.p", 'rb' ) ) 
 
 
 #CPI index
-cpi =  pickle.load( open("/home/jrodriguez/NH_HC/codes/model/simulate_sample/cpi.p", 'rb' ) )
+cpi =  pickle.load( open("/home/jrodriguez/NH_HC/codes/model_v2/simulate_sample/cpi.p", 'rb' ) )
 
 #Here: the estimates from the auxiliary model
 ###
@@ -142,25 +142,21 @@ nkids0=x_df[ ['nkids_baseline']   ].values
 married0=x_df[ ['d_marital_2']   ].values
 
 #age of child at baseline
-agech0_a=x_df[['age_t0A']].values[:,0]
-agech0_b=x_df[['age_t0B']].values[:,0]
-d_childb=x_df[['d_childB']].values
-d_childa=x_df[['d_childA']].values
+agech0=x_df[['age_t0']].values
 
 #Defines the instance with parameters
-param0=util.Parameters(alphap,alphaf,eta,gamma1,gamma2,gamma3,
-	tfp,sigma2theta,varphi,rho_theta_epsilon,rho_theta_ab,wagep_betas,
+param0=util.Parameters(alphap,alphaf,mu_c,
+	eta,gamma1,gamma2,gamma3,
+	tfp,sigma2theta,rho_theta_epsilon,wagep_betas,
 	income_male_betas,c_emp_spouse,
 	marriagep_betas, kidsp_betas, eitc_list,
 	afdc_list,snap_list,cpi,lambdas,kappas,pafdc,psnap,mup)
 
-
-
 ###Auxiliary estimates### 
-moments_vector=pd.read_csv("/home/jrodriguez/NH_HC/results/aux_model/moments_vector.csv").values
+moments_vector=pd.read_csv("/home/jrodriguez/NH_HC/results/model_v2/aux_model/moments_vector.csv").values
 
 #This is the var cov matrix of aux estimates
-var_cov=pd.read_csv("/home/jrodriguez/NH_HC/results/aux_model/var_cov.csv").values
+var_cov=pd.read_csv("/home/jrodriguez/NH_HC/results/model_v2/aux_model/var_cov.csv").values
 
 #The W matrix in Wald metric
 #Using inverse of diagonal of Var-Cov matrix of simulated moments
@@ -181,7 +177,7 @@ M=200
 
 #How many hours is part- and full-time work
 hours_p = 20
-hours_f = 40
+hours_f = 30
 
 #Indicate if model includes a work requirement (wr), 
 #and child care subsidy (cs) and a wage subsidy (ws)
@@ -190,9 +186,8 @@ cs=1
 ws=1
 
 output_ins=estimate.Estimate(nperiods,param0,x_w,x_m,x_k,x_wmk,passign,
-	agech0_a,agech0_b,d_childa,d_childb,nkids0,
-	married0,D,dict_grid,M,N,moments_vector,w_matrix,hours_p,hours_f,
-	wr,cs,ws)
+	agech0,nkids0,married0,D,dict_grid,M,N,
+	moments_vector,w_matrix,hours_p,hours_f,wr,cs,ws)
 
 
 start_time = time.time()
@@ -231,16 +226,14 @@ kappas_11 = output.x[21]
 kappas_12 = output.x[22]
 kappas_13 = output.x[23]
 rho_theta_epsilon_opt = sym(output.x[24])
-rho_theta_ab = sym(output.x[25])
-
 
 betas_opt=np.array([eta_opt, alphap_opt,alphaf_opt,
 	betaw0,betaw1,betaw2,betaw3,betaw4,
 	beta_s1,beta_s2,beta_s3,beta_emp_s,
 	gamma1_opt,gamma2_opt,gamma3_opt,tfp_opt,
 	kappas_00,kappas_01,kappas_02,kappas_03,
-	kappas_10,kappas_11,kappas_12,kappas_13,rho_theta_epsilon_opt,rho_theta_ab])
+	kappas_10,kappas_11,kappas_12,kappas_13,rho_theta_epsilon_opt])
 
-np.save('/home/jrodriguez/NH_HC/results/Model/estimation/betas_modelv27_twoch.npy',betas_opt)
+np.save('/home/jrodriguez/NH_HC/results/Model/estimation/betas_modelv34.npy',betas_opt)
 
 

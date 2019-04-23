@@ -2,8 +2,8 @@
 #build a grid around parameter value
 lenght = 1
 size_grid = 6
-max_p = wagep_betas[2] + 0.25
-min_p = wagep_betas[2] - 0.25
+max_p = income_male_betas[0] + 0.25
+min_p = income_male_betas[0] - 0.25
 p_list = np.linspace(min_p,max_p,size_grid)
 obs_moment = moments_vector[5,0].copy()
 
@@ -18,8 +18,7 @@ for i in range(size_grid):
 	
 
 #Back to original
-execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/load_param.py')
-
+exec(open("/home/jrodriguez/NH_HC/codes/model_v2/checks/identification_check/load_param.py").read())
 #the graph
 fig, ax=plt.subplots()
 plot1=ax.plot(p_list,target_moment,'b-o',label='Simulated',alpha=0.9)
@@ -35,6 +34,6 @@ ax.yaxis.set_ticks_position('left')
 ax.xaxis.set_ticks_position('bottom')
 ax.legend(loc=0)
 plt.show()
-fig.savefig('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/checks/constant_wage.pdf', format='pdf')
+fig.savefig('/home/jrodriguez/NH_HC/results/model_v2/checks/constant_wage.pdf', format='pdf')
 plt.close()
 

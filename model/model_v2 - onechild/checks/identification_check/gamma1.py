@@ -5,7 +5,7 @@ size_grid = 6
 max_p = 1.1
 min_p = 0.95
 p_list = np.linspace(min_p,max_p,size_grid)
-obs_moment = moments_vector[16,0].copy()
+obs_moment = moments_vector[20,0].copy()
 
 #draft: try updating a parameter
 target_moment = np.zeros((size_grid,))
@@ -18,7 +18,7 @@ for i in range(size_grid):
 
 
 #Back to original
-execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/load_param.py')
+exec(open("/home/jrodriguez/NH_HC/codes/model_v2/checks/identification_check/load_param.py").read())
 
 #the graph
 fig, ax=plt.subplots()
@@ -35,6 +35,6 @@ ax.yaxis.set_ticks_position('left')
 ax.xaxis.set_ticks_position('bottom')
 ax.legend(loc=0)
 plt.show()
-fig.savefig('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/checks/gamma1.pdf', format='pdf')
+fig.savefig('/home/jrodriguez/NH_HC/results/model_v2/checks/gamma1.pdf', format='pdf')
 plt.close()
 

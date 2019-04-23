@@ -31,7 +31,7 @@ class Budget(Utility):
 			nkids0,married0,hours,cc,age_t0,hours_p,hours_f,wr,cs,ws)
 
 
-	def dincomet(self, periodt,hours,wage,marr,kid):
+	def dincomet(self, periodt,hours,wage,marr,kid,income_spouse,employment_spouse):
 		"""
 		Computes annual disposable income given weekly hours worked, hourly wage,
 		marital status and number of kids. 
@@ -52,6 +52,8 @@ class Budget(Utility):
 		#To nominal prices (2003 prices)
 		pwage=pwage/(self.param.cpi[8]/self.param.cpi[periodt])
 
+		#family earnings: used for eligibility
+		pwage_family = pwage + income_spouse*employment_spouse
 
 		#the EITC parameters
 		dic_eitc=self.param.eitc[periodt]
@@ -85,7 +87,6 @@ class Budget(Utility):
 		#Obtaining individual's disposable income from EITC
 		eitc_fed=np.zeros(self.N)
 		eitc_state=np.zeros(self.N)
-
 		
 
 		for nn in range(0,3):
@@ -94,14 +95,19 @@ class Budget(Utility):
 				kid_boo=kid[:,0]==nn+1
 			else:
 				kid_boo=kid[:,0]>=nn+1
-			
-			eitc_fed[(pwage<b1[nn]) & (kid_boo) ]=r1[nn]*pwage[(pwage<b1[nn]) & (kid_boo)]
-			eitc_fed[(pwage>=b1[nn]) & (pwage<b2[nn]) & (kid_boo)]=r1[nn]*b1[nn]
-			eitc_fed[(pwage>=b2[nn]) & (kid_boo)]=np.maximum(r1[nn]*b1[nn]-r2[nn]*(pwage[(pwage>=b2[nn]) & (kid_boo)]-b2[nn]),np.zeros(pwage[(pwage>=b2[nn]) & (kid_boo)].shape[0]))
-			eitc_state[kid_boo]=state_eitc[nn]*eitc_fed[kid_boo]
 
-		
-		
+			for k in range(0,1): #spouse employment
+
+				if k == 0:
+					boo_spouse = employment_spouse == 0
+				else:
+					boo_spouse = employment_spouse == 1
+			
+				eitc_fed[(pwage_family<b1[nn]) & (kid_boo) & (boo_spouse) ]=r1[nn]*pwage_family[(pwage_family<b1[nn]) & (kid_boo) & (boo_spouse)]
+				eitc_fed[(pwage_family>=b1[nn]) & (pwage_family<b2[nn][k] & (boo_spouse)) & (kid_boo)]=r1[nn]*b1[nn]
+				eitc_fed[(pwage_family>=b2[nn][k]) & (kid_boo) & (boo_spouse)]=np.maximum(r1[nn]*b1[nn]-r2[nn]*(pwage_family[(pwage_family>=b2[nn][k]) & (kid_boo) & (boo_spouse)]-b2[nn][k]),np.zeros(pwage_family[(pwage_family>=b2[nn][k]) & (kid_boo) & (boo_spouse)].shape[0]))
+				eitc_state[kid_boo]=state_eitc[nn]*eitc_fed[kid_boo]
+
 		
 		##Obtaining NH income supplement: shut down#
 
@@ -168,7 +174,8 @@ class Budget(Utility):
 		return {'income': dincome*(self.param.cpi[8]/self.param.cpi[periodt]),
 		'NH': nh_supp }
 
-	def consumptiont(self,periodt,h,cc,dincome,marr,nkids,wage, free,price):
+	def consumptiont(self,periodt,h,cc,dincome,income_spouse,employment_spouse,
+		marr,nkids,wage, free,price):
 		"""
 		Computes per-capita consumption:
 		(income - cc_payment)/family size
@@ -204,8 +211,10 @@ class Budget(Utility):
 		if self.cs==1:
 			cc_cost[d_work & boo_nfree & young] = copayment[d_work & boo_nfree & young].copy()
 			
-		
-		incomepc=(dincome - cc*cc_cost)/(ones+nkids+marr)
+		#spouse income only if married
+		income_spouse[marr == 0] = 0
+
+		incomepc=(dincome+ income_spouse*employment_spouse - cc*cc_cost)/(ones+nkids+marr)
 		incomepc[incomepc<=0]=1
 		
 
@@ -213,64 +222,6 @@ class Budget(Utility):
 		nh_cost = np.zeros(self.N)
 		return {'income_pc': incomepc, 'nh_cc_cost': nh_cost}
 
-	def elec(self):
-		"""
-		This function recovers ec and el
-		"""
-		ec = np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/experiments/EITC/ec.npy')
-		el = np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/experiments/EITC/el.npy')
-		ecc = np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/experiments/EITC/ecc.npy')
-		e_age = np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/experiments/EITC/e_age.npy')
-		return [ec, el, ecc,e_age]
-
-	def thetat(self,periodt,theta0,h,cc,ct):
-		"""
-		Computes theta at period (t+1) (next period)
-		t+1 goes from 1-8
-		
-		Inputs must come from period t
-
-		"""
-		#age of child
-		agech=np.reshape(self.age_t0,(self.N)) + periodt
-
-		#recovering ec and el
-		ecel = self.elec()
-
-		#log consumption pc
-		incomepc=np.log(ct)
-		
-		
-		#log time w child (T=148 hours a week)
-		tch = np.zeros(self.N)
-		boo_p = h == self.hours_p
-		boo_f = h == self.hours_f
-		boo_u = h == 0
-
-		tch[agech<=5] = cc[agech<=5]*(168 - self.hours_f) + (1-cc[agech<=5])*(168 - h[agech<=5] )
-		tch[agech>5] = 133 - h[agech>5]
-		tch=np.log(tch)
-		
-					
-		#Parameters
-		gamma1=self.param.gamma1
-		gamma2=self.param.gamma2
-		gamma3=self.param.gamma3
-		tfp=self.param.tfp
-		
-		theta1=np.zeros(self.N)
-
-		
-		#The production of HC: young, cc=0
-		boo_age=agech<=5
-		theta1 = tfp*cc*boo_age + gamma1*np.log(theta0) + gamma2*incomepc +	gamma3*tch 
-
-		#adjustment for E[theta = 0]: this is shut down
-		if periodt<=7:
-			alpha = - ecel[3][periodt]*ecel[2][periodt]*tfp - ecel[0][periodt]*gamma2 - ecel[1][periodt]*gamma3
-		else:
-			alpha = - ecel[3][7]*ecel[2][7]*tfp - ecel[0][7]*gamma2 - ecel[1][7]*gamma3
-
-		return np.exp(theta1 + alpha)
+	
 	
 	

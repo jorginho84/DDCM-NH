@@ -21,17 +21,17 @@ need:
 options: (i) numpy.gradient
 """
 
-from __future__ import division #omit for python 3.x
+#from __future__ import division #omit for python 3.x
 import numpy as np
 import sys, os
-sys.path.append("/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/simulate_sample")
+sys.path.append("/home/jrodriguez/NH_HC/codes/model_v2/simulate_sample")
 import utility as util
 import gridemax
 import time
 import int_linear
 import emax as emax
 import simdata as simdata
-sys.path.append("/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/estimation")
+sys.path.append("/home/jrodriguez/NH_HC/codes/model_v2/estimation")
 import estimate as estimate
 
 
@@ -80,28 +80,34 @@ class SEs:
 		wagep_betas=np.array([bs[3],bs[4],bs[5],
 			np.exp(bs[6]),bs[7]]).reshape((5,1))
 
+		#spouse income process
+		income_male_betas = np.array([bs[8],bs[9],
+			np.exp(bs[10])]).reshape((3,1))
+		c_emp_spouse = bs[11]
+
 		#Production function [young[cc0,cc1],old]
-		gamma1=bs[8]
-		gamma2=bs[9]
-		gamma3=bs[10]
-		tfp=bs[11]
+		gamma1=bs[12]
+		gamma2=bs[13]
+		gamma3=bs[14]
+		tfp=bs[15]
 		
 				
 		def sym(a):
 			return ((1/(1+np.exp(-a))) - 0.5)*2
 
-		kappas=[[bs[12],bs[13],bs[14],bs[15]],[bs[16],bs[17],bs[18],bs[19]]]
+		kappas=[[bs[16],bs[17],bs[18],bs[19]],[bs[20],bs[21],bs[22],bs[23]]]
 
-		rho_theta_epsilon =  sym(bs[20])
+		rho_theta_epsilon =  sym(bs[24])
 
 		lambdas=[1,1]
 
 
 		#Re-defines the instance with parameters 
 		param0=util.Parameters(alphap,alphaf,eta,gamma1,gamma2,gamma3,
-			tfp,sigma2theta,rho_theta_epsilon,wagep_betas, marriagep_betas,
-			kidsp_betas, eitc_list,afdc_list,snap_list,cpi,lambdas,kappas,
-			pafdc,psnap,mup)
+			tfp,sigma2theta,rho_theta_epsilon,wagep_betas,
+			income_male_betas,c_emp_spouse,
+			marriagep_betas, kidsp_betas, eitc_list,
+			afdc_list,snap_list,cpi,lambdas,kappas,pafdc,psnap,mup)
 
 		return param0 
 
@@ -133,11 +139,13 @@ class SEs:
 		beta_wagep=np.mean(dic_betas['beta_wagep'],axis=1) # 7 x 1
 		beta_inputs=np.mean(dic_betas['beta_inputs'],axis=1) #5 x 1
 		betas_init_prod=np.mean(dic_betas['betas_init_prod'],axis=1) #1 x 1
+		beta_wage_spouse=np.mean(dic_betas['beta_wage_spouse'],axis=1)
+		beta_emp_spouse=np.mean(dic_betas['beta_emp_spouse'],axis=0)
 		
 
 		return [beta_childcare,beta_hours1,beta_hours2,beta_wagep,
 		beta_kappas_t2,beta_kappas_t5,
-		beta_inputs, betas_init_prod]
+		beta_inputs, betas_init_prod,beta_wage_spouse,beta_emp_spouse]
 
 	
 
@@ -154,8 +162,10 @@ class SEs:
 		beta_kappas_t5=betas[5]
 		beta_inputs=betas[6]
 		betas_init_prod=betas[7]
+		beta_wage_spouse=betas[8]
+		beta_emp_spouse=betas[9]
 		#Number of moments to match
-		num_par=beta_childcare.size + beta_hours1.size + beta_hours2.size + beta_wagep.size + + beta_kappas_t2.size +  beta_kappas_t5.size + beta_inputs.size + betas_init_prod.size
+		num_par=beta_childcare.size + beta_hours1.size + beta_hours2.size + beta_wagep.size + beta_wage_spouse.size + beta_emp_spouse.size + beta_kappas_t2.size +  beta_kappas_t5.size + beta_inputs.size + betas_init_prod.size
 		
 		#Outer matrix
 		x_vector=np.zeros((num_par,1))
@@ -173,6 +183,12 @@ class SEs:
 		x_vector[ind: ind+ beta_wagep.size,0]=beta_wagep - self.output_ins.moments_vector[ind:ind+ beta_wagep.size,0]
 		
 		ind = ind + beta_wagep.size
+		x_vector[ind:ind + beta_kappas_t2.size,0]=beta_kappas_t2 - self.output_ins.moments_vector[ind:ind + beta_kappas_t2.size,0]
+
+		ind=ind +beta_wage_spouse.size
+		x_vector[ind: ind+ beta_emp_spouse.size,0]=beta_emp_spouse - self.output_ins.moments_vector[ind:ind+ beta_emp_spouse.size,0]
+
+		ind = ind + beta_emp_spouse.size
 		x_vector[ind:ind + beta_kappas_t2.size,0]=beta_kappas_t2 - self.output_ins.moments_vector[ind:ind + beta_kappas_t2.size,0]
 
 		ind = ind + beta_kappas_t2.size

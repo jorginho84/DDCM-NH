@@ -1,5 +1,5 @@
 """
-exec(open("/home/jrodriguez/NH_HC/codes/checks/identification_check/master_iden.py").read())
+exec(open("/home/jrodriguez/NH_HC/codes/model_v2/checks/identification_check/master_iden.py").read())
 
 This file computes the objective function across different parameters values
 around the optimum.
@@ -21,14 +21,14 @@ from scipy import interpolate
 import matplotlib
 matplotlib.use('Agg') # Force matplotlib to not use any Xwindows backend.
 import matplotlib.pyplot as plt
-sys.path.append("/home/jrodriguez/NH_HC/codes/simulate_sample")
+sys.path.append("/home/jrodriguez/NH_HC/codes/model_v2/simulate_sample")
 import utility as util
 import gridemax
 import time
 import int_linear
 import emax as emax
 import simdata as simdata
-sys.path.append("/home/jrodriguez/NH_HC/codes/estimation")
+sys.path.append("/home/jrodriguez/NH_HC/codes/model_v2/estimation")
 import estimate as estimate
 
 np.random.seed(1)
@@ -36,14 +36,14 @@ np.random.seed(1)
 #Number of periods where all children are less than or equal to 18
 nperiods = 8
 
-exec(open("/home/jrodriguez/NH_HC/codes/checks/identification_check/load_param.py").read())
+exec(open("/home/jrodriguez/NH_HC/codes/model_v2/checks/identification_check/load_param.py").read())
 
 
 ###Auxiliary estimates### 
-moments_vector=pd.read_csv("/home/jrodriguez/NH_HC/results/aux_model/moments_vector.csv").values
+moments_vector=pd.read_csv("/home/jrodriguez/NH_HC/results/model_v2/aux_model/moments_vector.csv").values
 
 #This is the var cov matrix of aux estimates
-var_cov=pd.read_csv("/home/jrodriguez/NH_HC/results/aux_model/var_cov.csv").values
+var_cov=pd.read_csv("/home/jrodriguez/NH_HC/results/model_v2/aux_model/var_cov.csv").values
 
 #The W matrix in Wald metric
 #Using diagonal of Var-Cov matrix of simulated moments
@@ -60,10 +60,10 @@ hours_p=20
 hours_f=40
 
 #For montercarlo integration
-D=50
+D=20
 
 #For II procedure
-M=1000
+M=200
 
 #Indicate if model includes a work requirement (wr), 
 #and child care subsidy (cs) and a wage subsidy (ws)
@@ -75,12 +75,12 @@ ws=1
 hours = np.zeros(N)
 childcare  = np.zeros(N)
 
-model  = util.Utility(param0,N,x_w,x_m,x_k,passign,
-	nkids0,married0,hours,childcare,agech0,hours_p,hours_f,wr,cs,ws)
+model  = util.Utility(param0,N,x_w,x_m,x_k,passign,nkids0,
+	married0,hours,childcare,agech0,hours_p,hours_f,wr,cs,ws)
 
 #The instance for computing samples
-output_ins=estimate.Estimate(nperiods,param0,x_w,x_m,x_k,x_wmk,passign,agech0,nkids0,
-	married0,D,dict_grid,M,N,moments_vector,w_matrix,hours_p,hours_f,
+output_ins=estimate.Estimate(nperiods,param0,x_w,x_m,x_k,x_wmk,passign,
+	agech0,nkids0,married0,D,dict_grid,M,N,moments_vector,var_cov,hours_p,hours_f,
 	wr,cs,ws)
 
 def sym(a):
@@ -93,54 +93,65 @@ font_size = 20
 #Utility function
 
 ####ETA###
-exec(open("/home/jrodriguez/NH_HC/codes/checks/identification_check/eta.py").read())
+exec(open("/home/jrodriguez/NH_HC/codes/model_v2/checks/identification_check/eta.py").read())
 
 
 ####Full-time work###
-#execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/alphaf.py')
+exec(open("/home/jrodriguez/NH_HC/codes/model_v2/checks/identification_check/alphaf.py").read())
 
 ####Part-time work###
-#execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/alphap.py')
-
+exec(open("/home/jrodriguez/NH_HC/codes/model_v2/checks/identification_check/alphap.py").read())
 #########################################################
 #Wage offer
 
 ####high school###
-#execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/highschool_wage.py')
+exec(open("/home/jrodriguez/NH_HC/codes/model_v2/checks/identification_check/highschool_wage.py").read())
 
 ####trend###
-#execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/logt_wage.py')
+exec(open("/home/jrodriguez/NH_HC/codes/model_v2/checks/identification_check/logt_wage.py").read())
 
 ####constant_wage###
-#execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/constant_wage.py')
+exec(open("/home/jrodriguez/NH_HC/codes/model_v2/checks/identification_check/constant_wage.py").read())
 
 ####sigma2###
-#execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/sigma_wage.py')
+exec(open("/home/jrodriguez/NH_HC/codes/model_v2/checks/identification_check/sigma_wage.py").read())
 
 ####rho###
-#execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/rho_wage.py')
+exec(open("/home/jrodriguez/NH_HC/codes/model_v2/checks/identification_check/rho_wage.py").read())
 
+#########################################################
+#Spouse income: high school
+exec(open("/home/jrodriguez/NH_HC/codes/model_v2/checks/identification_check/highschool_spouse.py").read())
+
+#Spouse income: constant
+exec(open("/home/jrodriguez/NH_HC/codes/model_v2/checks/identification_check/constant_spouse.py").read())
+
+#Spouse income: sigma2
+exec(open("/home/jrodriguez/NH_HC/codes/model_v2/checks/identification_check/sigma_spouse.py").read())
+
+#Employment spouse
+exec(open("/home/jrodriguez/NH_HC/codes/model_v2/checks/identification_check/employment_spouse.py").read())
 
 #########################################################
 #Production function
 
 ##Kappas##
-#execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/kappas.py')
+exec(open("/home/jrodriguez/NH_HC/codes/model_v2/checks/identification_check/kappas.py").read())
 
 #***
 ####TFP###
-#execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/tfp.py')
+exec(open("/home/jrodriguez/NH_HC/codes/model_v2/checks/identification_check/tfp.py").read())
 
 ####\gamma_1###
-#execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/gamma1.py')
+exec(open("/home/jrodriguez/NH_HC/codes/model_v2/checks/identification_check/gamma1.py").read())
 
 
 ####\gamma_2###
-#execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/gamma2.py')
+exec(open("/home/jrodriguez/NH_HC/codes/model_v2/checks/identification_check/gamma2.py").read())
 
 #***
 ####\gamma_3###
-#execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/gamma3.py')
+exec(open("/home/jrodriguez/NH_HC/codes/model_v2/checks/identification_check/gamma3.py").read())
 
 
 #########################################################
@@ -148,5 +159,5 @@ exec(open("/home/jrodriguez/NH_HC/codes/checks/identification_check/eta.py").rea
 
 #***
 ####corr_theta0###
-#execfile('/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model_v2/checks/identification_check/corr_theta0.py')
+exec(open("/home/jrodriguez/NH_HC/codes/model_v2/checks/identification_check/corr_theta0.py").read())
 

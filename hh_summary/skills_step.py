@@ -7,7 +7,7 @@ The null hypothesis: no differences between control and treatment groups
 pip2.7 install --user --upgrade pylatex
 
 """
-from __future__ import division #omit for python 3.x
+#from __future__ import division #omit for python 3.x
 import numpy as np
 import pandas as pd
 import pickle
@@ -26,8 +26,8 @@ import subprocess
 
 
 ####Skills estimates###
-dofile = "/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/hh_summary/skills.do"
-cmd = ["stata-mp", "do", dofile]
+dofile = "/home/jrodriguez/NH_HC/codes/hh_summary/skills.do"
+cmd = ["stata-se", "do", dofile]
 subprocess.call(cmd)
 
 #pvalues are saved here
@@ -48,8 +48,8 @@ for model in range(2): #in every year we have 2 models
 
 		for block in range(nblocks):
 
-			y2_obs_block1=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Skills/y' + str(year) + '_obs_block'+str(block+1)+'_model'+str(model+1)+'.csv').values
-			y2_res_block1=pd.read_csv('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Skills/y' + str(year) +'_res_block'+str(block+1)+'_model'+str(model+1)+'.csv').values
+			y2_obs_block1=pd.read_csv('/home/jrodriguez/NH_HC/results/hh_summary/y' + str(year) + '_obs_block'+str(block+1)+'_model'+str(model+1)+'.csv').values
+			y2_res_block1=pd.read_csv('/home/jrodriguez/NH_HC/results/hh_summary/y' + str(year) +'_res_block'+str(block+1)+'_model'+str(model+1)+'.csv').values
 
 
 			#number of hypothesis/replications
@@ -95,7 +95,7 @@ tests_list_block1 = ['Overall', 'Reading', 'Math', 'Reading grade expectations',
 tests_list_block2 = ['Behavior skills', 'Independent skills', 'Transitional skills']
 
 
-with open('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/HH_summary/Y2_pvalues.tex','w') as f:
+with open('/home/jrodriguez/NH_HC/results/hh_summary/Y2_pvalues.tex','w') as f:
 	f.write(r'\begin{tabular}{lcccc}'+'\n')
 	f.write(r'\hline')
 	f.write(r'  \textbf{Measures}    &       & \textbf{No controls} &       & \textbf{W/ controls} \bigstrut[b] \\' + '\n')
@@ -143,7 +143,7 @@ block_list = ['Panel A. Woodcock-Johnson', 'Panel B. SSRS Academic Subscale',
 'Panel C. Teachers Mock\' Reports Cards', 'Panel D. Classroom Behavior Scale',
 'Panel E. Parents\' Reports' ]
 
-with open('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/HH_summary/Y5_pvalues.tex','w') as f:
+with open('/home/jrodriguez/NH_HC/results/hh_summary/Y5_pvalues.tex','w') as f:
 	f.write(r'\begin{tabular}{lcccc}'+'\n')
 	f.write(r'\hline')
 	f.write(r' \textbf{Measures}     &       & \textbf{No controls} &       & \textbf{W/ controls} \bigstrut[b] \\' + '\n')
@@ -181,7 +181,7 @@ for year in [2,5]:
 
 	i = i + 1
 
-with open('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/HH_summary/table_y2_y5.tex','w') as f:
+with open('/home/jrodriguez/NH_HC/results/hh_summary/table_y2_y5.tex','w') as f:
 	f.write(r'\begin{tabular}{lrccc}'+'\n')
 	f.write(r'\hline'+'\n')
 	f.write(r'SSRS measure && Year 2 && Year 5 \bigstrut\\'+'\n')

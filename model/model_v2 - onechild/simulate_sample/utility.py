@@ -31,7 +31,7 @@ class Parameters:
 		tfp,sigma2theta,rho_theta_epsilon,betaw,
 		beta_spouse,c_emp_spouse,
 		betam,betak,eitc,afdc,snap,cpi,
-		lambdas,kappas,pafdc,psnap,mup):
+		lambdas,kappas,pafdc,psnap,mup,sigma_z):
 
 		self.alphap,self.alphaf,self.eta,self.mu_c=alphap,alphaf,eta,mu_c
 		self.gamma1,self.gamma2,self.gamma3=gamma1,gamma2,gamma3
@@ -44,6 +44,7 @@ class Parameters:
 		self.lambdas,self.kappas=lambdas,kappas
 		self.pafdc,self.psnap=pafdc,psnap
 		self.mup = mup
+		self.sigma_z = sigma_z
 
 
 class Utility(object):
@@ -559,12 +560,14 @@ class Utility(object):
 		gamma2=self.param.gamma2
 		gamma3=self.param.gamma3
 		tfp=self.param.tfp
+
+		cte = self.param.gamma1*np.mean(np.log(theta0)) + self.param.gamma2*np.mean(incomepc) + self.param.gamma3*np.mean(tch)
 				
 		#The production of HC: (young, cc=0), (young,cc1), (old)
 		boo_age=agech<=5
-		theta1 = tfp*cc*boo_age + gamma1*np.log(theta0) + gamma2*incomepc +	gamma3*tch
-
-		return np.exp(theta1)
+		theta1 = self.param.tfp*cc*boo_age + self.param.gamma1*np.log(theta0) + self.param.gamma2*incomepc + self.param.gamma3*tch
+		
+		return np.exp(theta1 - cte)
 
 
 	def Ut(self,periodt,dincome,income_spouse,employment_spouse,marr,cc,nkids,ht,thetat,
@@ -624,22 +627,11 @@ class Utility(object):
 		elif periodt==5:
 			loc=1
 
-		lambdam=self.param.lambdas[loc]
-		cuts=[self.param.kappas[loc][0],self.param.kappas[loc][1],
-		self.param.kappas[loc][2],self.param.kappas[loc][3]]
-		
-		z_star=lambdam*np.log(thetat) + np.random.randn(self.N)
+		lambdam = self.param.lambdas[loc]
+		mu = self.param.kappas[loc]
+		sigma =self.param.sigma_z[loc]
 
-		#the SSRS measure: [child A, child B]
-		z=np.zeros(self.N)
-		z[z_star<=cuts[0]]=1
-		z[(z_star>cuts[0]) & (z_star<=cuts[1])]=2
-		z[(z_star>cuts[1]) & (z_star<=cuts[2])]=3
-		z[(z_star>cuts[2]) & (z_star<=cuts[3])]=4
-		z[(z_star>cuts[3])]=5
-
-
-		return z
+		return mu + lambdam*np.log(thetat) + sigma*np.random.randn(self.N)
 	
 	
 	def simulate(self,periodt,wage0,free,price,theta0,income_spouse,employment_spouse):

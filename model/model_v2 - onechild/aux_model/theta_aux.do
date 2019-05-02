@@ -14,27 +14,14 @@ gen age_t1=age_t0+1
 gen age_t4=age_t0+4
 gen age_t7=age_t0+7
 
-*Standardized measures
-foreach x of numlist 2 5 8{
-	rename skills_t`x' skills_t`x'_aux
-	egen skills_t`x'=std(skills_t`x'_aux)
-}
-
-*Dummies
-foreach x of numlist 2 5 8{
-	gen d_skills_t`x' = .
-	replace d_skills_t`x' = 1 if skills_t`x'_aux>3
-	replace d_skills_t`x' = 0 if skills_t`x'_aux<=3
-	replace d_skills_t`x' = . if skills_t`x'_aux == .
-}
 
 
 *Time outside market
 foreach x of numlist 1 4 7{
 	gen l_t`x'=.
-	replace l_t`x'=(168-hours_t`x') if d_CC2_t`x'==0 & age_t`x'<=6
-	replace l_t`x'=(168-40) if d_CC2_t`x'==1 & age_t`x'<=6
-	replace l_t`x'=(133-hours_t`x') if age_t`x'>6
+	replace l_t`x'=(168-hours_t`x') if d_CC2_t`x'==0 & age_t`x'<=5
+	replace l_t`x'=(168-30) if d_CC2_t`x'==1 & age_t`x'<=5
+	replace l_t`x'=(133-hours_t`x') if age_t`x'>5
 }
 
 *Income
@@ -64,37 +51,17 @@ foreach x of numlist 0 {
 
 gen lhwage_t0=log(hwage_t0)
 
+/*Intercepts and variances*/
+
+matrix prob_inc_t2=J(1,1,.)
+qui: sum skills_t2
+matrix prob_inc_t2[1,1] =r(mean)
 
 
-**********************************************************************************************
-**********************************************************************************************
-**********************************************************************************************
-
-*Inconditional Probs: matrix of 4 (categories) X 1 (measures)
-*(to identify kappas)
-matrix prob_inc_t2=J(4,1,.)
-local obs=1
-foreach j of numlist 2 3 4 5{
-	gen d_prob=skills_t2_aux==`j'
-	replace d_prob=. if  skills_t2==.
-	qui: sum d_prob if d_prob!=. & p_assign=="C"
-	mat beta_aux=r(mean)
-	mat prob_inc_t2[`obs',1]=beta_aux[1,1]
-	drop d_prob
-	local obs=`obs'+1
-}
-
-matrix prob_inc_t5=J(4,1,.)
-local jj=1
-foreach j of numlist 2 3 4 5{
-	gen d_prob=skills_t5_aux==`j'
-	replace d_prob=. if  skills_t5==.
-	sum d_prob if d_prob!=. & p_assign=="C"
-	mat prob_inc_t5[`jj',1]=r(mean)
-	drop d_prob
-	local jj=`jj'+1
-}
-
+matrix prob_inc_t5=J(2,1,.)
+qui: sum skills_t5
+matrix prob_inc_t5[1,1] =r(mean)
+matrix prob_inc_t5[2,1] =r(Var) 
 
 
 
@@ -105,10 +72,10 @@ foreach j of numlist 2 3 4 5{
 *To identify gammas (production function): 2 x 1 matrix
 mat inputs_moments=J(5,1,.)
 
-corr d_skills_t2  lhwage_t0 if p_assign=="C"
+corr skills_t2  lhwage_t0 if p_assign=="C"
 mat inputs_moments[5,1] = r(rho)
 
-corr d_skills_t2 skills_t5 if p_assign == "C"
+corr skills_t2 skills_t5 if p_assign == "C"
 mat inputs_moments[1,1] = r(rho)
 
 
@@ -119,27 +86,25 @@ egen id_child = seq()
 foreach x of numlist 2 5 8{
 	local z = `x' - 1
 	rename skills_t`x' skills_t`z'
-	rename d_skills_t`x' d_skills_t`z'
-
+	
 }
 
 keep incomepc_t1 incomepc_t4 incomepc_t7 skills_t1 skills_t4 skills_t7 /*
 */ l_t1 l_t4 l_t7 d_CC2_t1 d_CC2_t4 d_CC2_t7 /*
-*/ id_child age_t1 age_t4 age_t7 d_skills_t1 d_skills_t4 d_skills_t7 p_assign
+*/ id_child age_t1 age_t4 age_t7 p_assign
 
 reshape long incomepc_t skills_t d_skills_t l_t d_CC2_t age_t, i(id_child) j(year)
 
-bysort year: corr d_skills_t incomepc_t if p_assign=="C"
-bysort year: corr d_skills_t l_t if p_assign=="C"
-
-corr d_skills_t incomepc_t if p_assign=="C" & year<7
+corr skills_t incomepc_t if p_assign=="C" & year<7
 mat inputs_moments[2,1] = r(rho)
 
-corr d_skills_t l_t if p_assign=="C" & year<7
+corr skills_t l_t if p_assign=="C" & year<7
 mat inputs_moments[3,1] = r(rho)
 
-reg d_skills_t d_CC2_t if age_t<=5 & p_assign=="C" & year<7
+reg skills_t d_CC2_t if age_t<=5 & p_assign=="C" & year<7
 mat inputs_moments[4,1] = _b[d_CC2_t]
+
+
 
 **********************************************
 **********************************************

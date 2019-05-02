@@ -104,7 +104,7 @@ pos = 14
 list_aux = []
 list_obs = []
 list_sig = []
-for c in range(4):
+for c in range(1):
 	ws['B' + str(c + pos)] = np.float(beta_kappas_t2[c])
 	ws['D' + str(c + pos)] = np.float(moments_vector[ind + c,0])
 	ws['F' + str(c + pos)] = np.float(se_vector[ind + c])
@@ -114,10 +114,10 @@ for c in range(4):
 	list_sig.append(se_vector[ind + c])
 
 
-ind = ind + 4
-pos = 18
+ind = ind + 1
+pos = 15
 #B. t=5, kappas
-for c in range(4):
+for c in range(2):
 	ws['B' + str(c + pos)] = np.float(beta_kappas_t5[c])
 	ws['D' + str(c + pos)] = np.float(moments_vector[ind + c,0])
 	ws['F' + str(c + pos)] = np.float(se_vector[ind + c])
@@ -151,8 +151,8 @@ plt.close()
 
 
 #C. Measures of academic achievement and family choices
-ind = ind +4
-pos = 22
+ind = ind +2
+pos = 17
 list_aux = []
 list_obs = []
 list_sig = []

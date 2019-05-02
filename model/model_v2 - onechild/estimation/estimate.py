@@ -333,21 +333,19 @@ class Estimate:
 
 		beta_inputs=np.zeros((4,self.M)) #5 moments
 		betas_init_prod=np.zeros((1,self.M)) #5 moments
-		beta_kappas_t2=np.zeros((4,self.M)) #4 moments
-		beta_kappas_t5=np.zeros((4,self.M)) #4 moments
+		beta_kappas_t2=np.zeros((1,self.M)) #4 moments
+		beta_kappas_t5=np.zeros((2,self.M)) #4 moments
 
-		for z in range(2,6): #4 rankings
-			boo=ssrs_t2_matrix==z
-			beta_kappas_t2[z-2,:]=np.mean(boo,axis=0)
-			boo=ssrs_t5_matrix==z
-			beta_kappas_t5[z-2,:]=np.mean(boo,axis=0)
-		
+		beta_kappas_t2[0,:]=np.mean(ssrs_t2_matrix,axis=0)
+		beta_kappas_t5[0,:]=np.mean(ssrs_t5_matrix,axis=0)
+		beta_kappas_t5[1,:]=np.var(ssrs_t5_matrix,axis=0)
+
 		
 		boo_sample = (hours_matrix[:,0,:]>0) & (hours_matrix[:,1,:]>0) & (hours_matrix[:,4,:]>0) & (hours_matrix[:,7,:]>0)
 		for j in range(self.M):
 
 			#for gamma1
-			beta_inputs[0,j] = np.corrcoef(ssrs_t2_matrix_se[self.passign[:,0]==0,j],ssrs_t5_matrix_se[self.passign[:,0]==0,j])[1,0]
+			beta_inputs[0,j] = np.corrcoef(ssrs_t2_matrix[self.passign[:,0]==0,j],ssrs_t5_matrix[self.passign[:,0]==0,j])[1,0]
 			
 			#for gamma2 and 3
 			beta_inputs[1,j] = np.corrcoef(ssrs_aux[passign_aux==0,j],income_aux[passign_aux==0,j])[1,0]
@@ -362,7 +360,7 @@ class Estimate:
 			
 
 			boo_sample = hours_matrix[:,0,j]>0
-			betas_init_prod[0,j] = np.corrcoef(ssrs_t2_matrix_se[(self.passign[:,0]==0) & (boo_sample==1),j],np.log(wage_matrix[(self.passign[:,0]==0) & (boo_sample==1),0,j]))[1,0]
+			betas_init_prod[0,j] = np.corrcoef(ssrs_t2_matrix[(self.passign[:,0]==0) & (boo_sample==1),j],np.log(wage_matrix[(self.passign[:,0]==0) & (boo_sample==1),0,j]))[1,0]
 		
 		
 		return{'beta_childcare':beta_childcare,'beta_hours1': beta_hours1,
@@ -402,15 +400,10 @@ class Estimate:
 		self.param0.gamma2 = beta[13]
 		self.param0.gamma3 = beta[14]
 		self.param0.tfp = beta[15]
-		self.param0.kappas[0][0] = beta[16]
-		self.param0.kappas[0][1] = beta[17]
-		self.param0.kappas[0][2] = beta[18]
-		self.param0.kappas[0][3] = beta[19]
-		self.param0.kappas[1][0] = beta[20]
-		self.param0.kappas[1][1] = beta[21]
-		self.param0.kappas[1][2] = beta[22]
-		self.param0.kappas[1][3] = beta[23]
-		self.param0.rho_theta_epsilon = sym(beta[24])
+		self.param0.kappas[0] = beta[16]
+		self.param0.kappas[1] = beta[17]
+		self.param0.sigma_z[1] = beta[18]
+		self.param0.rho_theta_epsilon = sym(beta[19])
 					
 
 		#The model (utility instance)
@@ -449,8 +442,8 @@ class Estimate:
 		beta_hours1=np.mean(dic_betas['beta_hours1'],axis=0) #1x1
 		beta_hours2=np.mean(dic_betas['beta_hours2'],axis=0) #1x1
 		beta_wagep=np.mean(dic_betas['beta_wagep'],axis=1) # 6 x 1
-		beta_kappas_t2=np.mean(dic_betas['beta_kappas_t2'],axis=1) #4 x 1
-		beta_kappas_t5=np.mean(dic_betas['beta_kappas_t5'],axis=1) #4 x 1
+		beta_kappas_t2=np.mean(dic_betas['beta_kappas_t2'],axis=1) #2 x 1
+		beta_kappas_t5=np.mean(dic_betas['beta_kappas_t5'],axis=1) #2 x 1
 		beta_inputs=np.mean(dic_betas['beta_inputs'],axis=1) #4 x 1
 		betas_init_prod=np.mean(dic_betas['betas_init_prod'],axis=1) #1 x 1
 		beta_wage_spouse=np.mean(dic_betas['beta_wage_spouse'],axis=1)
@@ -509,7 +502,7 @@ class Estimate:
 		print ('Done aux model generation in')
 		print("--- %s seconds ---" % (time_opt))
 
-		return q_w
+		return q_w*100
 
 
 
@@ -531,10 +524,8 @@ class Estimate:
 			self.param0.c_emp_spouse,
 			self.param0.gamma1,self.param0.gamma2,self.param0.gamma3,	
 			self.param0.tfp,
-			self.param0.kappas[0][0],self.param0.kappas[0][1],#kappa: t=2, m0
-			self.param0.kappas[0][2],self.param0.kappas[0][3], #kappa: t=2, m0
-			self.param0.kappas[1][0],self.param0.kappas[1][1],#kappa: t=5, m0
-			self.param0.kappas[1][2],self.param0.kappas[1][3], #kappa: t=5, m0,
+			self.param0.kappas[0],self.param0.kappas[1],#kappa: t=2, m0
+			self.param0.sigma_z[1],
 			syminv(self.param0.rho_theta_epsilon)]) 
 
 		

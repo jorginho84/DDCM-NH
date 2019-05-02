@@ -91,3 +91,6 @@ drop draw betas*
 svmat var_cov
 outsheet using "$results/aux_model/var_cov.csv", comma  replace
 restore
+
+*The number of moments:
+display `n_moments'

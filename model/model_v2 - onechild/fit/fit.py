@@ -47,21 +47,20 @@ import estimate as estimate
 
 np.random.seed(1)
 
-betas_nelder=np.load("/home/jrodriguez/NH_HC/results/Model/estimation/betas_modelv34.npy")
+betas_nelder = np.load("/home/jrodriguez/NH_HC/results/Model/estimation/betas_modelv36.npy")
 
 
 #Number of periods where all children are less than or equal to 18
 nperiods = 8
 
 #Utility function
-eta =  betas_nelder[0]
+eta =  5.5
 alphap = betas_nelder[1]
-alphaf = betas_nelder[2]
+alphaf = -0.1
 mu_c = -0.56
 
-
-#wage process
-wagep_betas=np.array([betas_nelder[3],betas_nelder[4],betas_nelder[5],
+#wage process en employment processes: female
+wagep_betas=np.array([betas_nelder[3],0.1,1.4,
 	betas_nelder[6],betas_nelder[7]]).reshape((5,1))
 
 #income process: male
@@ -72,23 +71,20 @@ c_emp_spouse = betas_nelder[11]
 
 #Production function [young,old]
 gamma1= betas_nelder[12]
-gamma2= betas_nelder[13]
-gamma3= betas_nelder[14]
-tfp = betas_nelder[15]
+gamma2= 0.05
+gamma3= 0.12
+tfp = 0.12
 sigma2theta = 1
 
+kappas = [betas_nelder[16],betas_nelder[17]]
 
+#first sigma is normalized
+sigma_z = [1,betas_nelder[18]]
 
-kappas=[[betas_nelder[16],betas_nelder[17],
-betas_nelder[18],betas_nelder[19]],
-[betas_nelder[20],betas_nelder[21],betas_nelder[22],
-betas_nelder[23]]]
 
 #initial theta
-rho_theta_epsilon = betas_nelder[24]
+rho_theta_epsilon = betas_nelder[19]
 
-
-#First measure is normalized. starting arbitrary values
 #All factor loadings are normalized
 lambdas=[1,1]
 
@@ -165,7 +161,7 @@ param0=util.Parameters(alphap,alphaf,mu_c,
 	tfp,sigma2theta,rho_theta_epsilon,wagep_betas,
 	income_male_betas,c_emp_spouse,
 	marriagep_betas, kidsp_betas, eitc_list,
-	afdc_list,snap_list,cpi,lambdas,kappas,pafdc,psnap,mup)
+	afdc_list,snap_list,cpi,lambdas,kappas,pafdc,psnap,mup,sigma_z)
 
 
 ###Auxiliary estimates###
@@ -182,14 +178,14 @@ se_vector  = np.sqrt(np.diagonal(var_cov))
 dict_grid=gridemax.grid()
 
 #For montercarlo integration
-D=20		
-
+D = 20		
+ 
 #For II procedure
-M=200
+M = 200
 
 #How many hours is part- and full-time work
-hours_p=20
-hours_f=40
+hours_p = 20
+hours_f = 30
 
 #Indicate if model includes a work requirement (wr), 
 #and child care subsidy (cs) and a wage subsidy (ws)

@@ -9,7 +9,7 @@ import sys, os
 from scipy import stats
 from scipy import interpolate
 #sys.path.append("C:\\Users\\Jorge\\Dropbox\\Chicago\\Research\\Human capital and the household\]codes\\model")
-sys.path.append("/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model/simulate_sample")
+sys.path.append("/home/jrodriguez/NH_HC/codes/model_v2/simulate_sample")
 from utility import Utility
 import gridemax
 import int_linear
@@ -27,6 +27,8 @@ class Budget(Utility):
 		wr, cs, ws control working requirements, child care subsidy,
 		and wage subsidy parameters
 		"""
+		
+
 		Utility.__init__(self,param,N,xwage,xmarr,xkid,ra,
 			nkids0,married0,hours,cc,age_t0,hours_p,hours_f,wr,cs,ws)
 
@@ -53,7 +55,7 @@ class Budget(Utility):
 		pwage=pwage/(self.param.cpi[8]/self.param.cpi[periodt])
 
 		#family earnings: used for eligibility
-		pwage_family = pwage + income_spouse*employment_spouse
+		pwage_family = pwage + income_spouse*employment_spouse*marr[:,0]
 
 		#the EITC parameters
 		dic_eitc=self.param.eitc[periodt]
@@ -74,6 +76,7 @@ class Budget(Utility):
 		b2 = []
 		state_eitc = []
 		
+		pwages = [pwage,pwage_family]
 
 		#parameters of the EITC treatment
 		for nn in range(1,4):
@@ -99,13 +102,13 @@ class Budget(Utility):
 			for k in range(0,1): #spouse employment
 
 				if k == 0:
-					boo_spouse = employment_spouse == 0
+					boo_spouse = marr[:,0] == 0 | ((marr[:,0] == 1) & (employment_spouse == 0))
 				else:
-					boo_spouse = employment_spouse == 1
+					boo_spouse = (marr[:,0] == 1) & (employment_spouse == 1)
 			
-				eitc_fed[(pwage_family<b1[nn]) & (kid_boo) & (boo_spouse) ]=r1[nn]*pwage_family[(pwage_family<b1[nn]) & (kid_boo) & (boo_spouse)]
-				eitc_fed[(pwage_family>=b1[nn]) & (pwage_family<b2[nn][k] & (boo_spouse)) & (kid_boo)]=r1[nn]*b1[nn]
-				eitc_fed[(pwage_family>=b2[nn][k]) & (kid_boo) & (boo_spouse)]=np.maximum(r1[nn]*b1[nn]-r2[nn]*(pwage_family[(pwage_family>=b2[nn][k]) & (kid_boo) & (boo_spouse)]-b2[nn][k]),np.zeros(pwage_family[(pwage_family>=b2[nn][k]) & (kid_boo) & (boo_spouse)].shape[0]))
+				eitc_fed[(pwages[k]<b1[nn]) & (kid_boo) & (boo_spouse) ]=r1[nn]*pwages[k][(pwages[k]<b1[nn]) & (kid_boo) & (boo_spouse)]
+				eitc_fed[(pwages[k]>=b1[nn]) & (pwages[k]<b2[nn][k] & (boo_spouse)) & (kid_boo)]=r1[nn]*b1[nn]
+				eitc_fed[(pwages[k]>=b2[nn][k]) & (kid_boo) & (boo_spouse)]=np.maximum(r1[nn]*b1[nn]-r2[nn]*(pwages[k][(pwages[k]>=b2[nn][k]) & (kid_boo) & (boo_spouse)]-b2[nn][k]),np.zeros(pwages[k][(pwages[k]>=b2[nn][k]) & (kid_boo) & (boo_spouse)].shape[0]))
 				eitc_state[kid_boo]=state_eitc[nn]*eitc_fed[kid_boo]
 
 		
@@ -128,8 +131,8 @@ class Budget(Utility):
 				benefit_std[boo_k] = afdc_param['benefit_std'][nf-1]
 
 			boo_eli=(pwage<=cutoff) & (afdc_takeup==1)
-			boo_min=benefit_std<=benefit_std-(pwage - 30)*.67
-			afdc_benefit[boo_eli]=(1-boo_min[boo_eli])*(benefit_std[boo_eli]-(pwage[boo_eli] - 30)*.67) + boo_min[boo_eli]*benefit_std[boo_eli]
+			boo_min=benefit_std<=benefit_std-(pwage - 30*12)*.67
+			afdc_benefit[boo_eli]=(1-boo_min[boo_eli])*(benefit_std[boo_eli]-(pwage[boo_eli] - 30*12)*.67) + boo_min[boo_eli]*benefit_std[boo_eli]
 			afdc_benefit[afdc_benefit<0]=0
 			#boo_max=afdc_benefit>0
 			#dincome[boo_max]=dincome[boo_max] + afdc_benefit[boo_max]
@@ -170,6 +173,9 @@ class Budget(Utility):
 
 		dincome = pwage + afdc_benefit + nh_supp + snap + eitc_fed + eitc_state
 
+		if self.ws == 1: #the cash transfer
+			dincome = dincome + self.param.mup*12
+
 		#Back to real prices
 		return {'income': dincome*(self.param.cpi[8]/self.param.cpi[periodt]),
 		'NH': nh_supp }
@@ -183,12 +189,21 @@ class Budget(Utility):
 		where cc_payment is determined using NH formula and price offer
 
 		"""
+		nkids=np.reshape(nkids,self.N)
+		marr=np.reshape(marr,self.N)
+		
 		pwage=np.reshape(h,self.N)*np.reshape(wage,self.N)*52
+
+		pwage_family = pwage + income_spouse*employment_spouse*marr
 
 		d_work=h>=self.hours_p
 		agech=np.reshape(self.age_t0,(self.N)) + periodt
 		young=agech<=5
-		boo_nfree = free==0
+
+		#relevant threshold for Head Start
+		nfam = nkids + marr
+		line = self.param.fpl_list[periodt]['fpl'] + self.param.fpl_list[periodt]['multip']*(nfam)
+		boo_nfree = (free==0) | ((free==1) & (pwage_family > line))
 		
 
 		nkids=np.reshape(nkids,self.N)
@@ -198,29 +213,67 @@ class Budget(Utility):
 		#Assuming Wisconsin shares = NH
 		copayment=np.zeros(self.N)
 		copayment[price[:,0]<400]=price[price[:,0]<400,0].copy()
-		copayment[(price[:,0]>400) & (pwage<=8500) ] = 400
-		copayment[(price[:,0]>400) & (pwage>8500)] = 315 + 0.01*pwage[(price[:,0]>400) & (pwage>8500)] 
+		copayment[(price[:,0]>400) & (pwage_family<=8500) ] = 400
+		copayment[(price[:,0]>400) & (pwage_family>8500)] = 315 + 0.01*pwage_family[(price[:,0]>400) & (pwage_family>8500)] 
 		
 		#For those who copayment would be bigger than price
 		copayment[price[:,0]<copayment] = price[price[:,0]<copayment,0].copy()
+
+		#if married, spouse must work
+		copayment[(marr==1) & (employment_spouse==0) ] == price[(marr==1) & (employment_spouse==0),0].copy()
 
 		cc_cost = np.zeros(self.N)
 		
 		#Child care cost: cc subsidy extended for all periods
 		cc_cost[young & boo_nfree] = price[young & boo_nfree,0].copy()
 		if self.cs==1:
-			cc_cost[d_work & boo_nfree & young] = copayment[d_work & boo_nfree & young].copy()
+			cc_cost[boo_nfree & young] = copayment[boo_nfree & young].copy()
 			
-		#spouse income only if married
-		income_spouse[marr == 0] = 0
-
-		incomepc=(dincome+ income_spouse*employment_spouse - cc*cc_cost)/(ones+nkids+marr)
+		
+		incomepc=(dincome+ income_spouse*employment_spouse*marr - cc*cc_cost)/(ones+nkids+marr)
 		incomepc[incomepc<=0]=1
 		
 
 		#New hope cost is zero:
 		nh_cost = np.zeros(self.N)
-		return {'income_pc': incomepc, 'nh_cc_cost': nh_cost}
+		return {'income_pc': incomepc/12, 'nh_cc_cost': nh_cost}
+
+	def thetat(self,periodt,theta0,h,cc,ct):
+		"""
+		Computes theta at period (t+1) (next period)
+		t+1 goes from 1-8
+		
+		Inputs must come from period t
+		"""
+		#age of child
+		agech=np.reshape(self.age_t0,(self.N)) + periodt
+
+		#log consumption pc
+		incomepc=np.log(ct)
+		
+		#log time w child (T=168 hours a week, -35 for older kids)
+		tch = np.zeros(self.N)
+		boo_p = h == self.hours_p
+		boo_f = h == self.hours_f
+		boo_u = h == 0
+
+		tch[agech<=5] = cc[agech<=5]*(168 - self.hours_f) + (1-cc[agech<=5])*(168 - h[agech<=5] ) 
+		tch[agech>5] = 133 - h[agech>5] 
+		tch=np.log(tch)
+	
+				
+		#Parameters
+		gamma1=self.param.gamma1
+		gamma2=self.param.gamma2
+		gamma3=self.param.gamma3
+		tfp=self.param.tfp
+		
+				
+		#The production of HC: (young, cc=0), (young,cc1), (old)
+		boo_age=agech<=5
+		theta1 = self.param.tfp*cc*boo_age + self.param.gamma1*np.log(theta0) + self.param.gamma2*incomepc + self.param.gamma3*tch
+		
+		return np.exp(theta1)
 
 	
 	

@@ -1,102 +1,61 @@
 """
-exec(open("/home/jrodriguez/NH_HC/codes/model/experiments/NH/draft.py").read())
-
-This file computes a decomposition analysis of variables that explain ATE on theta
+exec(open("/home/jrodriguez/NH_HC/codes/model_v2/experiments/NH/draft.py").read())
 
 """
+#for period t=2
+#Mechanisms Figures #2: accumulated controbutions
+names_list_v2 = ['Wage sub', 'Child care sub','Wage sub + Child care sub']
+markers_list = ['k-','k--','k-o' ]
+facecolor_list = ['k','k','k' ]
+y_list = []
+y_list.append(np.mean(ates_list[0]['Theta'],axis=1))
+y_list.append(np.mean(ates_list[3]['Theta'],axis=1))
+y_list.append(np.mean(ates_list[1]['Theta'],axis=1))
+
+x = np.array(range(1,nperiods))
+fig, ax=plt.subplots()
+for k in range(len(y_list)):
+	ax.plot(x,y_list[k],markers_list[k],markerfacecolor= facecolor_list[k],
+		markeredgewidth=1.0,label=names_list_v2[k],linewidth=3,markersize=11,alpha=0.9)
+ax.set_ylabel(r'Impact on child human capital ($\sigma$s)', fontsize=12)
+ax.set_xlabel(r'Years after random assignment ($t$)', fontsize=12)
+ax.set_ylim(0,0.3)
+ax.spines['right'].set_visible(False)
+ax.spines['top'].set_visible(False)
+ax.yaxis.set_ticks_position('left')
+ax.xaxis.set_ticks_position('bottom')
+plt.yticks(fontsize=11)
+plt.xticks(fontsize=11)
+ax.legend(loc=0,fontsize = 11)
+plt.show()
+fig.savefig('/home/jrodriguez/NH_HC/results/model_v2/experiments/NH/ate_theta_policies_1.pdf', format='pdf')
+plt.close()
 
 
-#Choices
-for periodt in range(nperiods-1):									
+#Figure: ATE on theta of wage sub vs cc sub/ work requirements
+names_list_v2 = ['Wage sub + Work req', 'Child care sub + Work req','Full treatment']
+markers_list = ['k-','k--','k-o' ]
+facecolor_list = ['k','k','k' ]
+y_list = []
+y_list.append(np.mean(ates_list[2]['Theta'],axis=1))
+y_list.append(np.mean(ates_list[4]['Theta'],axis=1))
+y_list.append(np.mean(ates_list[5]['Theta'],axis=1))
 
-	for j in range(M):
-		#theta0
-		theta0 = []
-		theta_00 = []
-		theta_01 = []
-		theta_00.append(choices_c['Choice_' + str(0)]['theta_matrix_a'][:,periodt,j])
-		theta_00.append(choices_c['Choice_' + str(0)]['theta_matrix_b'][:,periodt,j])
-		theta_01.append(choices_c['Choice_' + str(1)]['theta_matrix_a'][:,periodt,j])
-		theta_01.append(choices_c['Choice_' + str(1)]['theta_matrix_b'][:,periodt,j])
-		theta0.append(theta_00)
-		theta0.append(theta_01)
-
-		#the theta contribution
-		ltheta_th1 = models[1].thetat(periodt,theta0[1],
-			h_sim_matrix[0][:,periodt,j],cc_sim_matrix_a[0][:,periodt,j],
-			cc_sim_matrix_b[0][:,periodt,j],
-			ct_sim_matrix[0][:,periodt,j])
-		ltheta_th0 = models[0].thetat(periodt,theta0[0],
-			h_sim_matrix[0][:,periodt,j],cc_sim_matrix_a[0][:,periodt,j],
-			cc_sim_matrix_b[0][:,periodt,j],
-			ct_sim_matrix[0][:,periodt,j])
-
-		ltheta_th1_aux = np.concatenate((ltheta_th1[0][d_childa[:,0]==1],
-			ltheta_th1[1][d_childb[:,0]==1]),axis=0)
-
-		ltheta_th0_aux = np.concatenate((ltheta_th0[0][d_childa[:,0]==1],
-			ltheta_th0[1][d_childb[:,0]==1]),axis=0)
-
-		ate_cont_theta[periodt,j] = np.mean(np.log(ltheta_th1_aux[boo_y]) - np.log(ltheta_th0_aux[boo_y]))/sd_matrix[periodt,j]
-		
-
-		#The leisure contribution
-		ltheta_th1 = models[1].thetat(periodt,theta_sim_matrix[1][:,periodt,j],
-			h_sim_matrix[1][:,periodt,j],cc_sim_matrix_a[0][:,periodt,j],
-			cc_sim_matrix_b[0][:,periodt,j],
-			ct_sim_matrix[0][:,periodt,j])
-		ltheta_th0 = models[0].thetat(periodt,theta_sim_matrix[1][:,periodt,j],
-			h_sim_matrix[0][:,periodt,j],cc_sim_matrix_a[0][:,periodt,j],
-			cc_sim_matrix_b[0][:,periodt,j],
-			ct_sim_matrix[0][:,periodt,j])
-		
-		ltheta_th1_aux = np.concatenate((ltheta_th1[0][d_childa[:,0]==1],
-			ltheta_th1[1][d_childb[:,0]==1]),axis=0)
-
-		ltheta_th0_aux = np.concatenate((ltheta_th0[0][d_childa[:,0]==1],
-			ltheta_th0[1][d_childb[:,0]==1]),axis=0)
-
-
-		ate_cont_lt[periodt,j] = np.mean(np.log(ltheta_th1_aux[boo_y]) - np.log(ltheta_th0_aux[boo_y]))/sd_matrix[periodt,j]
-		
-
-
-		
-		#The CC contribution
-		ltheta_th1 = models[1].thetat(periodt,theta_sim_matrix[1][:,periodt,j],
-			h_sim_matrix[1][:,periodt,j],cc_sim_matrix_a[1][:,periodt,j],
-			cc_sim_matrix_b[1][:,periodt,j],
-			ct_sim_matrix[0][:,periodt,j])
-		ltheta_th0 = models[0].thetat(periodt,theta_sim_matrix[1][:,periodt,j],
-			h_sim_matrix[1][:,periodt,j],cc_sim_matrix_a[0][:,periodt,j],
-			cc_sim_matrix_b[0][:,periodt,j],
-			ct_sim_matrix[0][:,periodt,j])
-		
-		ltheta_th1_aux = np.concatenate((ltheta_th1[0][d_childa[:,0]==1],
-			ltheta_th1[1][d_childb[:,0]==1]),axis=0)
-
-		ltheta_th0_aux = np.concatenate((ltheta_th0[0][d_childa[:,0]==1],
-			ltheta_th0[1][d_childb[:,0]==1]),axis=0)
-
-		ate_cont_cc[periodt,j] = np.mean(np.log(ltheta_th1_aux[boo_y]) - np.log(ltheta_th0_aux[boo_y]))/sd_matrix[periodt,j]
-		
-
-	
-		#The consumption contribution
-		ltheta_th1 = models[1].thetat(periodt,theta_sim_matrix[1][:,periodt,j],
-			h_sim_matrix[1][:,periodt,j],cc_sim_matrix_a[1][:,periodt,j],
-			cc_sim_matrix_b[1][:,periodt,j],
-			ct_sim_matrix[1][:,periodt,j])
-		ltheta_th0 = models[0].thetat(periodt,theta_sim_matrix[1][:,periodt,j],
-			h_sim_matrix[1][:,periodt,j],cc_sim_matrix_a[1][:,periodt,j],
-			cc_sim_matrix_b[1][:,periodt,j],
-			ct_sim_matrix[0][:,periodt,j])
-
-		ltheta_th1_aux = np.concatenate((ltheta_th1[0][d_childa[:,0]==1],
-			ltheta_th1[1][d_childb[:,0]==1]),axis=0)
-
-		ltheta_th0_aux = np.concatenate((ltheta_th0[0][d_childa[:,0]==1],
-			ltheta_th0[1][d_childb[:,0]==1]),axis=0)
-
-		ate_cont_ct[periodt,j] = np.mean(np.log(ltheta_th1_aux[boo_y]) - np.log(ltheta_th0_aux[boo_y]))/sd_matrix[periodt,j]
-		
+x = np.array(range(1,nperiods))
+fig, ax=plt.subplots()
+for k in range(len(y_list)):
+	ax.plot(x,y_list[k],markers_list[k],markerfacecolor= facecolor_list[k],
+		markeredgewidth=1.0,label=names_list_v2[k],linewidth=3,markersize=11,alpha=0.9)
+ax.set_ylabel(r'Impact on child human capital ($\sigma$s)', fontsize=12)
+ax.set_xlabel(r'Years after random assignment ($t$)', fontsize=12)
+ax.set_ylim(0,0.3)
+ax.spines['right'].set_visible(False)
+ax.spines['top'].set_visible(False)
+ax.yaxis.set_ticks_position('left')
+ax.xaxis.set_ticks_position('bottom')
+plt.yticks(fontsize=11)
+plt.xticks(fontsize=11)
+ax.legend(loc=0,fontsize = 11)
+plt.show()
+fig.savefig('/home/jrodriguez/NH_HC/results/model_v2/experiments/NH/ate_theta_policies_2.pdf', format='pdf')
+plt.close()

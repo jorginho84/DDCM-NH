@@ -47,20 +47,20 @@ import estimate as estimate
 
 np.random.seed(1)
 
-betas_nelder=np.load("/home/jrodriguez/NH_HC/results/Model/estimation/betas_modelv34.npy")
+betas_nelder = np.load("/home/jrodriguez/NH_HC/results/Model/estimation/betas_modelv45.npy")
 
 
 #Number of periods where all children are less than or equal to 18
 nperiods = 8
 
 #Utility function
-eta =  betas_nelder[0]
+eta = betas_nelder[0]
 alphap = betas_nelder[1]
 alphaf = betas_nelder[2]
+
 mu_c = -0.56
 
-
-#wage process
+#wage process en employment processes: female
 wagep_betas=np.array([betas_nelder[3],betas_nelder[4],betas_nelder[5],
 	betas_nelder[6],betas_nelder[7]]).reshape((5,1))
 
@@ -71,29 +71,26 @@ c_emp_spouse = betas_nelder[11]
 
 
 #Production function [young,old]
-gamma1= betas_nelder[12]
-gamma2= betas_nelder[13]
-gamma3= betas_nelder[14]
+gamma1 = betas_nelder[12]
+gamma2 = betas_nelder[13]
+gamma3 = betas_nelder[14]
 tfp = betas_nelder[15]
 sigma2theta = 1
 
+kappas = [betas_nelder[16],betas_nelder[17]]
 
+#first sigma is normalized
+sigma_z = [1,1]
 
-kappas=[[betas_nelder[16],betas_nelder[17],
-betas_nelder[18],betas_nelder[19]],
-[betas_nelder[20],betas_nelder[21],betas_nelder[22],
-betas_nelder[23]]]
 
 #initial theta
-rho_theta_epsilon = betas_nelder[24]
+rho_theta_epsilon = betas_nelder[18]
 
-
-#First measure is normalized. starting arbitrary values
 #All factor loadings are normalized
 lambdas=[1,1]
 
 #Child care price
-mup = 0.57*0 + (1-0.57)*750
+mup = 750
 
 #Probability of afdc takeup
 pafdc=.60
@@ -139,9 +136,11 @@ afdc_list = pickle.load( open("/home/jrodriguez/NH_HC/codes/model_v2/simulate_sa
 #The SNAP parameters
 snap_list = pickle.load( open("/home/jrodriguez/NH_HC/codes/model_v2/simulate_sample/snap_list.p", 'rb' ) ) 
 
-
 #CPI index
 cpi =  pickle.load( open("/home/jrodriguez/NH_HC/codes/model_v2/simulate_sample/cpi.p", 'rb' ) )
+
+#Federal Poverty Lines
+fpl_list = pickle.load( open("/home/jrodriguez/NH_HC/codes/model_v2/simulate_sample/fpl_list.p", 'rb' ) )
 
 #Here: the estimates from the auxiliary model
 ###
@@ -160,12 +159,13 @@ married0=x_df[ ['d_marital_2']   ].values
 agech0=x_df[['age_t0']].values
 
 #Defines the instance with parameters
-param0=util.Parameters(alphap,alphaf,mu_c,
+param0 = util.Parameters(alphap,alphaf,mu_c,
 	eta,gamma1,gamma2,gamma3,
 	tfp,sigma2theta,rho_theta_epsilon,wagep_betas,
 	income_male_betas,c_emp_spouse,
 	marriagep_betas, kidsp_betas, eitc_list,
-	afdc_list,snap_list,cpi,lambdas,kappas,pafdc,psnap,mup)
+	afdc_list,snap_list,cpi,fpl_list,
+	lambdas,kappas,pafdc,psnap,mup,sigma_z)
 
 
 ###Auxiliary estimates###
@@ -182,14 +182,14 @@ se_vector  = np.sqrt(np.diagonal(var_cov))
 dict_grid=gridemax.grid()
 
 #For montercarlo integration
-D=20		
-
+D = 50	
+ 
 #For II procedure
-M=200
+M = 1000
 
 #How many hours is part- and full-time work
-hours_p=20
-hours_f=40
+hours_p = 15
+hours_f = 40
 
 #Indicate if model includes a work requirement (wr), 
 #and child care subsidy (cs) and a wage subsidy (ws)
@@ -201,8 +201,6 @@ ws=1
 output_ins = estimate.Estimate(nperiods,param0,x_w,x_m,x_k,x_wmk,passign,
 	agech0,nkids0,married0,D,dict_grid,M,N,moments_vector,var_cov,hours_p,hours_f,
 	wr,cs,ws)
-
-
 
 #The model (utility instance)
 hours = np.zeros(N)
@@ -237,20 +235,33 @@ dic_betas = output_ins.aux_model(choices)
 
 #Getting the simulated betas
 #utility_aux
-beta_childcare=np.mean(dic_betas['beta_childcare'],axis=0) #1x1
-beta_hours1=np.mean(dic_betas['beta_hours1'],axis=0) #1x1
-beta_hours2=np.mean(dic_betas['beta_hours2'],axis=0) #1x1
-beta_wagep=np.mean(dic_betas['beta_wagep'],axis=1) # 6 x 1
-beta_kappas_t2=np.mean(dic_betas['beta_kappas_t2'],axis=1) #4 x 3
-beta_kappas_t5=np.mean(dic_betas['beta_kappas_t5'],axis=1) #4 x 1
-beta_inputs=np.mean(dic_betas['beta_inputs'],axis=1) #5 x 1
-betas_init_prod=np.mean(dic_betas['betas_init_prod'],axis=1) #1 x 1
-beta_wage_spouse=np.mean(dic_betas['beta_wage_spouse'],axis=1)
-beta_emp_spouse=np.mean(dic_betas['beta_emp_spouse'],axis=0)
+beta_childcare = np.mean(dic_betas['beta_childcare'],axis=0) #1x1
+beta_hours1 = np.mean(dic_betas['beta_hours1'],axis=0) #1x1
+beta_hours2 = np.mean(dic_betas['beta_hours2'],axis=0) #1x1
+beta_wagep = np.mean(dic_betas['beta_wagep'],axis=1) # 6 x 1
+beta_kappas_t2 = np.mean(dic_betas['beta_kappas_t2'],axis=1) #4 x 3
+beta_kappas_t5 = np.mean(dic_betas['beta_kappas_t5'],axis=1) #4 x 1
+beta_inputs = np.mean(dic_betas['beta_inputs'],axis=1) #5 x 1
+betas_init_prod = np.mean(dic_betas['betas_init_prod'],axis=1) #1 x 1
+beta_wage_spouse = np.mean(dic_betas['beta_wage_spouse'],axis=1)
+beta_emp_spouse = np.mean(dic_betas['beta_emp_spouse'],axis=0)
 
 
 #sample: age of the youngest child is six years or less by t=2
 boo_sample = (agech0[:,0]<= 4)
+
+hours = choices['hours_matrix'].copy()
+full = hours == hours_f
+part = hours == hours_p
+work = hours > 0
+
+#proportion of individuals working part- and full-time across years
+np.mean(np.mean(full[passign[:,0]==0,:,:],axis=2),axis=0)
+
+#wages across years for working
+wages = np.log(choices['wage_matrix'])
+np.mean(np.mean(wages[passign[:,0]==0,:,:],axis=2),axis=0)
+
 
 #################################################################################
 #################################################################################
@@ -273,7 +284,7 @@ exec(open('/home/jrodriguez/NH_HC/codes/model_v2/fit/ate_emp.py').read())
 #################################################################################
 #################################################################################
 #TABLE: COMPARING OPROBITS#
-#exec(open('/home/jrodriguez/NH_HC/codes/model/fit/oprobit.py').read())
+exec(open('/home/jrodriguez/NH_HC/codes/model_v2/fit/oprobit.py').read())
 
 
 #################################################################################

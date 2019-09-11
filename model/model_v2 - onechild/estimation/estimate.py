@@ -176,14 +176,14 @@ class Estimate:
 
 
 		#mean hours at t=0,1
-		hours_aux=np.concatenate((hours_matrix[:,0,:],hours_matrix[:,1,:]),axis=0)
-		passign_aux=np.concatenate((self.passign[:,0],self.passign[:,0]),axis=0)
+		hours_aux=np.concatenate((hours_matrix[:,0,:],hours_matrix[:,1,:],hours_matrix[:,4,:],hours_matrix[:,7,:]),axis=0)
+		passign_aux=np.concatenate((self.passign[:,0],self.passign[:,0],self.passign[:,0],self.passign[:,0]),axis=0)
 		
 		hours_aux_1 = hours_aux == self.hours_p
 		hours_aux_2 = hours_aux == self.hours_f
 		boo_h = passign_aux == 0
-		beta_hours1=np.mean(hours_aux_1[boo_h,:],axis=0)
-		beta_hours2=np.mean(hours_aux_2[boo_h,:],axis=0)
+		beta_hours1 = np.mean(hours_aux_1[boo_h,:],axis=0)
+		beta_hours2 = np.mean(hours_aux_2[boo_h,:],axis=0)
 
 		
 		############################################################
@@ -191,16 +191,12 @@ class Estimate:
 		############################################################
 
 
-		passign_aux=np.concatenate((self.passign[:,0],self.passign[:,0],
+		passign_aux = np.concatenate((self.passign[:,0],self.passign[:,0],
 			self.passign[:,0],self.passign[:,0]),axis=0)
 
-		wage_aux=np.log(np.concatenate((wage_matrix[:,0,:],wage_matrix[:,1,:],
+		wage_aux = np.log(np.concatenate((wage_matrix[:,0,:],wage_matrix[:,1,:],
 		wage_matrix[:,4,:],wage_matrix[:,7,:]),axis=0)) #to panel and logs
 
-		age_t0=self.x_w[:,0]
-		age=np.zeros((self.N,self.nperiods))
-		for t in range(self.nperiods):
-			age[:,t]=age_t0.copy()
 		
 		logt_dic={'period0':np.zeros((self.N,1)),
 		'period1': np.zeros((self.N,1)) + 1,
@@ -309,9 +305,7 @@ class Estimate:
 		############################################################
 		###Prod function############################################
 		############################################################
-		ssrs_t2_matrix_se = ssrs_t2_matrix>3
-		ssrs_t5_matrix_se = ssrs_t5_matrix>3
-
+		
 		leisure_matrix = np.zeros((self.N,hours_matrix.shape[1],self.M))
 		for t in range(hours_matrix.shape[1]):
 			leisure_matrix[age_child[:,t]<=5,t,:] = childcare_matrix[age_child[:,t]<=5,t,:]*(168 - self.hours_f) + (168-hours_matrix[age_child[:,t]<=5,t,:])*(1-childcare_matrix[age_child[:,t]<=5,t,:])
@@ -320,37 +314,56 @@ class Estimate:
 		#children panel
 		income_pc = income_matrix/(1 + kids_matrix + marr_matrix)
 
-		income_aux=np.concatenate((income_pc[:,1,:],
-			income_pc[:,4,:]),axis=0)
-		leisure_aux=np.concatenate((leisure_matrix[:,1,:],
-			leisure_matrix[:,4,:]),axis=0)
+		income_aux=np.concatenate((income_matrix[:,1,:],
+			income_matrix[:,4,:]),axis=0)
+		leisure_aux=np.concatenate((hours_matrix[:,1,:],
+			hours_matrix[:,4,:]),axis=0)
 		age_aux=np.concatenate((age_child[:,1],
 			age_child[:,4]),axis=0)
 		ssrs_aux=np.concatenate((ssrs_t2_matrix,
 			ssrs_t5_matrix),axis=0)
+		cte = np.ones((ssrs_aux.shape[0],1))
 		passign_aux=np.concatenate((self.passign[:,0],self.passign[:,0]),axis=0)
 		childcare_aux=np.concatenate((childcare_matrix[:,1,:],childcare_matrix[:,4,:]),axis=0)
 
 		beta_inputs=np.zeros((4,self.M)) #5 moments
 		betas_init_prod=np.zeros((1,self.M)) #5 moments
-		beta_kappas_t2=np.zeros((4,self.M)) #4 moments
-		beta_kappas_t5=np.zeros((4,self.M)) #4 moments
+		beta_kappas_t2=np.zeros((1,self.M)) #4 moments
+		beta_kappas_t5=np.zeros((1,self.M)) #4 moments
 
-		for z in range(2,6): #4 rankings
-			boo=ssrs_t2_matrix==z
-			beta_kappas_t2[z-2,:]=np.mean(boo,axis=0)
-			boo=ssrs_t5_matrix==z
-			beta_kappas_t5[z-2,:]=np.mean(boo,axis=0)
+		beta_kappas_t2[0,:]=np.mean(ssrs_t2_matrix[self.passign[:,0]==0,:],axis=0)
+		beta_kappas_t5[0,:]=np.mean(ssrs_t5_matrix[self.passign[:,0]==0,:],axis=0)
 		
 		
-		boo_sample = (hours_matrix[:,0,:]>0) & (hours_matrix[:,1,:]>0) & (hours_matrix[:,4,:]>0) & (hours_matrix[:,7,:]>0)
 		for j in range(self.M):
 
 			#for gamma1
-			beta_inputs[0,j] = np.corrcoef(ssrs_t2_matrix_se[self.passign[:,0]==0,j],ssrs_t5_matrix_se[self.passign[:,0]==0,j])[1,0]
+			beta_inputs[0,j] = np.corrcoef(ssrs_t2_matrix[self.passign[:,0]==0,j],ssrs_t5_matrix[self.passign[:,0]==0,j])[1,0]
 			
+			x1 = np.reshape(income_aux[passign_aux==0,j],(income_aux[passign_aux==0,j].shape[0],1))/1000
+			x2 = np.reshape(leisure_aux[passign_aux==0,j],(leisure_aux[passign_aux==0,j].shape[0],1))
+			y = np.reshape(ssrs_aux[passign_aux==0,j],(ssrs_aux[passign_aux==0,j].shape[0],1))
+
 			#for gamma2 and 3
+			"""
+			xw_aux=np.concatenate((x1,x2,cte[passign_aux==0,:]),axis=1)
+
+			if np.linalg.cond(np.dot(np.transpose(xw_aux),xw_aux)) < 1/sys.float_info.epsilon: #If nonsingular matrix
+
+				xx_inv=np.linalg.inv(np.dot(np.transpose(xw_aux),xw_aux))
+				xy=np.dot(np.transpose(xw_aux),y)
+				betas_ols=np.dot(xx_inv,xy)
+
+			else:
+				#print ('disregarding m sample: singular matrix in wage process estimation')
+				pass
+			
+			beta_inputs[1,j] = betas_ols[0]
+			beta_inputs[2,j] = betas_ols[1]
+			"""
+
 			beta_inputs[1,j] = np.corrcoef(ssrs_aux[passign_aux==0,j],income_aux[passign_aux==0,j])[1,0]
+
 			beta_inputs[2,j] = np.corrcoef(ssrs_aux[passign_aux==0,j],leisure_aux[passign_aux==0,j])[1,0]
 
 			#for tfp
@@ -362,7 +375,7 @@ class Estimate:
 			
 
 			boo_sample = hours_matrix[:,0,j]>0
-			betas_init_prod[0,j] = np.corrcoef(ssrs_t2_matrix_se[(self.passign[:,0]==0) & (boo_sample==1),j],np.log(wage_matrix[(self.passign[:,0]==0) & (boo_sample==1),0,j]))[1,0]
+			betas_init_prod[0,j] = np.corrcoef(ssrs_t2_matrix[(self.passign[:,0]==0) & (boo_sample==1),j],np.log(wage_matrix[(self.passign[:,0]==0) & (boo_sample==1),0,j]))[1,0]
 		
 		
 		return{'beta_childcare':beta_childcare,'beta_hours1': beta_hours1,
@@ -402,15 +415,9 @@ class Estimate:
 		self.param0.gamma2 = beta[13]
 		self.param0.gamma3 = beta[14]
 		self.param0.tfp = beta[15]
-		self.param0.kappas[0][0] = beta[16]
-		self.param0.kappas[0][1] = beta[17]
-		self.param0.kappas[0][2] = beta[18]
-		self.param0.kappas[0][3] = beta[19]
-		self.param0.kappas[1][0] = beta[20]
-		self.param0.kappas[1][1] = beta[21]
-		self.param0.kappas[1][2] = beta[22]
-		self.param0.kappas[1][3] = beta[23]
-		self.param0.rho_theta_epsilon = sym(beta[24])
+		self.param0.kappas[0] = beta[16]
+		self.param0.kappas[1] = beta[17]
+		self.param0.rho_theta_epsilon = sym(beta[18])
 					
 
 		#The model (utility instance)
@@ -449,8 +456,8 @@ class Estimate:
 		beta_hours1=np.mean(dic_betas['beta_hours1'],axis=0) #1x1
 		beta_hours2=np.mean(dic_betas['beta_hours2'],axis=0) #1x1
 		beta_wagep=np.mean(dic_betas['beta_wagep'],axis=1) # 6 x 1
-		beta_kappas_t2=np.mean(dic_betas['beta_kappas_t2'],axis=1) #4 x 1
-		beta_kappas_t5=np.mean(dic_betas['beta_kappas_t5'],axis=1) #4 x 1
+		beta_kappas_t2=np.mean(dic_betas['beta_kappas_t2'],axis=1) #2 x 1
+		beta_kappas_t5=np.mean(dic_betas['beta_kappas_t5'],axis=1) #2 x 1
 		beta_inputs=np.mean(dic_betas['beta_inputs'],axis=1) #4 x 1
 		betas_init_prod=np.mean(dic_betas['betas_init_prod'],axis=1) #1 x 1
 		beta_wage_spouse=np.mean(dic_betas['beta_wage_spouse'],axis=1)
@@ -468,48 +475,48 @@ class Estimate:
 		#Outer matrix
 		x_vector=np.zeros((num_par,1))
 		
-		x_vector[0:beta_childcare.size,0]=beta_childcare - self.moments_vector[0,0]
+		x_vector[0:beta_childcare.size,0] = beta_childcare - self.moments_vector[0,0]
 		
 		ind=beta_childcare.size
-		x_vector[ind:ind+beta_hours1.size,0]=beta_hours1 - self.moments_vector[ind,0]
+		x_vector[ind:ind+beta_hours1.size,0] = beta_hours1 - self.moments_vector[ind,0]
 
 		ind = ind + beta_hours1.size
-		x_vector[ind:ind+beta_hours2.size,0]=beta_hours2 - self.moments_vector[ind,0]
+		x_vector[ind:ind+beta_hours2.size,0] = beta_hours2 - self.moments_vector[ind,0]
 		
 		ind=ind + beta_hours2.size
-		x_vector[ind: ind+ beta_wagep.size,0]=beta_wagep - self.moments_vector[ind:ind+ beta_wagep.size,0]
+		x_vector[ind: ind+ beta_wagep.size,0] = beta_wagep - self.moments_vector[ind:ind+ beta_wagep.size,0]
 
 		ind=ind + beta_wagep.size
-		x_vector[ind: ind+ beta_wage_spouse.size,0]=beta_wage_spouse - self.moments_vector[ind:ind+ beta_wage_spouse.size,0]
+		x_vector[ind: ind+ beta_wage_spouse.size,0] = beta_wage_spouse - self.moments_vector[ind:ind+ beta_wage_spouse.size,0]
 		
 		ind=ind +beta_wage_spouse.size
-		x_vector[ind: ind+ beta_emp_spouse.size,0]=beta_emp_spouse - self.moments_vector[ind:ind+ beta_emp_spouse.size,0]
+		x_vector[ind: ind+ beta_emp_spouse.size,0] = beta_emp_spouse - self.moments_vector[ind:ind+ beta_emp_spouse.size,0]
 
 		ind = ind + beta_emp_spouse.size
-		x_vector[ind:ind + beta_kappas_t2.size,0]=beta_kappas_t2 - self.moments_vector[ind:ind + beta_kappas_t2.size,0]
+		x_vector[ind:ind + beta_inputs.size,0] = beta_inputs - self.moments_vector[ind:ind + beta_inputs.size,0]
+
+		ind = ind + beta_inputs.size
+		x_vector[ind:ind + beta_kappas_t2.size,0] = beta_kappas_t2 - self.moments_vector[ind:ind + beta_kappas_t2.size,0]
 
 		ind = ind + beta_kappas_t2.size
 		x_vector[ind: ind + beta_kappas_t5.size,0] = beta_kappas_t5 - self.moments_vector[ind: ind + beta_kappas_t5.size,0]
-		
+			
 		ind = ind + beta_kappas_t5.size
-		x_vector[ind:ind + beta_inputs.size,0] = beta_inputs - self.moments_vector[ind:ind + beta_inputs.size,0]
-		
-		ind = ind + beta_inputs.size
 		x_vector[ind:ind + betas_init_prod.size,0] = betas_init_prod - self.moments_vector[ind:ind + betas_init_prod.size,0]
 
 			
 		
 		#The Q metric
-		q_w=np.dot(np.dot(np.transpose(x_vector),self.w_matrix),x_vector)
+		q_w = np.dot(np.dot(np.transpose(x_vector),self.w_matrix),x_vector)
 		print ('')
-		print ('The objetive function value equals ', q_w)
+		print ('The objetive function value equals ', q_w*100)
 		print ('')
 
 		time_opt=time.time() - start_time
 		print ('Done aux model generation in')
 		print("--- %s seconds ---" % (time_opt))
 
-		return q_w
+		return q_w*100
 
 
 
@@ -531,15 +538,12 @@ class Estimate:
 			self.param0.c_emp_spouse,
 			self.param0.gamma1,self.param0.gamma2,self.param0.gamma3,	
 			self.param0.tfp,
-			self.param0.kappas[0][0],self.param0.kappas[0][1],#kappa: t=2, m0
-			self.param0.kappas[0][2],self.param0.kappas[0][3], #kappa: t=2, m0
-			self.param0.kappas[1][0],self.param0.kappas[1][1],#kappa: t=5, m0
-			self.param0.kappas[1][2],self.param0.kappas[1][3], #kappa: t=5, m0,
+			self.param0.kappas[0],self.param0.kappas[1],#kappa: t=2, m0
 			syminv(self.param0.rho_theta_epsilon)]) 
 
 		
 		#Here we go
-		opt = minimize(self.ll, beta0,  method='Nelder-Mead', options={'maxiter':5000, 'maxfev': 90000, 'ftol': 1e-3, 'disp': True});
+		opt = minimize(self.ll, beta0,  method='Nelder-Mead', options={'maxiter':5000, 'maxfev': 90000, 'ftol': 1e-5, 'disp': True});
 		#opt = minimize(self.ll, beta0,  method='Nelder-Mead', options={'maxiter':5000, 'gtol': 1e-3, 'disp': True});
 		
 		return opt

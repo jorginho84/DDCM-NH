@@ -5,9 +5,9 @@ and child care
 
 */
 
-global databases "/mnt/Research/nealresearch/new-hope-secure/newhopemount/Data/databases"
-global codes "/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes"
-global results "/mnt/Research/nealresearch/new-hope-secure/newhopemount/results"
+global databases "/home/jrodriguez/NH-secure"
+global codes "/home/jrodriguez/NH_HC/codes"
+global results "/home/jrodriguez/NH_HC/results"
 
 
 local SE="hc2"
@@ -19,6 +19,42 @@ set more off
 set maxvar 15000
 
 
+*******************************************************
+*******************************************************
+/*Recovering child's age*/
+
+use "$databases/Youth_original2.dta", clear
+
+*labels
+qui: do "$codes/data_youth.do"
+keep  sampleid child p_assign zboy agechild p_assign p_radaym sdkidbd
+
+
+
+*Age at baseline
+destring sdkidbd, force replace
+format sdkidbd %td
+gen year_birth=yofd(sdkidbd)
+
+*child age at baseline
+gen year_ra = substr(string(p_radaym),1,2)
+destring year_ra, force replace
+replace year_ra = 1900 + year_ra
+
+gen age_t0=  year_ra - year_birth
+
+*due to rounding errors, ages 0 and 11 are 1 and 10
+replace age_t0=1 if age_t0==0
+replace age_t0=10 if age_t0==11
+drop if age_t0 < 1 | age_t0 > 11
+
+
+keep age_t0 sampleid child
+reshape wide age_t0, i(sampleid) j(child)
+
+tempfile child_aux
+save `child_aux', replace
+
 
 *****************************************************************
 *****************************************************************
@@ -27,12 +63,12 @@ set maxvar 15000
 *****************************************************************
 
 
-use "$results/Income/data_income.dta", clear
+use "$results/income/data_income.dta", clear
 
 
 drop total_income_y0 gross_y0 gross_nominal_y0 grossv2_y0 employment_y0 /*
 */ fs_y0 afdc_y0 sup_y0 eitc_state_y0 eitc_fed_y0
-forvalues x=1/3{
+forvalues x=1/10{
 	local z=`x'-1
 	rename total_income_y`x' total_income_y`z'
 	rename gross_y`x' gross_y`z'
@@ -47,8 +83,7 @@ forvalues x=1/3{
 
 }
 
-*Many missing obs
-drop total_income_y10
+
 
 
 *Dropping 50 adults with no information on their children
@@ -63,9 +98,39 @@ local control_var age_ra i.marital i.ethnic d_HS2 higrade i.pastern2
 tempfile data_income
 save `data_income', replace
 
-keep total_income_y* sampleid p_assign emp_baseline age_ra marital ethnic d_HS2 higrade pastern2
-reshape long total_income_y, i(sampleid) j(year)
+gen d_ra= 1 if p_assign == "E"
+replace d_ra = 0 if p_assign == "C" 
 
+
+*stop!!
+*Treatment
+
+*randcmd ((d_ra) reg total_income_y3 d_ra), treatvars(d_ra) sample
+*randcmd ((d_ra) reg gross_y0 d_ra), treatvars(d_ra) sample
+
+merge 1:1 sampleid using `child_aux'
+drop _merge
+
+*age of youngest
+egen age_y = rowmin(age_t0*)
+
+
+
+keep total_income_y* gross_y* sampleid d_ra p_assign emp_baseline age_ra marital ethnic d_HS2 higrade pastern2 age_y
+reshape long total_income_y gross_y, i(sampleid) j(year)
+
+randcmd ((d_ra) reg total_income_y d_ra if year<=2 & age_y<=4), treatvars(d_ra) sample
+randcmd ((d_ra) reg gross_y d_ra if year<=2 & age_y<=4), treatvars(d_ra) sample
+
+randcmd ((d_ra) reg total_income_y d_ra if year>2 & age_y<=4), treatvars(d_ra) sample
+randcmd ((d_ra) reg gross_y d_ra if year==0 & age_y<=4), treatvars(d_ra) sample
+
+
+randcmd ((d_ra) reg total_income_y d_ra if year>2 & year<=5), treatvars(d_ra) sample
+
+randcmd ((d_ra) reg total_income_y d_ra if year>2), treatvars(d_ra) sample
+
+stop!
 qui xi: reg total_income_y i.p_assign, vce(`SE')
 local base_income = string(round(_b[_cons]),"%9.0gc")
 local beta_income = string(round(_b[_Ip_assign_2]),"%9.0f")

@@ -1,26 +1,34 @@
-"""
-exec(open("/home/jrodriguez/NH_HC/codes/model_v2/checks/identification_check/draft.py").read())
+#Employment spouse
+exec(open("/home/jrodriguez/NH_HC/codes/model_v2/checks/identification_check/employment_spouse.py").read())
 
-"""
+#########################################################
+#Production function
 
-exec(open("/home/jrodriguez/NH_HC/codes/model_v2/checks/identification_check/load_param.py").read())
 
-#the graph
-fig, ax=plt.subplots()
-plot1=ax.plot(p_list,target_moment,'b-o',label='Simulated',alpha=0.9)
-plot2=ax.plot(p_list,np.full((size_grid,),obs_moment),'b-.',label='Observed',alpha=0.9)
-plt.setp(plot1,linewidth=3)
-plt.setp(plot2,linewidth=3)
-ax.legend(loc = 0)
-ax.set_ylabel(r'Child care',fontsize=font_size)
-ax.set_xlabel(r'Preference for $\theta$ ($\eta$)',fontsize=font_size)
-ax.spines['right'].set_visible(False)
-ax.spines['top'].set_visible(False)
-ax.yaxis.set_ticks_position('left')
-ax.xaxis.set_ticks_position('bottom')
-ax.legend(loc=0)
-plt.show()
-fig.savefig('/home/jrodriguez/NH_HC/results/model_v2/checks/eta.pdf', format='pdf')
-plt.close()
 
+####\gamma_1###
+exec(open("/home/jrodriguez/NH_HC/codes/model_v2/checks/identification_check/gamma1.py").read())
+
+####\gamma_2###
+exec(open("/home/jrodriguez/NH_HC/codes/model_v2/checks/identification_check/gamma2.py").read())
+
+#***
+####\gamma_3###
+exec(open("/home/jrodriguez/NH_HC/codes/model_v2/checks/identification_check/gamma3.py").read())
+
+
+#***
+####TFP###
+exec(open("/home/jrodriguez/NH_HC/codes/model_v2/checks/identification_check/tfp.py").read())
+
+##Kappas##
+exec(open("/home/jrodriguez/NH_HC/codes/model_v2/checks/identification_check/kappas.py").read())
+
+
+#########################################################
+#Initial theta
+
+#***
+####corr_theta0###
+exec(open("/home/jrodriguez/NH_HC/codes/model_v2/checks/identification_check/corr_theta0.py").read())
 

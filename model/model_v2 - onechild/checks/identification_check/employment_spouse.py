@@ -2,19 +2,19 @@
 #build a grid around parameter value
 lenght = 1
 size_grid = 6
-max_p = income_male_betas[3] + 0.15
-min_p = income_male_betas[3] - 0.15
+max_p = c_emp_spouse + 0.15
+min_p = c_emp_spouse - 0.15
 p_list = np.linspace(min_p,max_p,size_grid)
-obs_moment = moments_vector[10,0].copy()
+obs_moment = moments_vector[11,0].copy()
 
 #draft: try updating a parameter
 target_moment = np.zeros((size_grid,))
 for i in range(size_grid): 
-	param0.beta_spouse[3,0] = p_list[i]
+	param0.c_emp_spouse = p_list[i]
 	emax_instance=output_ins.emax(param0,model)
 	choices=output_ins.samples(param0,emax_instance,model)
 	dic_betas=output_ins.aux_model(choices)
-	target_moment[i] = np.mean(dic_betas['beta_wage_spouse'][3,:],axis=0)
+	target_moment[i] = np.mean(dic_betas['beta_emp_spouse'],axis=0)
 	
 
 #Back to original

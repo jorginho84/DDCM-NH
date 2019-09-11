@@ -31,12 +31,13 @@ sys.path.append("/home/jrodriguez/NH_HC/codes/model_v2/estimation")
 import estimate as estimate
 sys.path.append("/home/jrodriguez/NH_HC/codes/model_v2/experiments/NH")
 from ates import ATE
+from util2 import Prod2
 
 
 
 np.random.seed(1)
 
-betas_nelder=np.load("/home/jrodriguez/NH_HC/results/model_v2/estimation/betas_modelv27_twoch.npy")
+betas_nelder = np.load("/home/jrodriguez/NH_HC/results/Model/estimation/betas_modelv41.npy")
 
 
 #Number of periods where all children are less than or equal to 18
@@ -47,7 +48,9 @@ eta = betas_nelder[0]
 alphap = betas_nelder[1]
 alphaf = betas_nelder[2]
 
-#wage process
+mu_c = -0.56
+
+#wage process en employment processes: female
 wagep_betas=np.array([betas_nelder[3],betas_nelder[4],betas_nelder[5],
 	betas_nelder[6],betas_nelder[7]]).reshape((5,1))
 
@@ -58,29 +61,26 @@ c_emp_spouse = betas_nelder[11]
 
 
 #Production function [young,old]
-gamma1= betas_nelder[12]
-gamma2= betas_nelder[13]
-gamma3= betas_nelder[14] - 0.05
+gamma1 = betas_nelder[12]
+gamma2 = betas_nelder[13]
+gamma3 = betas_nelder[14]
 tfp = betas_nelder[15]
 sigma2theta = 1
 
+kappas = [betas_nelder[16],betas_nelder[17]]
 
+#first sigma is normalized
+sigma_z = [0.5,betas_nelder[18]]
 
-kappas=[[betas_nelder[16],betas_nelder[17],
-betas_nelder[18],betas_nelder[19]],
-[betas_nelder[20],betas_nelder[21],betas_nelder[22],
-betas_nelder[23]]]
 
 #initial theta
-rho_theta_epsilon = betas_nelder[24]
+rho_theta_epsilon = betas_nelder[19]
 
-
-#First measure is normalized. starting arbitrary values
 #All factor loadings are normalized
 lambdas=[1,1]
 
 #Child care price
-mup = 0.57*0 + (1-0.57)*750
+mup = 750
 
 #Probability of afdc takeup
 pafdc=.60
@@ -126,10 +126,11 @@ afdc_list = pickle.load( open("/home/jrodriguez/NH_HC/codes/model_v2/simulate_sa
 #The SNAP parameters
 snap_list = pickle.load( open("/home/jrodriguez/NH_HC/codes/model_v2/simulate_sample/snap_list.p", 'rb' ) ) 
 
-
 #CPI index
 cpi =  pickle.load( open("/home/jrodriguez/NH_HC/codes/model_v2/simulate_sample/cpi.p", 'rb' ) )
 
+#Federal Poverty Lines
+fpl_list = pickle.load( open("/home/jrodriguez/NH_HC/codes/model_v2/simulate_sample/fpl_list.p", 'rb' ) )
 
 #Here: the estimates from the auxiliary model
 ###
@@ -154,11 +155,13 @@ for periodt in range(nperiods):
 
 
 #Defines the instance with parameters
-param0 = util.Parameters(alphap,alphaf,eta,gamma1,gamma2,gamma3,
+param0=util.Parameters(alphap,alphaf,mu_c,
+	eta,gamma1,gamma2,gamma3,
 	tfp,sigma2theta,rho_theta_epsilon,wagep_betas,
 	income_male_betas,c_emp_spouse,
 	marriagep_betas, kidsp_betas, eitc_list,
-	afdc_list,snap_list,cpi,lambdas,kappas,pafdc,psnap,mup)
+	afdc_list,snap_list,cpi,fpl_list,
+	lambdas,kappas,pafdc,psnap,mup,sigma_z)
 
 
 ###Auxiliary estimates###
@@ -176,17 +179,19 @@ se_vector  = np.sqrt(np.diagonal(var_cov))
 dict_grid=gridemax.grid()
 
 #For montercarlo integration
-D = 20
+D = 50
 
 #Number of samples to produce
-M = 200
+M = 1000
 
 #How many hours is part- and full-time work
-hours_p = 20
+hours_p = 15
 hours_f = 40
 
+
 #################################################################################
-###Obtaining counterfactuals
+###Obtaining counterfactuals###
+#################################################################################
 
 #This is the list of models to compute [wr,cs,ws]. This order is fixed
 models_list = [[0,0,1], [0,1,1], [1,0,1],[0,1,0],[1,1,0],[1,1,1]]
@@ -253,8 +258,11 @@ for j in range(len(models_list)):
 		output_ins.__dict__['passign'] = passign_aux
 		choices_c['Choice_' + str(k)] = output_ins.samples(param0,emax_instance,models[k])
 
+	#modify prod fn (get rid of constant)
+	model_aux = Prod2(param0,N,x_w,x_m,x_k,passign,nkids0,married0,hours,childcare,
+		agech0,hours_p,hours_f,models_list[j][0],models_list[j][1],models_list[j][2])
 	choices_list.append(choices_c)
-	ate_ins = ATE(N,M,choices_c,models,agech0,
+	ate_ins = ATE(N,M,choices_c,model_aux,agech0,
 		passign,hours_p,hours_f,nperiods,
 		nperiods_cc,nperiods_ct,nperiods_emp,nperiods_theta,period_y,sd_matrix)
 	ates = ate_ins.sim_ate()
@@ -271,11 +279,10 @@ for j in range(len(models_list)):
 
 
 #################################################################################
-#Figures
+#Mechanisms Figures #1
 
 y_limit_upper = np.mean(contribution_list[1]['Theta'],axis=1) + np.mean(contribution_list[1]['Time'],axis=1) + np.mean(contribution_list[1]['CC'],axis=1) + np.mean(contribution_list[j]['Money'],axis=1)
 y_limit_lower = np.mean(contribution_list[5]['Time'],axis=1)
-
 
 #Mechanisms figures
 for j in range(len(models_list)):
@@ -286,37 +293,76 @@ for j in range(len(models_list)):
 	y4 = np.mean(contribution_list[j]['Money'],axis=1)
 	total = y1 + y2 + y3 + y4
 	horiz_line_data = np.array([0 for i in range(len(x))])
+	bar1 = y2.copy() #Time
+	bar2 = y1.copy() #Theta: since Time is always negative, starting from zero
+	bar3 = bar2 + y3 # CC
+	bar4 = bar3 + y4 # Income
+
 	fig, ax=plt.subplots()
-	ax.plot(x,y2, color='k',zorder=1,linewidth=4.5,label='Time')
 	ax.plot(x,horiz_line_data, 'k--',linewidth=2)
-	ax.fill_between(x,y2,(y2+y1), color='k' ,alpha=.65,zorder=2,label='Lagged human capital')
-	ax.fill_between(x,(y2+y1),(y2+y1+y3), color='k' ,alpha=.35,zorder=3,label='Child care')
-	ax.fill_between(x,(y2+y1+y3),(total), color='k' ,alpha=.12,zorder=4,label='Money')
+	ax.bar(x,bar1,color='black',edgecolor='black',alpha=.6,hatch ='o' ,label='Time')
+	ax.bar(x,bar2,color='blue',edgecolor='black',alpha=.6,hatch ='/' ,label='Lagged human capital')
+	ax.bar(x,bar3,bottom=bar2,color='red',edgecolor='black',alpha=.6,hatch ="\\" ,label='Child care')
+	ax.bar(x,bar4,bottom=bar3,color='green',edgecolor='black',alpha=.6,hatch ='x' ,label='Income')
 	ax.set_ylabel(r'Effect on child human capital ($\sigma$s)', fontsize=14)
 	ax.set_xlabel(r'Years after random assignment ($t$)', fontsize=14)
-	#ax.annotate('Explained by time', xy=(2, y2[2]), xytext=(2.5, y2[2]-0.02),
-	#	arrowprops=dict(facecolor='black', shrink=0.05,connectionstyle="arc3"))
-	#ax.annotate('Explained by consumption', xy=(3, total[2]-0.01), xytext=(2, total[2]+0.02),
-	#	arrowprops=dict(facecolor='black', shrink=0.05,connectionstyle="arc3"))
-	
-	#ax.annotate('Explained by child care', xy=(2.2, y1[1]+0.04), xytext=(3, y1[1]+0.02),
-	#	arrowprops=dict(facecolor='black', shrink=0.05,connectionstyle="arc3"))
-	#ax.text(4,0.05,'Explained by lagged human capital')
 	ax.spines['right'].set_visible(False)
 	ax.spines['top'].set_visible(False)
 	ax.yaxis.set_ticks_position('left')
 	ax.xaxis.set_ticks_position('bottom')
 	ax.margins(0, 0)
-	#ax.set_ylim(y_limit_lower[0] - 0.02,y_limit_upper[3] + 0.02)
-	ax.legend(loc=5,fontsize=19)
+	ax.legend(loc=5,fontsize=10)
 	plt.yticks(fontsize=11)
 	plt.xticks(fontsize=11)
-	#ax.legend(['Time', 'Lagged human capital','Child care','Consumption'],loc=5)
 	plt.show()
 	fig.savefig('/home/jrodriguez/NH_HC/results/model_v2/experiments/NH/mech_' + models_names[j]+'.pdf', format='pdf')
 	plt.close()
 
 
+#Mechanisms Figures #2: accumulated contributions
+phi_money = np.zeros((nperiods,len(models_list)))
+phi_cc = np.zeros((nperiods-1,len(models_list)))
+phi_time = np.zeros((nperiods-1,len(models_list)))
+
+for j in range(len(models_list)):
+	c_money = np.mean(contribution_list[j]['Money'],axis=1)
+	c_cc = np.mean(contribution_list[j]['CC'],axis=1)
+	c_time = np.mean(contribution_list[j]['Time'],axis=1)
+
+	phi_money[0,j] = c_money[0]
+	phi_cc[0,j] = c_cc[0]
+	phi_time[0,j] = c_time[0]
+	for t in range(c_money.shape[0]-1):
+		phi_money[t+1,j] = c_money[t+1] + gamma1*phi_money[t,j]
+		phi_cc[t+1,j] = c_cc[t+1] + gamma1*phi_cc[t,j]
+		phi_time[t+1,j] = c_time[t+1] + gamma1*phi_time[t,j]
+
+#Plot accumulated contributions up to period nt
+nt = 2
+
+x = np.array(len(models_list))
+total = phi_time[nt,:] + phi_cc[nt,:] + phi_money[nt,:]
+bar1 =  phi_time[nt,:]/total #Time
+bar2 = phi_money[nt,:]/total # Income
+bar3 = phi_cc[nt,:]/total # CC
+y = np.arange(len(models_list))
+y_labels = ['WS', 'WS+CS', 'WS+WR','CS', 'CS+WR', 'Full']
+
+fig, ax=plt.subplots()
+ax.barh(y,bar1.tolist(),height=0.5,color='gray',edgecolor='black',label='Time')
+ax.barh(y,bar2.tolist(),height=0.5,left=bar1,color='blue',alpha=0.7,edgecolor='black',label='Money')
+ax.barh(y,bar3.tolist(),height=0.5,left=list(map(lambda g,y:g+y,bar1.tolist(),bar2.tolist())),color='green',alpha=0.7,edgecolor='black',hatch='//',label='Child care')
+#ax.set_xlabel(r'Share explained by input', fontsize=14)
+ax.legend(loc='upper center',bbox_to_anchor=(0.5, -0.05),fontsize=12,ncol=3)
+plt.yticks(y,y_labels,fontsize=11)
+plt.show()
+fig.savefig('/home/jrodriguez/NH_HC/results/model_v2/experiments/NH/mech_share.pdf', format='pdf')
+plt.close()
+
+
+
+#################################################################################
+#Treatment Effects Figures
 
 """
 
@@ -325,7 +371,6 @@ This is the order:
 names_list_v2 = ['Wage sub', 'Wage sub + Child care sub','Wage sub + Work req', 'Child care sub', 
 'Child care sub + Work req', 'Full treatment']
 """
-
 
 #Figure: ATE on theta of wage sub vs cc sub/no work requirements
 names_list_v2 = ['Wage sub', 'Child care sub','Wage sub + Child care sub']
@@ -343,14 +388,14 @@ for k in range(len(y_list)):
 		markeredgewidth=1.0,label=names_list_v2[k],linewidth=3,markersize=11,alpha=0.9)
 ax.set_ylabel(r'Impact on child human capital ($\sigma$s)', fontsize=12)
 ax.set_xlabel(r'Years after random assignment ($t$)', fontsize=12)
-ax.set_ylim(0,0.16)
+ax.set_ylim(0,0.3)
 ax.spines['right'].set_visible(False)
 ax.spines['top'].set_visible(False)
 ax.yaxis.set_ticks_position('left')
 ax.xaxis.set_ticks_position('bottom')
 plt.yticks(fontsize=11)
 plt.xticks(fontsize=11)
-ax.legend(loc=4,fontsize = 11)
+ax.legend(loc=1,fontsize = 11)
 plt.show()
 fig.savefig('/home/jrodriguez/NH_HC/results/model_v2/experiments/NH/ate_theta_policies_1.pdf', format='pdf')
 plt.close()
@@ -372,29 +417,29 @@ for k in range(len(y_list)):
 		markeredgewidth=1.0,label=names_list_v2[k],linewidth=3,markersize=11,alpha=0.9)
 ax.set_ylabel(r'Impact on child human capital ($\sigma$s)', fontsize=12)
 ax.set_xlabel(r'Years after random assignment ($t$)', fontsize=12)
-ax.set_ylim(0,0.16)
+ax.set_ylim(0,0.3)
 ax.spines['right'].set_visible(False)
 ax.spines['top'].set_visible(False)
 ax.yaxis.set_ticks_position('left')
 ax.xaxis.set_ticks_position('bottom')
 plt.yticks(fontsize=11)
 plt.xticks(fontsize=11)
-ax.legend(loc=4,fontsize = 11)
+ax.legend(loc=1,fontsize = 11)
 plt.show()
 fig.savefig('/home/jrodriguez/NH_HC/results/model_v2/experiments/NH/ate_theta_policies_2.pdf', format='pdf')
 plt.close()
 
 ####The table###
 #the list of policies
-outcome_list = [r'Consumption (US\$)', 'Part-time', 'Full-time', 'Child care']
+outcome_list = [r'Money (US\$)', 'Weekly Hours', 'Child care']
 
-output_list = ['Consumption', 'Part-time', 'Full-time', 'CC']
+output_list = ['Consumption', 'Hours', 'CC']
 
 with open('/home/jrodriguez/NH_HC/results/model_v2/experiments/NH/table_nhpol_hh.tex','w') as f:
 	f.write(r'\begin{tabular}{lcccccccccccc}'+'\n')
 	f.write(r'\hline'+'\n')
 	f.write('ATE'+r'& & (1)   & & (2)&& (3)& & (4) && (5) && (6) \bigstrut[b]\\'+'\n')
-	f.write(r'\cline{1-1}\cline{3-13}'+'\n')
+	f.write(r'\hline'+'\n')
 	for j in range(len(outcome_list)):
 		
 		if j==0: #consumption w/ no decimals
@@ -416,6 +461,8 @@ with open('/home/jrodriguez/NH_HC/results/model_v2/experiments/NH/table_nhpol_hh
 	f.write(r'\hline'+'\n')
 	f.write(r'\end{tabular}'+'\n')
 	f.close()
+
+
 
 
 	

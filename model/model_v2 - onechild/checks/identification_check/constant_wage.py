@@ -2,8 +2,8 @@
 #build a grid around parameter value
 lenght = 1
 size_grid = 6
-max_p = income_male_betas[0] + 0.25
-min_p = income_male_betas[0] - 0.25
+max_p = wagep_betas[2] + 0.25
+min_p = wagep_betas[2] - 0.25
 p_list = np.linspace(min_p,max_p,size_grid)
 obs_moment = moments_vector[5,0].copy()
 

@@ -31,7 +31,9 @@ qui: save "$results/data_aux.dta", replace
 qui: do "$codes/utility_aux.do"
 qui: do "$codes/wage_p.do"
 qui: do "$codes/theta_aux.do"
-mat betas_orig=beta_utility\beta_wage\beta_spouse\beta_employment_spouse\betas_theta
+mat betas_orig = beta_utility\beta_wage\beta_spouse\beta_employment_spouse\betas_theta
+
+stop!!
 svmat betas_orig
 preserve
 keep betas_orig1
@@ -52,11 +54,11 @@ forvalues x = 1/`draws'{
 	qui: do "$codes/utility_aux.do"
 	qui: do "$codes/wage_p.do"
 	qui: do "$codes/theta_aux.do"
-	mat betas=beta_utility\beta_wage\beta_spouse\beta_employment_spouse\betas_theta
+	mat betas = beta_utility\beta_wage\beta_spouse\beta_employment_spouse\betas_theta
 	svmat betas
 	keep betas1
 	rename betas1 betas
-	drop if betas==.
+	drop if betas == .
 	egen par = seq()
 	gen draw = `x'
 	qui: reshape wide betas, i(draw) j(par)
@@ -77,7 +79,7 @@ forvalues x=2/`draws'{
 sum betas1
 matrix beta_matrix =r(mean)
 forvalues x=2/`n_moments'{
-	sum betas`x'
+	qui: sum betas`x'
 	matrix beta_matrix = beta_matrix\r(mean)
 	
 
@@ -91,3 +93,6 @@ drop draw betas*
 svmat var_cov
 outsheet using "$results/aux_model/var_cov.csv", comma  replace
 restore
+
+*The number of moments:
+display `n_moments'

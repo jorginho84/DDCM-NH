@@ -14,9 +14,9 @@ to compute baseline characteristics of estimation sample, run sample_model.do fi
 */
 
 
-global databases "/mnt/Research/nealresearch/new-hope-secure/newhopemount/Data/databases"
-global codes "/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes"
-global results "/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Baseline"
+global databases "/home/jrodriguez/NH-secure"
+global codes "/home/jrodriguez/NH_HC/codes"
+global results "/home/jrodriguez/NH_HC/results/Baseline"
 
 clear
 clear matrix
@@ -128,37 +128,11 @@ forvalues x=-1(3)8{
 *******************************************************
 /*CFS sample: estimation sample*/
 *******************************************************
-use "/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/sample_model_v2.dta", clear
-duplicates drop sampleid, force
-sort sampleid
-tempfile data_aux
-save `data_aux', replace
+use "/home/jrodriguez/NH_HC/results/model_v2/sample_model.dta", clear
 
-use "$databases/Youth_original2.dta", clear
-qui: do "$codes/data_youth.do"
-
-keep sampleid tq1b t21fl00 et2f03 p_assign p_radatr p_bdatey p_bdatem p_bdated /*
-*/b_bdater bifage p_bdatey p_bdatem gender ethnic marital degree/*
-*/ pastern2 work_ft currwage higrade c1 piinvyy epiinvyy 
-
-destring sampleid, force replace
-
-*Dummies for year x respondant
-gen d_year2=tq1b!=.
-gen d_year5=t21fl00!=.
-gen d_year8=et2f03!=.
-
-*Leaving just one child (Child A)
-duplicates drop sampleid, force
-
-*Meging
-sort sampleid
-merge 1:1 sampleid using `data_aux'
-keep if _merge==3
-drop _merge
 
 *Constructing the matrix baseline
-do "$codes/baseline/baseline_aux.do"
+do "$codes/baseline/baseline_aux_2.do"
 
 *the table
 putexcel set "$results/baseline_cfs_estimation", sheet("data") modify
@@ -183,39 +157,12 @@ putexcel F1=("N")
 *******************************************************
 /*CFS sample: estimation sample +  parents young children*/
 *******************************************************
-use "/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/sample_model_v2.dta", clear
+use "/home/jrodriguez/NH_HC/results/model_v2/sample_model.dta", clear
 gen age_t2 = age_t0 + 2
 keep if age_t2<=6
-duplicates drop sampleid, force
-sort sampleid
-tempfile data_aux
-save `data_aux', replace
-
-use "$databases/Youth_original2.dta", clear
-qui: do "$codes/data_youth.do"
-
-keep sampleid tq1b t21fl00 et2f03 p_assign p_radatr p_bdatey p_bdatem p_bdated /*
-*/b_bdater bifage p_bdatey p_bdatem gender ethnic marital degree/*
-*/ pastern2 work_ft currwage higrade c1 piinvyy epiinvyy 
-
-destring sampleid, force replace
-
-*Dummies for year x respondant
-gen d_year2=tq1b!=.
-gen d_year5=t21fl00!=.
-gen d_year8=et2f03!=.
-
-*Leaving just one child (Child A)
-duplicates drop sampleid, force
-
-*Meging
-sort sampleid
-merge 1:1 sampleid using `data_aux'
-keep if _merge==3
-drop _merge
 
 *Constructing the matrix baseline
-do "$codes/baseline/baseline_aux.do"
+do "$codes/baseline/baseline_aux_2.do"
 
 *the table
 putexcel set "$results/baseline_cfs_estimation_young", sheet("data") modify
@@ -240,34 +187,16 @@ putexcel F1=("N")
 
 
 *******************************************************
-/*CFS-Teachers' reports sample sample*/
+/*CFS-Teachers' reports sample */
 *******************************************************
 
-use "$databases/CFS_original.dta", clear
-do "$codes/data_cfs.do"
-sort sampleid
-tempfile data_aux
-save `data_aux', replace
+use "/home/jrodriguez/NH_HC/results/model_v2/sample_model.dta", clear
 
-use "$databases/Youth_original2.dta", clear
-qui: do "$codes/data_youth.do"
-
-keep sampleid tq1b t21fl00 et2f03
-destring sampleid, force replace
 
 *Dummies for year x respondant
-gen d_year2=tq1b!=.
-gen d_year5=t21fl00!=.
-gen d_year8=et2f03!=.
-
-*Leaving just one child (Child A)
-duplicates drop sampleid, force
-
-*Meging
-sort sampleid
-merge 1:1 sampleid using `data_aux'
-keep if _merge==3
-drop _merge
+gen d_year2= skills_t2 !=.
+gen d_year5= skills_t5 !=.
+gen d_year8= skills_t8 !=.
 
 
 
@@ -292,7 +221,7 @@ forvalues x=2(3)8{
 	}
 	
 	*Constructing the matrix baseline
-	do "$codes/baseline/baseline_aux.do"
+	do "$codes/baseline/baseline_aux_2.do"
 	
 	
 

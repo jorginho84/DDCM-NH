@@ -96,15 +96,52 @@ ws['B' + str(pos)] = np.float(beta_emp_spouse)
 ws['D' + str(pos)] = np.float(moments_vector[ind,0])
 ws['F' + str(pos)] = np.float(se_vector[ind])
 
-
-
-#A. t=2, kappas
+#C. Measures of academic achievement and family choices
 ind = ind + 1
 pos = 14
 list_aux = []
 list_obs = []
 list_sig = []
+#C. prod fn
+list_aux = [beta_inputs]
+list_obs = [moments_vector[ind:ind + 4 ,0]]
+list_sig = [se_vector[ind:ind + 4]]
+
 for c in range(4):
+	ws['B' + str(c + pos)] = np.float(list_aux[0][c])
+	ws['D' + str(c + pos)] = np.float(list_obs[0][c])
+	ws['F' + str(c + pos)] = np.float(list_sig[0][c])
+
+
+		
+#the graph
+fig, ax=plt.subplots()
+x = np.array(range(0,list_aux[0].shape[0]))
+plot1=ax.bar(x,list_aux[0],bar_width,label='Simulated',color='k',alpha=alpha_plot1)
+plot2=ax.bar(x + bar_width,list_obs[0],bar_width,yerr=list_sig[0],label='Data',edgecolor='k',
+	color='k',alpha=alpha_plot2)
+ax.legend(loc=9,fontsize=fontsize_axis)
+ax.set_ylabel(r'Corr(SSRS,input)', fontsize=fontsize_axis)
+ax.set_xlabel(r'Moments', fontsize=fontsize_axis)
+ax.spines['right'].set_visible(False)
+ax.spines['top'].set_visible(False)
+ax.yaxis.set_ticks_position('left')
+ax.xaxis.set_ticks_position('bottom')
+ax.set_xticklabels([])
+ax.set_xticks([])
+plt.show()
+fig.savefig('/home/jrodriguez/NH_HC/results/model_v2/fit/fit_ssrs.pdf', format='pdf')
+plt.close()
+
+
+
+#A. t=2, kappas
+ind = ind + 4
+pos = 18
+list_aux = []
+list_obs = []
+list_sig = []
+for c in range(1):
 	ws['B' + str(c + pos)] = np.float(beta_kappas_t2[c])
 	ws['D' + str(c + pos)] = np.float(moments_vector[ind + c,0])
 	ws['F' + str(c + pos)] = np.float(se_vector[ind + c])
@@ -114,10 +151,11 @@ for c in range(4):
 	list_sig.append(se_vector[ind + c])
 
 
-ind = ind + 4
-pos = 18
+ind = ind + 1
+pos = 19
+
 #B. t=5, kappas
-for c in range(4):
+for c in range(1):
 	ws['B' + str(c + pos)] = np.float(beta_kappas_t5[c])
 	ws['D' + str(c + pos)] = np.float(moments_vector[ind + c,0])
 	ws['F' + str(c + pos)] = np.float(se_vector[ind + c])
@@ -149,43 +187,13 @@ fig.savefig('/home/jrodriguez/NH_HC/results/model_v2/fit/fit_kappas.pdf', format
 plt.close()
 
 
-
-#C. Measures of academic achievement and family choices
-ind = ind +4
-pos = 22
-list_aux = []
-list_obs = []
-list_sig = []
-#C. prod fn
-list_aux = [np.concatenate((beta_inputs,betas_init_prod),axis=0)]
-list_obs = [moments_vector[ind:ind + 5 ,0]]
-list_sig = [se_vector[ind:ind + 5]]
-
-for c in range(5):
-	ws['B' + str(c + pos)] = np.float(list_aux[0][c])
-	ws['D' + str(c + pos)] = np.float(list_obs[0][c])
-	ws['F' + str(c + pos)] = np.float(list_sig[0][c])
-
-
-		
-#the graph
-fig, ax=plt.subplots()
-x = np.array(range(0,list_aux[0].shape[0]))
-plot1=ax.bar(x,list_aux[0],bar_width,label='Simulated',color='k',alpha=alpha_plot1)
-plot2=ax.bar(x + bar_width,list_obs[0],bar_width,yerr=list_sig[0],label='Data',edgecolor='k',
-	color='k',alpha=alpha_plot2)
-ax.legend(loc=9,fontsize=fontsize_axis)
-ax.set_ylabel(r'Corr(SSRS,input)', fontsize=fontsize_axis)
-ax.set_xlabel(r'Moments', fontsize=fontsize_axis)
-ax.spines['right'].set_visible(False)
-ax.spines['top'].set_visible(False)
-ax.yaxis.set_ticks_position('left')
-ax.xaxis.set_ticks_position('bottom')
-ax.set_xticklabels([])
-ax.set_xticks([])
-plt.show()
-fig.savefig('/home/jrodriguez/NH_HC/results/model_v2/fit/fit_ssrs.pdf', format='pdf')
-plt.close()
-
+#rho_theta_epsilon
+ind = ind + 1
+pos = 20
+#B. t=5, kappas
+for c in range(1):
+	ws['B' + str(c + pos)] = np.float(betas_init_prod[c])
+	ws['D' + str(c + pos)] = np.float(moments_vector[ind + c,0])
+	ws['F' + str(c + pos)] = np.float(se_vector[ind + c])
 
 wb.save('/home/jrodriguez/NH_HC/results/model_v2/fit/fit.xlsx')

@@ -140,7 +140,7 @@ replace dummy_sp_work = 0 if married_year2 == 1 & lincome_spouse == .
 
 keep sampleid d_RA age_ra age_ra2 d_marital* d_HS  nkids_baseline  /*
 */ constant curremp higrade nkids* married* c91 d_ethnic* d_black /*
-*/ lincome_spouse dummy_sp_work d_women
+*/ lincome_spouse dummy_sp_work d_women pastern2 ethnic marital
 
 
 
@@ -172,9 +172,36 @@ qui: do "$codes/data_youth.do"
 keep sampleid child agechild kid1dats kid2dats kid3dats p_radaym cq11 sdkidbd/* identifiers
 */ c68* c69* c70* c73 /*CC use and payments (year 2)
 */ piq113da  piq114* piq119a piq128a piq128b/* CC use and payments (year 5)    
-*/ tq17a tq17b tq17c tq17h /*skills t1
-*/ t2q17a etsq13a /*skills t5 and t8*/
-destring c68* c69* c70* c73 piq113da  piq114* piq119a piq128a piq128b tq17a tq17b tq17c tq17h t2q17a etsq13a, force replace
+*/ tacad /*skills t1
+*/ t2q17a t2q17b t2q17c t2q17d t2q17e t2q17f t2q17g t2q17h t2q17i t2q17j /* Y5: SSRS (block2)
+*/ etsq13a etsq13b etsq13c etsq13d etsq13e etsq13f etsq13g etsq13h etsq13i etsq13j /* Y8: teachers reports: SSRS academic subscale (block 2)*/
+
+
+local Y5_B2 t2q17a t2q17b t2q17c t2q17d t2q17e t2q17f t2q17g t2q17h t2q17i t2q17j
+local Y8_B2 etsq13a etsq13b etsq13c etsq13d etsq13e etsq13f etsq13g etsq13h etsq13i etsq13j
+
+destring c68* c69* c70* c73 piq113da  piq114* piq119a piq128a piq128b `Y5_B2' `Y8_B2'  tacad, force replace
+
+
+/*Skills*/
+*Rounding up variables to the nearest integer
+foreach variable of varlist `Y5_B2' `Y8_B2' {
+	gen `variable'_s=round(`variable')
+	drop `variable'
+	rename `variable'_s `variable'
+}
+
+rename tacad skills_t2 
+egen skills_t5 = rowmean(`Y5_B2') 
+egen skills_t8 = rowmean(`Y8_B2')
+
+
+foreach variable of varlist skills_t2 skills_t5 skills_t8 {
+	qui: sum `variable'
+	gen `variable'_s = `variable' - r(mean)
+	drop `variable'
+	rename `variable'_s `variable'
+}
 
 *Age at baseline
 destring sdkidbd, force replace
@@ -260,26 +287,9 @@ drop piq128a
 gen cc_pay_t4 = .
 replace cc_pay_t4 = 0 if d_CC2_t4 == 0
 replace cc_pay_t4 = 0.57*0 + (1-0.57)*750 if d_CC2_t4 == 1
-/*
-replace cc_pay_t4=13 if piq128b==1
-replace cc_pay_t4=38 if piq128b==2
-replace cc_pay_t4=75 if piq128b==3
-replace cc_pay_t4=125 if piq128b==4
-replace cc_pay_t4=175 if piq128b==5
-replace cc_pay_t4=200 if piq128b==6
-*/
 
-rename tq17b skills_m1_t2
-rename tq17c skills_m2_t2
-rename tq17h skills_m3_t2
 
-gen t2q17a_aux=round(t2q17a)
-drop t2q17a
-rename t2q17a_aux t2q17a
 
-rename tq17a skills_t2
-rename t2q17a skills_t5
-rename etsq13a skills_t8
 
 keep sampleid child d_CC* skills_* age_t0 cc_pay* sdkidbd
 sort sampleid child
@@ -579,9 +589,11 @@ keep sampleid child d_RA p_assign age_ra age_ra2 d_marital* d_HS d_HS2 c91 /*
 */ nkids* hours_t* d_CC* constant emp_baseline delta_emp skills_* c1 piinvyy /*
 */ epiinvyy total_income_y* married*  gross_y* gross_nominal_y* grossv2_y* /*
 */ age_t0 afdc_y* fs_y* sup_y* higrade d_ethnic* d_black /*
-*/ lincome_spouse dummy_sp_work d_women income_spouse_y2 cc_pay* sdkidbd
+*/ lincome_spouse dummy_sp_work d_women income_spouse_y2 cc_pay* sdkidbd /*
+*/ pastern2 ethnic marital
 
 keep if d_women == 1
+
 
 *makign sure of no missing values
 foreach x of varlist d_RA age_ra d_marital_2 d_HS2 nkids_baseline age_t0{

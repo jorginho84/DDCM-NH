@@ -1,7 +1,7 @@
 
 #build a grid around parameter value
 lenght = 0.1
-size_grid = 6
+size_grid = 4
 max_p = eta + 0.05
 min_p = eta - 0.05
 p_list = np.linspace(min_p,max_p,size_grid)

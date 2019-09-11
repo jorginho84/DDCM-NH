@@ -140,7 +140,7 @@ replace dummy_sp_work = 0 if married_year2 == 1 & lincome_spouse == .
 
 keep sampleid d_RA age_ra age_ra2 d_marital* d_HS  nkids_baseline  /*
 */ constant curremp higrade nkids* married* c91 d_ethnic* d_black /*
-*/ lincome_spouse dummy_sp_work d_women
+*/ lincome_spouse dummy_sp_work d_women pastern2 ethnic marital
 
 
 
@@ -197,7 +197,8 @@ egen skills_t8 = rowmean(`Y8_B2')
 
 
 foreach variable of varlist skills_t2 skills_t5 skills_t8 {
-	egen `variable'_s=std(`variable')
+	qui: sum `variable'
+	gen `variable'_s = `variable' - r(mean)
 	drop `variable'
 	rename `variable'_s `variable'
 }
@@ -588,9 +589,11 @@ keep sampleid child d_RA p_assign age_ra age_ra2 d_marital* d_HS d_HS2 c91 /*
 */ nkids* hours_t* d_CC* constant emp_baseline delta_emp skills_* c1 piinvyy /*
 */ epiinvyy total_income_y* married*  gross_y* gross_nominal_y* grossv2_y* /*
 */ age_t0 afdc_y* fs_y* sup_y* higrade d_ethnic* d_black /*
-*/ lincome_spouse dummy_sp_work d_women income_spouse_y2 cc_pay* sdkidbd
+*/ lincome_spouse dummy_sp_work d_women income_spouse_y2 cc_pay* sdkidbd /*
+*/ pastern2 ethnic marital
 
 keep if d_women == 1
+
 
 *makign sure of no missing values
 foreach x of varlist d_RA age_ra d_marital_2 d_HS2 nkids_baseline age_t0{

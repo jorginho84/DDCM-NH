@@ -20,7 +20,69 @@ set matsize 2000
 local reps = 2000
 
 
+*******************************************************
+/*Estimation sample: children of women*/
+*******************************************************
+
 use "$databases/Youth_original2.dta", clear
+
+*labels
+keep  sampleid child p_assign zboy agechild p_assign p_radaym sdkidbd
+
+
+
+*Age at baseline
+destring sdkidbd, force replace
+format sdkidbd %td
+gen year_birth=yofd(sdkidbd)
+
+*child age at baseline
+gen year_ra = substr(string(p_radaym),1,2)
+destring year_ra, force replace
+replace year_ra = 1900 + year_ra
+
+gen age_t0=  year_ra - year_birth
+
+*due to rounding errors, ages 0 and 11 are 1 and 10
+replace age_t0=1 if age_t0==0
+replace age_t0=10 if age_t0==11
+drop if age_t0 < 1 | age_t0 > 11
+
+
+keep age_t0 sampleid child p_assign sdkidbd
+reshape wide age_t0 sdkidbd, i(sampleid) j(child)
+
+tempfile child_aux
+save `child_aux', replace
+
+
+*Merge data with adults and drop those who do not merge
+use "$databases/CFS_original.dta", clear
+qui: do "$codes/data_cfs.do"
+
+qui: count
+local n_cfs = r(N)
+
+merge 1:1 sampleid using `child_aux'
+keep if _merge == 3
+drop _merge
+
+qui: count
+local n_cfs2 = r(N)
+
+keep if gender == 2
+
+reshape long age_t0 sdkidbd, i(sampleid) j(child)
+
+keep sampleid child
+tempfile data_est
+save `data_est'
+
+
+
+/*ESTIMATES*/
+use "$databases/Youth_original2.dta", clear
+
 
 *labels
 qui: do "$codes/data_youth.do"
@@ -48,6 +110,7 @@ gen age_t0=  year_ra - year_birth
 replace age_t0=1 if age_t0==0
 replace age_t0=10 if age_t0==11
 drop if age_t0 < 1 | age_t0 > 11
+
 
 *gender
 gen d_girl = 1 if zboy == "0"
@@ -95,10 +158,6 @@ foreach variable of varlist ssrs_2 ssrs_5 ssrs_8 {
 }
 
 
-
-qui: do "$codes/hh_summary/Xs.do"
-destring  agechild, force replace
-
 gen ra_girl	= d_ra*d_girl
 
 
@@ -140,10 +199,60 @@ label variable ssrs_2 "SSRS t=2"
 label variable ssrs_5 "SSRS t=5"
 label variable ssrs_8 "SSRS t=8"
 
+merge 1:1 sampleid child using `data_est'
+*This is the sample of children of women
+keep if _merge == 3 | _merge == 2
+drop _merge
+
 ******************************************************************************
 /*ANALYSIS OF SUB-ITEMS*/
 ******************************************************************************
 
+
+reg ssrs_2 d_ra
+local beta_1 = _b[d_ra]
+local lb_1 = _b[d_ra] - invttail(e(df_r),0.025)*_se[d_ra]
+local ub_1 = _b[d_ra] + invttail(e(df_r),0.025)*_se[d_ra]
+
+reg ssrs_2 d_ra if age_t0<=4
+local beta_2 = _b[d_ra]
+local lb_2 = _b[d_ra] - invttail(e(df_r),0.025)*_se[d_ra]
+local ub_2 = _b[d_ra] + invttail(e(df_r),0.025)*_se[d_ra]
+
+
+reg ssrs_2 d_ra if age_t0>4
+local beta_3 = _b[d_ra]
+local lb_3 = _b[d_ra] - invttail(e(df_r),0.025)*_se[d_ra]
+local ub_3 = _b[d_ra] + invttail(e(df_r),0.025)*_se[d_ra]
+
+/*graph*/
+preserve	
+clear
+set obs 3
+egen reg_type = seq()
+
+gen lb = .
+gen ub =.
+gen beta = .
+
+forvalues x =1/3{
+	replace beta = `beta_`x'' if reg_type == `x'
+	replace lb = `lb_`x'' if reg_type == `x'
+	replace ub = `ub_`x'' if reg_type == `x'
+}
+
+graph twoway (scatter beta reg_type, mcolor(navy) msize(large)) ///
+(rcap ub lb reg_type, lcolor(navy) lpattern(dash)), xlabel(0.5 " " 1 "All" 2 "Young" 3 "Old" 3.5 " ", noticks) ylabel(, nogrid) ///
+ ytitle("Change in test score (in SD)")  xtitle("") yline(0,lstyle(foreground)) ///
+ graphregion(fcolor(white) ifcolor(white) lcolor(white) ilcolor(white)) ///
+ plotregion(fcolor(white) lcolor(white)  ifcolor(white) ilcolor(white)) ///
+ scale(1.1) legend(off) /*ylabel(0(.3)1.6) */
+
+graph export "$results/childhc.pdf", as(pdf) replace
+
+restore	
+
+stop!!
 foreach variable of varlist ssrs_2 ssrs_5 ssrs_8 {
 
 
@@ -265,6 +374,9 @@ file open ssrs using "$results/ssrs_overall.tex", write replace
 
 stop!
 
+
+
+/*
 ******************************************************************************
 /*ANALYSIS OF SUB-ITEMS*/
 ******************************************************************************
@@ -398,3 +510,4 @@ restore
 
 graph export "$results/ssrs_summary.pdf", as(pdf) replace
 
+*/

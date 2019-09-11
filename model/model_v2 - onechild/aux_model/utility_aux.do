@@ -32,10 +32,10 @@ keep p_assign id hours_cat*
 drop hours_cat1*
 reshape long hours_cat2_t hours_cat3_t, i(id) j(t_ra)
 
-qui xi: reg hours_cat2_t i.p_assign if t_ra<=1 
+qui xi: reg hours_cat2_t i.p_assign
 matrix beta_level_hours1=_b[_cons]
 
-qui xi: reg hours_cat3_t i.p_assign if t_ra<=1 
+qui xi: reg hours_cat3_t i.p_assign
 matrix beta_level_hours2=_b[_cons]
 
 matrix beta_utility = beta_cc\beta_level_hours1\beta_level_hours2

@@ -5,7 +5,7 @@ size_grid = 6
 max_p = gamma3 + 0.3
 min_p = gamma3 - 0.3
 p_list = np.linspace(min_p,max_p,size_grid)
-obs_moment = moments_vector[22,0].copy()
+obs_moment = moments_vector[14,0].copy()
 
 #draft: try updating a parameter
 target_moment = np.zeros((size_grid,))

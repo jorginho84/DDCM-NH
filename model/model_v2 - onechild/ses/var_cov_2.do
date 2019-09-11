@@ -30,10 +30,8 @@ use "$results/sample_model.dta", clear
 qui: save "$results/data_aux.dta", replace
 qui: do "$codes/utility_aux.do"
 qui: do "$codes/wage_p.do"
-qui: do "$codes/theta_aux.do"
-mat betas_orig = beta_utility\beta_wage\beta_spouse\beta_employment_spouse\betas_theta
-
-stop!!
+qui: do "$codes/theta_aux_2.do"
+mat betas_orig=beta_utility\beta_wage\beta_spouse\beta_employment_spouse\betas_theta
 svmat betas_orig
 preserve
 keep betas_orig1
@@ -53,7 +51,7 @@ forvalues x = 1/`draws'{
 	*qui: save "$results/data_aux.dta", replace
 	qui: do "$codes/utility_aux.do"
 	qui: do "$codes/wage_p.do"
-	qui: do "$codes/theta_aux.do"
+	qui: do "$codes/theta_aux_2.do"
 	mat betas = beta_utility\beta_wage\beta_spouse\beta_employment_spouse\betas_theta
 	svmat betas
 	keep betas1
@@ -79,7 +77,7 @@ forvalues x=2/`draws'{
 sum betas1
 matrix beta_matrix =r(mean)
 forvalues x=2/`n_moments'{
-	qui: sum betas`x'
+	sum betas`x'
 	matrix beta_matrix = beta_matrix\r(mean)
 	
 

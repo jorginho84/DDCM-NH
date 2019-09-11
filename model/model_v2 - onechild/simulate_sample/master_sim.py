@@ -49,7 +49,8 @@ np.random.seed(1);
 #Sample size
 #N=315
 
-betas_nelder=np.load("/home/jrodriguez/NH_HC/results/Model/estimation/betas_modelv34.npy")
+betas_nelder = np.load("/home/jrodriguez/NH_HC/results/Model/estimation/betas_modelv40.npy")
+
 
 #Number of periods where all children are less than or equal to 18
 nperiods = 8
@@ -77,19 +78,20 @@ gamma3= betas_nelder[14]
 tfp = betas_nelder[15]
 sigma2theta = 1
 
-kappas = [0,0]
+kappas = [betas_nelder[16],betas_nelder[17]]
 
-sigma_z = [1,1]
+#first sigma is normalized
+sigma_z = [1,betas_nelder[18]]
 
 
 #initial theta
-rho_theta_epsilon = betas_nelder[24]
+rho_theta_epsilon = betas_nelder[19]
 
 #All factor loadings are normalized
 lambdas=[1,1]
 
 #Child care price
-mup = 0.57*0 + (1-0.57)*750
+mup = 750
 
 #Probability of afdc takeup
 pafdc=.60
@@ -128,17 +130,19 @@ x_wmk=x_df[  ['age_ra','age_ra2', 'd_HS2', 'constant'] ].values
 passign=x_df[ ['d_RA']   ].values
 
 #The EITC parameters
-eitc_list = pickle.load( open("/home/jrodriguez/NH_HC/codes/model/simulate_sample/eitc_list.p", 'rb' ) )
+eitc_list = pickle.load( open("/home/jrodriguez/NH_HC/codes/model_v2/simulate_sample/eitc_list.p", 'rb' ) )
 
 #The AFDC parameters
-afdc_list = pickle.load( open("/home/jrodriguez/NH_HC/codes/model/simulate_sample/afdc_list.p", 'rb' ) )
+afdc_list = pickle.load( open("/home/jrodriguez/NH_HC/codes/model_v2/simulate_sample/afdc_list.p", 'rb' ) )
 
 #The SNAP parameters
-snap_list = pickle.load( open("/home/jrodriguez/NH_HC/codes/model/simulate_sample/snap_list.p", 'rb' ) ) 
-
+snap_list = pickle.load( open("/home/jrodriguez/NH_HC/codes/model_v2/simulate_sample/snap_list.p", 'rb' ) ) 
 
 #CPI index
-cpi =  pickle.load( open("/home/jrodriguez/NH_HC/codes/model/simulate_sample/cpi.p", 'rb' ) )
+cpi =  pickle.load( open("/home/jrodriguez/NH_HC/codes/model_v2/simulate_sample/fpl_list.p", 'rb' ) )
+
+#Federal Poverty Lines
+fpl_list = pickle.load( open("/home/jrodriguez/NH_HC/codes/model_v2/simulate_sample/fpl_list.p", 'rb' ) ) 
 
 #Here: the estimates from the auxiliary model
 ###
@@ -164,15 +168,16 @@ param = util.Parameters(alphap,alphaf,mu_c,
 	tfp,sigma2theta,rho_theta_epsilon,wagep_betas,
 	income_male_betas,c_emp_spouse,
 	marriagep_betas, kidsp_betas, eitc_list,
-	afdc_list,snap_list,cpi,lambdas,kappas,pafdc,psnap,mup,sigma_z)
+	afdc_list,snap_list,cpi,fpl_list,
+	lambdas,kappas,pafdc,psnap,mup,sigma_z)
 
 
 #Creating a grid for the emax computation
 dict_grid=gridemax.grid()
 
 #How many hours is part- and full-time work
-hours_p=15
-hours_f=40
+hours_p = 15
+hours_f = 40
 
 hours = np.zeros(N)
 childcare = np.zeros(N)

@@ -2,10 +2,10 @@
 #build a grid around parameter value
 lenght = 0.05
 size_grid = 6
-max_p = 1.1
-min_p = 0.95
+max_p = 0.99
+min_p = 0.92
 p_list = np.linspace(min_p,max_p,size_grid)
-obs_moment = moments_vector[20,0].copy()
+obs_moment = moments_vector[12,0].copy()
 
 #draft: try updating a parameter
 target_moment = np.zeros((size_grid,))

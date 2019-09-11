@@ -43,7 +43,7 @@ exec(open("/home/jrodriguez/NH_HC/codes/model_v2/checks/identification_check/loa
 moments_vector=pd.read_csv("/home/jrodriguez/NH_HC/results/model_v2/aux_model/moments_vector.csv").values
 
 #This is the var cov matrix of aux estimates
-var_cov=pd.read_csv("/home/jrodriguez/NH_HC/results/model_v2/aux_model/var_cov.csv").values
+var_cov = pd.read_csv("/home/jrodriguez/NH_HC/results/model_v2/aux_model/var_cov.csv").values
 
 #The W matrix in Wald metric
 #Using diagonal of Var-Cov matrix of simulated moments
@@ -56,8 +56,8 @@ for i in range(var_cov.shape[0]):
 dict_grid=gridemax.grid()
 
 #How many hours is part- and full-time work
-hours_p=20
-hours_f=40
+hours_p = 15
+hours_f = 40
 
 #For montercarlo integration
 D=20
@@ -79,7 +79,7 @@ model  = util.Utility(param0,N,x_w,x_m,x_k,passign,nkids0,
 	married0,hours,childcare,agech0,hours_p,hours_f,wr,cs,ws)
 
 #The instance for computing samples
-output_ins=estimate.Estimate(nperiods,param0,x_w,x_m,x_k,x_wmk,passign,
+output_ins = estimate.Estimate(nperiods,param0,x_w,x_m,x_k,x_wmk,passign,
 	agech0,nkids0,married0,D,dict_grid,M,N,moments_vector,var_cov,hours_p,hours_f,
 	wr,cs,ws)
 
@@ -95,12 +95,12 @@ font_size = 20
 ####ETA###
 exec(open("/home/jrodriguez/NH_HC/codes/model_v2/checks/identification_check/eta.py").read())
 
+####Part-time work###
+exec(open("/home/jrodriguez/NH_HC/codes/model_v2/checks/identification_check/alphap.py").read())
 
 ####Full-time work###
 exec(open("/home/jrodriguez/NH_HC/codes/model_v2/checks/identification_check/alphaf.py").read())
 
-####Part-time work###
-exec(open("/home/jrodriguez/NH_HC/codes/model_v2/checks/identification_check/alphap.py").read())
 #########################################################
 #Wage offer
 
@@ -135,16 +135,10 @@ exec(open("/home/jrodriguez/NH_HC/codes/model_v2/checks/identification_check/emp
 #########################################################
 #Production function
 
-##Kappas##
-exec(open("/home/jrodriguez/NH_HC/codes/model_v2/checks/identification_check/kappas.py").read())
 
-#***
-####TFP###
-exec(open("/home/jrodriguez/NH_HC/codes/model_v2/checks/identification_check/tfp.py").read())
 
 ####\gamma_1###
 exec(open("/home/jrodriguez/NH_HC/codes/model_v2/checks/identification_check/gamma1.py").read())
-
 
 ####\gamma_2###
 exec(open("/home/jrodriguez/NH_HC/codes/model_v2/checks/identification_check/gamma2.py").read())
@@ -152,6 +146,14 @@ exec(open("/home/jrodriguez/NH_HC/codes/model_v2/checks/identification_check/gam
 #***
 ####\gamma_3###
 exec(open("/home/jrodriguez/NH_HC/codes/model_v2/checks/identification_check/gamma3.py").read())
+
+
+#***
+####TFP###
+exec(open("/home/jrodriguez/NH_HC/codes/model_v2/checks/identification_check/tfp.py").read())
+
+##Kappas##
+exec(open("/home/jrodriguez/NH_HC/codes/model_v2/checks/identification_check/kappas.py").read())
 
 
 #########################################################

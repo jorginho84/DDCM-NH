@@ -8,8 +8,7 @@ from numba import jit
 import sys, os
 from scipy import stats
 from scipy import interpolate
-#sys.path.append("C:\\Users\\Jorge\\Dropbox\\Chicago\\Research\\Human capital and the household\]codes\\model")
-sys.path.append("/mnt/Research/nealresearch/new-hope-secure/newhopemount/codes/model/simulate_sample")
+sys.path.append("/home/jrodriguez/NH_HC/codes/model_v2/simulate_sample")
 from utility import Utility
 import gridemax
 import int_linear
@@ -32,7 +31,7 @@ class Shock(Utility):
 		"""
 		Loads shock (number)
 		"""
-		return np.load('/mnt/Research/nealresearch/new-hope-secure/newhopemount/results/Model/experiments/NH/shock.npy')
+		return np.load('/home/jrodriguez/NH_HC/results/model_v2/experiments/NH/shock.npy')
 
 	def wage_init(self,epsilon_t):
 		"""

@@ -30,7 +30,7 @@ class Parameters:
 		eta,gamma1,gamma2,gamma3,
 		tfp,sigma2theta,rho_theta_epsilon,betaw,
 		beta_spouse,c_emp_spouse,
-		betam,betak,eitc,afdc,snap,cpi,
+		betam,betak,eitc,afdc,snap,cpi,fpl_list,
 		lambdas,kappas,pafdc,psnap,mup,sigma_z):
 
 		self.alphap,self.alphaf,self.eta,self.mu_c=alphap,alphaf,eta,mu_c
@@ -40,7 +40,7 @@ class Parameters:
 		self.sigma2theta=sigma2theta
 		self.betaw,self.betam,self.betak=betaw,betam,betak
 		self.beta_spouse,self.c_emp_spouse=beta_spouse,c_emp_spouse
-		self.eitc,self.afdc,self.snap,self.cpi=eitc,afdc,snap,cpi
+		self.eitc,self.afdc,self.snap,self.cpi,self.fpl_list=eitc,afdc,snap,cpi,fpl_list
 		self.lambdas,self.kappas=lambdas,kappas
 		self.pafdc,self.psnap=pafdc,psnap
 		self.mup = mup
@@ -185,8 +185,8 @@ class Utility(object):
 		Draws a free child care slot from a binomial distribution
 		#THIS IS SHUT DOWN
 		"""
-		#return np.random.binomial(1,0.57,self.N)
-		return np.zeros(self.N)
+		return np.random.binomial(1,0.57,self.N)
+		#return np.zeros(self.N)
 
 	def price_cc(self):
 		"""
@@ -198,13 +198,15 @@ class Utility(object):
 		"""
 		Draws a vector of participation shocks of AFDC
 		"""
-		return np.random.binomial(1,self.param.pafdc,self.N)
+		#return np.random.binomial(1,self.param.pafdc,self.N)
+		return np.ones(self.N)
 
 	def prob_snap(self):
 		"""
 		Draws a vector of participation shocks of SNAP
 		"""
-		return np.random.binomial(1,self.param.psnap,self.N)
+		#return np.random.binomial(1,self.param.psnap,self.N)
+		return np.ones(self.N)
 
 
 
@@ -308,6 +310,9 @@ class Utility(object):
 		b1 = []
 		b2 = []
 		state_eitc = []
+
+		pwages = [pwage,pwage_family]
+
 		for nn in range(1,4):
 			#1 children
 			r1.append(dic_eitc['r1_' + str(nn)])
@@ -331,13 +336,13 @@ class Utility(object):
 			for k in range(0,1): #spouse employment
 
 				if k == 0:
-					boo_spouse = employment_spouse == 0
+					boo_spouse = marr[:,0] == 0 | ((marr[:,0] == 1) & (employment_spouse == 0))
 				else:
-					boo_spouse = employment_spouse & marr == 1
+					boo_spouse = (marr[:,0] == 1) & (employment_spouse == 1)
 				
-				eitc_fed[(pwage_family<b1[nn]) & (kid_boo) & (boo_spouse) ]=r1[nn]*pwage_family[(pwage_family<b1[nn]) & (kid_boo) & (boo_spouse)]
-				eitc_fed[(pwage_family>=b1[nn]) & (pwage_family<b2[nn][k] & (boo_spouse)) & (kid_boo)]=r1[nn]*b1[nn]
-				eitc_fed[(pwage_family>=b2[nn][k]) & (kid_boo) & (boo_spouse)]=np.maximum(r1[nn]*b1[nn]-r2[nn]*(pwage_family[(pwage_family>=b2[nn][k]) & (kid_boo) & (boo_spouse)]-b2[nn][k]),np.zeros(pwage_family[(pwage_family>=b2[nn][k]) & (kid_boo) & (boo_spouse)].shape[0]))
+				eitc_fed[(pwages[k]<b1[nn]) & (kid_boo) & (boo_spouse) ]=r1[nn]*pwages[k][(pwages[k]<b1[nn]) & (kid_boo) & (boo_spouse)]
+				eitc_fed[(pwages[k]>=b1[nn]) & (pwages[k]<b2[nn][k] & (boo_spouse)) & (kid_boo)]=r1[nn]*b1[nn]
+				eitc_fed[(pwages[k]>=b2[nn][k]) & (kid_boo) & (boo_spouse)]=np.maximum(r1[nn]*b1[nn]-r2[nn]*(pwages[k][(pwages[k]>=b2[nn][k]) & (kid_boo) & (boo_spouse)]-b2[nn][k]),np.zeros(pwages[k][(pwages[k]>=b2[nn][k]) & (kid_boo) & (boo_spouse)].shape[0]))
 				eitc_state[kid_boo]=state_eitc[nn]*eitc_fed[kid_boo]
 
 		dincome_eitc=pwage+eitc_fed+eitc_state
@@ -408,8 +413,8 @@ class Utility(object):
 				benefit_std[boo_k] = afdc_param['benefit_std'][nf-1]
 
 			boo_eli=(pwage_family<=cutoff) & (afdc_takeup==1)
-			boo_min=benefit_std<=benefit_std-(pwage - 30)*.67
-			afdc_benefit[boo_eli]=(1-boo_min[boo_eli])*(benefit_std[boo_eli]-(pwage_family[boo_eli] - 30)*.67) + boo_min[boo_eli]*benefit_std[boo_eli]
+			boo_min=benefit_std<=benefit_std-(pwage - 30*12)*.67
+			afdc_benefit[boo_eli]=(1-boo_min[boo_eli])*(benefit_std[boo_eli]-(pwage_family[boo_eli] - 30*12)*.67) + boo_min[boo_eli]*benefit_std[boo_eli]
 			afdc_benefit[afdc_benefit<0]=0
 			#boo_max=afdc_benefit>0
 			#dincome[boo_max]=dincome[boo_max] + afdc_benefit[boo_max]
@@ -449,11 +454,10 @@ class Utility(object):
 		snap[snap<0]=0
 
 		#income of household less spouse's earnings
-		dincome = pwage + afdc_benefit + nh_supp + snap + eitc_fed + eitc_state
+		dincome = pwage*(self.param.cpi[8]/self.param.cpi[periodt]) + afdc_benefit + nh_supp + snap + eitc_fed + eitc_state
 
 		#Back to real prices, on monthly basis
-		return {'income': dincome*(self.param.cpi[8]/self.param.cpi[periodt])/12,
-		'NH': nh_supp, 'EITC_NH': nh_supp + eitc_fed + eitc_state}
+		return {'income': dincome, 'NH': nh_supp, 'EITC_NH': nh_supp + eitc_fed + eitc_state}
 
 	def consumptiont(self,periodt,h,cc,dincome,income_spouse,employment_spouse,
 		marr,nkids,wage, free,price):
@@ -477,11 +481,13 @@ class Utility(object):
 		d_full=h>=self.hours_f
 		agech=np.reshape(self.age_t0,(self.N)) + periodt
 		young=agech<=5
-		boo_nfree = free==0
 		boo_ra = self.ra==1
 
+		#relevant threshold for Head Start
+		nfam = nkids + marr
+		line = self.param.fpl_list[periodt]['fpl'] + self.param.fpl_list[periodt]['multip']*(nfam)
+		boo_nfree = (free==0) | ((free==1) & (pwage_family > line))
 
-		
 		#NH copayment
 		copayment=np.zeros(self.N)
 		copayment[price[:,0]<400]=price[price[:,0]<400,0].copy()
@@ -492,8 +498,9 @@ class Utility(object):
 		copayment[price[:,0]<copayment] = price[price[:,0]<copayment,0].copy()
 
 		#if married, spouse must work
-		copayment[(marr==1) & (employment_spouse==0) ] == 0
+		copayment[(marr==1) & (employment_spouse==0) ] == price[(marr==1) & (employment_spouse==0),0].copy()
 
+		
 		#child care cost
 		cc_cost = np.zeros(self.N)
 
@@ -520,12 +527,12 @@ class Utility(object):
 
 			nh_cost = np.zeros(self.N)
 
-
+		
 		incomepc=(dincome + income_spouse*employment_spouse*marr - cc*young*cc_cost)/(np.ones(self.N)+nkids+marr)
 		incomepc[incomepc <= 0] = 1
 
 
-		#monthly basis
+		#in monthly figures
 		return {'income_pc': incomepc/12, 'nh_cc_cost': nh_cost}
 
 
@@ -552,22 +559,19 @@ class Utility(object):
 
 		tch[agech<=5] = cc[agech<=5]*(168 - self.hours_f) + (1-cc[agech<=5])*(168 - h[agech<=5] ) 
 		tch[agech>5] = 133 - h[agech>5] 
-		tch=np.log(tch)
+		tch = np.log(tch)
 	
-				
-		#Parameters
-		gamma1=self.param.gamma1
-		gamma2=self.param.gamma2
-		gamma3=self.param.gamma3
-		tfp=self.param.tfp
-
-		cte = self.param.gamma1*np.mean(np.log(theta0)) + self.param.gamma2*np.mean(incomepc) + self.param.gamma3*np.mean(tch)
+		
 				
 		#The production of HC: (young, cc=0), (young,cc1), (old)
-		boo_age=agech<=5
+		boo_age = agech <= 5
 		theta1 = self.param.tfp*cc*boo_age + self.param.gamma1*np.log(theta0) + self.param.gamma2*incomepc + self.param.gamma3*tch
-		
-		return np.exp(theta1 - cte)
+
+		#to normalize
+		cte = self.param.gamma1*np.mean(np.log(theta0)) + self.param.gamma2*np.mean(incomepc) + self.param.gamma3*np.mean(tch)		
+		theta1 = theta1 - cte
+
+		return np.exp(theta1)
 
 
 	def Ut(self,periodt,dincome,income_spouse,employment_spouse,marr,cc,nkids,ht,thetat,
@@ -579,22 +583,23 @@ class Utility(object):
 
 
 		#log-theta: if child is not present, log theta = 0
-		ltheta = (thetat - np.mean(thetat))/np.std(thetat)
-		#ltheta = (thetat**0.9 - 1)/0.9
+		ltheta = thetat.copy()
+		#ltheta = (thetat**0.5 - 1)/0.5
 				
 		#Work dummies
-		d_workf=ht==self.hours_f
-		d_workp=ht==self.hours_p
-		d_unemp=ht==0
+		d_workf = ht == self.hours_f
+		d_workp = ht == self.hours_p
+		d_unemp = ht == 0
 
 		#Consumption: depends on ra, cc, and period
-		ct=self.consumptiont(periodt,ht,cc,dincome,income_spouse,employment_spouse,
+		ct = self.consumptiont(periodt,ht,cc,dincome,income_spouse,employment_spouse,
 			marr,nkids,wage,free,price)['income_pc']
 		
 		#Current-period utility
-		ut_h=d_workp*self.param.alphap + d_workf*self.param.alphaf
-		#ut=((ct*np.exp(ut_h)*(thetat**self.param.eta))**self.param.mu_c)/self.param.mu_c
-		ut = np.log(ct) + ut_h + self.param.eta*ltheta
+		ut_h = d_workp*self.param.alphap + d_workf*self.param.alphaf
+		ut = (ct*np.exp(ut_h)*(thetat**self.param.eta))**self.param.mu_c/(self.param.mu_c)
+		#ut = ((ct**self.param.mu_c)/self.param.mu_c)*np.exp(ut_h)*(thetat**self.param.eta)
+		#ut = np.log(ct) + ut_h + self.param.eta*ltheta
 
 		if (np.any(np.isnan(ct))==True) | (np.any(np.isinf(ct))==True) :
 			raise ValueError('Consumption is not a real number')
@@ -622,9 +627,9 @@ class Utility(object):
 		For a given periodt and measure, computes the SSRS, given a value for theta.
 		There is only one measure for period
 		"""
-		if periodt==2:
+		if periodt == 2:
 			loc=0
-		elif periodt==5:
+		elif periodt == 5:
 			loc=1
 
 		lambdam = self.param.lambdas[loc]

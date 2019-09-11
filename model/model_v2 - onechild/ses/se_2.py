@@ -93,11 +93,11 @@ class SEs:
 		gamma3=bs[14]
 		tfp=bs[15]
 		
-		kappas = [bs[16],bs[17]]
+		kappas = [-0.8,-0.85]
 
-		sigma_z = [1,1]
+		sigma_z = [0.5,0.72]
 
-		rho_theta_epsilon =  bs[18]
+		rho_theta_epsilon =  bs[16]
 
 		lambdas=[1,1]
 
@@ -146,8 +146,8 @@ class SEs:
 
 		#This order cannot be modified. Check consistency with order of moments matrix (simulated and observed)
 		return [beta_childcare,beta_hours1,beta_hours2,beta_wagep,
-		beta_wage_spouse,beta_emp_spouse,
-		beta_inputs,beta_kappas_t2,beta_kappas_t5,betas_init_prod]
+		beta_wage_spouse,beta_emp_spouse,		
+		beta_inputs, betas_init_prod]
 
 	
 
@@ -162,9 +162,9 @@ class SEs:
 		beta_wagep = betas[3]
 		beta_wage_spouse = betas[4]
 		beta_emp_spouse = betas[5]
-		beta_inputs = betas[6]
-		beta_kappas_t2 = betas[7]
-		beta_kappas_t5 = betas[8]
+		beta_kappas_t2 = betas[6]
+		beta_kappas_t5 = betas[7]
+		beta_inputs = betas[8]
 		betas_init_prod = betas[9]
 		
 		#Number of moments to match
@@ -191,15 +191,15 @@ class SEs:
 		x_vector[ind: ind+ beta_emp_spouse.size,0] = beta_emp_spouse - self.output_ins.moments_vector[ind:ind+ beta_emp_spouse.size,0]
 
 		ind = ind + beta_emp_spouse.size
-		x_vector[ind:ind + beta_inputs.size,0] = beta_inputs - self.output_ins.moments_vector[ind:ind + beta_inputs.size,0]
-
-		ind = ind + beta_inputs.size
 		x_vector[ind:ind + beta_kappas_t2.size,0] = beta_kappas_t2 - self.output_ins.moments_vector[ind:ind + beta_kappas_t2.size,0]
 
 		ind = ind + beta_kappas_t2.size
 		x_vector[ind: ind + beta_kappas_t5.size,0] = beta_kappas_t5 - self.output_ins.moments_vector[ind: ind + beta_kappas_t5.size,0]
 		
 		ind = ind + beta_kappas_t5.size
+		x_vector[ind:ind + beta_inputs.size,0] = beta_inputs - self.output_ins.moments_vector[ind:ind + beta_inputs.size,0]
+		
+		ind = ind + beta_inputs.size
 		x_vector[ind:ind + betas_init_prod.size,0] = betas_init_prod - self.output_ins.moments_vector[ind:ind + betas_init_prod.size,0]
 		
 		
@@ -248,9 +248,7 @@ class SEs:
 
 		betas = self.sim_moments(samples)
 
-		x_vector = self.obj_fn(betas)['x_vector']
-
-		return {'betas': betas, 'x_vector': x_vector}
+		return {'betas': betas}
 
 
 	def db_dtheta(self,psi,eps,K,S):
@@ -319,18 +317,22 @@ class SEs:
 		#The gradient of binding function
 		dbdt = self.db_dtheta(self.psi,h,nmoments,npar)
 
+		#The weighting matrix used in estimation
+		w_matrix = self.output_ins.__dict__['w_matrix'].copy()
+		
 		#Var-Cov following Low, Meghir, Pistaferri, and Voena
-		_inn = np.dot(np.transpose(dbdt),self.output_ins.__dict__['w_matrix'])
-
-		#V = np.dot(a_inn,dbdt)
+		#a_inn = np.dot(np.transpose(dbdt),w_matrix)
 		
-		#return {'Var_Cov': np.linalg.pinv(V), 'Gradient': dbdt}
+		#return {'Var_Cov': np.linalg.inv(np.dot(a_inn,dbdt)), 'Gradient': dbdt}
 
-		V1_1 = np.dot(np.transpose(dbdt),self.output_ins.__dict__['w_matrix'])
-		V1 = np.linalg.inv(np.dot(V1_1,dbdt))
-
-		V2 = np.dot(np.dot(V1_1,self.var_cov),np.transpose(V1_1))
+		#x_vector = self.binding(self.psi)['x_vector'].copy()
 		
-		return {'Var_Cov': np.dot(np.dot(V1,V2),V1), 'Gradient': dbdt}
+		v_matrix = self.var_cov.copy()
+		a_inn = np.dot(np.transpose(dbdt),w_matrix)
+		a_matrix = np.linalg.inv(np.dot(a_inn,dbdt))
+		a_left = np.dot(a_matrix,a_inn)
+
+		return {'Var_Cov': np.dot(np.dot(a_left,v_matrix),np.transpose(a_left)),
+		'Gradient': dbdt}
 
 

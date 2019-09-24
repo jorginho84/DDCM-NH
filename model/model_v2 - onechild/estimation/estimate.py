@@ -171,7 +171,7 @@ class Estimate:
 		age_aux = age_child[:,1].copy()
 		passign_aux = self.passign[:,0].copy()
 		cc_logit = childcare_matrix[:,1,:]
-		boo = (age_aux<=5) & (passign_aux==0)
+		boo = (age_aux<=5)
 		beta_childcare = np.mean(cc_logit[boo,:],axis=0) #beta for every m
 
 
@@ -181,9 +181,8 @@ class Estimate:
 		
 		hours_aux_1 = hours_aux == self.hours_p
 		hours_aux_2 = hours_aux == self.hours_f
-		boo_h = passign_aux == 0
-		beta_hours1 = np.mean(hours_aux_1[boo_h,:],axis=0)
-		beta_hours2 = np.mean(hours_aux_2[boo_h,:],axis=0)
+		beta_hours1 = np.mean(hours_aux_1,axis=0)
+		beta_hours2 = np.mean(hours_aux_2,axis=0)
 
 		
 		############################################################
@@ -214,7 +213,6 @@ class Estimate:
 
 		#sample who work all years
 		boo_sample = (hours_matrix[:,0,:]>0) & (hours_matrix[:,1,:]>0) & (hours_matrix[:,4,:]>0) & (hours_matrix[:,7,:]>0)
-		boo_sample[self.passign[:,0]==1,:] = 0 #only control group estimates
 		boo_work = np.concatenate((boo_sample,boo_sample,
 			boo_sample,boo_sample),axis=0)
 
@@ -331,51 +329,33 @@ class Estimate:
 		beta_kappas_t2=np.zeros((1,self.M)) #4 moments
 		beta_kappas_t5=np.zeros((1,self.M)) #4 moments
 
-		beta_kappas_t2[0,:]=np.mean(ssrs_t2_matrix[self.passign[:,0]==0,:],axis=0)
-		beta_kappas_t5[0,:]=np.mean(ssrs_t5_matrix[self.passign[:,0]==0,:],axis=0)
+		beta_kappas_t2[0,:]=np.mean(ssrs_t2_matrix,axis=0)
+		beta_kappas_t5[0,:]=np.mean(ssrs_t5_matrix,axis=0)
 		
 		
 		for j in range(self.M):
 
 			#for gamma1
-			beta_inputs[0,j] = np.corrcoef(ssrs_t2_matrix[self.passign[:,0]==0,j],ssrs_t5_matrix[self.passign[:,0]==0,j])[1,0]
+			beta_inputs[0,j] = np.corrcoef(ssrs_t2_matrix[:,j],ssrs_t5_matrix[:,j])[1,0]
 			
-			x1 = np.reshape(income_aux[passign_aux==0,j],(income_aux[passign_aux==0,j].shape[0],1))/1000
-			x2 = np.reshape(leisure_aux[passign_aux==0,j],(leisure_aux[passign_aux==0,j].shape[0],1))
-			y = np.reshape(ssrs_aux[passign_aux==0,j],(ssrs_aux[passign_aux==0,j].shape[0],1))
+			x1 = np.reshape(income_aux[:,j],(income_aux[:,j].shape[0],1))/1000
+			x2 = np.reshape(leisure_aux[:,j],(leisure_aux[:,j].shape[0],1))
+			y = np.reshape(ssrs_aux[:,j],(ssrs_aux[:,j].shape[0],1))
 
 			#for gamma2 and 3
-			"""
-			xw_aux=np.concatenate((x1,x2,cte[passign_aux==0,:]),axis=1)
-
-			if np.linalg.cond(np.dot(np.transpose(xw_aux),xw_aux)) < 1/sys.float_info.epsilon: #If nonsingular matrix
-
-				xx_inv=np.linalg.inv(np.dot(np.transpose(xw_aux),xw_aux))
-				xy=np.dot(np.transpose(xw_aux),y)
-				betas_ols=np.dot(xx_inv,xy)
-
-			else:
-				#print ('disregarding m sample: singular matrix in wage process estimation')
-				pass
-			
-			beta_inputs[1,j] = betas_ols[0]
-			beta_inputs[2,j] = betas_ols[1]
-			"""
-
-			beta_inputs[1,j] = np.corrcoef(ssrs_aux[passign_aux==0,j],income_aux[passign_aux==0,j])[1,0]
-
-			beta_inputs[2,j] = np.corrcoef(ssrs_aux[passign_aux==0,j],leisure_aux[passign_aux==0,j])[1,0]
+			beta_inputs[1,j] = np.corrcoef(ssrs_aux[:,j],income_aux[:,j])[1,0]
+			beta_inputs[2,j] = np.corrcoef(ssrs_aux[:,j],leisure_aux[:,j])[1,0]
 
 			#for tfp
 			b_cc0 = childcare_aux[:,j] == 0 #child care choice=0 at t=1
 			b_cc1 = childcare_aux[:,j] == 1 #child care choice=1 at t=1
-			boo_young_cc0 = (age_aux<=5) & (b_cc0==True) & (passign_aux==0)
-			boo_young_cc1 = (age_aux<=5) & (b_cc1==True) & (passign_aux==0)
+			boo_young_cc0 = (age_aux<=5) & (b_cc0==True)
+			boo_young_cc1 = (age_aux<=5) & (b_cc1==True)
 			beta_inputs[3,j] = np.mean(ssrs_aux[boo_young_cc1,j]) - np.mean(ssrs_aux[boo_young_cc0,j])
 			
 
 			boo_sample = hours_matrix[:,0,j]>0
-			betas_init_prod[0,j] = np.corrcoef(ssrs_t2_matrix[(self.passign[:,0]==0) & (boo_sample==1),j],np.log(wage_matrix[(self.passign[:,0]==0) & (boo_sample==1),0,j]))[1,0]
+			betas_init_prod[0,j] = np.corrcoef(ssrs_t2_matrix[boo_sample==1,j],np.log(wage_matrix[boo_sample==1,0,j]))[1,0]
 		
 		
 		return{'beta_childcare':beta_childcare,'beta_hours1': beta_hours1,

@@ -61,12 +61,12 @@ gen lhwage_t0=ln(hwage_t0)
 /*Intercepts and variances*/
 
 matrix prob_inc_t2=J(1,1,.)
-qui: sum skills_t2 if p_assign == "C"
+qui: sum skills_t2
 matrix prob_inc_t2[1,1] =r(mean)
 
 
 matrix prob_inc_t5=J(1,1,.)
-qui: sum skills_t5 if p_assign == "C"
+qui: sum skills_t5
 matrix prob_inc_t5[1,1] =r(mean)
 
 
@@ -81,10 +81,10 @@ mat inputs_moments = J(4,1,.)
 
 mat init_prod = J(1,1,.)
 
-corr skills_t2 skills_t5 if p_assign == "C"
+corr skills_t2 skills_t5
 mat inputs_moments[1,1] = r(rho)
 
-corr skills_t2  lhwage_t0 if p_assign=="C"
+corr skills_t2  lhwage_t0
 mat init_prod[1,1] = r(rho)
 
 egen id_child = seq()
@@ -111,13 +111,13 @@ replace l_t = l_t/1000
 
 *reg skills_t incomepc_t hours2_t if p_assign=="C" & year<7
 
-corr skills_t total_income_y if p_assign=="C" & year<7
+corr skills_t total_income_y if year<7
 mat inputs_moments[2,1] = r(rho)
 
-corr skills_t hours2_t if p_assign=="C" & year<7
+corr skills_t hours2_t if year<7
 mat inputs_moments[3,1] = r(rho)
 
-reg skills_t d_CC2_t if age_t<=5 & p_assign=="C" & year<7
+reg skills_t d_CC2_t if age_t<=5 & year<7
 mat inputs_moments[4,1] = _b[d_CC2_t]
 
 

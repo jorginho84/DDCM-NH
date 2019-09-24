@@ -35,7 +35,7 @@ import se
 
 np.random.seed(1)
 
-betas_nelder = np.load("/home/jrodriguez/NH_HC/results/Model/estimation/betas_modelv45.npy")
+betas_nelder = np.load("/home/jrodriguez/NH_HC/results/Model/estimation/betas_modelv46.npy")
 
 
 #Number of periods where all children are less than or equal to 18
@@ -211,9 +211,9 @@ npar = betas_opt.shape[0]
 nmom = moments_vector.shape[0]
 
 #The var-cov matrix of structural parameters
-ses = se_ins.big_sand(0.025,nmom,npar)
+ses = se_ins.big_sand(0.01,nmom,npar)
 
-np.save('/home/jrodriguez/NH_HC/results/model_v2/estimation/sesv3_modelv45.npy',ses['Var_Cov']*(1+1/M))
+np.save('/home/jrodriguez/NH_HC/results/model_v2/estimation/sesv3_modelv46.npy',ses['Var_Cov']*(1+1/M))
 
 np.sqrt(np.diagonal(ses['Var_Cov']*(1+1/M)))
 

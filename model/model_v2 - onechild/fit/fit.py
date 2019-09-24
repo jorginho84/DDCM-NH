@@ -47,7 +47,7 @@ import estimate as estimate
 
 np.random.seed(1)
 
-betas_nelder = np.load("/home/jrodriguez/NH_HC/results/Model/estimation/betas_modelv45.npy")
+betas_nelder = np.load("/home/jrodriguez/NH_HC/results/Model/estimation/betas_modelv46.npy")
 
 
 #Number of periods where all children are less than or equal to 18
@@ -56,7 +56,7 @@ nperiods = 8
 #Utility function
 eta = betas_nelder[0]
 alphap = betas_nelder[1]
-alphaf = betas_nelder[2]
+alphaf =betas_nelder[2]
 
 mu_c = -0.56
 

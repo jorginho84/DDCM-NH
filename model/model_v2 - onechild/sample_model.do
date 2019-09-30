@@ -595,7 +595,7 @@ keep sampleid child d_RA p_assign age_ra age_ra2 d_marital* d_HS d_HS2 c91 /*
 keep if d_women == 1
 
 
-
+/*
 *Leaving youngest child
 sort sampleid sdkidbd
 
@@ -608,16 +608,12 @@ bysort sampleid: egen seq_aux_2 = seq()
 
 keep if seq_aux_2 == 1
 drop seq_aux* sdkidbd
-
+*/
 
 *makign sure of no missing values
 foreach x of varlist d_RA age_ra d_marital_2 d_HS2 nkids_baseline age_t0{
 	drop if `x'==.
 }
-
-***Data for prod fn auxiliary model
-save "$results/sample_model_theta.dta", replace
-outsheet using "$results/sample_model_theta.csv", comma  replace
 
 
 save "$results/sample_model.dta", replace

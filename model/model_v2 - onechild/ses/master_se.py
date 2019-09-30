@@ -42,7 +42,7 @@ betas_nelder = np.load("/home/jrodriguez/NH_HC/results/Model/estimation/betas_mo
 nperiods = 8
 
 #Utility function
-eta = betas_nelder[0]
+eta = 0.3
 alphap = betas_nelder[1]
 alphaf = betas_nelder[2]
 
@@ -158,10 +158,10 @@ var_cov = pd.read_csv("/home/jrodriguez/NH_HC/results/model_v2/aux_model/var_cov
 
 #The W matrix in Wald metric
 #Using diagonal of Var-Cov matrix of simulated moments
-#w_matrix  = np.linalg.inv(var_cov)
-w_matrix = np.zeros((var_cov.shape[0],var_cov.shape[0]))
-for i in range(var_cov.shape[0]):
-	w_matrix[i,i] = var_cov[i,i]**(-1)
+w_matrix  = np.linalg.inv(var_cov)
+#w_matrix = np.zeros((var_cov.shape[0],var_cov.shape[0]))
+#for i in range(var_cov.shape[0]):
+#	w_matrix[i,i] = var_cov[i,i]**(-1)
 
 
 #Creating a grid for the emax computation
@@ -211,7 +211,7 @@ npar = betas_opt.shape[0]
 nmom = moments_vector.shape[0]
 
 #The var-cov matrix of structural parameters
-ses = se_ins.big_sand(0.01,nmom,npar)
+ses = se_ins.big_sand(0.025,nmom,npar)
 
 np.save('/home/jrodriguez/NH_HC/results/model_v2/estimation/sesv3_modelv46.npy',ses['Var_Cov']*(1+1/M))
 

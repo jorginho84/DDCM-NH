@@ -568,7 +568,7 @@ class Utility(object):
 		theta1 = self.param.tfp*cc*boo_age + self.param.gamma1*np.log(theta0) + self.param.gamma2*incomepc + self.param.gamma3*tch
 
 		#to normalize
-		cte = self.param.gamma1*np.mean(np.log(theta0)) + self.param.gamma2*np.mean(incomepc) + self.param.gamma3*np.mean(tch)		
+		cte = self.param.gamma1*np.mean(np.log(theta0)) + self.param.gamma2*np.mean(incomepc) + self.param.gamma3*np.mean(tch) + self.param.tfp*np.mean(cc*boo_age)		
 		theta1 = theta1 - cte
 
 		return np.exp(theta1)

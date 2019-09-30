@@ -54,7 +54,7 @@ betas_nelder = np.load("/home/jrodriguez/NH_HC/results/Model/estimation/betas_mo
 nperiods = 8
 
 #Utility function
-eta = betas_nelder[0]
+eta = .3
 alphap = betas_nelder[1]
 alphaf =betas_nelder[2]
 

@@ -320,17 +320,17 @@ class SEs:
 		dbdt = self.db_dtheta(self.psi,h,nmoments,npar)
 
 		#Var-Cov following Low, Meghir, Pistaferri, and Voena
-		_inn = np.dot(np.transpose(dbdt),self.output_ins.__dict__['w_matrix'])
+		a_inn = np.dot(np.transpose(dbdt),self.output_ins.__dict__['w_matrix'])
 
-		#V = np.dot(a_inn,dbdt)
+		V = np.dot(a_inn,dbdt)
 		
-		#return {'Var_Cov': np.linalg.pinv(V), 'Gradient': dbdt}
+		return {'Var_Cov': np.linalg.pinv(V), 'Gradient': dbdt}
 
-		V1_1 = np.dot(np.transpose(dbdt),self.output_ins.__dict__['w_matrix'])
-		V1 = np.linalg.inv(np.dot(V1_1,dbdt))
+		#V1_1 = np.dot(np.transpose(dbdt),self.output_ins.__dict__['w_matrix'])
+		#V1 = np.linalg.inv(np.dot(V1_1,dbdt))
 
-		V2 = np.dot(np.dot(V1_1,self.var_cov),np.transpose(V1_1))
+		#V2 = np.dot(np.dot(V1_1,self.var_cov),np.transpose(V1_1))
 		
-		return {'Var_Cov': np.dot(np.dot(V1,V2),V1), 'Gradient': dbdt}
+		#return {'Var_Cov': np.dot(np.dot(V1,V2),V1), 'Gradient': dbdt}
 
 

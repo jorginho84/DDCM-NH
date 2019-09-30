@@ -33,7 +33,7 @@ qui: do "$codes/wage_p.do"
 qui: do "$codes/theta_aux.do"
 mat betas_orig = beta_utility\beta_wage\beta_spouse\beta_employment_spouse\betas_theta
 
-stop!!
+
 svmat betas_orig
 preserve
 keep betas_orig1
@@ -47,7 +47,7 @@ local n_moments = rowsof(betas_orig)
 
 forvalues x = 1/`draws'{
 	use "$results/sample_model.dta", clear
-	bsample
+	bsample, cluster(sampleid)
 	drop sampleid
 	egen sampleid = seq()
 	*qui: save "$results/data_aux.dta", replace

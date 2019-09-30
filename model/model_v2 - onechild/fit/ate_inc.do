@@ -10,6 +10,7 @@ set more off
 
 
 use "/home/jrodriguez/NH_HC/results/model_v2/sample_model.dta", clear
+duplicates drop sampleid, force
 set seed 2828
 local reps = 800
 

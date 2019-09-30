@@ -8,7 +8,7 @@ do sample_model.do
 */
 
 preserve
-
+duplicates drop sampleid, force
 
 *These are the CPI factors (to 2003 dollars)
 local cpi_0=178.3/148.4

@@ -9,6 +9,7 @@ This do-file computes the auxiliary model to identify the parameters of the util
 /*Hours*/
 ****************************************
 preserve
+duplicates drop sampleid, force
 
 *Age of child
 gen age_t1=age_t0+1

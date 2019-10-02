@@ -56,7 +56,7 @@ nperiods = 8
 #Utility function
 eta = .3
 alphap = betas_nelder[1]
-alphaf =betas_nelder[2]
+alphaf = - 0.05
 
 mu_c = -0.56
 

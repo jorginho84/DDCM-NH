@@ -571,7 +571,7 @@ class Utility(object):
 		cte = self.param.gamma1*np.mean(np.log(theta0)) + self.param.gamma2*np.mean(incomepc) + self.param.gamma3*np.mean(tch) + self.param.tfp*np.mean(cc*boo_age)		
 		theta1 = theta1 - cte
 
-		return np.exp(theta1 + 0.5*np.random.randn(self.N))
+		return np.exp(theta1)
 
 
 	def Ut(self,periodt,dincome,income_spouse,employment_spouse,marr,cc,nkids,ht,thetat,

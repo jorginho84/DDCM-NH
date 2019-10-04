@@ -14,15 +14,16 @@ def grid():
 	"""
 
 	#Lists of state variables (that determine emax)
-	nkids_grid=np.linspace(1,5,2).astype(int).tolist() 
-	married_grid=[i for i in range(0,2)]
-	passign_grid=[i for i in range(0,2)]
-	age_grid=np.linspace(18,45,5).astype(int).tolist() 
-	hs_grid=[i for i in range(0,2)]
+	nkids_grid = np.linspace(1,6,3).astype(int).tolist() 
+	married_grid = [i for i in range(0,2)]
+	passign_grid = [i for i in range(0,2)]
+	age_grid=np.linspace(18,45,4).astype(int).tolist() 
+	hs_grid = [i for i in range(0,2)]
+	theta_grid = np.random.lognormal(0,1,8)
 		
-	iterables=[nkids_grid,married_grid, passign_grid,age_grid,hs_grid]
+	iterables=[nkids_grid,married_grid, passign_grid,age_grid,hs_grid,theta_grid]
 	#copy the names here
-	keys=['nkids_grid','married_grid','passign_grid','age_grid','hs_grid']
+	keys=['nkids_grid','married_grid','passign_grid','age_grid','hs_grid','theta_grid']
 
 	#Array of combinations (cartesian product)
 	it=1
@@ -47,18 +48,19 @@ def grid():
 	passign = np.reshape(np.array(dict_grid['passign_grid']).astype(float),(grid.shape[0],1) )
 	age = np.reshape(np.array(dict_grid['age_grid']).astype(float),(grid.shape[0],1) )
 	d_hs = np.reshape(np.array(dict_grid['hs_grid']).astype(float),(grid.shape[0],1) )
+	theta0 = np.reshape(np.array(dict_grid['theta_grid']).astype(float),(grid.shape[0],1) )
 	
 	
 
-	theta0 = np.random.uniform(0.01,2,(grid.shape[0],1))
+	#theta0 = np.random.uniform(0.01,2,(grid.shape[0],1))
 	epsilon_1 = np.random.uniform(-2,2,(grid.shape[0],1))
 	agech = np.random.randint(0,11,(grid.shape[0],1))
-	
+
 
 
 	#Shuffling variables 
 	#to avoid collinearity on interpolation rutines
-	for var in [theta0,nkids0,married0,passign,d_hs,age,agech,epsilon_1]:
+	for var in [nkids0,married0,passign,d_hs,age,agech,epsilon_1]:
 		np.random.shuffle(var) 
 
 	#follow the same order as master_sim (line 71)

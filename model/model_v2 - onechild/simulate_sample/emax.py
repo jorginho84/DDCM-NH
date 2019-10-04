@@ -235,28 +235,28 @@ class Emaxt:
 		#dict_aux=gridemax.grid()
 
 		#Defining state variables at t-1
-		passign=self.grid_dict['passign']
-		theta0=self.grid_dict['theta0'][:,0]
-		nkids0=self.grid_dict['nkids0']
-		married0=self.grid_dict['married0']
-		agech=self.grid_dict['agech']
+		passign = self.grid_dict['passign']
+		theta0 = self.grid_dict['theta0'][:,0]
+		nkids0 = self.grid_dict['nkids0']
+		married0 = self.grid_dict['married0']
+		agech = self.grid_dict['agech']
 		
-		epsilon_1=self.grid_dict['epsilon_1'][:,0]#initial shock
+		epsilon_1 = self.grid_dict['epsilon_1'][:,0]#initial shock
 		
 
-		x_w=self.grid_dict['x_w']
-		x_m=self.grid_dict['x_m']
-		x_k=self.grid_dict['x_k']
-		x_wmk=self.grid_dict['x_wmk']
+		x_w = self.grid_dict['x_w']
+		x_m = self.grid_dict['x_m']
+		x_k = self.grid_dict['x_k']
+		x_wmk = self.grid_dict['x_wmk']
 
 		
 		#Sample size
-		ngrid=theta0.shape[0]
+		ngrid = theta0.shape[0]
 
-		agech=np.reshape(agech,ngrid)
+		agech = np.reshape(agech,ngrid)
 				
 		#Set number of choices at t-1
-		Jt=3*2
+		Jt = 3*2
 
 		hours=np.zeros(ngrid)
 		childcare=np.zeros(ngrid)
@@ -264,9 +264,9 @@ class Emaxt:
 		self.change_util(self.param,ngrid,x_w,x_m,x_k,passign,
 			nkids0,married0,hours,childcare,agech,
 			self.hours_p,self.hours_f,self.wr,self.cs,self.ws)
-		wage0=self.model.waget(periodt,epsilon_1)
-		free0=self.model.q_prob()
-		price0=self.model.price_cc()
+		wage0 = self.model.waget(periodt,epsilon_1)
+		free0 = self.model.q_prob()
+		price0 = self.model.price_cc()
 
 
 		#I save interpolating instances here
@@ -315,18 +315,18 @@ class Emaxt:
 						self.hours_p,self.hours_f,self.wr,self.cs,self.ws)
 					
 					
-					married_t1=self.model.marriaget(periodt,married0)
-					married_t1=np.reshape(married_t1,(ngrid,1))
-					nkids_t1=self.model.kidst(periodt,np.reshape(nkids0,(ngrid,1)),
+					married_t1 = self.model.marriaget(periodt,married0)
+					married_t1 = np.reshape(married_t1,(ngrid,1))
+					nkids_t1 = self.model.kidst(periodt,np.reshape(nkids0,(ngrid,1)),
 						married0)+nkids0 #previous kids + if they have a kid next period
-					epsilon_t1=self.model.epsilon(epsilon_1)
-					wage_t1=self.model.waget(periodt,epsilon_t1)
-					free_t1=self.model.q_prob()
-					price_t1=self.model.price_cc()
-					income_spouse_t1=self.model.income_spouse()
-					employment_spouse_t1=self.model.employment_spouse()
+					epsilon_t1 = self.model.epsilon(epsilon_1)
+					wage_t1 = self.model.waget(periodt,epsilon_t1)
+					free_t1 = self.model.q_prob()
+					price_t1 = self.model.price_cc()
+					income_spouse_t1 = self.model.income_spouse()
+					employment_spouse_t1 = self.model.employment_spouse()
 					#income at t-1 to compute theta_t
-					theta_t1=self.model.thetat(periodt-1,theta0,hours,childcare,consumption0) #theta at t+1 uses inputs at t
+					theta_t1 = self.model.thetat(periodt-1,theta0,hours,childcare,consumption0) #theta at t+1 uses inputs at t
 
 					# Possible decision at t
 					hours_t1 = np.full(ngrid,hours_aux[j],dtype=float)
@@ -405,7 +405,7 @@ class Emaxt:
 		"""	
 		
 		
-	
+		
 		def emax_gen(j):
 			
 			for t in range(j,0,-1):

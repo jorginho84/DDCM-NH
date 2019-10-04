@@ -29,7 +29,7 @@ var_cov=np.load('/home/jrodriguez/NH_HC/results/model_v2/estimation/sesv3_modelv
 se_vector  = np.sqrt(np.diagonal(var_cov))
 
 #Utility function
-eta = betas_nelder[0]
+eta = 0.35
 alphap = betas_nelder[1]
 alphaf = betas_nelder[2]
 mu_c = -0.56

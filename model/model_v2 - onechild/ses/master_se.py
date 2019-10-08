@@ -159,8 +159,8 @@ var_cov = pd.read_csv("/home/jrodriguez/NH_HC/results/model_v2/aux_model/var_cov
 #The W matrix in Wald metric
 #Using diagonal of Var-Cov matrix of simulated moments
 #w_matrix  = np.linalg.inv(var_cov)
-w_matrix = np.zeros((var_cov.shape[0],var_cov.shape[0]))
-for i in range(var_cov.shape[0]):
+w_matrix = np.zeros((12,12))
+for i in range(12):
 	w_matrix[i,i] = var_cov[i,i]**(-1)
 
 
@@ -185,7 +185,7 @@ ws=1
 
 #The estimate class
 output_ins=estimate.Estimate(nperiods,param0,x_w,x_m,x_k,x_wmk,passign,
-	agech0,nkids0,married0,D,dict_grid,M,N,moments_vector,w_matrix,hours_p,hours_f,
+	agech0,nkids0,married0,D,dict_grid,M,N,moments_vector,w_matrix[0:12,0:12],hours_p,hours_f,
 	wr,cs,ws)
 
 def syminv(g):
@@ -204,16 +204,16 @@ betas_opt = np.array([eta, alphap,alphaf,wagep_betas[0,0],
 
 
 #The SE class
-se_ins = se.SEs(output_ins,var_cov,betas_opt)
+se_ins = se.SEs(output_ins,var_cov[0:12,0:12],betas_opt)
 
 #Number of parameters and moments
-npar = betas_opt.shape[0]
-nmom = moments_vector.shape[0]
+npar = 12
+nmom = 12
 
 #The var-cov matrix of structural parameters
 ses = se_ins.big_sand(0.025,nmom,npar)
 
-np.save('/home/jrodriguez/NH_HC/results/model_v2/estimation/sesv3_modelv46.npy',ses['Var_Cov']*(1+1/M))
+np.save('/home/jrodriguez/NH_HC/results/model_v2/estimation/sesv3_modelv46_less.npy',ses['Var_Cov']*(1+1/M))
 
 np.sqrt(np.diagonal(ses['Var_Cov']*(1+1/M)))
 
@@ -224,8 +224,12 @@ for s in range(npar):
 
 
 #the gradients of moments w/r of parameter 16:
-ses['Gradient'][:,16]
+se_hat = np.sqrt(np.diagonal(ses['Var_Cov']*(1+1/M)))
 
+se_hat[]
+
+
+np.sqrt(np.diagonal(var_cov))
 
 ((np.dot(np.transpose(ses['Gradient'][:,16]),ses['Gradient'][:,16])*w_matrix[16,16])**(-1))**.5
 ((np.dot(np.transpose(ses['Gradient'][:,17]),ses['Gradient'][:,17])*w_matrix[17,17])**(-1))**.5

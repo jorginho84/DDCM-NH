@@ -193,14 +193,14 @@ class SEs:
 		ind = ind + beta_emp_spouse.size
 		x_vector[ind:ind + beta_inputs.size,0] = beta_inputs - self.output_ins.moments_vector[ind:ind + beta_inputs.size,0]
 
-		ind = ind + beta_inputs.size
-		x_vector[ind:ind + beta_kappas_t2.size,0] = beta_kappas_t2 - self.output_ins.moments_vector[ind:ind + beta_kappas_t2.size,0]
+	#	ind = ind + beta_inputs.size
+	#	x_vector[ind:ind + beta_kappas_t2.size,0] = beta_kappas_t2 - self.output_ins.moments_vector[ind:ind + beta_kappas_t2.size,0]
 
-		ind = ind + beta_kappas_t2.size
-		x_vector[ind: ind + beta_kappas_t5.size,0] = beta_kappas_t5 - self.output_ins.moments_vector[ind: ind + beta_kappas_t5.size,0]
+	#	ind = ind + beta_kappas_t2.size
+	#	x_vector[ind: ind + beta_kappas_t5.size,0] = beta_kappas_t5 - self.output_ins.moments_vector[ind: ind + beta_kappas_t5.size,0]
 		
-		ind = ind + beta_kappas_t5.size
-		x_vector[ind:ind + betas_init_prod.size,0] = betas_init_prod - self.output_ins.moments_vector[ind:ind + betas_init_prod.size,0]
+	#	ind = ind + beta_kappas_t5.size
+	#	x_vector[ind:ind + betas_init_prod.size,0] = betas_init_prod - self.output_ins.moments_vector[ind:ind + betas_init_prod.size,0]
 		
 		
 		#The Q metric
@@ -248,9 +248,9 @@ class SEs:
 
 		betas = self.sim_moments(samples)
 
-		x_vector = self.obj_fn(betas)['x_vector']
+		#x_vector = self.obj_fn(betas)['x_vector']
 
-		return {'betas': betas, 'x_vector': x_vector}
+		return {'betas': betas}
 
 
 	def db_dtheta(self,psi,eps,K,S):
@@ -284,9 +284,9 @@ class SEs:
 			psi_high[s] = psi[s] + h
 
 
-			#Computing betas
-			betas_low = self.binding(psi_low)['betas']
-			betas_high = self.binding(psi_high)['betas']
+			#Computing betas: not including betas of theta process.
+			betas_low = self.binding(psi_low)['betas'][0:6]
+			betas_high = self.binding(psi_high)['betas'][0:6]
 			
 			#From list to numpy array
 			betas_low_array = np.array([[betas_low[0]]])

@@ -19,7 +19,7 @@ def grid():
 	passign_grid = [i for i in range(0,2)]
 	age_grid=np.linspace(18,45,4).astype(int).tolist() 
 	hs_grid = [i for i in range(0,2)]
-	theta_grid = np.random.lognormal(0,1,8)
+	theta_grid = np.random.lognormal(0,1,6)
 		
 	iterables=[nkids_grid,married_grid, passign_grid,age_grid,hs_grid,theta_grid]
 	#copy the names here

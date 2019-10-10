@@ -40,14 +40,14 @@ betas_nelder = np.load("/home/jrodriguez/NH_HC/results/Model/estimation/betas_mo
 nperiods = 8
 
 #Utility function
-eta = betas_nelder[0]
+eta = .1
 alphap = betas_nelder[1]
-alphaf = -0.19
+alphaf = -0.15
 
 mu_c = -0.56
 
 #wage process en employment processes: female
-wagep_betas=np.array([betas_nelder[3],betas_nelder[4],betas_nelder[5],
+wagep_betas=np.array([betas_nelder[3],betas_nelder[4],1.2,
 	betas_nelder[6],betas_nelder[7]]).reshape((5,1))
 
 #income process: male
@@ -57,13 +57,13 @@ c_emp_spouse = betas_nelder[11]
 
 
 #Production function [young,old]
-gamma1 = 0.93
-gamma2 = betas_nelder[13]
-gamma3 = betas_nelder[14]
-tfp = betas_nelder[15]
+gamma1 = betas_nelder[12]
+gamma2 = betas_nelder[13]/7
+gamma3 = betas_nelder[14]/4
+tfp = 0.2
 sigma2theta = 1
 
-kappas = [betas_nelder[16],betas_nelder[17]]
+kappas = [0.02,0]
 
 #first sigma is normalized
 sigma_z = [1,1]
@@ -162,11 +162,11 @@ var_cov = pd.read_csv("/home/jrodriguez/NH_HC/results/model_v2/aux_model/var_cov
 
 #The W matrix in Wald metric
 #Using inverse of diagonal of Var-Cov matrix of simulated moments
-#w_matrix  = np.zeros((var_cov.shape[0],var_cov.shape[0]))
-#for i in range(var_cov.shape[0]):
-#	w_matrix[i,i] = var_cov[i,i]**(-1)
+w_matrix  = np.zeros((var_cov.shape[0],var_cov.shape[0]))
+for i in range(var_cov.shape[0]):
+	w_matrix[i,i] = var_cov[i,i]**(-1)
 
-w_matrix  = np.linalg.inv(var_cov)
+#w_matrix  = np.linalg.inv(var_cov)
 
 
 #Creating a grid for the emax computation
@@ -233,6 +233,6 @@ betas_opt=np.array([eta_opt, alphap_opt,alphaf_opt,
 	gamma1_opt,gamma2_opt,gamma3_opt,tfp_opt,
 	kappas_00,kappas_01,rho_theta_epsilon_opt])
 
-np.save('/home/jrodriguez/NH_HC/results/Model/estimation/betas_modelv46.npy',betas_opt)
+np.save('/home/jrodriguez/NH_HC/results/Model/estimation/betas_modelv47.npy',betas_opt)
 
 

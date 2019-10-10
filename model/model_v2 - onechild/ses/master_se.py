@@ -42,9 +42,9 @@ betas_nelder = np.load("/home/jrodriguez/NH_HC/results/Model/estimation/betas_mo
 nperiods = 8
 
 #Utility function
-eta = 0.35
+eta = .4
 alphap = betas_nelder[1]
-alphaf = betas_nelder[2]
+alphaf = -0.26
 
 mu_c = -0.56
 
@@ -60,12 +60,12 @@ c_emp_spouse = betas_nelder[11]
 
 #Production function [young,old]
 gamma1 = betas_nelder[12]
-gamma2 = betas_nelder[13]
-gamma3 = betas_nelder[14]
+gamma2 = betas_nelder[13]/4.2
+gamma3 = betas_nelder[14]/1.7
 tfp = betas_nelder[15]
 sigma2theta = 1
 
-kappas = [betas_nelder[16],betas_nelder[17]]
+kappas = [-0.8,-1.1]
 
 #first sigma is normalized
 sigma_z = [1,1]

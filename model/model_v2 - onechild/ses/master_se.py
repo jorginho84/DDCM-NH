@@ -35,16 +35,16 @@ import se
 
 np.random.seed(1)
 
-betas_nelder = np.load("/home/jrodriguez/NH_HC/results/Model/estimation/betas_modelv46.npy")
+betas_nelder = np.load("/home/jrodriguez/NH_HC/results/Model/estimation/betas_modelv47.npy")
 
 
 #Number of periods where all children are less than or equal to 18
 nperiods = 8
 
 #Utility function
-eta = 0.35
+eta = 0.015
 alphap = betas_nelder[1]
-alphaf = betas_nelder[2]
+alphaf = -0.07
 
 mu_c = -0.56
 
@@ -61,18 +61,21 @@ c_emp_spouse = betas_nelder[11]
 #Production function [young,old]
 gamma1 = betas_nelder[12]
 gamma2 = betas_nelder[13]
-gamma3 = betas_nelder[14]
-tfp = betas_nelder[15]
+rho0 = betas_nelder[14] #substitution
+rho1 = 0.12 #scale
+tfp = 0.15
 sigma2theta = 1
 
-kappas = [betas_nelder[16],betas_nelder[17]]
+
+
+kappas = [betas_nelder[17],betas_nelder[18]]
 
 #first sigma is normalized
 sigma_z = [1,1]
 
 
 #initial theta
-rho_theta_epsilon = betas_nelder[18]
+rho_theta_epsilon = betas_nelder[19]
 
 
 lambdas=[1,1]
@@ -141,7 +144,7 @@ agech0=x_df[['age_t0']].values
 
 #Defines the instance with parameters
 param0=util.Parameters(alphap,alphaf,mu_c,
-	eta,gamma1,gamma2,gamma3,
+	eta,gamma1,gamma2,rho0,rho1,
 	tfp,sigma2theta,rho_theta_epsilon,wagep_betas,
 	income_male_betas,c_emp_spouse,
 	marriagep_betas, kidsp_betas, eitc_list,
@@ -171,7 +174,7 @@ dict_grid=gridemax.grid()
 D = 50
 
 #For II procedure
-M = 1000
+M = 300
 
 #How many hours is part- and full-time work
 hours_p = 15
@@ -179,9 +182,9 @@ hours_f = 40
 
 #Indicate if model includes a work requirement (wr), 
 #and child care subsidy (cs) and a wage subsidy (ws)
-wr=1
-cs=1
-ws=1
+wr = 1
+cs = 1
+ws = 1
 
 #The estimate class
 output_ins=estimate.Estimate(nperiods,param0,x_w,x_m,x_k,x_wmk,passign,
@@ -197,7 +200,7 @@ betas_opt = np.array([eta, alphap,alphaf,wagep_betas[0,0],
 	wagep_betas[3,0],wagep_betas[4,0],
 	income_male_betas[0],income_male_betas[1],income_male_betas[2],
 	c_emp_spouse,
-	gamma1,gamma2,gamma3,tfp,
+	gamma1,gamma2,rho0,rho1,tfp,
 	kappas[0],kappas[1],
 	rho_theta_epsilon])
 
@@ -213,7 +216,7 @@ nmom = moments_vector.shape[0]
 #The var-cov matrix of structural parameters
 ses = se_ins.big_sand(0.025,nmom,npar)
 
-np.save('/home/jrodriguez/NH_HC/results/model_v2/estimation/sesv3_modelv46.npy',ses['Var_Cov']*(1+1/M))
+np.save('/home/jrodriguez/NH_HC/results/model_v2/estimation/sesv3_modelv47.npy',ses['Var_Cov']*(1+1/M))
 
 np.sqrt(np.diagonal(ses['Var_Cov']*(1+1/M)))
 
@@ -225,6 +228,7 @@ for s in range(npar):
 
 #the gradients of moments w/r of parameter 16:
 ses['Gradient'][:,16]
+ses['Gradient'][:,15]
 
 
 ((np.dot(np.transpose(ses['Gradient'][:,16]),ses['Gradient'][:,16])*w_matrix[16,16])**(-1))**.5

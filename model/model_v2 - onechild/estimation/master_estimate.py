@@ -33,16 +33,16 @@ import estimate as estimate
 
 np.random.seed(1)
 
-betas_nelder = np.load("/home/jrodriguez/NH_HC/results/Model/estimation/betas_modelv45.npy")
+betas_nelder = np.load("/home/jrodriguez/NH_HC/results/Model/estimation/betas_modelv47.npy")
 
 
 #Number of periods where all children are less than or equal to 18
 nperiods = 8
 
 #Utility function
-eta = betas_nelder[0]
+eta = 0.015
 alphap = betas_nelder[1]
-alphaf = -0.19
+alphaf = -0.07
 
 mu_c = -0.56
 
@@ -57,20 +57,23 @@ c_emp_spouse = betas_nelder[11]
 
 
 #Production function [young,old]
-gamma1 = 0.93
+gamma1 = betas_nelder[12]
 gamma2 = betas_nelder[13]
-gamma3 = betas_nelder[14]
-tfp = betas_nelder[15]
+rho0 = betas_nelder[14] #substitution
+rho1 = 0.12 #scale
+tfp = 0.15
 sigma2theta = 1
 
-kappas = [betas_nelder[16],betas_nelder[17]]
+
+
+kappas = [betas_nelder[17],betas_nelder[18]]
 
 #first sigma is normalized
 sigma_z = [1,1]
 
 
 #initial theta
-rho_theta_epsilon = betas_nelder[18]
+rho_theta_epsilon = betas_nelder[19]
 
 
 #All factor loadings are normalized
@@ -147,7 +150,7 @@ agech0 = x_df[['age_t0']].values
 
 #Defines the instance with parameters
 param0 = util.Parameters(alphap,alphaf,mu_c,
-	eta,gamma1,gamma2,gamma3,
+	eta,gamma1,gamma2,rho0,rho1,
 	tfp,sigma2theta,rho_theta_epsilon,wagep_betas,
 	income_male_betas,c_emp_spouse,
 	marriagep_betas, kidsp_betas, eitc_list,
@@ -162,11 +165,11 @@ var_cov = pd.read_csv("/home/jrodriguez/NH_HC/results/model_v2/aux_model/var_cov
 
 #The W matrix in Wald metric
 #Using inverse of diagonal of Var-Cov matrix of simulated moments
-#w_matrix  = np.zeros((var_cov.shape[0],var_cov.shape[0]))
-#for i in range(var_cov.shape[0]):
-#	w_matrix[i,i] = var_cov[i,i]**(-1)
+w_matrix  = np.zeros((var_cov.shape[0],var_cov.shape[0]))
+for i in range(var_cov.shape[0]):
+	w_matrix[i,i] = var_cov[i,i]**(-1)
 
-w_matrix  = np.linalg.inv(var_cov)
+#w_matrix  = np.linalg.inv(var_cov)
 
 
 #Creating a grid for the emax computation
@@ -176,7 +179,7 @@ dict_grid=gridemax.grid()
 D = 50
 
 #Number of samples to produce
-M = 1000
+M = 500
 
 
 #How many hours is part- and full-time work
@@ -185,9 +188,9 @@ hours_f = 40
 
 #Indicate if model includes a work requirement (wr), 
 #and child care subsidy (cs) and a wage subsidy (ws)
-wr=1
-cs=1
-ws=1
+wr = 1
+cs = 1
+ws = 1
 
 output_ins=estimate.Estimate(nperiods,param0,x_w,x_m,x_k,x_wmk,passign,
 	agech0,nkids0,married0,D,dict_grid,M,N,
@@ -221,18 +224,19 @@ beta_s3 = np.exp(output.x[10])
 beta_emp_s = output.x[11]
 gamma1_opt = output.x[12]
 gamma2_opt = output.x[13]
-gamma3_opt = output.x[14]
-tfp_opt = output.x[15]
-kappas_00 = output.x[16]
-kappas_01 = output.x[17]
-rho_theta_epsilon_opt = sym(output.x[18])
+rho0_opt = output.x[14]
+rho1_opt = output.x[15]
+tfp_opt = output.x[16]
+kappas_00 = output.x[17]
+kappas_01 = output.x[18]
+rho_theta_epsilon_opt = sym(output.x[19])
 
 betas_opt=np.array([eta_opt, alphap_opt,alphaf_opt,
 	betaw0,betaw1,betaw2,betaw3,betaw4,
 	beta_s1,beta_s2,beta_s3,beta_emp_s,
-	gamma1_opt,gamma2_opt,gamma3_opt,tfp_opt,
+	gamma1_opt,gamma2_opt,rho0_opt,rho1_opt,tfp_opt,
 	kappas_00,kappas_01,rho_theta_epsilon_opt])
 
-np.save('/home/jrodriguez/NH_HC/results/Model/estimation/betas_modelv46.npy',betas_opt)
+np.save('/home/jrodriguez/NH_HC/results/Model/estimation/betas_modelv48.npy',betas_opt)
 
 

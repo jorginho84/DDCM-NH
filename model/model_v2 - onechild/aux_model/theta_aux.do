@@ -77,7 +77,7 @@ matrix prob_inc_t5[1,1] =r(mean)
 ********************************************************************
 
 *To identify gammas (production function): 2 x 1 matrix
-mat inputs_moments = J(4,1,.)
+mat inputs_moments = J(5,1,.)
 
 mat init_prod = J(1,1,.)
 
@@ -103,11 +103,7 @@ keep incomepc_t1 incomepc_t4 incomepc_t7 skills_t1 skills_t4 skills_t7 /*
 
 reshape long incomepc_t skills_t d_skills_t l_t d_CC2_t age_t hours2_t total_income_y, i(id_child) j(year)
 
-gen l_incomepc_t = ln(incomepc_t)
-gen l_l_t = ln(l_t)
-
 replace incomepc_t = incomepc_t/1000
-replace l_t = l_t/1000
 
 *reg skills_t incomepc_t hours2_t if p_assign=="C" & year<7
 
@@ -121,6 +117,16 @@ reg skills_t d_CC2_t if age_t<=5 & year<7
 mat inputs_moments[4,1] = _b[d_CC2_t]
 
 
+gen l_skills_t = log(skills_t)
+gen l_total_income_y = log(total_income_y + 0.001)
+gen l_total_income_y_2 = l_total_income_y^2
+gen l_hours2_t = log(hours2_t + 1)
+gen l_hours2_t_2 = l_hours2_t^2
+gen l_total_income_y_l_hours2_t = l_total_income_y*l_hours2_t
+
+
+qui: reg l_skills_t l_total_income_y l_total_income_y_2 l_hours2_t l_hours2_t_2 l_total_income_y_l_hours2_t if year < 7, noc
+mat inputs_moments[5,1] = _b[l_total_income_y_l_hours2_t]
 
 **********************************************
 **********************************************

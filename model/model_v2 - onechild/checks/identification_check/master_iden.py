@@ -60,16 +60,16 @@ hours_p = 15
 hours_f = 40
 
 #For montercarlo integration
-D=20
+D = 50
 
 #For II procedure
-M=200
+M = 300
 
 #Indicate if model includes a work requirement (wr), 
 #and child care subsidy (cs) and a wage subsidy (ws)
-wr=1
-cs=1
-ws=1
+wr = 1
+cs = 1
+ws = 1
 
 #The model (utility instance)
 hours = np.zeros(N)
@@ -96,41 +96,41 @@ font_size = 20
 exec(open("/home/jrodriguez/NH_HC/codes/model_v2/checks/identification_check/eta.py").read())
 
 ####Part-time work###
-exec(open("/home/jrodriguez/NH_HC/codes/model_v2/checks/identification_check/alphap.py").read())
+#exec(open("/home/jrodriguez/NH_HC/codes/model_v2/checks/identification_check/alphap.py").read())
 
 ####Full-time work###
-exec(open("/home/jrodriguez/NH_HC/codes/model_v2/checks/identification_check/alphaf.py").read())
+#exec(open("/home/jrodriguez/NH_HC/codes/model_v2/checks/identification_check/alphaf.py").read())
 
 #########################################################
 #Wage offer
 
 ####high school###
-exec(open("/home/jrodriguez/NH_HC/codes/model_v2/checks/identification_check/highschool_wage.py").read())
+#exec(open("/home/jrodriguez/NH_HC/codes/model_v2/checks/identification_check/highschool_wage.py").read())
 
 ####trend###
-exec(open("/home/jrodriguez/NH_HC/codes/model_v2/checks/identification_check/logt_wage.py").read())
+#exec(open("/home/jrodriguez/NH_HC/codes/model_v2/checks/identification_check/logt_wage.py").read())
 
 ####constant_wage###
-exec(open("/home/jrodriguez/NH_HC/codes/model_v2/checks/identification_check/constant_wage.py").read())
+#exec(open("/home/jrodriguez/NH_HC/codes/model_v2/checks/identification_check/constant_wage.py").read())
 
 ####sigma2###
-exec(open("/home/jrodriguez/NH_HC/codes/model_v2/checks/identification_check/sigma_wage.py").read())
+#exec(open("/home/jrodriguez/NH_HC/codes/model_v2/checks/identification_check/sigma_wage.py").read())
 
 ####rho###
-exec(open("/home/jrodriguez/NH_HC/codes/model_v2/checks/identification_check/rho_wage.py").read())
+#exec(open("/home/jrodriguez/NH_HC/codes/model_v2/checks/identification_check/rho_wage.py").read())
 
 #########################################################
 #Spouse income: high school
-exec(open("/home/jrodriguez/NH_HC/codes/model_v2/checks/identification_check/highschool_spouse.py").read())
+#exec(open("/home/jrodriguez/NH_HC/codes/model_v2/checks/identification_check/highschool_spouse.py").read())
 
 #Spouse income: constant
-exec(open("/home/jrodriguez/NH_HC/codes/model_v2/checks/identification_check/constant_spouse.py").read())
+#exec(open("/home/jrodriguez/NH_HC/codes/model_v2/checks/identification_check/constant_spouse.py").read())
 
 #Spouse income: sigma2
-exec(open("/home/jrodriguez/NH_HC/codes/model_v2/checks/identification_check/sigma_spouse.py").read())
+#exec(open("/home/jrodriguez/NH_HC/codes/model_v2/checks/identification_check/sigma_spouse.py").read())
 
 #Employment spouse
-exec(open("/home/jrodriguez/NH_HC/codes/model_v2/checks/identification_check/employment_spouse.py").read())
+#exec(open("/home/jrodriguez/NH_HC/codes/model_v2/checks/identification_check/employment_spouse.py").read())
 
 #########################################################
 #Production function
@@ -138,22 +138,24 @@ exec(open("/home/jrodriguez/NH_HC/codes/model_v2/checks/identification_check/emp
 
 
 ####\gamma_1###
-exec(open("/home/jrodriguez/NH_HC/codes/model_v2/checks/identification_check/gamma1.py").read())
+#exec(open("/home/jrodriguez/NH_HC/codes/model_v2/checks/identification_check/gamma1.py").read())
 
 ####\gamma_2###
 exec(open("/home/jrodriguez/NH_HC/codes/model_v2/checks/identification_check/gamma2.py").read())
 
 #***
-####\gamma_3###
-exec(open("/home/jrodriguez/NH_HC/codes/model_v2/checks/identification_check/gamma3.py").read())
+####rho0###
+#exec(open("/home/jrodriguez/NH_HC/codes/model_v2/checks/identification_check/rho0.py").read())
 
+####rho1###
+#exec(open("/home/jrodriguez/NH_HC/codes/model_v2/checks/identification_check/rho0.py").read())
 
 #***
 ####TFP###
-exec(open("/home/jrodriguez/NH_HC/codes/model_v2/checks/identification_check/tfp.py").read())
+#exec(open("/home/jrodriguez/NH_HC/codes/model_v2/checks/identification_check/tfp.py").read())
 
 ##Kappas##
-exec(open("/home/jrodriguez/NH_HC/codes/model_v2/checks/identification_check/kappas.py").read())
+#exec(open("/home/jrodriguez/NH_HC/codes/model_v2/checks/identification_check/kappas.py").read())
 
 
 #########################################################
@@ -161,5 +163,5 @@ exec(open("/home/jrodriguez/NH_HC/codes/model_v2/checks/identification_check/kap
 
 #***
 ####corr_theta0###
-exec(open("/home/jrodriguez/NH_HC/codes/model_v2/checks/identification_check/corr_theta0.py").read())
+#exec(open("/home/jrodriguez/NH_HC/codes/model_v2/checks/identification_check/corr_theta0.py").read())
 

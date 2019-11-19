@@ -27,14 +27,15 @@ class Parameters:
 
 	"""
 	def __init__(self,alphap,alphaf,mu_c,
-		eta,gamma1,gamma2,gamma3,
+		eta,gamma1,gamma2,rho0,rho1,
 		tfp,sigma2theta,rho_theta_epsilon,betaw,
 		beta_spouse,c_emp_spouse,
 		betam,betak,eitc,afdc,snap,cpi,fpl_list,
 		lambdas,kappas,pafdc,psnap,mup,sigma_z):
 
 		self.alphap,self.alphaf,self.eta,self.mu_c=alphap,alphaf,eta,mu_c
-		self.gamma1,self.gamma2,self.gamma3=gamma1,gamma2,gamma3
+		self.gamma1,self.gamma2=gamma1,gamma2
+		self.rho0,self.rho1=rho0,rho1
 		self.tfp=tfp
 		self.rho_theta_epsilon=rho_theta_epsilon
 		self.sigma2theta=sigma2theta
@@ -548,9 +549,6 @@ class Utility(object):
 		#age of child
 		agech=np.reshape(self.age_t0,(self.N)) + periodt
 
-		#log consumption pc
-		incomepc=np.log(ct)
-		
 		#log time w child (T=168 hours a week, -35 for older kids)
 		tch = np.zeros(self.N)
 		boo_p = h == self.hours_p
@@ -559,19 +557,17 @@ class Utility(object):
 
 		tch[agech<=5] = cc[agech<=5]*(168 - self.hours_f) + (1-cc[agech<=5])*(168 - h[agech<=5] ) 
 		tch[agech>5] = 133 - h[agech>5] 
-		tch = np.log(tch)
-	
-		
+			
 				
 		#The production of HC: (young, cc=0), (young,cc1), (old)
 		boo_age = agech <= 5
-		theta1 = self.param.tfp*cc*boo_age + self.param.gamma1*np.log(theta0) + self.param.gamma2*incomepc + self.param.gamma3*tch
+		theta1 = (np.exp(self.param.tfp*cc*boo_age))*(theta0**self.param.gamma1)*((self.param.gamma2*(ct**self.param.rho0) + (1-self.param.gamma2)*(tch**self.param.rho0))**(self.param.rho1/self.param.rho0))
+		
 
-		#to normalize
-		cte = self.param.gamma1*np.mean(np.log(theta0)) + self.param.gamma2*np.mean(incomepc) + self.param.gamma3*np.mean(tch) + self.param.tfp*np.mean(cc*boo_age)		
-		theta1 = theta1 - cte
+		#normalizing E(ln theta)=0 forall t
+		cte = np.mean(np.log(theta1))
 
-		return np.exp(theta1)
+		return theta1*np.exp(-cte)
 
 
 	def Ut(self,periodt,dincome,income_spouse,employment_spouse,marr,cc,nkids,ht,thetat,
@@ -581,11 +577,6 @@ class Utility(object):
 
 		"""
 
-
-		#log-theta: if child is not present, log theta = 0
-		ltheta = thetat.copy()
-		#ltheta = (thetat**0.5 - 1)/0.5
-				
 		#Work dummies
 		d_workf = ht == self.hours_f
 		d_workp = ht == self.hours_p
@@ -597,7 +588,7 @@ class Utility(object):
 		
 		#Current-period utility
 		ut_h = d_workp*self.param.alphap + d_workf*self.param.alphaf
-		ut = (ct*np.exp(ut_h)*(thetat**self.param.eta))**self.param.mu_c/(self.param.mu_c)
+		ut = ((ct*np.exp(ut_h))**self.param.mu_c)/(self.param.mu_c) + self.param.eta*((thetat**0.5)/0.5)
 		#ut = ((ct**self.param.mu_c)/self.param.mu_c)*np.exp(ut_h)*(thetat**self.param.eta)
 		#ut = np.log(ct) + ut_h + self.param.eta*ltheta
 

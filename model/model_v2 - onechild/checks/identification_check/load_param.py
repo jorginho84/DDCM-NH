@@ -1,4 +1,4 @@
-betas_nelder = np.load("/home/jrodriguez/NH_HC/results/Model/estimation/betas_modelv41.npy")
+betas_nelder = np.load("/home/jrodriguez/NH_HC/results/Model/estimation/betas_modelv47.npy")
 
 
 #Number of periods where all children are less than or equal to 18
@@ -24,14 +24,17 @@ c_emp_spouse = betas_nelder[11]
 #Production function [young,old]
 gamma1 = betas_nelder[12]
 gamma2 = betas_nelder[13]
-gamma3 = betas_nelder[14]
-tfp = betas_nelder[15]
+rho0 = betas_nelder[14] #substitution
+rho1 = 0.1 #scale
+tfp = 0.15
 sigma2theta = 1
 
-kappas = [-0.8,-0.85]
+
+
+kappas = [betas_nelder[17],betas_nelder[18]]
 
 #first sigma is normalized
-sigma_z = [0.5,betas_nelder[18]]
+sigma_z = [1,1]
 
 
 #initial theta
@@ -103,7 +106,7 @@ agech0=x_df[['age_t0']].values
 
 #Defines the instance with parameters
 param0=util.Parameters(alphap,alphaf,mu_c,
-	eta,gamma1,gamma2,gamma3,
+	eta,gamma1,gamma2,rho0,rho1,
 	tfp,sigma2theta,rho_theta_epsilon,wagep_betas,
 	income_male_betas,c_emp_spouse,
 	marriagep_betas, kidsp_betas, eitc_list,

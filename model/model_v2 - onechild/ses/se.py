@@ -88,22 +88,24 @@ class SEs:
 		c_emp_spouse = bs[11]
 
 		#Production function [young[cc0,cc1],old]
-		gamma1=bs[12]
-		gamma2=bs[13]
-		gamma3=bs[14]
-		tfp=bs[15]
+		gamma1 = bs[12]
+		gamma2 = bs[13]
+		rho0 = bs[14]
+		rho1 = bs[15]
+		tfp = bs[16]
 		
-		kappas = [bs[16],bs[17]]
+		kappas = [bs[17],bs[18]]
 
 		sigma_z = [1,1]
 
-		rho_theta_epsilon =  bs[18]
+		rho_theta_epsilon =  bs[19]
 
 		lambdas=[1,1]
 
 
 		#Re-defines the instance with parameters 
-		param0 = util.Parameters(alphap,alphaf,mu_c,eta,gamma1,gamma2,gamma3,
+		param0 = util.Parameters(alphap,alphaf,mu_c,
+			eta,gamma1,gamma2,rho0,rho1,
 			tfp,sigma2theta,rho_theta_epsilon,wagep_betas,
 			income_male_betas,c_emp_spouse,
 			marriagep_betas, kidsp_betas, eitc_list,
@@ -271,15 +273,15 @@ class SEs:
 		#save results here
 		db_dt = np.zeros((K,S))
 		
-		for s in range(S):
+		for s in range(S): # loop across parameters
 
 			#evaluating at optimum
 			psi_low = psi.copy()
 			psi_high = psi.copy()
 
 			#changing only relevant parameter, one at a time
-			
 			h = eps*abs(psi[s])
+
 			psi_low[s] = psi[s] - h
 			psi_high[s] = psi[s] + h
 

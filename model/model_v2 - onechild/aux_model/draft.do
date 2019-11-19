@@ -1,5 +1,6 @@
 use "/home/jrodriguez/NH_HC/results/model_v2/sample_model.dta", clear
 
+*This if full-time work
 local hours_f = 40
 
 *Nobody in child care at t=7
@@ -58,10 +59,10 @@ qui: sum skills_t2
 matrix prob_inc_t2[1,1] =r(mean)
 
 
-matrix prob_inc_t5=J(2,1,.)
+matrix prob_inc_t5=J(1,1,.)
 qui: sum skills_t5
 matrix prob_inc_t5[1,1] =r(mean)
-matrix prob_inc_t5[2,1] =r(Var) 
+
 
 
 
@@ -70,15 +71,15 @@ matrix prob_inc_t5[2,1] =r(Var)
 ********************************************************************
 
 *To identify gammas (production function): 2 x 1 matrix
-mat inputs_moments=J(5,1,.)
+mat inputs_moments = J(4,1,.)
 
-corr skills_t2  lhwage_t0 if p_assign=="C"
-mat inputs_moments[5,1] = r(rho)
+mat init_prod = J(1,1,.)
 
-corr skills_t2 skills_t5 if p_assign == "C"
+corr skills_t2 skills_t5
 mat inputs_moments[1,1] = r(rho)
 
-
+corr skills_t2  lhwage_t0
+mat init_prod[1,1] = r(rho)
 
 egen id_child = seq()
 
@@ -98,33 +99,28 @@ reshape long incomepc_t skills_t d_skills_t l_t d_CC2_t age_t hours2_t total_inc
 
 gen l_incomepc_t = ln(incomepc_t)
 gen l_l_t = ln(l_t)
-gen l_hours2_t = ln(hours2_t)
 
-replace total_income_y = total_income_y/1000
 replace incomepc_t = incomepc_t/1000
 replace l_t = l_t/1000
 
+*reg skills_t incomepc_t hours2_t if p_assign=="C" & year<7
+
+corr skills_t total_income_y if year<7
 
 
-reg skills_t l_incomepc_t l_l_t if p_assign=="C" & year<7
-mat inputs_moments[2,1] = _b[l_incomepc_t]
-mat inputs_moments[3,1] = _b[l_l_t]
-
-reg skills_t d_CC2_t if age_t<=5 & p_assign=="C" & year<7
-mat inputs_moments[4,1] = _b[d_CC2_t]
+corr skills_t hours2_t if year<7
 
 
-reg skills_t incomepc_t hours2_t if p_assign=="C" & year<7
+reg skills_t d_CC2_t if age_t<=5 & year<7
 
-reg skills_t l_incomepc_t i.hours2_t if p_assign=="C" & year<7
+gen l_skills_t = log(skills_t)
+gen l_total_income_y = log(total_income_y + 1)
+gen l_total_income_y_2 = l_total_income_y^2
+gen l_hours2_t = log(hours2_t + 1)
+gen l_hours2_t_2 = l_hours2_t^2
+gen l_total_income_y_l_hours2_t = l_total_income_y*l_hours2_t
 
-reg skills_t l_incomepc_t hours2_t if p_assign=="C" & year<7
-reg skills_t l_incomepc_t l_l_t if p_assign=="C" & year<7
 
-reg skills_t incomepc_t hours2_t if p_assign=="C" & year<7
+reg l_skills_t l_total_income_y l_total_income_y_2 l_hours2_t l_hours2_t_2 l_total_income_y_l_hours2_t if year < 7
 
-
-corr skills_t incomepc_t hours2_t if p_assign=="C" & year<7
-
-corr skills_t total_income_y hours2_t if p_assign=="C" & year<7
 

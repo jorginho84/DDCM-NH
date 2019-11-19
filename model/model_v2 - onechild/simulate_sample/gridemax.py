@@ -17,13 +17,12 @@ def grid():
 	nkids_grid = np.linspace(1,6,3).astype(int).tolist() 
 	married_grid = [i for i in range(0,2)]
 	passign_grid = [i for i in range(0,2)]
-	age_grid=np.linspace(18,45,4).astype(int).tolist() 
+	age_grid=np.linspace(18,45,3).astype(int).tolist() 
 	hs_grid = [i for i in range(0,2)]
-	theta_grid = np.random.lognormal(0,1,6)
-		
-	iterables=[nkids_grid,married_grid, passign_grid,age_grid,hs_grid,theta_grid]
+			
+	iterables=[nkids_grid,married_grid, passign_grid,age_grid,hs_grid]
 	#copy the names here
-	keys=['nkids_grid','married_grid','passign_grid','age_grid','hs_grid','theta_grid']
+	keys=['nkids_grid','married_grid','passign_grid','age_grid','hs_grid']
 
 	#Array of combinations (cartesian product)
 	it=1
@@ -48,11 +47,9 @@ def grid():
 	passign = np.reshape(np.array(dict_grid['passign_grid']).astype(float),(grid.shape[0],1) )
 	age = np.reshape(np.array(dict_grid['age_grid']).astype(float),(grid.shape[0],1) )
 	d_hs = np.reshape(np.array(dict_grid['hs_grid']).astype(float),(grid.shape[0],1) )
-	theta0 = np.reshape(np.array(dict_grid['theta_grid']).astype(float),(grid.shape[0],1) )
-	
-	
+		
 
-	#theta0 = np.random.uniform(0.01,2,(grid.shape[0],1))
+	theta0 = np.random.uniform(0.01,2,(grid.shape[0],1))
 	epsilon_1 = np.random.uniform(-2,2,(grid.shape[0],1))
 	agech = np.random.randint(0,11,(grid.shape[0],1))
 

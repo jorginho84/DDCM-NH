@@ -104,10 +104,10 @@ list_obs = []
 list_sig = []
 #C. prod fn
 list_aux = [beta_inputs]
-list_obs = [moments_vector[ind:ind + 4 ,0]]
-list_sig = [se_vector[ind:ind + 4]]
+list_obs = [moments_vector[ind:ind + 5 ,0]]
+list_sig = [se_vector[ind:ind + 5]]
 
-for c in range(4):
+for c in range(5):
 	ws['B' + str(c + pos)] = np.float(list_aux[0][c])
 	ws['D' + str(c + pos)] = np.float(list_obs[0][c])
 	ws['F' + str(c + pos)] = np.float(list_sig[0][c])
@@ -136,8 +136,8 @@ plt.close()
 
 
 #A. t=2, kappas
-ind = ind + 4
-pos = 18
+ind = ind + 5
+pos = 19
 list_aux = []
 list_obs = []
 list_sig = []
@@ -152,7 +152,7 @@ for c in range(1):
 
 
 ind = ind + 1
-pos = 19
+pos = 20
 
 #B. t=5, kappas
 for c in range(1):
@@ -189,7 +189,7 @@ plt.close()
 
 #rho_theta_epsilon
 ind = ind + 1
-pos = 20
+pos = 21
 #B. t=5, kappas
 for c in range(1):
 	ws['B' + str(c + pos)] = np.float(betas_init_prod[c])

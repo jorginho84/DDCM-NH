@@ -90,22 +90,22 @@ class SEs:
 		#Production function [young[cc0,cc1],old]
 		gamma1 = bs[12]
 		gamma2 = bs[13]
-		rho0 = bs[14]
-		rho1 = bs[15]
-		tfp = bs[16]
+		gamma3 = bs[14]
+		tfp = bs[15]
 		
-		kappas = [bs[17],bs[18]]
+		kappas = [self.output_ins.__dict__['param0'].__dict__['kappas'][0],
+		self.output_ins.__dict__['param0'].__dict__['kappas'][1]]
 
 		sigma_z = [1,1]
 
-		rho_theta_epsilon =  bs[19]
+		rho_theta_epsilon =  bs[16]
 
 		lambdas=[1,1]
 
 
 		#Re-defines the instance with parameters 
 		param0 = util.Parameters(alphap,alphaf,mu_c,
-			eta,gamma1,gamma2,rho0,rho1,
+			eta,gamma1,gamma2,gamma3,
 			tfp,sigma2theta,rho_theta_epsilon,wagep_betas,
 			income_male_betas,c_emp_spouse,
 			marriagep_betas, kidsp_betas, eitc_list,
@@ -137,8 +137,6 @@ class SEs:
 		beta_childcare = np.mean(dic_betas['beta_childcare'],axis=0) #1x1
 		beta_hours1 = np.mean(dic_betas['beta_hours1'],axis=0) #1x1
 		beta_hours2 = np.mean(dic_betas['beta_hours2'],axis=0) #1x1
-		beta_kappas_t2 = np.mean(dic_betas['beta_kappas_t2'],axis=1) #4 x 1
-		beta_kappas_t5 = np.mean(dic_betas['beta_kappas_t5'],axis=1) #4 x 1
 		beta_wagep = np.mean(dic_betas['beta_wagep'],axis=1) # 7 x 1
 		beta_inputs = np.mean(dic_betas['beta_inputs'],axis=1) #5 x 1
 		betas_init_prod = np.mean(dic_betas['betas_init_prod'],axis=1) #1 x 1
@@ -149,7 +147,7 @@ class SEs:
 		#This order cannot be modified. Check consistency with order of moments matrix (simulated and observed)
 		return [beta_childcare,beta_hours1,beta_hours2,beta_wagep,
 		beta_wage_spouse,beta_emp_spouse,
-		beta_inputs,beta_kappas_t2,beta_kappas_t5,betas_init_prod]
+		beta_inputs,betas_init_prod]
 
 	
 
@@ -165,12 +163,10 @@ class SEs:
 		beta_wage_spouse = betas[4]
 		beta_emp_spouse = betas[5]
 		beta_inputs = betas[6]
-		beta_kappas_t2 = betas[7]
-		beta_kappas_t5 = betas[8]
-		betas_init_prod = betas[9]
+		betas_init_prod = betas[7]
 		
 		#Number of moments to match
-		num_par = beta_childcare.size + beta_hours1.size + beta_hours2.size + beta_wagep.size + beta_wage_spouse.size + beta_emp_spouse.size + beta_kappas_t2.size +  beta_kappas_t5.size + beta_inputs.size + betas_init_prod.size
+		num_par = beta_childcare.size + beta_hours1.size + beta_hours2.size + beta_wagep.size + beta_wage_spouse.size + beta_emp_spouse.size + beta_inputs.size + betas_init_prod.size
 		
 		#Outer matrix
 		x_vector = np.zeros((num_par,1))
@@ -196,12 +192,6 @@ class SEs:
 		x_vector[ind:ind + beta_inputs.size,0] = beta_inputs - self.output_ins.moments_vector[ind:ind + beta_inputs.size,0]
 
 		ind = ind + beta_inputs.size
-		x_vector[ind:ind + beta_kappas_t2.size,0] = beta_kappas_t2 - self.output_ins.moments_vector[ind:ind + beta_kappas_t2.size,0]
-
-		ind = ind + beta_kappas_t2.size
-		x_vector[ind: ind + beta_kappas_t5.size,0] = beta_kappas_t5 - self.output_ins.moments_vector[ind: ind + beta_kappas_t5.size,0]
-		
-		ind = ind + beta_kappas_t5.size
 		x_vector[ind:ind + betas_init_prod.size,0] = betas_init_prod - self.output_ins.moments_vector[ind:ind + betas_init_prod.size,0]
 		
 		

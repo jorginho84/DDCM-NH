@@ -58,26 +58,13 @@ foreach x of numlist 0 {
 
 gen lhwage_t0=ln(hwage_t0)
 
-/*Intercepts and variances*/
-
-matrix prob_inc_t2=J(1,1,.)
-qui: sum skills_t2
-matrix prob_inc_t2[1,1] =r(mean)
-
-
-matrix prob_inc_t5=J(1,1,.)
-qui: sum skills_t5
-matrix prob_inc_t5[1,1] =r(mean)
-
-
-
 
 *******************************************************************
 /*Identifying period 5 measurement system and prod function*/
 ********************************************************************
 
 *To identify gammas (production function): 2 x 1 matrix
-mat inputs_moments = J(5,1,.)
+mat inputs_moments = J(4,1,.)
 
 mat init_prod = J(1,1,.)
 
@@ -117,23 +104,12 @@ reg skills_t d_CC2_t if age_t<=5 & year<7
 mat inputs_moments[4,1] = _b[d_CC2_t]
 
 
-gen l_skills_t = log(skills_t)
-gen l_total_income_y = log(total_income_y + 0.001)
-gen l_total_income_y_2 = l_total_income_y^2
-gen l_hours2_t = log(hours2_t + 1)
-gen l_hours2_t_2 = l_hours2_t^2
-gen l_total_income_y_l_hours2_t = l_total_income_y*l_hours2_t
-
-
-qui: reg l_skills_t l_total_income_y l_total_income_y_2 l_hours2_t l_hours2_t_2 l_total_income_y_l_hours2_t if year < 7, noc
-mat inputs_moments[5,1] = _b[l_total_income_y_l_hours2_t]
-
 **********************************************
 **********************************************
 **********************************************
 /*Saving betas*/
 
-matrix betas_theta = inputs_moments\prob_inc_t2\prob_inc_t5\init_prod
+matrix betas_theta = inputs_moments\init_prod
 
 restore
 

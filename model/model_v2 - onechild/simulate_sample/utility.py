@@ -27,15 +27,14 @@ class Parameters:
 
 	"""
 	def __init__(self,alphap,alphaf,mu_c,
-		eta,gamma1,gamma2,rho0,rho1,
+		eta,gamma1,gamma2,gamma3,
 		tfp,sigma2theta,rho_theta_epsilon,betaw,
 		beta_spouse,c_emp_spouse,
 		betam,betak,eitc,afdc,snap,cpi,fpl_list,
 		lambdas,kappas,pafdc,psnap,mup,sigma_z):
 
 		self.alphap,self.alphaf,self.eta,self.mu_c=alphap,alphaf,eta,mu_c
-		self.gamma1,self.gamma2=gamma1,gamma2
-		self.rho0,self.rho1=rho0,rho1
+		self.gamma1,self.gamma2,self.gamma3=gamma1,gamma2,gamma3
 		self.tfp=tfp
 		self.rho_theta_epsilon=rho_theta_epsilon
 		self.sigma2theta=sigma2theta
@@ -561,8 +560,7 @@ class Utility(object):
 				
 		#The production of HC: (young, cc=0), (young,cc1), (old)
 		boo_age = agech <= 5
-		theta1 = (np.exp(self.param.tfp*cc*boo_age))*(theta0**self.param.gamma1)*((self.param.gamma2*(ct**self.param.rho0) + (1-self.param.gamma2)*(tch**self.param.rho0))**(self.param.rho1/self.param.rho0))
-		
+		theta1 = np.exp(self.param.tfp*cc*boo_age)*(theta0**self.param.gamma1)*(ct**self.param.gamma2)*(tch**self.param.gamma3)
 
 		#normalizing E(ln theta)=0 forall t
 		cte = np.mean(np.log(theta1))

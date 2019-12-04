@@ -24,14 +24,14 @@ import time
 import openpyxl
 
 #Betas and var-cov matrix
-betas_nelder=np.load('/home/jrodriguez/NH_HC/results/Model/estimation/betas_modelv47.npy')
-var_cov=np.load('/home/jrodriguez/NH_HC/results/model_v2/estimation/sesv3_modelv47.npy')
+betas_nelder=np.load('/home/jrodriguez/NH_HC/results/Model/estimation/betas_modelv49.npy')
+var_cov=np.load('/home/jrodriguez/NH_HC/results/model_v2/estimation/sesv3_modelv49.npy')
 se_vector  = np.sqrt(np.diagonal(var_cov))
 
 #Utility function
-eta = 0.015
+eta = betas_nelder[0]
 alphap = betas_nelder[1]
-alphaf = -0.07
+alphaf = betas_nelder[2]
 mu_c = -0.56
 
 
@@ -59,28 +59,22 @@ sigma_c_emp_spouse = se_vector[11]
 #Production function [young[cc0,cc1],old]
 gamma1 = betas_nelder[12]
 gamma2 = betas_nelder[13]
-rho0 = betas_nelder[14] #substitution
-rho1 = 0.12 #scale
-tfp = 0.15
-sigma2theta=1
+gamma3 = betas_nelder[14] #substitution
+tfp = betas_nelder[15]
+sigma2theta = 1
 
 sigma_gamma1 = se_vector[12]
 sigma_gamma2 = se_vector[13]
-sigma_rho0 = se_vector[14]
-sigma_rho1 = se_vector[15]
-sigma_tfp = se_vector[16]
+sigma_gamma3 = se_vector[14]
+sigma_tfp = se_vector[15]
 
 
-kappas = [betas_nelder[17],betas_nelder[18]]
-
-sigma_kappas = [se_vector[17],se_vector[18]]
+kappas = [0,0]
 
 sigma_z = [1,1]
 
-
-
-rho_theta_epsilon = betas_nelder[19]
-sigma_rho_theta_epsilon = se_vector[19]
+rho_theta_epsilon = betas_nelder[16]
+sigma_rho_theta_epsilon = se_vector[16]
 
 
 #First measure is normalized. starting arbitrary values
@@ -109,15 +103,10 @@ sigma_c_emp_spouse]
 swage_names = ['High school dummy', 'Constant', 'Variance of error term','Employment probability']
 
 
-prod_list_beta = [tfp,gamma1,gamma2,rho0,rho1,rho_theta_epsilon]
-prod_list_se  = [sigma_tfp,sigma_gamma1,sigma_gamma2,sigma_rho0,sigma_rho1,sigma_rho_theta_epsilon]
-prod_names = [r'Child care TFP ($\gamma_1$)', r'Lagged human capital ($\gamma_2$)', r'Income ($\gamma_3$)', r'Substitution ($\rho_0$)',r'Scale ($\rho_1$)',
+prod_list_beta = [tfp,gamma1,gamma2,gamma3,rho_theta_epsilon]
+prod_list_se  = [sigma_tfp,sigma_gamma1,sigma_gamma2,sigma_gamma3,sigma_rho_theta_epsilon]
+prod_names = [r'Child care TFP ($\gamma_1$)', r'Lagged human capital ($\gamma_2$)', r'Income ($\gamma_3$)', r'Time ($\gamma_4$)',
 r'$Corr(\varepsilon_0^{\theta},\varepsilon_0^w)$']
-
-ssrs_list_beta = [kappas[0],kappas[1]]
-ssrs_list_se = [sigma_kappas[0],sigma_kappas[1]]
-
-ssrs_names = [r'Intercept ($t=2$)', r'Intercept ($t=5$)']
 
 #This is for the paper
 with open('/home/jrodriguez/NH_HC/results/model_v2/estimation/estimates.tex','w') as f:
@@ -149,14 +138,6 @@ with open('/home/jrodriguez/NH_HC/results/model_v2/estimation/estimates.tex','w'
 			r' &  & '+ '{:04.3f}'.format(prod_list_se[j])+r' \\' + '\n')
 
 	f.write(r' &       &       &       &  \\' + '\n')
-	f.write(r'\emph{E. SSRS)} &       &       &       &  \\' + '\n')
-	
-	f.write(ssrs_names[0]+r' &  &  '+ '{:04.3f}'.format(ssrs_list_beta[0]) +
-		r' &  & '+ '{:04.3f}'.format(ssrs_list_se[0])+r' \\' + '\n')
-
-	f.write(ssrs_names[1]+r' &  &  '+ '{:04.3f}'.format(ssrs_list_beta[1]) +
-		r' &  & '+ '{:04.3f}'.format(ssrs_list_se[1])+r' \\' + '\n')
-
 
 	f.write(r'\hline'+'\n')
 	f.write(r'\end{tabular}' + '\n')

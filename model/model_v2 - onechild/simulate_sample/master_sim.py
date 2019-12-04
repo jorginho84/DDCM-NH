@@ -72,19 +72,16 @@ c_emp_spouse = betas_nelder[11]
 
 
 #Production function [young,old]
-gamma1 = betas_nelder[12]
-gamma2 = betas_nelder[13]/(7*100)
+gamma1 = 0.9
+gamma2 = 0.01
+gamma3 = 0.01
 tfp = 0.4
 sigma2theta = 1
-rho0 = 0.8 #substitution
-rho1 = 0.05 #scale
 
-
-kappas = [0.02,0]
+kappas = [0,0]
 
 #first sigma is normalized
 sigma_z = [1,1]
-
 
 #initial theta
 rho_theta_epsilon = betas_nelder[18]
@@ -166,7 +163,7 @@ agech0=x_df[['age_t0']].values
 
 #Defines the instance with parameters
 param0 = util.Parameters(alphap,alphaf,mu_c,
-	eta,gamma1,gamma2,rho0,rho1,
+	eta,gamma1,gamma2,gamma3,
 	tfp,sigma2theta,rho_theta_epsilon,wagep_betas,
 	income_male_betas,c_emp_spouse,
 	marriagep_betas, kidsp_betas, eitc_list,
@@ -186,7 +183,7 @@ childcare = np.zeros(N)
 wr,cs,ws=1,1,1
 
 #This is an arbitrary initialization of Utility class
-model = util.Utility(param,N,x_w,x_m,x_k,passign,nkids0,married0,hours,childcare,
+model = util.Utility(param0,N,x_w,x_m,x_k,passign,nkids0,married0,hours,childcare,
 	agech0,hours_p,hours_f,wr,cs,ws)
 
 tracemalloc.start()
@@ -201,7 +198,7 @@ print ('')
 
 D=20
 np.random.seed(2)
-emax_function_in=emax.Emaxt(param,D,dict_grid,hours_p,hours_f,
+emax_function_in=emax.Emaxt(param0,D,dict_grid,hours_p,hours_f,
 	wr,cs,ws,model)
 emax_dic=emax_function_in.recursive() #8 emax (t=1 to t=8)
 
@@ -226,7 +223,7 @@ print ('')
 print ('')
 
 
-sim_ins=simdata.SimData(N,param,emax_dic,x_w,x_m,x_k,x_wmk,passign,nkids0,married0,
+sim_ins=simdata.SimData(N,param0,emax_dic,x_w,x_m,x_k,x_wmk,passign,nkids0,married0,
 	agech0,hours_p,hours_f,wr,cs,ws,model)
 
 data_dic=sim_ins.fake_data(8)
@@ -300,9 +297,6 @@ ate_income=np.mean(income[passign[:,0]==1,:],axis=0) - np.mean(income[passign[:,
 ate_ct=np.mean(ct[passign[:,0]==1,:],axis=0) - np.mean(ct[passign[:,0]==0,:],axis=0)
 
 np.mean(np.mean(ct[passign[:,0]==0,:],axis=0))
-
-
-
 
 #Labor supply
 unemp_t=hours_t==0

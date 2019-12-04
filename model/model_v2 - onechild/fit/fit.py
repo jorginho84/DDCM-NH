@@ -47,16 +47,16 @@ import estimate as estimate
 
 np.random.seed(1)
 
-betas_nelder = np.load("/home/jrodriguez/NH_HC/results/Model/estimation/betas_modelv47.npy")
+betas_nelder = np.load("/home/jrodriguez/NH_HC/results/Model/estimation/betas_modelv49.npy")
 
 
 #Number of periods where all children are less than or equal to 18
 nperiods = 8
 
 #Utility function
-eta = 0.015
+eta = betas_nelder[0]
 alphap = betas_nelder[1]
-alphaf = -0.07
+alphaf = betas_nelder[2]
 
 mu_c = -0.56
 
@@ -73,21 +73,18 @@ c_emp_spouse = betas_nelder[11]
 #Production function [young,old]
 gamma1 = betas_nelder[12]
 gamma2 = betas_nelder[13]
-rho0 = betas_nelder[14] #substitution
-rho1 = 0.12 #scale
-tfp = 0.15
+gamma3 = betas_nelder[14]
+tfp = betas_nelder[15]
 sigma2theta = 1
 
-
-
-kappas = [betas_nelder[17],betas_nelder[18]]
+kappas = [0,0]
 
 #first sigma is normalized
 sigma_z = [1,1]
 
-
 #initial theta
-rho_theta_epsilon = betas_nelder[19]
+rho_theta_epsilon = betas_nelder[16]
+
 
 #All factor loadings are normalized
 lambdas=[1,1]
@@ -163,7 +160,7 @@ agech0=x_df[['age_t0']].values
 
 #Defines the instance with parameters
 param0 = util.Parameters(alphap,alphaf,mu_c,
-	eta,gamma1,gamma2,rho0,rho1,
+	eta,gamma1,gamma2,gamma3,
 	tfp,sigma2theta,rho_theta_epsilon,wagep_betas,
 	income_male_betas,c_emp_spouse,
 	marriagep_betas, kidsp_betas, eitc_list,
@@ -185,10 +182,10 @@ se_vector  = np.sqrt(np.diagonal(var_cov))
 dict_grid=gridemax.grid()
 
 #For montercarlo integration
-D = 50	
+D = 25	
  
 #For II procedure
-M = 300
+M = 250
 
 #How many hours is part- and full-time work
 hours_p = 15
@@ -235,6 +232,8 @@ print('')
 choices = output_ins.samples(param0,emax_instance,model)
 dic_betas = output_ins.aux_model(choices)
 
+np.mean(choices['income_matrix'])
+
 
 #Getting the simulated betas
 #utility_aux
@@ -242,8 +241,6 @@ beta_childcare = np.mean(dic_betas['beta_childcare'],axis=0) #1x1
 beta_hours1 = np.mean(dic_betas['beta_hours1'],axis=0) #1x1
 beta_hours2 = np.mean(dic_betas['beta_hours2'],axis=0) #1x1
 beta_wagep = np.mean(dic_betas['beta_wagep'],axis=1) # 6 x 1
-beta_kappas_t2 = np.mean(dic_betas['beta_kappas_t2'],axis=1) #4 x 3
-beta_kappas_t5 = np.mean(dic_betas['beta_kappas_t5'],axis=1) #4 x 1
 beta_inputs = np.mean(dic_betas['beta_inputs'],axis=1) #5 x 1
 betas_init_prod = np.mean(dic_betas['betas_init_prod'],axis=1) #1 x 1
 beta_wage_spouse = np.mean(dic_betas['beta_wage_spouse'],axis=1)

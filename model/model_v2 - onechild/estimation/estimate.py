@@ -322,14 +322,8 @@ class Estimate:
 		passign_aux=np.concatenate((self.passign[:,0],self.passign[:,0]),axis=0)
 		childcare_aux=np.concatenate((childcare_matrix[:,1,:],childcare_matrix[:,4,:]),axis=0)
 
-		beta_inputs = np.zeros((5,self.M)) #5 moments
+		beta_inputs = np.zeros((4,self.M)) #5 moments
 		betas_init_prod = np.zeros((1,self.M)) #5 moments
-		beta_kappas_t2 = np.zeros((1,self.M)) #4 moments
-		beta_kappas_t5 = np.zeros((1,self.M)) #4 moments
-
-		beta_kappas_t2[0,:] = np.mean(ssrs_t2_matrix,axis=0)
-		beta_kappas_t5[0,:] = np.mean(ssrs_t5_matrix,axis=0)
-		
 		
 		for j in range(self.M):
 
@@ -351,22 +345,10 @@ class Estimate:
 			boo_sample = hours_matrix[:,0,j]>0
 			betas_init_prod[0,j] = np.corrcoef(ssrs_t2_matrix[boo_sample==1,j],np.log(wage_matrix[boo_sample==1,0,j]))[1,0]
 			
-			x1 = np.reshape(income_aux[:,j],(income_aux[:,j].shape[0],1))
-			x2 = np.reshape(leisure_aux[:,j],(leisure_aux[:,j].shape[0],1)) + 1
-			y = np.reshape(ssrs_aux[:,j],(ssrs_aux[:,j].shape[0],1))
-
-			xw_aux=np.concatenate((np.log(x1),np.log(x2),
-				(np.log(x1))**2,(np.log(x2))**2,np.log(x1)*np.log(x2)),axis=1)
-			xx_inv=np.linalg.inv(np.dot(np.transpose(xw_aux),xw_aux))
-			xy=np.dot(np.transpose(xw_aux),y)
-			betas = np.dot(xx_inv,xy)
-			beta_inputs[4,j] = np.dot(xx_inv,xy)[3]
-
 		
 		return{'beta_childcare':beta_childcare,'beta_hours1': beta_hours1,
 		'beta_hours2':beta_hours2,'beta_wagep': beta_wagep,
-		'beta_kappas_t2': beta_kappas_t2,'beta_inputs': beta_inputs,
-		'beta_kappas_t5':beta_kappas_t5,'betas_init_prod':betas_init_prod,
+		'beta_inputs': beta_inputs,'betas_init_prod':betas_init_prod,
 		'beta_wage_spouse':beta_wage_spouse,'beta_emp_spouse':beta_emp_spouse}
 	
 	
@@ -398,12 +380,9 @@ class Estimate:
 		self.param0.c_emp_spouse = beta[11]
 		self.param0.gamma1 = beta[12]
 		self.param0.gamma2 = beta[13]
-		self.param0.rho0 = beta[14]
-		self.param0.rho1 = beta[15]
-		self.param0.tfp = beta[16]
-		self.param0.kappas[0] = beta[17]
-		self.param0.kappas[1] = beta[18]
-		self.param0.rho_theta_epsilon = sym(beta[19])
+		self.param0.gamma3 = beta[14]
+		self.param0.tfp = beta[15]
+		self.param0.rho_theta_epsilon = sym(beta[16])
 					
 
 		#The model (utility instance)
@@ -442,21 +421,18 @@ class Estimate:
 		beta_hours1=np.mean(dic_betas['beta_hours1'],axis=0) #1x1
 		beta_hours2=np.mean(dic_betas['beta_hours2'],axis=0) #1x1
 		beta_wagep=np.mean(dic_betas['beta_wagep'],axis=1) # 6 x 1
-		beta_kappas_t2=np.mean(dic_betas['beta_kappas_t2'],axis=1) #2 x 1
-		beta_kappas_t5=np.mean(dic_betas['beta_kappas_t5'],axis=1) #2 x 1
 		beta_inputs=np.mean(dic_betas['beta_inputs'],axis=1) #4 x 1
 		betas_init_prod=np.mean(dic_betas['betas_init_prod'],axis=1) #1 x 1
 		beta_wage_spouse=np.mean(dic_betas['beta_wage_spouse'],axis=1)
 		beta_emp_spouse=np.mean(dic_betas['beta_emp_spouse'],axis=0)
 	
 
-
 		###########################################################################
 		####Forming the likelihood#################################################
 		###########################################################################
 
 		#Number of moments to match
-		num_par = beta_childcare.size + beta_hours1.size + beta_hours2.size + beta_wagep.size + beta_wage_spouse.size + beta_emp_spouse.size + beta_kappas_t2.size +  beta_kappas_t5.size + beta_inputs.size + betas_init_prod.size
+		num_par = beta_childcare.size + beta_hours1.size + beta_hours2.size + beta_wagep.size + beta_wage_spouse.size + beta_emp_spouse.size + beta_inputs.size + betas_init_prod.size
 		
 		#Outer matrix
 		x_vector=np.zeros((num_par,1))
@@ -482,14 +458,7 @@ class Estimate:
 		x_vector[ind:ind + beta_inputs.size,0] = beta_inputs - self.moments_vector[ind:ind + beta_inputs.size,0]
 
 		ind = ind + beta_inputs.size
-		x_vector[ind:ind + beta_kappas_t2.size,0] = beta_kappas_t2 - self.moments_vector[ind:ind + beta_kappas_t2.size,0]
-
-		ind = ind + beta_kappas_t2.size
-		x_vector[ind: ind + beta_kappas_t5.size,0] = beta_kappas_t5 - self.moments_vector[ind: ind + beta_kappas_t5.size,0]
-			
-		ind = ind + beta_kappas_t5.size
 		x_vector[ind:ind + betas_init_prod.size,0] = betas_init_prod - self.moments_vector[ind:ind + betas_init_prod.size,0]
-
 			
 		
 		#The Q metric
@@ -522,9 +491,8 @@ class Estimate:
 			self.param0.beta_spouse[0],self.param0.beta_spouse[1],
 			np.log(self.param0.beta_spouse[2]),
 			self.param0.c_emp_spouse,
-			self.param0.gamma1,self.param0.gamma2,self.param0.rho0,self.param0.rho1,	
+			self.param0.gamma1,self.param0.gamma2,self.param0.gamma3,
 			self.param0.tfp,
-			self.param0.kappas[0],self.param0.kappas[1],#kappa: t=2, m0
 			syminv(self.param0.rho_theta_epsilon)]) 
 
 		

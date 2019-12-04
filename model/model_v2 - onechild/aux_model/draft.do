@@ -52,19 +52,6 @@ foreach x of numlist 0 {
 
 gen lhwage_t0=ln(hwage_t0)
 
-/*Intercepts and variances*/
-
-matrix prob_inc_t2=J(1,1,.)
-qui: sum skills_t2
-matrix prob_inc_t2[1,1] =r(mean)
-
-
-matrix prob_inc_t5=J(1,1,.)
-qui: sum skills_t5
-matrix prob_inc_t5[1,1] =r(mean)
-
-
-
 
 *******************************************************************
 /*Identifying period 5 measurement system and prod function*/
@@ -90,37 +77,32 @@ foreach x of numlist 2 5 8{
 	
 }
 
+
 keep incomepc_t1 incomepc_t4 incomepc_t7 skills_t1 skills_t4 skills_t7 /*
 */ l_t1 l_t4 l_t7 d_CC2_t1 d_CC2_t4 d_CC2_t7 hours2_t1 hours2_t4 hours2_t7/*
 */ id_child age_t1 age_t4 age_t7 p_assign /*
-*/ total_income_y1 total_income_y4 total_income_y7
+*/ total_income_y1 total_income_y4 total_income_y7 emp_baseline d_HS2
 
 reshape long incomepc_t skills_t d_skills_t l_t d_CC2_t age_t hours2_t total_income_y, i(id_child) j(year)
 
-gen l_incomepc_t = ln(incomepc_t)
-gen l_l_t = ln(l_t)
-
 replace incomepc_t = incomepc_t/1000
-replace l_t = l_t/1000
 
 *reg skills_t incomepc_t hours2_t if p_assign=="C" & year<7
 
 corr skills_t total_income_y if year<7
-
+mat inputs_moments[2,1] = r(rho)
 
 corr skills_t hours2_t if year<7
-
+mat inputs_moments[3,1] = r(rho)
 
 reg skills_t d_CC2_t if age_t<=5 & year<7
-
-gen l_skills_t = log(skills_t)
-gen l_total_income_y = log(total_income_y + 1)
-gen l_total_income_y_2 = l_total_income_y^2
-gen l_hours2_t = log(hours2_t + 1)
-gen l_hours2_t_2 = l_hours2_t^2
-gen l_total_income_y_l_hours2_t = l_total_income_y*l_hours2_t
+mat inputs_moments[4,1] = _b[d_CC2_t]
 
 
-reg l_skills_t l_total_income_y l_total_income_y_2 l_hours2_t l_hours2_t_2 l_total_income_y_l_hours2_t if year < 7
+reg skills_t incomepc_t hours2_t i.year if year<7
 
+xi: reg skills_t i.p_assign if year == 1 & age_t<=5
 
+corr skills_t total_income_y if year == 7
+
+reg skills_t d_HS2

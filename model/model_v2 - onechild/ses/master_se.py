@@ -35,16 +35,16 @@ import se
 
 np.random.seed(1)
 
-betas_nelder = np.load("/home/jrodriguez/NH_HC/results/Model/estimation/betas_modelv47.npy")
+betas_nelder = np.load("/home/jrodriguez/NH_HC/results/Model/estimation/betas_modelv49.npy")
 
 
 #Number of periods where all children are less than or equal to 18
 nperiods = 8
 
 #Utility function
-eta = 0.015
+eta = betas_nelder[0]
 alphap = betas_nelder[1]
-alphaf = -0.07
+alphaf = betas_nelder[2]
 
 mu_c = -0.56
 
@@ -61,23 +61,20 @@ c_emp_spouse = betas_nelder[11]
 #Production function [young,old]
 gamma1 = betas_nelder[12]
 gamma2 = betas_nelder[13]
-rho0 = betas_nelder[14] #substitution
-rho1 = 0.12 #scale
-tfp = 0.15
+gamma3 = betas_nelder[14]
+tfp = betas_nelder[15]
 sigma2theta = 1
 
-
-
-kappas = [betas_nelder[17],betas_nelder[18]]
+kappas = [0,0]
 
 #first sigma is normalized
 sigma_z = [1,1]
 
-
 #initial theta
-rho_theta_epsilon = betas_nelder[19]
+rho_theta_epsilon = betas_nelder[16]
 
 
+#All factor loadings are normalized
 lambdas=[1,1]
 
 #Child care price
@@ -144,7 +141,7 @@ agech0=x_df[['age_t0']].values
 
 #Defines the instance with parameters
 param0=util.Parameters(alphap,alphaf,mu_c,
-	eta,gamma1,gamma2,rho0,rho1,
+	eta,gamma1,gamma2,gamma3,
 	tfp,sigma2theta,rho_theta_epsilon,wagep_betas,
 	income_male_betas,c_emp_spouse,
 	marriagep_betas, kidsp_betas, eitc_list,
@@ -158,6 +155,10 @@ moments_vector=pd.read_csv("/home/jrodriguez/NH_HC/results/model_v2/aux_model/mo
 
 #This is the var cov matrix of aux estimates
 var_cov = pd.read_csv("/home/jrodriguez/NH_HC/results/model_v2/aux_model/var_cov.csv").values
+
+for i in range(12,17):
+	var_cov[i,i] = var_cov[i,i]/10
+
 
 #The W matrix in Wald metric
 #Using diagonal of Var-Cov matrix of simulated moments
@@ -200,8 +201,7 @@ betas_opt = np.array([eta, alphap,alphaf,wagep_betas[0,0],
 	wagep_betas[3,0],wagep_betas[4,0],
 	income_male_betas[0],income_male_betas[1],income_male_betas[2],
 	c_emp_spouse,
-	gamma1,gamma2,rho0,rho1,tfp,
-	kappas[0],kappas[1],
+	gamma1,gamma2,gamma3,tfp,
 	rho_theta_epsilon])
 
 
@@ -216,9 +216,9 @@ nmom = moments_vector.shape[0]
 #The var-cov matrix of structural parameters
 ses = se_ins.big_sand(0.025,nmom,npar)
 
-np.save('/home/jrodriguez/NH_HC/results/model_v2/estimation/sesv3_modelv47.npy',ses['Var_Cov']*(1+1/M))
+np.save('/home/jrodriguez/NH_HC/results/model_v2/estimation/sesv3_modelv49.npy',ses['Var_Cov']*(1+1/M))
 
-np.sqrt(np.diagonal(ses['Var_Cov']*(1+1/M)))
+se = np.sqrt(np.diagonal(ses['Var_Cov']*(1+1/M)))
 
 np.max(np.abs(ses['Gradient'][0,:]))
 
@@ -226,17 +226,24 @@ for s in range(npar):
 	print ('This is argmax of gradient' + str(s), np.argmax(np.abs(ses['Gradient'][s,:])))
 
 
-#the gradients of moments w/r of parameter 16:
-ses['Gradient'][:,16]
-ses['Gradient'][:,15]
+
+w_matrix_2 = np.linalg.inv(var_cov)
+dbdt = ses['Gradient']
+a_inn = np.dot(np.transpose(dbdt),w_matrix_2)
+V = np.linalg.pinv(np.dot(a_inn,dbdt))
+
+se2 = np.sqrt(np.diagonal(V*(1+1/M)))
+
+var_cov_2 = pd.read_csv("/home/jrodriguez/NH_HC/results/model_v2/aux_model/var_cov.csv").values
+
+w_matrix_3 = np.zeros((var_cov.shape[0],var_cov.shape[0]))
+for i in range(var_cov.shape[0]):
+	w_matrix_3[i,i] = var_cov_2[i,i]**(-1)
 
 
-((np.dot(np.transpose(ses['Gradient'][:,16]),ses['Gradient'][:,16])*w_matrix[16,16])**(-1))**.5
-((np.dot(np.transpose(ses['Gradient'][:,17]),ses['Gradient'][:,17])*w_matrix[17,17])**(-1))**.5
+V1_1 = np.dot(np.transpose(dbdt),w_matrix_3)
+V1 = np.linalg.inv(np.dot(V1_1,dbdt))
 
-((np.dot(np.transpose(ses['Gradient'][:,15]),ses['Gradient'][:,15])*w_matrix[15,15])**(-1))**.5
+V2 = np.dot(np.dot(V1_1,var_cov_2),np.transpose(V1_1))
 
-((np.dot(np.transpose(ses['Gradient'][:,0]),ses['Gradient'][:,0])*w_matrix[0,0])**(-1))**.5
-
-((np.dot(np.transpose(ses['Gradient'][:,14]),ses['Gradient'][:,14])*w_matrix[14,14])**(-1))**.5
-
+se3 = np.sqrt(np.diagonal(np.dot(np.dot(V1,V2),V1)*(1+1/M)))

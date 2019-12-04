@@ -42,12 +42,12 @@ nperiods = 8
 #Utility function
 eta = 0.015
 alphap = betas_nelder[1]
-alphaf = -0.07
+alphaf = -0.15
 
 mu_c = -0.56
 
 #wage process en employment processes: female
-wagep_betas=np.array([betas_nelder[3],betas_nelder[4],betas_nelder[5],
+wagep_betas=np.array([betas_nelder[3],betas_nelder[4],1.5,
 	betas_nelder[6],betas_nelder[7]]).reshape((5,1))
 
 #income process: male
@@ -58,19 +58,15 @@ c_emp_spouse = betas_nelder[11]
 
 #Production function [young,old]
 gamma1 = betas_nelder[12]
-gamma2 = betas_nelder[13]
-rho0 = betas_nelder[14] #substitution
-rho1 = 0.12 #scale
+gamma2 = 0.01
+gamma3 = 0.01
 tfp = 0.15
 sigma2theta = 1
 
-
-
-kappas = [betas_nelder[17],betas_nelder[18]]
+kappas = [0,0]
 
 #first sigma is normalized
 sigma_z = [1,1]
-
 
 #initial theta
 rho_theta_epsilon = betas_nelder[19]
@@ -150,7 +146,7 @@ agech0 = x_df[['age_t0']].values
 
 #Defines the instance with parameters
 param0 = util.Parameters(alphap,alphaf,mu_c,
-	eta,gamma1,gamma2,rho0,rho1,
+	eta,gamma1,gamma2,gamma3,
 	tfp,sigma2theta,rho_theta_epsilon,wagep_betas,
 	income_male_betas,c_emp_spouse,
 	marriagep_betas, kidsp_betas, eitc_list,
@@ -224,19 +220,17 @@ beta_s3 = np.exp(output.x[10])
 beta_emp_s = output.x[11]
 gamma1_opt = output.x[12]
 gamma2_opt = output.x[13]
-rho0_opt = output.x[14]
-rho1_opt = output.x[15]
-tfp_opt = output.x[16]
-kappas_00 = output.x[17]
-kappas_01 = output.x[18]
-rho_theta_epsilon_opt = sym(output.x[19])
+gamma3_opt = output.x[14]
+tfp_opt = output.x[15]
+rho_theta_epsilon_opt = sym(output.x[16])
 
 betas_opt=np.array([eta_opt, alphap_opt,alphaf_opt,
 	betaw0,betaw1,betaw2,betaw3,betaw4,
 	beta_s1,beta_s2,beta_s3,beta_emp_s,
-	gamma1_opt,gamma2_opt,rho0_opt,rho1_opt,tfp_opt,
-	kappas_00,kappas_01,rho_theta_epsilon_opt])
+	gamma1_opt,gamma2_opt,gamma3_opt,tfp_opt,
+	rho_theta_epsilon_opt])
 
-np.save('/home/jrodriguez/NH_HC/results/Model/estimation/betas_modelv48.npy',betas_opt)
+
+np.save('/home/jrodriguez/NH_HC/results/Model/estimation/betas_modelv49.npy',betas_opt)
 
 

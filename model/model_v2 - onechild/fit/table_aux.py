@@ -104,10 +104,10 @@ list_obs = []
 list_sig = []
 #C. prod fn
 list_aux = [beta_inputs]
-list_obs = [moments_vector[ind:ind + 5 ,0]]
-list_sig = [se_vector[ind:ind + 5]]
+list_obs = [moments_vector[ind:ind + 4 ,0]]
+list_sig = [se_vector[ind:ind + 4]]
 
-for c in range(5):
+for c in range(4):
 	ws['B' + str(c + pos)] = np.float(list_aux[0][c])
 	ws['D' + str(c + pos)] = np.float(list_obs[0][c])
 	ws['F' + str(c + pos)] = np.float(list_sig[0][c])
@@ -135,61 +135,10 @@ plt.close()
 
 
 
-#A. t=2, kappas
-ind = ind + 5
-pos = 19
-list_aux = []
-list_obs = []
-list_sig = []
-for c in range(1):
-	ws['B' + str(c + pos)] = np.float(beta_kappas_t2[c])
-	ws['D' + str(c + pos)] = np.float(moments_vector[ind + c,0])
-	ws['F' + str(c + pos)] = np.float(se_vector[ind + c])
-	
-	list_aux.append(np.float(beta_kappas_t2[c]))
-	list_obs.append(moments_vector[ind + c,0])
-	list_sig.append(se_vector[ind + c])
-
-
-ind = ind + 1
-pos = 20
-
-#B. t=5, kappas
-for c in range(1):
-	ws['B' + str(c + pos)] = np.float(beta_kappas_t5[c])
-	ws['D' + str(c + pos)] = np.float(moments_vector[ind + c,0])
-	ws['F' + str(c + pos)] = np.float(se_vector[ind + c])
-
-
-	list_aux.append(np.float(beta_kappas_t5[c]))
-	list_obs.append(moments_vector[ind + c,0])
-	list_sig.append(se_vector[ind + c])
-
-
-
-#the graph
-fig, ax=plt.subplots()
-x = np.array(range(0,len(list_aux)))
-plot1=ax.bar(x,list_aux,bar_width,label='Simulated',color='k',alpha=alpha_plot1)
-plot2=ax.bar(x + bar_width,list_obs,bar_width,yerr=list_sig,label='Data',edgecolor='k',
-	color='k',alpha=alpha_plot2)
-ax.legend(loc=loc_legen,fontsize=fontsize_axis)
-ax.set_ylabel(r'$Pr(SSRS = \kappa)$', fontsize=fontsize_axis)
-ax.set_xlabel(r'Moments', fontsize=fontsize_axis)
-ax.spines['right'].set_visible(False)
-ax.spines['top'].set_visible(False)
-ax.yaxis.set_ticks_position('left')
-ax.xaxis.set_ticks_position('bottom')
-ax.set_xticklabels([])
-ax.set_xticks([])
-plt.show()
-fig.savefig('/home/jrodriguez/NH_HC/results/model_v2/fit/fit_kappas.pdf', format='pdf')
-plt.close()
-
 
 #rho_theta_epsilon
-ind = ind + 1
-pos = 21
+ind = ind + 4
+pos = 18
 #B. t=5, kappas
 for c in range(1):
 	ws['B' + str(c + pos)] = np.float(betas_init_prod[c])

@@ -586,7 +586,7 @@ class Utility(object):
 		
 		#Current-period utility
 		ut_h = d_workp*self.param.alphap + d_workf*self.param.alphaf
-		ut = ((ct*np.exp(ut_h))**self.param.mu_c)/(self.param.mu_c) + self.param.eta*((thetat**0.5)/0.5)
+		ut = ((ct*np.exp(ut_h))**self.param.mu_c)/(self.param.mu_c) + self.param.eta*((thetat**(0.5))/0.5)
 		#ut = ((ct**self.param.mu_c)/self.param.mu_c)*np.exp(ut_h)*(thetat**self.param.eta)
 		#ut = np.log(ct) + ut_h + self.param.eta*ltheta
 
@@ -625,7 +625,9 @@ class Utility(object):
 		mu = self.param.kappas[loc]
 		sigma =self.param.sigma_z[loc]
 
-		return mu + lambdam*np.log(thetat) + sigma*np.random.randn(self.N)
+		pi = np.exp(thetat + sigma*np.random.randn(self.N))/(1+np.exp(thetat + sigma*np.random.randn(self.N)))
+
+		return 5*pi
 	
 	
 	def simulate(self,periodt,wage0,free,price,theta0,income_spouse,employment_spouse):

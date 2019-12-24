@@ -81,7 +81,7 @@ foreach x of numlist 2 5 8{
 keep incomepc_t1 incomepc_t4 incomepc_t7 skills_t1 skills_t4 skills_t7 /*
 */ l_t1 l_t4 l_t7 d_CC2_t1 d_CC2_t4 d_CC2_t7 hours2_t1 hours2_t4 hours2_t7/*
 */ id_child age_t1 age_t4 age_t7 p_assign /*
-*/ total_income_y1 total_income_y4 total_income_y7 emp_baseline d_HS2
+*/ total_income_y1 total_income_y4 total_income_y7 d_HS2 nkids_baseline married_y0
 
 reshape long incomepc_t skills_t d_skills_t l_t d_CC2_t age_t hours2_t total_income_y, i(id_child) j(year)
 
@@ -92,17 +92,18 @@ replace incomepc_t = incomepc_t/1000
 corr skills_t total_income_y if year<7
 mat inputs_moments[2,1] = r(rho)
 
-corr skills_t hours2_t if year<7
+reg skills_t d_HS2 if year<7
 mat inputs_moments[3,1] = r(rho)
 
 reg skills_t d_CC2_t if age_t<=5 & year<7
 mat inputs_moments[4,1] = _b[d_CC2_t]
 
+reg skills_t hours2_t if year<7
 
-reg skills_t incomepc_t hours2_t i.year if year<7
+gen ll_t = log(l_t)
 
-xi: reg skills_t i.p_assign if year == 1 & age_t<=5
+gen lincomepc_t = log(incomepc_t)
+corr ll_t lincomepc_t
 
-corr skills_t total_income_y if year == 7
 
-reg skills_t d_HS2
+

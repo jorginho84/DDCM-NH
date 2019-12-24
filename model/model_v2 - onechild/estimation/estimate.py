@@ -20,6 +20,7 @@ import time
 import int_linear
 import emax as emax
 import simdata as simdata
+import pybobyqa
 
 
 class Estimate:
@@ -73,8 +74,6 @@ class Estimate:
 		iscost_matrix = np.zeros((self.N,self.nperiods,self.M))
 		cscost_matrix = np.zeros((self.N,self.nperiods,self.M))
 		childcare_matrix = np.zeros((self.N,self.nperiods,self.M))
-		utils_periodt = np.zeros((self.N,J,self.nperiods,self.M))
-		utils_c_periodt = np.zeros((self.N,J,self.nperiods,self.M))
 		theta_matrix = np.zeros((self.N,self.nperiods,self.M))
 		wage_matrix = np.zeros((self.N,self.nperiods,self.M))
 		spouse_income_matrix = np.zeros((self.N,self.nperiods,self.M))
@@ -91,7 +90,7 @@ class Estimate:
 			np.random.seed(j+100)
 			return simdata_ins.fake_data(self.nperiods)
 
-		pool = ProcessPool(nodes=18)
+		pool = ProcessPool(nodes = 10)
 		dics = pool.map(sample_gen,range(self.M))
 		pool.close()
 		pool.join()
@@ -107,7 +106,6 @@ class Estimate:
 			income_matrix[:,:,j]=dics[j]['Income']
 			consumption_matrix[:,:,j]=dics[j]['Consumption']
 			iscost_matrix[:,:,j]=dics[j]['nh_matrix']
-			cscost_matrix[:,:,j]=dics[j]['cs_cost_matrix']
 			childcare_matrix[:,:,j]=dics[j]['Childcare']
 			theta_matrix[:,:,j]=dics[j]['Theta']
 			ssrs_t2_matrix[:,j]=dics[j]['SSRS_t2']
@@ -119,18 +117,13 @@ class Estimate:
 			kids_matrix[:,:,j]=dics[j]['Kids']
 			marr_matrix[:,:,j]=dics[j]['Marriage']
 
-			for periodt in range(0,self.nperiods):
-				utils_periodt[:,:,periodt,j]=dics[j]['Uti_values_dic'][periodt]
-				utils_c_periodt[:,:,periodt,j]=dics[j]['Uti_values_c_dic'][periodt]
-
-		return {'utils_periodt': utils_periodt,'utils_c_periodt': utils_c_periodt,
-				'income_matrix':income_matrix,
+		return {'income_matrix':income_matrix,
 				'theta_matrix': theta_matrix,
 				'ssrs_t2_matrix':ssrs_t2_matrix,'ssrs_t5_matrix':ssrs_t5_matrix,
 				'childcare_matrix':childcare_matrix,'wage_matrix': wage_matrix,
 				'consumption_matrix':consumption_matrix,'spouse_income_matrix':spouse_income_matrix,
 				'spouse_employment_matrix':spouse_employment_matrix,
-				'hours_matrix': hours_matrix,'cscost_matrix':cscost_matrix, 
+				'hours_matrix': hours_matrix,
 				'iscost_matrix': iscost_matrix,
 				'kids_matrix': kids_matrix ,'marr_matrix': marr_matrix  }
 
@@ -141,7 +134,7 @@ class Estimate:
 
 		#number of choices
 		J = 2*3
-		J_1=3 #3 hours categories
+		J_1 = 3 #3 hours categories
 		nperiods=self.nperiods
 		
 		age_child = np.zeros((self.agech0.shape[0],nperiods))
@@ -150,17 +143,17 @@ class Estimate:
 			age_child[:,x]=np.reshape(self.agech0,self.N)+x
 
 		##Obtaining Auxiliary estimate for every m##
-		childcare_matrix=choices['childcare_matrix'].copy()
-		hours_matrix=choices['hours_matrix'].copy()
-		wage_matrix=choices['wage_matrix'].copy()
-		income_matrix=choices['income_matrix'].copy()
-		spouse_income_matrix=choices['spouse_income_matrix'].copy()
-		spouse_employment_matrix=choices['spouse_employment_matrix'].copy()
-		ssrs_t2_matrix=choices['ssrs_t2_matrix'].copy()
-		ssrs_t5_matrix=choices['ssrs_t5_matrix'].copy()
-		consumption_matrix=choices['consumption_matrix'].copy()
-		kids_matrix=choices['kids_matrix'].copy()
-		marr_matrix=choices['marr_matrix'].copy()
+		childcare_matrix=choices['childcare_matrix']
+		hours_matrix=choices['hours_matrix']
+		wage_matrix=choices['wage_matrix']
+		income_matrix=choices['income_matrix']
+		spouse_income_matrix=choices['spouse_income_matrix']
+		spouse_employment_matrix=choices['spouse_employment_matrix']
+		ssrs_t2_matrix=choices['ssrs_t2_matrix']
+		ssrs_t5_matrix=choices['ssrs_t5_matrix']
+		consumption_matrix=choices['consumption_matrix']
+		kids_matrix=choices['kids_matrix']
+		marr_matrix=choices['marr_matrix']
 
 
 		############################################################
@@ -168,8 +161,8 @@ class Estimate:
 		############################################################
 
 		#child care at period t=1
-		age_aux = age_child[:,1].copy()
-		passign_aux = self.passign[:,0].copy()
+		age_aux = age_child[:,1]
+		passign_aux = self.passign[:,0]
 		cc_logit = childcare_matrix[:,1,:]
 		boo = (age_aux<=5)
 		beta_childcare = np.mean(cc_logit[boo,:],axis=0) #beta for every m
@@ -263,7 +256,7 @@ class Estimate:
 		############################################################
 		####Spouse's earnings and employment########################
 		############################################################
-		passign_aux = self.passign[:,0].copy()
+		passign_aux = self.passign[:,0]
 			
 		wage_aux = np.log(spouse_income_matrix[:,2,:]) #to panel and logs
 
@@ -304,44 +297,52 @@ class Estimate:
 		###Prod function############################################
 		############################################################
 		
-		leisure_matrix = np.zeros((self.N,hours_matrix.shape[1],self.M))
-		for t in range(hours_matrix.shape[1]):
-			leisure_matrix[age_child[:,t]<=5,t,:] = childcare_matrix[age_child[:,t]<=5,t,:]*(168 - self.hours_f) + (168-hours_matrix[age_child[:,t]<=5,t,:])*(1-childcare_matrix[age_child[:,t]<=5,t,:])
-			leisure_matrix[age_child[:,t]>5,t,:] = 133 - hours_matrix[age_child[:,t]>5,t,:]
-			
-		#children panel
-		income_aux=np.concatenate((income_matrix[:,1,:],
-			income_matrix[:,4,:]),axis=0)/1000
-		leisure_aux=np.concatenate((hours_matrix[:,1,:],
-			hours_matrix[:,4,:]),axis=0)
-		age_aux=np.concatenate((age_child[:,1],
-			age_child[:,4]),axis=0)
-		ssrs_aux=np.concatenate((ssrs_t2_matrix,
-			ssrs_t5_matrix),axis=0)
-		cte = np.ones((ssrs_aux.shape[0],1))
-		passign_aux=np.concatenate((self.passign[:,0],self.passign[:,0]),axis=0)
-		childcare_aux=np.concatenate((childcare_matrix[:,1,:],childcare_matrix[:,4,:]),axis=0)
 
-		beta_inputs = np.zeros((4,self.M)) #5 moments
-		betas_init_prod = np.zeros((1,self.M)) #5 moments
+		#aux variables
+		age_aux = np.concatenate((age_child[:,1],
+			age_child[:,4]),axis=0)
+		ssrs_aux = np.concatenate((ssrs_t2_matrix,
+			ssrs_t5_matrix),axis=0)
+
+		income_aux = np.concatenate((income_matrix[:,1,:],
+			income_matrix[:,4,:]),axis=0)/100000
+
+		leisure_aux = np.concatenate((hours_matrix[:,1,:],
+			hours_matrix[:,4,:]),axis=0)/100
+
+		cte = np.ones((ssrs_aux.shape[0],1))
+		
+		childcare_aux = np.concatenate((childcare_matrix[:,1,:],childcare_matrix[:,4,:]),axis=0)
+
+		beta_inputs = np.zeros((6,self.M)) #5 moments
+		betas_init_prod = np.zeros((1,self.M)) #1 moment
+
+
 		
 		for j in range(self.M):
 
 			#for gamma1
 			beta_inputs[0,j] = np.corrcoef(ssrs_t2_matrix[:,j],ssrs_t5_matrix[:,j])[1,0]
 			
-			#for gamma2 and 3
-			beta_inputs[1,j] = np.corrcoef(ssrs_aux[:,j],income_aux[:,j])[1,0]
-			beta_inputs[2,j] = np.corrcoef(ssrs_aux[:,j],leisure_aux[:,j])[1,0]
+			x_aux = np.concatenate((np.reshape(income_aux[:,j],(income_aux[:,j].shape[0],1)),
+				np.reshape(leisure_aux[:,j],(leisure_aux[:,j].shape[0],1)),cte),axis=1)
+			xx = np.dot(np.transpose(x_aux),x_aux)
+			xy = np.dot(np.transpose(x_aux),ssrs_aux[:,j])
+			xx_inv = np.linalg.inv(xx)
+			betas_aux = np.dot(xx_inv,xy)
+			beta_inputs[1,j] = betas_aux[0]
+			beta_inputs[2,j] = betas_aux[1]
 
 			#for tfp
-			b_cc0 = childcare_aux[:,j] == 0 #child care choice=0 at t=1
-			b_cc1 = childcare_aux[:,j] == 1 #child care choice=1 at t=1
-			boo_young_cc0 = (age_aux<=5) & (b_cc0==True)
-			boo_young_cc1 = (age_aux<=5) & (b_cc1==True)
+			boo_young_cc0 = (age_aux<=5) & (childcare_aux[:,j] == 0)
+			boo_young_cc1 = (age_aux<=5) & (childcare_aux[:,j] == 1)
 			beta_inputs[3,j] = np.mean(ssrs_aux[boo_young_cc1,j]) - np.mean(ssrs_aux[boo_young_cc0,j])
 			
+			#variance
+			beta_inputs[4,j] = np.var(ssrs_t2_matrix[:,j])
+			beta_inputs[5,j] = np.var(ssrs_t5_matrix[:,j])
 
+			#for initial theta
 			boo_sample = hours_matrix[:,0,j]>0
 			betas_init_prod[0,j] = np.corrcoef(ssrs_t2_matrix[boo_sample==1,j],np.log(wage_matrix[boo_sample==1,0,j]))[1,0]
 			
@@ -382,7 +383,9 @@ class Estimate:
 		self.param0.gamma2 = beta[13]
 		self.param0.gamma3 = beta[14]
 		self.param0.tfp = beta[15]
-		self.param0.rho_theta_epsilon = sym(beta[16])
+		self.param0.sigma_z[0] = beta[16]
+		self.param0.sigma_z[1] = beta[17]
+		self.param0.rho_theta_epsilon = sym(beta[18])
 					
 
 		#The model (utility instance)
@@ -394,25 +397,44 @@ class Estimate:
 			self.hours_p,self.hours_f,self.wr,self.cs,self.ws)
 
 		##obtaining emax instance##
-		emax_instance=self.emax(self.param0,model)
+		emax_instance = self.emax(self.param0,model)
+
+		time_emax = time.time() - start_time
+		print ('')
+		print ('')
+		print ('Done emax in')
+		print("--- %s seconds ---" % (time_emax))
+		print ('')
+		print ('')
 		
 		##obtaining samples##
+		start_time = time.time()
+		choices = self.samples(self.param0,emax_instance,model)
 
-		choices=self.samples(self.param0,emax_instance,model)
+		time_choices = time.time() - start_time
+		print ('')
+		print ('')
+		print ('Done sample gen in')
+		print("--- %s seconds ---" % (time_choices))
+		print ('')
+		print ('')
 
 		###########################################################################
 		##Getting the betas of the auxiliary model#################################
 		###########################################################################
+		start_time = time.time()
 		dic_betas=self.aux_model(choices)
 
-		time_opt=time.time() - start_time
+		time_opt = time.time() - start_time
 		print ('')
 		print ('')
-		print ('Done sample generation in')
+		print ('Done betas generation in')
 		print("--- %s seconds ---" % (time_opt))
 		print ('')
 		print ('')
 		start_time = time.time()
+		print ('')
+		print ('')
 		print ('Beginning aux model generator')
 
 
@@ -484,7 +506,7 @@ class Estimate:
 			return out
 		
 				
-		beta0=np.array([self.param0.eta,self.param0.alphap,self.param0.alphaf,
+		beta0 = np.array([self.param0.eta,self.param0.alphap,self.param0.alphaf,
 			self.param0.betaw[0],
 			self.param0.betaw[1],self.param0.betaw[2],
 			np.log(self.param0.betaw[3]),self.param0.betaw[4],
@@ -493,13 +515,15 @@ class Estimate:
 			self.param0.c_emp_spouse,
 			self.param0.gamma1,self.param0.gamma2,self.param0.gamma3,
 			self.param0.tfp,
+			self.param0.sigma_z[0],self.param0.sigma_z[1],
 			syminv(self.param0.rho_theta_epsilon)]) 
 
 		
 		#Here we go
 		opt = minimize(self.ll, beta0,  method='Nelder-Mead', options={'maxiter':5000, 'maxfev': 90000, 'ftol': 1e-3, 'disp': True});
 		#opt = minimize(self.ll, beta0,  method='Nelder-Mead', options={'maxiter':5000, 'gtol': 1e-3, 'disp': True});
-		
+		#opt = pybobyqa.solve(self.ll, beta0)
+
 		return opt
 
 

@@ -196,12 +196,7 @@ egen skills_t5 = rowmean(`Y5_B2')
 egen skills_t8 = rowmean(`Y8_B2')
 
 
-foreach variable of varlist skills_t2 skills_t5 skills_t8 {
-	qui: sum `variable'
-	gen `variable'_s = `variable' - r(mean)
-	drop `variable'
-	rename `variable'_s `variable'
-}
+
 
 *Age at baseline
 destring sdkidbd, force replace
@@ -616,5 +611,15 @@ foreach x of varlist d_RA age_ra d_marital_2 d_HS2 nkids_baseline age_t0{
 }
 
 
+
+/*
+foreach variable of varlist skills_t2 skills_t5 skills_t8 {
+	qui: sum `variable'
+	egen `variable'_s = std(`variable')
+	drop `variable'
+	rename `variable'_s `variable'
+}
+
+*/
 save "$results/sample_model.dta", replace
 outsheet using "$results/sample_model.csv", comma  replace

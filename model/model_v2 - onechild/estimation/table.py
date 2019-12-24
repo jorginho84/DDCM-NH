@@ -24,8 +24,8 @@ import time
 import openpyxl
 
 #Betas and var-cov matrix
-betas_nelder=np.load('/home/jrodriguez/NH_HC/results/Model/estimation/betas_modelv49.npy')
-var_cov=np.load('/home/jrodriguez/NH_HC/results/model_v2/estimation/sesv3_modelv49.npy')
+betas_nelder=np.load('/home/jrodriguez/NH_HC/results/Model/estimation/betas_modelv52.npy')
+var_cov=np.load('/home/jrodriguez/NH_HC/results/model_v2/estimation/sesv3_modelv52.npy')
 se_vector  = np.sqrt(np.diagonal(var_cov))
 
 #Utility function

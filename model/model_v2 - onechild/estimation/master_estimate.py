@@ -30,24 +30,25 @@ import emax as emax
 import simdata as simdata
 sys.path.append("/home/jrodriguez/NH_HC/codes/model_v2/estimation")
 import estimate as estimate
+import pybobyqa
 
 np.random.seed(1)
 
-betas_nelder = np.load("/home/jrodriguez/NH_HC/results/Model/estimation/betas_modelv47.npy")
+betas_nelder = np.load("/home/jrodriguez/NH_HC/results/Model/estimation/betas_modelv53.npy")
 
 
 #Number of periods where all children are less than or equal to 18
 nperiods = 8
 
 #Utility function
-eta = 0.015
+eta = betas_nelder[0]
 alphap = betas_nelder[1]
-alphaf = -0.15
+alphaf = betas_nelder[2]
 
 mu_c = -0.56
 
 #wage process en employment processes: female
-wagep_betas=np.array([betas_nelder[3],betas_nelder[4],1.5,
+wagep_betas=np.array([betas_nelder[3],betas_nelder[4],betas_nelder[5],
 	betas_nelder[6],betas_nelder[7]]).reshape((5,1))
 
 #income process: male
@@ -57,19 +58,19 @@ c_emp_spouse = betas_nelder[11]
 
 
 #Production function [young,old]
-gamma1 = betas_nelder[12]
-gamma2 = 0.01
-gamma3 = 0.01
-tfp = 0.15
+gamma1 = 0.87
+gamma2 = betas_nelder[13]
+gamma3 = betas_nelder[14]
+tfp = betas_nelder[15]
 sigma2theta = 1
 
 kappas = [0,0]
 
 #first sigma is normalized
-sigma_z = [1,1]
+sigma_z = [0.7,0.8]
 
 #initial theta
-rho_theta_epsilon = betas_nelder[19]
+rho_theta_epsilon = betas_nelder[16]
 
 
 #All factor loadings are normalized
@@ -169,13 +170,13 @@ for i in range(var_cov.shape[0]):
 
 
 #Creating a grid for the emax computation
-dict_grid=gridemax.grid()
+dict_grid=gridemax.grid(500)
 
 #For montercarlo integration
-D = 50
+D = 25
 
 #Number of samples to produce
-M = 500
+M = 10
 
 
 #How many hours is part- and full-time work
@@ -222,15 +223,17 @@ gamma1_opt = output.x[12]
 gamma2_opt = output.x[13]
 gamma3_opt = output.x[14]
 tfp_opt = output.x[15]
-rho_theta_epsilon_opt = sym(output.x[16])
+sigma_z1_opt = output.x[16]
+sigma_z2_opt = output.x[17]
+rho_theta_epsilon_opt = sym(output.x[18])
 
 betas_opt=np.array([eta_opt, alphap_opt,alphaf_opt,
 	betaw0,betaw1,betaw2,betaw3,betaw4,
 	beta_s1,beta_s2,beta_s3,beta_emp_s,
 	gamma1_opt,gamma2_opt,gamma3_opt,tfp_opt,
+	sigma_z1_opt,sigma_z2_opt,
 	rho_theta_epsilon_opt])
 
 
-np.save('/home/jrodriguez/NH_HC/results/Model/estimation/betas_modelv49.npy',betas_opt)
-
+np.save('/home/jrodriguez/NH_HC/results/Model/estimation/betas_modelv54.npy',betas_opt)
 

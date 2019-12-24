@@ -73,9 +73,9 @@ class SEs:
 		sigma2theta =  self.output_ins.__dict__['param0'].__dict__['sigma2theta']
 		
 		#Utility function
-		eta=bs[0]
-		alphap=bs[1]
-		alphaf=bs[2]
+		eta = bs[0]
+		alphap = bs[1]
+		alphaf = bs[2]
 		mu_c = -0.56
 		
 		#wage process
@@ -96,11 +96,11 @@ class SEs:
 		kappas = [self.output_ins.__dict__['param0'].__dict__['kappas'][0],
 		self.output_ins.__dict__['param0'].__dict__['kappas'][1]]
 
-		sigma_z = [1,1]
+		sigma_z = [bs[16],bs[17]]
 
-		rho_theta_epsilon =  bs[16]
+		rho_theta_epsilon =  bs[18]
 
-		lambdas=[1,1]
+		lambdas = [1,1]
 
 
 		#Re-defines the instance with parameters 

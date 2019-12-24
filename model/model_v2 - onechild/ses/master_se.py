@@ -35,7 +35,7 @@ import se
 
 np.random.seed(1)
 
-betas_nelder = np.load("/home/jrodriguez/NH_HC/results/Model/estimation/betas_modelv49.npy")
+betas_nelder = np.load("/home/jrodriguez/NH_HC/results/Model/estimation/betas_modelv54.npy")
 
 
 #Number of periods where all children are less than or equal to 18
@@ -59,7 +59,7 @@ c_emp_spouse = betas_nelder[11]
 
 
 #Production function [young,old]
-gamma1 = betas_nelder[12]
+gamma1 = 0.95
 gamma2 = betas_nelder[13]
 gamma3 = betas_nelder[14]
 tfp = betas_nelder[15]
@@ -68,10 +68,10 @@ sigma2theta = 1
 kappas = [0,0]
 
 #first sigma is normalized
-sigma_z = [1,1]
+sigma_z = [0.15,0.15]
 
 #initial theta
-rho_theta_epsilon = betas_nelder[16]
+rho_theta_epsilon = betas_nelder[18]
 
 
 #All factor loadings are normalized
@@ -156,10 +156,6 @@ moments_vector=pd.read_csv("/home/jrodriguez/NH_HC/results/model_v2/aux_model/mo
 #This is the var cov matrix of aux estimates
 var_cov = pd.read_csv("/home/jrodriguez/NH_HC/results/model_v2/aux_model/var_cov.csv").values
 
-for i in range(12,17):
-	var_cov[i,i] = var_cov[i,i]/10
-
-
 #The W matrix in Wald metric
 #Using diagonal of Var-Cov matrix of simulated moments
 #w_matrix  = np.linalg.inv(var_cov)
@@ -169,13 +165,13 @@ for i in range(var_cov.shape[0]):
 
 
 #Creating a grid for the emax computation
-dict_grid=gridemax.grid()
+dict_grid=gridemax.grid(800)
 
 #For montercarlo integration
-D = 50
+D = 25
 
 #For II procedure
-M = 300
+M = 10
 
 #How many hours is part- and full-time work
 hours_p = 15
@@ -202,6 +198,7 @@ betas_opt = np.array([eta, alphap,alphaf,wagep_betas[0,0],
 	income_male_betas[0],income_male_betas[1],income_male_betas[2],
 	c_emp_spouse,
 	gamma1,gamma2,gamma3,tfp,
+	sigma_z[0],sigma_z[1],
 	rho_theta_epsilon])
 
 
@@ -213,10 +210,41 @@ se_ins = se.SEs(output_ins,var_cov,betas_opt)
 npar = betas_opt.shape[0]
 nmom = moments_vector.shape[0]
 
+"""
+#get gradients for differents hs
+
+dbdt = []
+
+for h in [0.001,0.005,0.01,0.025]:
+	dbdt.append(se_ins.db_dtheta(betas_opt,h,nmom,npar))
+
+
+se_list = []
+
+for k in range(len(dbdt)):
+
+		V1_1 = np.dot(np.transpose(dbdt[k]),w_matrix)
+		
+		V1 = np.linalg.inv(np.dot(V1_1,dbdt[k]))
+
+		V2 = np.dot(np.dot(V1_1,var_cov),np.transpose(V1_1))
+
+		vc = np.dot(np.dot(V1,V2),V1)
+		
+		se_list.append(np.sqrt(np.diagonal(vc*(1+1/M))))
+
+		df = pd.DataFrame(se_list[k])
+
+		df.to_csv('/home/jrodriguez/NH_HC/codes/model_v2/ses/se_'+str(k)+'.csv', index=False)
+
+
+"""
+
+
 #The var-cov matrix of structural parameters
 ses = se_ins.big_sand(0.025,nmom,npar)
 
-np.save('/home/jrodriguez/NH_HC/results/model_v2/estimation/sesv3_modelv49.npy',ses['Var_Cov']*(1+1/M))
+np.save('/home/jrodriguez/NH_HC/results/model_v2/estimation/sesv3_modelv52.npy',ses['Var_Cov']*(1+1/M))
 
 se = np.sqrt(np.diagonal(ses['Var_Cov']*(1+1/M)))
 
@@ -247,3 +275,4 @@ V1 = np.linalg.inv(np.dot(V1_1,dbdt))
 V2 = np.dot(np.dot(V1_1,var_cov_2),np.transpose(V1_1))
 
 se3 = np.sqrt(np.diagonal(np.dot(np.dot(V1,V2),V1)*(1+1/M)))
+

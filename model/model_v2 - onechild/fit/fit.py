@@ -47,7 +47,7 @@ import estimate as estimate
 
 np.random.seed(1)
 
-betas_nelder = np.load("/home/jrodriguez/NH_HC/results/Model/estimation/betas_modelv49.npy")
+betas_nelder = np.load("/home/jrodriguez/NH_HC/results/Model/estimation/betas_modelv54.npy")
 
 
 #Number of periods where all children are less than or equal to 18
@@ -71,7 +71,7 @@ c_emp_spouse = betas_nelder[11]
 
 
 #Production function [young,old]
-gamma1 = betas_nelder[12]
+gamma1 = 0.95
 gamma2 = betas_nelder[13]
 gamma3 = betas_nelder[14]
 tfp = betas_nelder[15]
@@ -80,10 +80,10 @@ sigma2theta = 1
 kappas = [0,0]
 
 #first sigma is normalized
-sigma_z = [1,1]
+sigma_z = [0.15,0.15]
 
 #initial theta
-rho_theta_epsilon = betas_nelder[16]
+rho_theta_epsilon = betas_nelder[18]
 
 
 #All factor loadings are normalized
@@ -150,13 +150,13 @@ fpl_list = pickle.load( open("/home/jrodriguez/NH_HC/codes/model_v2/simulate_sam
 #theta0=np.exp(np.random.randn(N))
 
 #number of kids at baseline
-nkids0=x_df[ ['nkids_baseline']   ].values
+nkids0 = x_df[ ['nkids_baseline']   ].values
 
 #marital status at baseline
-married0=x_df[ ['d_marital_2']   ].values
+married0 = x_df[ ['d_marital_2']   ].values
 
 #age of child at baseline
-agech0=x_df[['age_t0']].values
+agech0 = x_df[['age_t0']].values
 
 #Defines the instance with parameters
 param0 = util.Parameters(alphap,alphaf,mu_c,
@@ -169,23 +169,23 @@ param0 = util.Parameters(alphap,alphaf,mu_c,
 
 
 ###Auxiliary estimates###
-moments_vector=pd.read_csv("/home/jrodriguez/NH_HC/results/model_v2/aux_model/moments_vector.csv").values
+moments_vector = pd.read_csv("/home/jrodriguez/NH_HC/results/model_v2/aux_model/moments_vector.csv").values
 
 #This is the var cov matrix of aux estimates
-var_cov=pd.read_csv("/home/jrodriguez/NH_HC/results/model_v2/aux_model/var_cov.csv").values
+var_cov = pd.read_csv("/home/jrodriguez/NH_HC/results/model_v2/aux_model/var_cov.csv").values
 
 #The vector of aux standard errors
 #Using diagonal of Var-Cov matrix of simulated moments
 se_vector  = np.sqrt(np.diagonal(var_cov))
 
 #Creating a grid for the emax computation
-dict_grid=gridemax.grid()
+dict_grid = gridemax.grid(800)
 
 #For montercarlo integration
 D = 25	
  
 #For II procedure
-M = 250
+M = 10
 
 #How many hours is part- and full-time work
 hours_p = 15
@@ -235,6 +235,7 @@ dic_betas = output_ins.aux_model(choices)
 np.mean(choices['income_matrix'])
 
 
+
 #Getting the simulated betas
 #utility_aux
 beta_childcare = np.mean(dic_betas['beta_childcare'],axis=0) #1x1
@@ -250,10 +251,22 @@ beta_emp_spouse = np.mean(dic_betas['beta_emp_spouse'],axis=0)
 #sample: age of the youngest child is six years or less by t=2
 boo_sample = (agech0[:,0]<= 4)
 
-hours = choices['hours_matrix'].copy()
+hours = choices['hours_matrix'][:,0,0].copy()
 full = hours == hours_f
 part = hours == hours_p
 work = hours > 0
+
+cc = choices['childcare_matrix'][:,0,0].copy()
+
+tch = np.zeros(N)
+boo_p = hours == hours_p
+boo_f = hours == hours_f
+boo_u = hours == 0
+
+tch[agech0[:,0]<=5] = cc[agech0[:,0]<=5]*(168 - hours_f) + (1-cc[agech0[:,0]<=5])*(168 - hours[agech0[:,0]<=5] ) 
+tch[agech0[:,0]>5] = 133 - hours[agech0[:,0]>5]
+
+np.corrcoef(tch,np.log(choices['income_matrix'][:,0,0]))
 
 #proportion of individuals working part- and full-time across years
 np.mean(np.mean(full[passign[:,0]==0,:,:],axis=2),axis=0)

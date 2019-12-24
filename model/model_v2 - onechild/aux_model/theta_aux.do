@@ -64,7 +64,7 @@ gen lhwage_t0=ln(hwage_t0)
 ********************************************************************
 
 *To identify gammas (production function): 2 x 1 matrix
-mat inputs_moments = J(4,1,.)
+mat inputs_moments = J(6,1,.)
 
 mat init_prod = J(1,1,.)
 
@@ -86,7 +86,7 @@ foreach x of numlist 2 5 8{
 keep incomepc_t1 incomepc_t4 incomepc_t7 skills_t1 skills_t4 skills_t7 /*
 */ l_t1 l_t4 l_t7 d_CC2_t1 d_CC2_t4 d_CC2_t7 hours2_t1 hours2_t4 hours2_t7/*
 */ id_child age_t1 age_t4 age_t7 p_assign /*
-*/ total_income_y1 total_income_y4 total_income_y7
+*/ total_income_y1 total_income_y4 total_income_y7 d_HS2
 
 reshape long incomepc_t skills_t d_skills_t l_t d_CC2_t age_t hours2_t total_income_y, i(id_child) j(year)
 
@@ -94,14 +94,27 @@ replace incomepc_t = incomepc_t/1000
 
 *reg skills_t incomepc_t hours2_t if p_assign=="C" & year<7
 
-corr skills_t total_income_y if year<7
-mat inputs_moments[2,1] = r(rho)
 
-corr skills_t hours2_t if year<7
-mat inputs_moments[3,1] = r(rho)
+replace total_income_y = total_income_y/100000
+replace hours2_t = hours2_t/100
+
+reg skills_t total_income_y hours2_t if year<7 
+mat inputs_moments[2,1] = _b[total_income_y]
+mat inputs_moments[3,1] = _b[hours2_t]
+
 
 reg skills_t d_CC2_t if age_t<=5 & year<7
 mat inputs_moments[4,1] = _b[d_CC2_t]
+
+
+sum skills_t if year == 1
+mat inputs_moments[5,1] = r(Var)
+
+sum skills_t if year == 4
+mat inputs_moments[6,1] = r(Var)
+
+
+
 
 
 **********************************************
